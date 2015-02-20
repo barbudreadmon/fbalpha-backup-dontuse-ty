@@ -255,6 +255,7 @@ BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_CPU_DIR)/sh2/mksh2.cpp \
 	$(FBA_CPU_DIR)/sh2/mksh2-x86.cpp \
 	$(FBA_CPU_DIR)/m68k/m68kmake.c \
+	$(FBA_CPU_DIR)/m68k/m68kfpu.c \
 	$(FBA_BURNER_DIR)/wave_writer.cpp \
 	$(FBA_CPU_DIR)/m68k/m68kdasm.c \
 	$(FBA_LIBRETRO_DIR)/menu.cpp \

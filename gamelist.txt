@@ -126,8 +126,8 @@ This list contains all games supported by FB Alpha.
 | pce_advislnd	|  	| Adventure Island					| 		| 1991	| Hudson	| PC Engine	| 					|
 | hatena	|  	| Adventure Quiz 2 Hatena Hatena no Dai-Bouken (Japan 90| 		| 1990	| Capcom	| Miscellaneous	| 					|
 | md_adveboy	|  	| Adventurous Boy - Mao Xian Xiao Zi (Chi)		| 		| 199?	| <unlicensed>	| Sega Megadrive| 					|
-| pce_aeroblst	|  	| Aero Blasters						| 		| 1990	| Hudson	| PC Engine	| 					|
 | tg_aeroblst	|  	| Aero Blasters						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_aeroblst	|  	| Aero Blasters						| 		| 1990	| Hudson	| PC Engine	| 					|
 | md_aeroblst	|  	| Aero Blasters: Trouble Specialty Raid Unit (Jpn)	| md_airbustr	| 1991	| Kaneko	| Sega Megadrive| 					|
 | aerofgt	|  	| Aero Fighters						| 		| 1992	| Video System C| Video System	| 					|
 | aerofgtb	|  	| Aero Fighters (Turbo Force hardware set 1)		| aerofgt	| 1992	| Video System C| Video System	| 					|
@@ -142,8 +142,8 @@ This list contains all games supported by FB Alpha.
 | md_aerobiz	|  	| Aerobiz (USA)						| 		| 1992	| Koei		| Sega Megadrive| 					|
 | md_aerobizs	|  	| Aerobiz Supersonic (USA)				| 		| 1994	| Koei		| Sega Megadrive| 					|
 | aburner	|  	| After Burner						| aburner2	| 1987	| Sega		| X-Board	| 					|
-| pce_aburner2	|  	| After Burner II					| 		| 1990	| NEC Avenue	| PC Engine	| 					|
 | aburner2	|  	| After Burner II					| 		| 1987	| Sega		| X-Board	| 					|
+| pce_aburner2	|  	| After Burner II					| 		| 1990	| NEC Avenue	| PC Engine	| 					|
 | md_aburner2	|  	| After Burner II (Euro, USA)				| 		| 1990	| Sega		| Sega Megadrive| 					|
 | aburner2g	|  	| After Burner II (German)				| aburner2	| 1987	| Sega		| X-Board	| 					|
 | md_aburner2j	|  	| After Burner II (Jpn)					| md_aburner2	| 1990	| Denpa Shinbuns| Sega Megadrive| 					|
@@ -628,8 +628,8 @@ This list contains all games supported by FB Alpha.
 | bbmanwj	|  	| Bomber Man World (Japan)				| bbmanw	| 1992	| Irem		| M90		| 					|
 | bbmanwja	|  	| Bomber Man World (Japan, revised sound hardware)	| bbmanw	| 1992	| Irem		| M90		| 					|
 | bbmanw	|  	| Bomber Man World / New Dyna Blaster - Global Quest	| 		| 1992	| Irem		| M90		| 					|
-| pce_bombman	|  	| Bomberman						| 		| 1990	| Hudson	| PC Engine	| 					|
 | tg_bombman	|  	| Bomberman						| 		| 1991	| NEC		| TurboGrafx 16	| 					|
+| pce_bombman	|  	| Bomberman						| 		| 1990	| Hudson	| PC Engine	| 					|
 | pce_bombmn93	|  	| Bomberman '93						| 		| 1992	| Hudson	| PC Engine	| 					|
 | tg_bombmn93	|  	| Bomberman '93						| 		| 1990	| Hudson Soft	| TurboGrafx 16	| 					|
 | pce_bombmn93s	|  	| Bomberman '93 (Special Version)			| pce_bombmn93	| 1992	| Hudson	| PC Engine	| 					|
@@ -1088,8 +1088,8 @@ This list contains all games supported by FB Alpha.
 | md_cutiesuz	|  	| Cutie Suzuki no Ringside Angel (Jpn)			| 		| 1990	| Asmik Ace	| Sega Megadrive| 					|
 | md_cutthr	|  	| CutThroat Island (Euro, USA)				| 		| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | md_cutthrp	|  	| CutThroat Island (Prototye)				| md_cutthr	| 1995	| Acclaim Entert| Sega Megadrive| 					|
-| pce_cybrcore	|  	| Cyber Core						| 		| 1990	| IGS		| PC Engine	| 					|
 | tg_cybrcore	|  	| Cyber Core						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_cybrcore	|  	| Cyber Core						| 		| 1990	| IGS		| PC Engine	| 					|
 | pce_cyberdod	|  	| Cyber Dodge						| 		| 1992	| Tonkin House	| PC Engine	| 					|
 | pce_cyknight	|  	| Cyber Knight						| 		| 1990	| Tonkin House	| PC Engine	| 					|
 | md_eswatj	|  	| Cyber Police ESWAT (Jpn, Rev. 0)			| md_eswat	| 1990	| Sega		| Sega Megadrive| 					|
@@ -1363,8 +1363,8 @@ This list contains all games supported by FB Alpha.
 | ddragon2	|  	| Double Dragon II - The Revenge (World)		| 		| 1988	| Technos	| Miscellaneous	| 					|
 | md_ddragon5	|  	| Double Dragon V - The Shadow Falls (USA)		| 		| 1994	| Tradewest	| Sega Megadrive| 					|
 | md_ddribble	|  	| Double Dribble - The Playoff Edition (USA)		| md_hyperdnk	| 1994	| Konami	| Sega Megadrive| 					|
-| tg_ddungw	|  	| Double Dungeons - W					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | pce_ddungw	|  	| Double Dungeons - W					| 		| 1989	| NCS		| PC Engine	| 					|
+| tg_ddungw	|  	| Double Dungeons - W					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | dblpoint	|  	| Double Point						| 		| 1995	| Min Corp.	| Miscellaneous	| 					|
 | dblpointd	|  	| Double Point (Dong Bang Electron, bootleg?)		| dblpoint	| 1995	| Dong Bang Elec| Miscellaneous	| 					|
 | pce_download	|  	| Download						| 		| 1990	| NEC Avenue	| PC Engine	| 					|
@@ -1616,8 +1616,8 @@ This list contains all games supported by FB Alpha.
 | eyeszacb	|  	| Eyes (bootleg set 2, decrypted)			| eyes		| 1982	| bootleg	| Pac-man	| 					|
 | eyes		|  	| Eyes (Digitrex Techstar)				| 		| 1982	| Digitrex Techs| Pac-man	| 					|
 | eyes2		|  	| Eyes (Techstar)					| eyes		| 1982	| Techstar (Rock| Pac-man	| 					|
-| f1dream	|  	| F-1 Dream						| 		| 1988	| Capcom (Romsta| Miscellaneous	| 					|
 | pce_f1dream	|  	| F-1 Dream						| 		| 1989	| NEC		| PC Engine	| 					|
+| f1dream	|  	| F-1 Dream						| 		| 1988	| Capcom (Romsta| Miscellaneous	| 					|
 | f1dreamb	|  	| F-1 Dream (bootleg, set 1)				| f1dream	| 1988	| bootleg	| Miscellaneous	| 					|
 | f1dreamba	|  	| F-1 Dream (bootleg, set 2)				| f1dream	| 1988	| bootleg	| Miscellaneous	| 					|
 | f1gp		|  	| F-1 Grand Prix					| 		| 1991	| Video System C| Miscellaneous	| 					|
@@ -1731,8 +1731,8 @@ This list contains all games supported by FB Alpha.
 | ffightu1	|  	| Final Fight (USA, set 2)				| ffight	| 1989	| Capcom	| CPS1		| 					|
 | ffight	|  	| Final Fight (World, set 1)				| 		| 1989	| Capcom	| CPS1		| 					|
 | ffighta	|  	| Final Fight (World, set 2)				| ffight	| 1989	| Capcom	| CPS1		| 					|
-| tg_finallap	|  	| Final Lap Twin					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | pce_finallap	|  	| Final Lap Twin					| 		| 1989	| Namcot	| PC Engine	| 					|
+| tg_finallap	|  	| Final Lap Twin					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | pce_finalmt	|  	| Final Match Tennis					| 		| 1991	| Human		| PC Engine	| 					|
 | pce_finalsol	|  	| Final Soldier						| 		| 1991	| Hudson	| PC Engine	| 					|
 | pce_finalsols	|  	| Final Soldier (Special Version)			| pce_finalsol	| 19??	| Hudson	| PC Engine	| 					|
@@ -1795,8 +1795,8 @@ This list contains all games supported by FB Alpha.
 | forgottnuaa	|  	| Forgotten Worlds (US, B-Board 88618B-2, rev AA)	| forgottn	| 1988	| Capcom	| CPS1		| 					|
 | forgottnu1	|  	| Forgotten Worlds (US, B-Board 88618B-2, Rev C)	| forgottn	| 1988	| Capcom	| CPS1		| 					|
 | forgottnu	|  	| Forgotten Worlds (US, B-Board 88621B-2, rev C)	| forgottn	| 1988	| Capcom	| CPS1		| 					|
-| md_forgottn1	|  	| Forgotten Worlds (World)				| md_forgottn	| 1989	| Sega		| Sega Megadrive| 					|
 | forgottn	|  	| Forgotten Worlds (World)				| 		| 1988	| Capcom	| CPS1		| 					|
+| md_forgottn1	|  	| Forgotten Worlds (World)				| md_forgottn	| 1989	| Sega		| Sega Megadrive| 					|
 | md_forgottn	|  	| Forgotten Worlds (World, v1.1)			| 		| 1989	| Sega		| Sega Megadrive| 					|
 | pce_fsoccr90	|  	| Formation Soccer - Human Cup '90			| 		| 1990	| Human		| PC Engine	| 					|
 | pce_fsoccer	|  	| Formation Soccer - On J. League			| 		| 1994	| Human		| PC Engine	| 					|
@@ -2192,8 +2192,8 @@ This list contains all games supported by FB Alpha.
 | hiticej	|  	| Hit the Ice (Japan)					| hitice	| 1990	| Midway/Taito C| Taito B System| Imperfect graphics			|
 | hitice	|  	| Hit the Ice (US)					| 		| 1990	| Williams	| Taito B System| Imperfect graphics			|
 | md_hitice	|  	| Hit the Ice (USA)					| 		| 1992	| Taito		| Sega Megadrive| 					|
-| tg_hitice	|  	| Hit the Ice - VHL - The Official Video Hockey League	| 		| 1992	| TTI		| TurboGrafx 16	| 					|
 | pce_hitice	|  	| Hit the Ice - VHL - The Official Video Hockey League	| 		| 1991	| Taito		| PC Engine	| 					|
+| tg_hitice	|  	| Hit the Ice - VHL - The Official Video Hockey League	| 		| 1992	| TTI		| TurboGrafx 16	| 					|
 | md_hokuto	|  	| Hokuto no Ken - Shin Seikimatsu Kyuuseishu Densetsu (J| md_lastbtle	| 1989	| Sega		| Sega Megadrive| 					|
 | md_homea	|  	| Home Alone (Euro, USA)				| 		| 1992	| Sega		| Sega Megadrive| 					|
 | md_homeap	|  	| Home Alone (USA, Prototype)				| md_homea	| 1992	| Sega		| Sega Megadrive| 					|
@@ -2489,8 +2489,8 @@ This list contains all games supported by FB Alpha.
 | md_kissshot	|  	| Kiss Shot (Jpn, SegaNet)				| 		| 1991	| Sega		| Sega Megadrive| 					|
 | kittenk	|  	| Kitten Kaboodle					| 		| 1988	| Konami	| GX712		| 					|
 | kizuna	|  	| Kizuna Encounter - Super Tag Battle / Fu'un Super Tag | 		| 1996	| SNK		| Neo Geo MVS	| 					|
-| pce_klax	|  	| Klax							| 		| 1990	| Tengen	| PC Engine	| 					|
 | tg_klax	|  	| Klax							| 		| 1990	| Tengen	| TurboGrafx 16	| 					|
+| pce_klax	|  	| Klax							| 		| 1990	| Tengen	| PC Engine	| 					|
 | md_klax	|  	| Klax (Euro, USA)					| 		| 1990	| Tengen	| Sega Megadrive| 					|
 | md_klaxj	|  	| Klax (Jpn)						| md_klax	| 1990	| Namcot	| Sega Megadrive| 					|
 | pce_knightrs	|  	| Knight Rider Special					| 		| 1989	| Pack-In-Video	| PC Engine	| 					|
@@ -2625,8 +2625,8 @@ This list contains all games supported by FB Alpha.
 | ledstorm2	|  	| Led Storm Rally 2011 (US)				| madgear	| 1988	| Capcom	| Miscellaneous	| 					|
 | legend	|  	| Legend						| 		| 1986	| Sega / Corelan| Kyugo		| 					|
 | pce_loht	|  	| Legend of Hero Tonma					| 		| 1991	| Irem		| PC Engine	| 					|
-| loht		|  	| Legend of Hero Tonma					| 		| 1989	| Irem		| M72		| 					|
 | tg_loht	|  	| Legend of Hero Tonma					| 		| 1991	| TTI		| TurboGrafx 16	| 					|
+| loht		|  	| Legend of Hero Tonma					| 		| 1989	| Irem		| M72		| 					|
 | lohtb		|  	| Legend of Hero Tonma (bootleg, set 1)			| loht		| 1989	| bootleg	| M72		| 					|
 | lohtb2	|  	| Legend of Hero Tonma (bootleg, set 2)			| loht		| 1989	| bootleg	| M72		| 					|
 | lohtj		|  	| Legend of Hero Tonma (Japan)				| loht		| 1989	| Irem		| M72		| 					|
@@ -2743,8 +2743,8 @@ This list contains all games supported by FB Alpha.
 | mswordu	|  	| Magic Sword - heroic fantasy (25.07.1990 USA)		| msword	| 1990	| Capcom	| CPS1		| 					|
 | mcatadv	|  	| Magical Cat Adventure					| 		| 1993	| Wintechno	| LINDA		| 					|
 | mcatadvj	|  	| Magical Cat Adventure (Japan)				| mcatadv	| 1993	| Wintechno	| LINDA		| 					|
-| pce_magchase	|  	| Magical Chase						| 		| 1991	| Palsoft	| PC Engine	| 					|
 | tg_magchase	|  	| Magical Chase						| 		| 1991	| NEC		| TurboGrafx 16	| 					|
+| pce_magchase	|  	| Magical Chase						| 		| 1991	| Palsoft	| PC Engine	| 					|
 | mgcrystlj	|  	| Magical Crystals (Japan, 92/01/13)			| mgcrystl	| 1991	| Kaneko (Atlus | Kaneko16	| 					|
 | mgcrystlo	|  	| Magical Crystals (World, 91/12/10)			| mgcrystl	| 1991	| Kaneko	| Kaneko16	| 					|
 | mgcrystl	|  	| Magical Crystals (World, 92/01/10)			| 		| 1991	| Kaneko	| Kaneko16	| 					|
@@ -3099,8 +3099,8 @@ This list contains all games supported by FB Alpha.
 | md_mk3	|  	| Mortal Kombat 3 (Euro)				| 		| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | md_mk3u	|  	| Mortal Kombat 3 (USA)					| md_mk3	| 1995	| Williams	| Sega Megadrive| 					|
 | md_mk2	|  	| Mortal Kombat II (World)				| 		| 1994	| Acclaim Entert| Sega Megadrive| 					|
-| tg_motoroad	|  	| Moto Roader						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | pce_motoroad	|  	| Moto Roader						| 		| 1989	| NCS		| PC Engine	| 					|
+| tg_motoroad	|  	| Moto Roader						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | pce_motorod2	|  	| Moto Roader II					| 		| 1991	| Masiya	| PC Engine	| 					|
 | pce_motorod2a	|  	| Moto Roader II (Alt)					| pce_motorod2	| 1991	| Masiya	| PC Engine	| 					|
 | mrdo		|  	| Mr. Do!						| 		| 1982	| Universal	| Miscellaneous	| 					|
@@ -3285,10 +3285,10 @@ This list contains all games supported by FB Alpha.
 | neocup98	|  	| Neo-Geo Cup '98 - The Road to the Victory		| 		| 1998	| SNK		| Neo Geo MVS	| 					|
 | neotet	|  	| NeoGeo 2-Player Tetris				| 		| 2013	| Crim/Stephen	| Neo Geo	| 					|
 | neo3ddmo	|  	| NeoGeo 3D! Demo					| 		| 2012	| Oxygene	| Neo Geo	| 					|
-| pce_neutopia	|  	| Neutopia						| 		| 1989	| Hudson	| PC Engine	| 					|
 | tg_neutopia	|  	| Neutopia						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
-| tg_neutopi2	|  	| Neutopia II						| 		| 1992	| NEC		| TurboGrafx 16	| 					|
+| pce_neutopia	|  	| Neutopia						| 		| 1989	| Hudson	| PC Engine	| 					|
 | pce_neutopi2	|  	| Neutopia II						| 		| 1991	| Hudson	| PC Engine	| 					|
+| tg_neutopi2	|  	| Neutopia II						| 		| 1992	| NEC		| TurboGrafx 16	| 					|
 | md_n3dgdevi	|  	| New 3D Golf Simulation - Devil's Course (Jpn)		| 		| 1994	| Sega		| Sega Megadrive| 					|
 | md_n3dgaugu	|  	| New 3D Golf Simulation - Harukanaru Augusta (Jpn)	| 		| 1993	| T & E Soft	| Sega Megadrive| 					|
 | md_n3dgpebb	|  	| New 3D Golf Simulation - Pebble Beach no Hatou (Jpn)	| md_pebble	| 1993	| Sega		| Sega Megadrive| 					|
@@ -3454,8 +3454,8 @@ This list contains all games supported by FB Alpha.
 | orbitron	|  	| Orbitron						| 		| 19??	| Signatron USA	| Galaxian	| 					|
 | orbs		|  	| Orbs (10/7/94 prototype?)				| 		| 1994	| American Sammy| Seta		| 					|
 | tg_griffon	|  	| Order of the Griffon					| 		| 1992	| TTI		| TurboGrafx 16	| 					|
-| pce_ordyne	|  	| Ordyne						| 		| 1989	| Namcot	| PC Engine	| 					|
 | tg_ordyne	|  	| Ordyne						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
+| pce_ordyne	|  	| Ordyne						| 		| 1989	| Namcot	| PC Engine	| 					|
 | orlegend105k	|  	| Oriental Legend (V105, Korea)				| orlegend	| 1997	| IGS		| PolyGameMaster| 					|
 | orlegend111c	|  	| Oriental Legend - Xi Yo Gi Shi Re Zuang (V111, China)	| orlegend	| 1997	| IGS		| PolyGameMaster| 					|
 | orlegend111t	|  	| Oriental Legend - Xi Yo Gi Shi Re Zuang (V111, Taiwan)| orlegend	| 1997	| IGS		| PolyGameMaster| 					|
@@ -3504,8 +3504,8 @@ This list contains all games supported by FB Alpha.
 | md_pto	|  	| P.T.O. - Pacific Theater of Operations (USA)		| 		| 1993	| Koei		| Sega Megadrive| 					|
 | md_pacattak	|  	| Pac-Attack (USA)					| md_pacpanic	| 1993	| Namco		| Sega Megadrive| 					|
 | pacgal	|  	| Pac-Gal						| mspacman	| 1981	| hack		| Pac-man	| 					|
-| pce_pacland	|  	| Pac-land						| 		| 1989	| Namcot	| PC Engine	| 					|
 | tg_pacland	|  	| Pac-Land						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_pacland	|  	| Pac-land						| 		| 1989	| Namcot	| PC Engine	| 					|
 | paclandj	|  	| Pac-Land (Japan new)					| pacland	| 1984	| Namco		| Miscellaneous	| 					|
 | paclandjo	|  	| Pac-Land (Japan old)					| pacland	| 1984	| Namco		| Miscellaneous	| 					|
 | paclandjo2	|  	| Pac-Land (Japan older)				| pacland	| 1984	| Namco		| Miscellaneous	| 					|
@@ -3553,8 +3553,8 @@ This list contains all games supported by FB Alpha.
 | md_paperboyj	|  	| Paperboy (Jpn)					| md_paperboy	| 1992	| Tengen	| Sega Megadrive| 					|
 | md_paperbo2	|  	| Paperboy 2 (Euro, USA)				| 		| 1992	| Tengen	| Sega Megadrive| 					|
 | pce_paranoia	|  	| Paranoia						| 		| 1990	| Naxat		| PC Engine	| 					|
-| tg_parasol	|  	| Parasol Stars - The Story of Bubble Bobble III	| 		| 1991	| Working Design| TurboGrafx 16	| 					|
 | pce_parasol	|  	| Parasol Stars - The Story of Bubble Bobble III	| 		| 1991	| Taito		| PC Engine	| 					|
+| tg_parasol	|  	| Parasol Stars - The Story of Bubble Bobble III	| 		| 1991	| Working Design| TurboGrafx 16	| 					|
 | parodiusa	|  	| Parodius DA! (Asia)					| parodius	| 1990	| Konami	| GX955		| 					|
 | parodiusj	|  	| Parodius DA! (Japan)					| parodius	| 1990	| Konami	| GX955		| 					|
 | parodius	|  	| Parodius DA! (World, set 1)				| 		| 1990	| Konami	| GX955		| 					|
@@ -4407,10 +4407,10 @@ This list contains all games supported by FB Alpha.
 | md_sidepockj	|  	| Side Pocket (Jpn)					| md_sidepock	| 1992	| Data East	| Sega Megadrive| 					|
 | md_sidepocku	|  	| Side Pocket (USA)					| md_sidepock	| 1992	| Data East	| Sega Megadrive| 					|
 | sidepckt	|  	| Side Pocket (World)					| 		| 1986	| Data East Corp| Miscellaneous	| 					|
-| pce_sidearms	|  	| Sidearms - Hyper Dyne					| 		| 1989	| NEC		| PC Engine	| 					|
 | tg_sidearms	|  	| Sidearms - Hyper Dyne					| 		| 1989	| Radiance Softw| TurboGrafx 16	| 					|
-| pce_silentd	|  	| Silent Debuggers					| 		| 1991	| Data East	| PC Engine	| 					|
+| pce_sidearms	|  	| Sidearms - Hyper Dyne					| 		| 1989	| NEC		| PC Engine	| 					|
 | tg_silentd	|  	| Silent Debuggers					| 		| 1991	| Hudson Soft	| TurboGrafx 16	| 					|
+| pce_silentd	|  	| Silent Debuggers					| 		| 1991	| Data East	| PC Engine	| 					|
 | silentdj	|  	| Silent Dragon (Japan)					| silentd	| 1992	| Taito Corporat| Taito B System| 					|
 | silentdu	|  	| Silent Dragon (US)					| silentd	| 1992	| Taito America | Taito B System| 					|
 | silentd	|  	| Silent Dragon (World)					| 		| 1992	| Taito Corporat| Taito B System| 					|
@@ -4582,8 +4582,8 @@ This list contains all games supported by FB Alpha.
 | spacegunj	|  	| Space Gun (Japan)					| spacegun	| 1990	| Taito Corporat| Taito-Z	| 					|
 | spacegunu	|  	| Space Gun (US)					| spacegun	| 1990	| Taito America | Taito-Z	| 					|
 | spacegun	|  	| Space Gun (World)					| 		| 1990	| Taito Corporat| Taito-Z	| 					|
-| tg_sharrier	|  	| Space Harrier						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | pce_sharrier	|  	| Space Harrier						| 		| 1988	| NEC		| PC Engine	| 					|
+| tg_sharrier	|  	| Space Harrier						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | sharrier1	|  	| Space Harrier (8751 315-5163)				| sharrier	| 1985	| Sega		| Hang-On	| 					|
 | sharrier	|  	| Space Harrier (Rev A, 8751 315-5163A)			| 		| 1985	| Sega		| Hang-On	| 					|
 | md_sharrierj	|  	| Space Harrier II (Jpn, Launch Cart)			| md_sharrier	| 1988	| Sega		| Sega Megadrive| 					|
@@ -4644,8 +4644,8 @@ This list contains all games supported by FB Alpha.
 | pce_spirwave	|  	| Spiral Wave						| 		| 1991	| Media Rings Co| PC Engine	| 					|
 | md_spiritwf	|  	| Spiritual Warfare (USA)				| 		| 1994	| Wisdom Tree	| Sega Megadrive| 					|
 | md_spirou	|  	| Spirou (Euro)						| 		| 1996	| Infogrames	| Sega Megadrive| 					|
-| pce_splatth	|  	| Splatterhouse						| 		| 1990	| Namcot	| PC Engine	| 					|
 | tg_splatth	|  	| Splatterhouse						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_splatth	|  	| Splatterhouse						| 		| 1990	| Namcot	| PC Engine	| 					|
 | md_splatth2	|  	| Splatterhouse 2 (Euro)				| 		| 1992	| Sega		| Sega Megadrive| 					|
 | md_splatth2u	|  	| Splatterhouse 2 (USA)					| md_splatth2	| 1992	| Namco		| Sega Megadrive| 					|
 | md_splatth3	|  	| Splatterhouse 3 (USA)					| 		| 1993	| Namco		| Sega Megadrive| 					|
@@ -5126,8 +5126,8 @@ This list contains all games supported by FB Alpha.
 | md_svolleyj	|  	| Super Volley Ball (Jpn)				| md_svolley	| 1991	| Video System	| Sega Megadrive| 					|
 | md_svolley	|  	| Super Volley Ball (USA)				| 		| 1991	| Video System	| Sega Megadrive| 					|
 | md_svolley1	|  	| Super Volley Ball (USA, Alt)				| md_svolley	| 1991	| Video System	| Sega Megadrive| 					|
-| pce_svolley	|  	| Super Volleyball					| 		| 1990	| Video System	| PC Engine	| 					|
 | tg_svolley	|  	| Super Volleyball					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_svolley	|  	| Super Volleyball					| 		| 1990	| Video System	| PC Engine	| 					|
 | svolley	|  	| Super Volleyball (Japan)				| 		| 1989	| V-System Co.	| Miscellaneous	| 					|
 | svolleyk	|  	| Super Volleyball (Korea)				| svolley	| 1989	| V-System Co.	| Miscellaneous	| 					|
 | svolleyu	|  	| Super Volleyball (US)					| svolley	| 1989	| V-System Co. (| Miscellaneous	| 					|
@@ -5168,8 +5168,8 @@ This list contains all games supported by FB Alpha.
 | hotgmck3	|  	| Taisen Hot Gimmick 3 Digital Surfing (Japan)		| 		| 1999	| Psikyo	| PS4		| 					|
 | hotgm4ev	|  	| Taisen Hot Gimmick 4 Ever (Japan)			| 		| 2000	| Psikyo	| PS4		| 					|
 | hgkairak	|  	| Taisen Hot Gimmick Kairakuten (Japan)			| 		| 1998	| Psikyo	| PS4		| 					|
-| tg_chasehq	|  	| Taito Chase H.Q.					| 		| 1992	| TTI		| TurboGrafx 16	| 					|
 | pce_chasehq	|  	| Taito Chase H.Q.					| 		| 1990	| Taito		| PC Engine	| 					|
+| tg_chasehq	|  	| Taito Chase H.Q.					| 		| 1992	| TTI		| TurboGrafx 16	| 					|
 | md_taiwan	|  	| Taiwan Daheng (Chi)					| 		| 1994	| C&E		| Sega Megadrive| 					|
 | pce_takameib	|  	| Takahashi Meijin no Shin Boukenjima			| 		| 1992	| Hudson	| PC Engine	| 					|
 | pce_shingen	|  	| Takeda Shingen					| 		| 1989	| Aicom		| PC Engine	| 					|
@@ -5774,12 +5774,12 @@ This list contains all games supported by FB Alpha.
 | turtshipk	|  	| Turtle Ship (Korea)					| turtship	| 1988	| Philko	| Miscellaneous	| 					|
 | turtship	|  	| Turtle Ship (North America)				| 		| 1988	| Philko (Sharp | Miscellaneous	| 					|
 | turtles	|  	| Turtles						| 		| 1981	| Konami (Stern | Galaxian	| 					|
-| pce_tvbasket	|  	| TV Sports Basketball					| 		| 1993	| Victor Interac| PC Engine	| 					|
 | tg_tvbasket	|  	| TV Sports Basketball					| 		| 1991	| NEC		| TurboGrafx 16	| 					|
-| pce_tvfootbl	|  	| TV Sports Football					| 		| 1991	| Victor Interac| PC Engine	| 					|
+| pce_tvbasket	|  	| TV Sports Basketball					| 		| 1993	| Victor Interac| PC Engine	| 					|
 | tg_tvfootbl	|  	| TV Sports Football					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
-| pce_tvhockey	|  	| TV Sports Hockey					| 		| 1993	| Victor Interac| PC Engine	| 					|
+| pce_tvfootbl	|  	| TV Sports Football					| 		| 1991	| Victor Interac| PC Engine	| 					|
 | tg_tvhockey	|  	| TV Sports Hockey					| 		| 1991	| NEC		| TurboGrafx 16	| 					|
+| pce_tvhockey	|  	| TV Sports Hockey					| 		| 1993	| Victor Interac| PC Engine	| 					|
 | twinactn	|  	| Twin Action						| 		| 1995	| Afega		| NMK16		| 					|
 | twinadvk	|  	| Twin Adventure (Korea)				| twinadv	| 1995	| Barko Corp	| Kaneko Pandora| 					|
 | twinadv	|  	| Twin Adventure (World)				| 		| 1995	| Barko Corp	| Kaneko Pandora| 					|
@@ -5909,8 +5909,8 @@ This list contains all games supported by FB Alpha.
 | venus		|  	| Venus							| gyruss	| 1983	| bootleg	| Miscellaneous	| 					|
 | md_vermilj	|  	| Vermilion (Jpn)					| md_vermil	| 1989	| Sega		| Sega Megadrive| 					|
 | md_verytex	|  	| Verytex (Jpn)						| 		| 1991	| Asmik Ace	| Sega Megadrive| 					|
-| tg_victoryr	|  	| Victory Run						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | pce_victoryr	|  	| Victory Run						| 		| 1987	| Hudson	| PC Engine	| 					|
+| tg_victoryr	|  	| Victory Run						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | hustler	|  	| Video Hustler						| 		| 1981	| Konami	| Galaxian	| 					|
 | hustlerb	|  	| Video Hustler (bootleg)				| hustler	| 1981	| bootleg	| Galaxian	| 					|
 | vpool		|  	| Video Pool (bootleg on Moon Cresta hardware)		| hustler	| 1980	| bootleg	| Galaxian	| 					|
