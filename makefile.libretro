@@ -182,6 +182,16 @@ else ifeq ($(platform), wii)
 	NO_CPS = 1
 	NO_NEO = 1
 	NO_PCE = 1
+else ifeq ($(platform), rpi2)
+   TARGET := $(TARGET_NAME)_libretro.so
+   fpic := -fPIC
+   SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(LIBRETRO_DIR)/link.T
+   PLATFORM_DEFINES += -marm -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
+   HAVE_NEON = 1
+   ENDIANNESS_DEFINES := -DLSB_FIRST
+   CFLAGS += -DARM
+   CC = gcc
+   CXX = g++
 else ifneq (,$(findstring armv,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
