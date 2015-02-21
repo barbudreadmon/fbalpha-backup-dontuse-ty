@@ -14,4 +14,6 @@
 #define LIBRETRO_COLOR_CONVERT_SWITCH(r, g, b, a) (nBurnBpp == 2) ? (((r << 7) & 0x7c00) | ((g << 2) & 0x03e0) | ((b >> 3) & 0x001f)) : (((r << 16) & 0xff0000) | ((g << 8) & 0x00ff00) | ((b) & 0x0000ff))
 #endif
 
+extern char g_rom_dir[1024];
+
 #endif

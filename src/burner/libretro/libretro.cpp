@@ -6,7 +6,7 @@
 
 #include "cd/cd_interface.h"
 
-#define FBA_VERSION "v0.2.97.34" // Feb 20, 2015 (SVN)
+#define FBA_VERSION "v0.2.97.30" // Sept 16, 2013 (SVN)
 
 static retro_environment_t environ_cb;
 static retro_log_printf_t log_cb;

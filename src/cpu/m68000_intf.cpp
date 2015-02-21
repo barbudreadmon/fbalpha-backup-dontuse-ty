@@ -2061,7 +2061,7 @@ INT32 SekScan(INT32 nAction)
 				ba.Data = SekM68KContext[i];
 				// for savestate portability: preserve our cpu's pointers, they are set up in DrvInit() and can be specific to different systems.
 				// Therefore we scan the cpu context structure up until right before the pointers
-				ba.nLen = nSekM68KContextSize[i];
+				ba.nLen = m68k_context_size_no_pointers();
 				ba.szName = szName;
 				BurnAcb(&ba);
 			}
