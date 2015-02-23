@@ -3,17 +3,6 @@ LIBRETRO_OPTIMIZATIONS = 1
 FRONTEND_SUPPORTS_RGB565 = 1
 HAVE_GRIFFIN = 0
 
-profile := accuracy
-ifeq ($(profile),accuracy)
-  profflags := -DPROFILE_ACCURACY
-else ifeq ($(profile),balanced)
-  profflags := -DPROFILE_BALANCED
-else ifeq ($(profile),performance)
-  profflags := -DPROFILE_PERFORMANCE
-else
-  $(error unknown profile.)
-endif
-
 ifneq ($(EMSCRIPTEN),)
    platform = emscripten
 endif
@@ -60,6 +49,20 @@ FBA_INTERFACE_DIR := $(MAIN_FBA_DIR)/intf
 FBA_GENERATED_DIR = $(MAIN_FBA_DIR)/dep/generated
 FBA_SCRIPTS_DIR = $(MAIN_FBA_DIR)/dep/scripts
 GRIFFIN_DIR = griffin-libretro
+
+profile := accuracy
+ifeq ($(profile),accuracy)
+  PROFFLAGS := -DPROFILE_ACCURACY
+  SH2_CPU_DIR := $(FBA_CPU_DIR)/sh2
+else ifeq ($(profile),balanced)
+  PROFFLAGS := -DPROFILE_BALANCED
+  SH2_CPU_DIR := $(FBA_CPU_DIR)/sh2
+else ifeq ($(profile),performance)
+  PROFFLAGS := -DPROFILE_PERFORMANCE
+  SH2_CPU_DIR := $(FBA_CPU_DIR)/alt/sh2
+else
+  $(error unknown profile.)
+endif
 
 EXTERNAL_ZLIB = 0
 
@@ -389,7 +392,7 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/nec \
 	$(FBA_CPU_DIR)/pic16c5x \
 	$(FBA_CPU_DIR)/s2650 \
-	$(FBA_CPU_DIR)/sh2 \
+	$(SH2_CPU_DIR) \
 	$(FBA_CPU_DIR)/tlcs90 \
 	$(FBA_CPU_DIR)/z80
 
@@ -468,8 +471,8 @@ else
 WARNINGS_DEFINES = -Wno-write-strings
 endif
 
-CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(profflags)
-CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(profflags)
+CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
+CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
 LDFLAGS += $(fpic)
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)
