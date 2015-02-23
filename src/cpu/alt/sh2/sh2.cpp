@@ -57,15 +57,15 @@ typedef unsigned long long UINT64;*/
 #define SH2_INT_15			15
 
 #ifndef SH2_INLINE
-#define	SH2_INLINE
+#define	SH2_INLINE inline
 #endif
 
 #if FAST_OP_FETCH
-
-	#define change_pc(newpc)															\
-		sh2->pc = (newpc);																\
-		pSh2Ext->opbase = pSh2Ext->MemMap[ (sh2->pc >> SH2_SHIFT) + SH2_WADD * 2 ];		\
-		pSh2Ext->opbase -= (sh2->pc & ~SH2_PAGEM);
+	static unsigned char * readop_pr;  // for FAST_OP_FETCH cpu_readop16()										\
+	#define change_pc(newpc)													\
+		sh2->pc = (newpc);														\
+		readop_pr = pSh2Ext->MemMap[ (sh2->pc >> SH2_SHIFT) + SH2_WADD * 2 ];	\
+		pSh2Ext->opbase = readop_pr - (sh2->pc & ~SH2_PAGEM);
 
 #else
 
@@ -606,9 +606,9 @@ void program_write_dword_32be(unsigned int /*A*/, unsigned int /*V*/)
 #if FAST_OP_FETCH
 
 #ifdef LSB_FIRST
-#define cpu_readop16(A)	*(unsigned short *)(pSh2Ext->opbase + ((A) ^ 0x02))
+#define cpu_readop16(A) ((uintptr_t)readop_pr >= SH2_MAXHANDLER) ? *(unsigned short *)(pSh2Ext->opbase + ((A) ^ 0x02)) : pSh2Ext->ReadWord[(uintptr_t)readop_pr](A);
 #else
-#define cpu_readop16(A)	(*(unsigned short *)(pSh2Ext->opbase + ((A))))
+#define cpu_readop16(A) ((uintptr_t)readop_pr >= SH2_MAXHANDLER) ? *(unsigned short *)(pSh2Ext->opbase + ((A))) : pSh2Ext->ReadWord[(uintptr_t)readop_pr](A);
 #endif
 
 #else
@@ -617,13 +617,13 @@ SH2_INLINE unsigned short cpu_readop16(unsigned int A)
 {
 	unsigned char * pr;
 	pr = pSh2Ext->MemMap[ (A >> SH2_SHIFT) + SH2_WADD * 2 ];
-	if ( (unsigned int)pr >= SH2_MAXHANDLER ) {
+	if ( (uintptr_t)pr >= SH2_MAXHANDLER ) {
 #ifdef LSB_FIRST
 		A ^= 2;
 #endif
 		return *((unsigned short *)(pr + (A & SH2_PAGEM)));
 	}
-	return pSh2Ext->ReadWord[(unsigned int)pr](A);
+	return pSh2Ext->ReadWord[pr](A);
 }
 
 #endif
