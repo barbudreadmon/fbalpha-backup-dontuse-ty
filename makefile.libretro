@@ -3,6 +3,17 @@ LIBRETRO_OPTIMIZATIONS = 1
 FRONTEND_SUPPORTS_RGB565 = 1
 HAVE_GRIFFIN = 0
 
+profile := accuracy
+ifeq ($(profile),accuracy)
+  profflags := -DPROFILE_ACCURACY
+else ifeq ($(profile),balanced)
+  profflags := -DPROFILE_BALANCED
+else ifeq ($(profile),performance)
+  profflags := -DPROFILE_PERFORMANCE
+else
+  $(error unknown profile.)
+endif
+
 ifneq ($(EMSCRIPTEN),)
    platform = emscripten
 endif
@@ -457,8 +468,8 @@ else
 WARNINGS_DEFINES = -Wno-write-strings
 endif
 
-CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
-CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
+CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(profflags)
+CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(profflags)
 LDFLAGS += $(fpic)
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)
