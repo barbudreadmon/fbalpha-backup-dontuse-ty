@@ -61,7 +61,8 @@ typedef unsigned long long UINT64;*/
 #endif
 
 #if FAST_OP_FETCH
-	static unsigned char * readop_pr;  // for FAST_OP_FETCH cpu_readop16()										\
+	static unsigned char * readop_pr;  // for FAST_OP_FETCH cpu_readop16()
+
 	#define change_pc(newpc)													\
 		sh2->pc = (newpc);														\
 		readop_pr = pSh2Ext->MemMap[ (sh2->pc >> SH2_SHIFT) + SH2_WADD * 2 ];	\
