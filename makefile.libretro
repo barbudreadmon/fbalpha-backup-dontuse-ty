@@ -406,7 +406,6 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/pic16c5x \
 	$(FBA_CPU_DIR)/s2650 \
 	$(SH2_CPU_DIR) \
-	$(FBA_CPU_DIR)/sms \
 	$(FBA_CPU_DIR)/tlcs90 \
 	$(FBA_CPU_DIR)/z80
 

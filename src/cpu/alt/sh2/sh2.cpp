@@ -3321,7 +3321,6 @@ int Sh2Run(int cycles)
 	
 	do
 	{
-
 		if ( pSh2Ext->suspend ) {
 			sh2->sh2_total_cycles += cycles;
 			sh2->sh2_icount = 0;
@@ -3329,6 +3328,7 @@ int Sh2Run(int cycles)
 		}			
 
 		UINT16 opcode;
+
 
 		if (sh2->delay) {
 			//opcode = cpu_readop16(WORD_XOR_BE((UINT32)(sh2->delay & AM)));
@@ -3362,7 +3362,6 @@ int Sh2Run(int cycles)
 		case 14<<12: op1110(opcode); break;
 		default: op1111(opcode); break;
 		}
-
 #endif
 
 		if(sh2->test_irq && !sh2->delay)
@@ -3412,7 +3411,7 @@ void Sh2SetIRQLine(const int line, const int state)
 	if (sh2->irq_line_state[line] == state) return;
 	sh2->irq_line_state[line] = state;
 
-	if( state == SH2_IRQSTATUS_NONE ) {
+	if( state == CPU_IRQSTATUS_NONE ) {
 		// LOG(("SH-2 #%d cleared irq #%d\n", cpu_getactivecpu(), line));
 		sh2->pending_irq &= ~(1 << line);
 	} else {
