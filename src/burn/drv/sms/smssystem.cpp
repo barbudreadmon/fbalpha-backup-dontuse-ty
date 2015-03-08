@@ -17,7 +17,6 @@
 */
 
 #include "smsshared.h"
-#include "burnint.h"
 #include "z80_intf.h"
 #include "sn76496.h"
 

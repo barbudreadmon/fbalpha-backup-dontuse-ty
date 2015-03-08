@@ -2,7 +2,7 @@
     sound.c --
     Sound emulation.
 */
-#include "tiles_generic.h"
+
 #include "smsshared.h"
 #include "sn76496.h"
 

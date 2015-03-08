@@ -3,7 +3,6 @@
     Display rendering.
 */
 
-#include "tiles_generic.h"
 #include "smsshared.h"
 
 uint8 sms_cram_expand_table[4];

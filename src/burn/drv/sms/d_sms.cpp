@@ -1,6 +1,5 @@
 // Sega Mastersystem driver for FBA, interface for SMS Plus by Charles MacDonald
 
-#include "tiles_generic.h"
 #include "smsshared.h"
 #include "z80_intf.h"
 #include "sn76496.h"

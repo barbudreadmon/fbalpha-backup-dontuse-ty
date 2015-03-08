@@ -2,6 +2,7 @@
     pio.c --
     I/O chip and peripheral emulation.
 */
+
 #include "smsshared.h"
 
 io_state io_lut[2][256];

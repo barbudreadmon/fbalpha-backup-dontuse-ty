@@ -2,9 +2,8 @@
     vdp.c --
     Video Display Processor (VDP) emulation.
 */
+
 #include "smsshared.h"
-#include "tiles_generic.h"
-#include "driver.h"
 #include "z80_intf.h"
 #include "smshvc.h"
 

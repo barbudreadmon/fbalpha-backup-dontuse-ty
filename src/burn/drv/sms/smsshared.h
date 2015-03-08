@@ -1,14 +1,7 @@
 #ifndef _SMSSHARED_H_
 #define _SMSSHARED_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <signal.h>
-#include <malloc.h>
-#include <math.h>
-#include <limits.h>
+#include "tiles_generic.h"
 #include "zlib.h"
 
 #include "sms.h"
