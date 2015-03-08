@@ -13,10 +13,12 @@ extern "C" {
 static UINT8 *Mem, *Rom0, *Rom1, *Gfx, *Prom, *User;
 static UINT8 DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvJoy4[8], DrvReset, DrvDips[2];
 static INT16 *pAY8910Buffer[3], *pFMBuffer = NULL;
-static INT32 tri_fix, joinem, loverb, suprtriv;
+static INT32 tri_fix = 0, joinem = 0, loverb = 0, suprtriv = 0, unclepoo = 0, zzyzzyxx = 0;
 static INT32 timer_rate, flip_screen;
 static UINT32 *Palette, *DrvPal;
 static UINT8 DrvCalcPal;
+static UINT8 joinem_palette_bank = 0, joinem_nmi_enable = 0;
+static INT32 joinem_scroll_w[300];
 
 static UINT8 soundlatch;
 static INT32 question_address, question_rom, remap_address[16];
@@ -153,6 +155,32 @@ static struct BurnInputInfo JoinemInputList[] = {
 };
 
 STDINPUTINFO(Joinem)
+
+static struct BurnInputInfo UnclepooInputList[] = {
+	{"P1 Coin"      , BIT_DIGITAL  , DrvJoy3 + 0,	"p1 coin"  },
+	{"P1 start"  ,    BIT_DIGITAL  , DrvJoy3 + 2,	"p1 start" },
+	{"P1 Up",	  BIT_DIGITAL,   DrvJoy1 + 0,   "p1 up",   },
+	{"P1 Down",	  BIT_DIGITAL,   DrvJoy1 + 1,   "p1 down", },
+	{"P1 Right"     , BIT_DIGITAL  , DrvJoy1 + 2, 	"p1 right" },
+	{"P1 Left"      , BIT_DIGITAL  , DrvJoy1 + 3, 	"p1 left"  },
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"},
+
+	{"P2 Coin"      , BIT_DIGITAL  , DrvJoy3 + 1,	"p2 coin"  },
+	{"P2 start"  ,    BIT_DIGITAL  , DrvJoy3 + 3,	"p2 start" },
+	{"P2 Up",	  BIT_DIGITAL,   DrvJoy2 + 0,   "p2 up",   },
+	{"P2 Down",	  BIT_DIGITAL,   DrvJoy2 + 1,   "p2 down", },
+	{"P2 Right"     , BIT_DIGITAL  , DrvJoy2 + 2, 	"p2 right" },
+	{"P2 Left"      , BIT_DIGITAL  , DrvJoy2 + 3, 	"p2 left"  },
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p2 fire 2"},
+
+	{"Reset",	  BIT_DIGITAL  , &DrvReset,	"reset"    },
+	{"Dip 1",	  BIT_DIPSWITCH, DrvDips + 0,	"dip"	   },
+	{"Dip 2",	  BIT_DIPSWITCH, DrvDips + 1,	"dip"	   },
+};
+
+STDINPUTINFO(Unclepoo)
 
 static struct BurnInputInfo LoverboyInputList[] = {
 	{"P1 Coin"      , BIT_DIGITAL  , DrvJoy3 + 0,	"p1 coin"  },
@@ -561,6 +589,45 @@ static struct BurnDIPInfo JoinemDIPList[]=
 
 STDDIPINFO(Joinem)
 
+static struct BurnDIPInfo UnclepooDIPList[]=
+{
+	// Default Values
+	{0x11, 0xff, 0xff, 0x00, NULL},
+	{0x12, 0xff, 0xff, 0x01, NULL},
+
+	// DSW1
+	{0   , 0xfe, 0   , 4   , "Coin A"},
+	{0x11, 0x01, 0x03, 0x01, "2 coins 1 credit"},
+	{0x11, 0x01, 0x03, 0x03, "4 coins 3 credits"},
+	{0x11, 0x01, 0x03, 0x00, "1 coin 1 credit"},
+	{0x11, 0x01, 0x03, 0x02, "1 coin 3 credits"},
+
+	{0   , 0xfe, 0   , 4   , "Coin B"},
+	{0x11, 0x01, 0x0c, 0x08, "3 coins 1 credit"},
+	{0x11, 0x01, 0x0c, 0x04, "2 coins 1 credit"},
+	{0x11, 0x01, 0x0c, 0x0c, "4 coins 3 credits"},
+	{0x11, 0x01, 0x0c, 0x00, "1 coin 1 credit"},
+
+	{0   , 0xfe, 0   , 2   , "Lives"},
+	{0x11, 0x01, 0x10, 0x00, "2"},
+	{0x11, 0x01, 0x10, 0x10, "5"},
+
+	// DSW2
+	{0   , 0xfe, 0   , 2   , "Cabinet"},
+	{0x12, 0x01, 0x01, 0x01, "Upright"},
+	{0x12, 0x01, 0x01, 0x00, "Cocktail"},
+
+	{0   , 0xfe, 0   , 2   , "Sound Check"},
+	{0x12, 0x01, 0x20, 0x00, "Off"},
+	{0x12, 0x01, 0x20, 0x20, "On"},
+
+	{0   , 0xfe, 0   , 2   , "Infinite Lives"},
+	{0x12, 0x01, 0x80, 0x00, "2"},
+	{0x12, 0x01, 0x80, 0x80, "3"},
+};
+
+STDDIPINFO(Unclepoo)
+
 static struct BurnDIPInfo LoverboyDIPList[]=
 {
 	// Default Values
@@ -646,7 +713,7 @@ static UINT8 timer_r(UINT32)
 
 static UINT8 soundlatch_r(UINT32)
 {
-	ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+	//ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 	return soundlatch;
 }
 
@@ -704,6 +771,11 @@ UINT8 __fastcall jack_cpu0_read(UINT16 address)
 {
 	UINT8 ret = 0;
 
+	if (address >= 0xb000 && address <= 0xb07f)
+	{
+		return Rom0[address];
+	}
+
 	switch (address)
 	{
 		case 0xb500:
@@ -734,7 +806,7 @@ UINT8 __fastcall jack_cpu0_read(UINT16 address)
 		case 0xb504:
 		{
 			for (INT32 i = 0; i < 8; i++) ret |= DrvJoy3[i] << i;
-			if (joinem || loverb) ret |= 0x40;
+			if (joinem || loverb) ret |= 0x40; // boot-freeze disable.
 
 			return ret;
 		}
@@ -767,13 +839,25 @@ void __fastcall jack_cpu0_write(UINT16 address, UINT8 data)
 		return;
 	}
 
+	if (address >= 0xb000 && address <= 0xb07f)
+	{
+		Rom0[address] = data;
+		return;
+	}
+
+	if (address >= 0xb080 && address <= 0xb0ff)
+	{
+		joinem_scroll_w[(address - 0xb080) >> 2] = data;
+		return;
+	}
+
 	switch (address)
 	{
 		case 0xb400:
 			soundlatch = data;
 			ZetClose();
 			ZetOpen(1);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 			ZetClose();
 			ZetOpen(0);
 		break;
@@ -785,6 +869,12 @@ void __fastcall jack_cpu0_write(UINT16 address, UINT8 data)
 		case 0xb700:
 			flip_screen = data >> 7;
 			joinem_snd_bit = data & 1;
+			joinem_palette_bank = (data & 0x18) << 1;
+			joinem_nmi_enable = data & 0x20;
+
+			//from MAME: palette_bank = data & (m_palette->entries() - 1) >> 3 & 0x18;
+			//Why do we do it differently? :/  - dink
+			//bprintf(0, _T("pbank[%X] data[%X],"), joinem_palette_bank, data);
 		break;
 	}
 }
@@ -827,17 +917,22 @@ static INT32 DrvDoReset()
 
 	if (loverb || joinem) {
 		memset (Rom0 + 0x8000, 0, 0x1000);
+		memset (Rom0 + 0x9000, 0, 0x07ff);
 	} else {
 		memset ((UINT8*)Palette, 0, 0x400);
 		memset (Rom0 + 0x4000, 0, 0x1000);
 	}
 
 	memset (Rom0 + 0xb000, 0, 0x1000);
-	memset (Rom1 + 0x4000, 0, 0x0400);
-	memset ((UINT8*)remap_address, 0, 0x40); 
+	if (!unclepoo)
+		memset (Rom1 + 0x4000, 0, 0x0400);
+	memset ((UINT8*)remap_address, 0, 0x40);
 
 	question_address = question_rom = 0;
 	joinem_snd_bit = 0;
+	joinem_nmi_enable = 0;
+	joinem_palette_bank = 0;
+	memset(&joinem_scroll_w, 0, sizeof(joinem_scroll_w));
 	soundlatch = 0;
 
 	for (INT32 i = 0; i < 2; i++) {
@@ -898,7 +993,7 @@ static INT32 GetRoms()
 		if ((ri.nType & 7) == 3) {
 			if (BurnLoadRom(Loadg, i, 1)) return 1;
 			Loadg += ri.nLen;
-			if (joinem) Loadg += 0x1000;
+			if (joinem && !unclepoo) Loadg += 0x1000;
 			gCount++;
 
 			continue;
@@ -981,37 +1076,28 @@ static INT32 DrvInit()
 
 	if (joinem || loverb)
 	{
-		ZetMapArea(0x0000, 0x8fff, 0, Rom0 + 0x0000);
-		ZetMapArea(0x0000, 0x8fff, 2, Rom0 + 0x0000);
+		ZetMapMemory(Rom0 + 0x0000,	0x0000, 0x7fff, MAP_ROM);
+		ZetMapMemory(Rom0 + 0x8000,	0x8000, 0x8fff, MAP_RAM);
+		ZetMapMemory(Rom0 + 0x9000,	0x9000, 0x97ff, MAP_RAM);
 
-		ZetMapArea(0x8000, 0x8fff, 1, Rom0 + 0x8000);
-
-		ZetMapArea(0xb500, 0xb5ff, 0, Rom0 + 0xb500); // controls hack
+		if (!unclepoo)
+			ZetMapArea(0xb500, 0xb5ff, 0, Rom0 + 0xb500); // controls hack
 	} else {
-		ZetMapArea(0x0000, 0x3fff, 0, Rom0 + 0x0000);
-		ZetMapArea(0x0000, 0x3fff, 2, Rom0 + 0x0000);
-
-		ZetMapArea(0x4000, 0x5fff, 0, Rom0 + 0x4000);
-		ZetMapArea(0x4000, 0x5fff, 1, Rom0 + 0x4000);
-		ZetMapArea(0x4000, 0x5fff, 2, Rom0 + 0x4000);
+		ZetMapMemory(Rom0 + 0x0000,	0x0000, 0x3fff, MAP_ROM);
+		ZetMapMemory(Rom0 + 0x4000,	0x4000, 0x5fff, MAP_RAM);
 	}
 
-	ZetMapArea(0xb000, 0xb0ff, 0, Rom0 + 0xb000);
-	ZetMapArea(0xb000, 0xb0ff, 1, Rom0 + 0xb000);
+	//ZetMapArea(0xb000, 0xb07f, 0, Rom0 + 0xb000); // move to cpu0_read/write
+	//ZetMapArea(0xb000, 0xb07f, 1, Rom0 + 0xb000);
 
-	ZetMapArea(0xb800, 0xbbff, 0, Rom0 + 0xb800);
-	ZetMapArea(0xb800, 0xbbff, 1, Rom0 + 0xb800);	
-
-	ZetMapArea(0xbc00, 0xbfff, 0, Rom0 + 0xbc00);
-	ZetMapArea(0xbc00, 0xbfff, 1, Rom0 + 0xbc00);
+	ZetMapMemory(Rom0 + 0xb800,	0xb800, 0xbbff, MAP_RAM);
+	ZetMapMemory(Rom0 + 0xbc00,	0xbc00, 0xbfff, MAP_RAM);
 
 	if (suprtriv)
 	{
-		ZetMapArea(0xd000, 0xffff, 0, Rom0 + 0xc000);
-		ZetMapArea(0xd000, 0xffff, 2, Rom0 + 0xc000);
-	} else {
-		ZetMapArea(0xc000, 0xffff, 0, Rom0 + 0xc000);
-		ZetMapArea(0xc000, 0xffff, 2, Rom0 + 0xc000);
+		ZetMapMemory(Rom0 + 0xc000,	0xd000, 0xffff, MAP_RAM); // + 0xc000, really?
+	} else if (!unclepoo) {
+		ZetMapMemory(Rom0 + 0xc000,	0xc000, 0xffff, MAP_ROM);
 	}
 
 	ZetClose();
@@ -1033,7 +1119,7 @@ static INT32 DrvInit()
 
 	AY8910Init(0, 1500000, nBurnSoundRate, &soundlatch_r, &timer_r, NULL, NULL);
 	AY8910SetAllRoutes(0, 1.00, BURN_SND_ROUTE_BOTH);
-	if (loverb) {
+	if (loverb || joinem || zzyzzyxx) {
 		AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	}
 
@@ -1062,6 +1148,10 @@ static INT32 DrvExit()
 	joinem = 0;
 	loverb = 0;
 	suprtriv = 0;
+	unclepoo = 0;
+	zzyzzyxx = 0;
+
+	memset(joinem_scroll_w, 0, sizeof(joinem_scroll_w));
 
 	return 0;
 }
@@ -1081,16 +1171,19 @@ static INT32 DrvDraw()
 	UINT8 *sram = Rom0 + 0xb000; // sprite ram
 	UINT8 *vram = Rom0 + 0xb800; // video ram
 	UINT8 *cram = Rom0 + 0xbc00; // color ram
-	INT32 offs, sx, sy, num, color, flipx, flipy;
+	INT32 offs, sx, sy, num, color, flipx, flipy; // Tiles
 
 	for (offs = 0; offs < 0x400; offs++)
 	{
 		sx = (offs & 0x1f) << 3;
 		sy = (offs >> 2) & 0xf8;
+		sx -= joinem_scroll_w[sy >> 3];
+		if (sx < -15) sx += 256;
+		if (sy < -15) sy += 256;
 
 		if (joinem || loverb) {
 			num = vram[offs] + ((cram[offs] & 0x03) << 8);
-			color = (cram[offs] & 0x38) >> 2;
+			color = (cram[offs] & 0x38) >> 2 | joinem_palette_bank;
 		} else {
 			num = vram[offs] + ((cram[offs] & 0x18) << 5);
 			color = (cram[offs] & 0x07);
@@ -1104,14 +1197,16 @@ static INT32 DrvDraw()
 		}
 	}
 
-	for (offs = 0; offs < 0x80; offs += 4)
+	for (offs = 0; offs < 0x80; offs += 4) // Sprites
 	{
 		sx = 248 - sram[offs];
+		if (sx < -15) sx += 256;
+		if (sy < -15) sy += 256;
 		sy = sram[offs + 1];
 
 		if (joinem || loverb) {
-			num   = sram[offs + 2] + ((sram[offs + 3] & 0x01) << 8);
-			color = (sram[offs + 3] & 0x38) >> 2;
+			num   = sram[offs + 2] + ((sram[offs + 3] & 0x03) << 8);
+			color = (sram[offs + 3] & 0x38) >> 2 | joinem_palette_bank;
 		} else {
 			num   = sram[offs + 2] + ((sram[offs + 3] & 0x08) << 5);
 			color = (sram[offs + 3] & 0x07);
@@ -1155,7 +1250,7 @@ static INT32 DrvFrame()
 		DrvDoReset();
 	}
 
-	if (joinem || loverb) {
+	if ((joinem || loverb) && !unclepoo) { // this causes Unclepoo to not boot
 		for (INT32 i = 0; i < 6; i++)
 			Rom0[0xb500 + i] = jack_cpu0_read(0xb500 + i);
 	}
@@ -1164,7 +1259,7 @@ static INT32 DrvFrame()
 	INT32 nSoundBufferPos = 0;
 
 	nCyclesTotal[0] = 3000000 / 60;
-	nCyclesTotal[1] = 1500000 / 60;
+	nCyclesTotal[1] = 3000000 / 60;
 	nCyclesDone[0] = nCyclesDone[1] = 0;
 	
 	ZetNewFrame();
@@ -1179,21 +1274,23 @@ static INT32 DrvFrame()
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
 
-		if (joinem)
-			if (i == (nInterleave / 3) || i == ((nInterleave / 3) * 2))
-				ZetRaiseIrq(0);
+		//if (joinem)
+			//if (i == (nInterleave / 3) || i == ((nInterleave / 3) * 2))
+		if (joinem && (i % 249) == 0)
+			ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO); // game speed (joinem, uncle poo)
 
-		if (tri_fix && i == (nInterleave / 2)) ZetRaiseIrq(0);
+		if (tri_fix && i == (nInterleave / 2)) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
-		if (i == (nInterleave - 1))
+		if (i == (nInterleave - 1)) // vblank
 		{
-			if (joinem) {					// joinem
-				if (!DrvJoy3[7]) ZetNmi();
+			if (joinem) {					// joinem, uncle poo
+				if (joinem_nmi_enable)
+					ZetNmi();
 			} else if (loverb) {				// loverboy
 				ZetNmi();
 
 			} else {					// other
-				ZetRaiseIrq(0);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 			}
 		}
 
@@ -1250,17 +1347,18 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		memset(&ba, 0, sizeof(ba));
 		if (joinem || loverb) {
 			ba.Data	  = Rom0 + 0x8000;
+			ba.nLen	  = 0xbfff - 0x8000;
 		} else {
 			ba.Data	  = Rom0 + 0x4000;
+			ba.nLen	  = 0xbfff - 0x4000;
 		}
-		ba.nLen	  = 0x01000;
 		ba.szName = "Main Ram";
 		BurnAcb(&ba);
-	
+
 		memset(&ba, 0, sizeof(ba));
-		ba.Data	  = Rom0 + 0xb000;
-		ba.nLen	  = 0x01000;
-		ba.szName = "Video Ram";
+		ba.Data	  = Rom1 + 0x4000;
+		ba.nLen	  = 0x003ff;
+		ba.szName = "Soundcpu Ram";
 		BurnAcb(&ba);
 
 		memset(&ba, 0, sizeof(ba));
@@ -1283,6 +1381,9 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		SCAN_VAR(question_rom);
 		SCAN_VAR(soundlatch);
 		SCAN_VAR(joinem_snd_bit);
+		SCAN_VAR(joinem_palette_bank);
+		SCAN_VAR(joinem_nmi_enable);
+		SCAN_VAR(joinem_scroll_w);
 	}
 
 	return 0;
@@ -1314,7 +1415,7 @@ STD_ROM_FN(jack)
 
 static INT32 jackInit()
 {
-	timer_rate = 128;
+	timer_rate = 256;
 
 	return DrvInit();
 }
@@ -1490,7 +1591,8 @@ STD_ROM_FN(zzyzzyxx)
 
 static INT32 zzyzzyxxInit()
 {
-	timer_rate = 16;
+	timer_rate = 32;
+	zzyzzyxx = 1;
 
 	return DrvInit();
 }
@@ -1760,7 +1862,7 @@ static void joinem_palette_init()
 static INT32 joinemInit()
 {
 	joinem = 1;
-	timer_rate = 16;
+	timer_rate = 32;
 
 	INT32 nRet = DrvInit();
 
@@ -1776,9 +1878,52 @@ struct BurnDriver BurnDrvjoinem = {
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
 	NULL, joinemRomInfo, joinemRomName, NULL, NULL, JoinemInputInfo, JoinemDIPInfo,
 	joinemInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x100,
-	224, 240, 3, 4
+	224, 256, 3, 4
 };
 
+static INT32 unclepooInit()
+{
+	joinem = 1;
+	unclepoo = 1;
+	timer_rate = 32;
+
+	INT32 nRet = DrvInit();
+
+	joinem_palette_init();
+
+	return nRet;
+}
+
+// Uncle Poo
+
+static struct BurnRomInfo unclepooRomDesc[] = {
+	{ "01.f17",		0x2000, 0x92fb238c, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "02.f14",		0x2000, 0xb99214ef, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "03.f11",		0x2000, 0xa136af97, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "04.f09",		0x2000, 0xc4bcd414, 1 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "08.c15",		0x1000, 0xfd84106b, 2 | BRF_PRG | BRF_ESS }, //  4 audiocpu
+
+	{ "07.h04",		0x2000, 0xe2f73e99, 3 | BRF_GRA }, //  5 gfx1
+	{ "06.j04",		0x2000, 0x94b5f676, 3 | BRF_GRA }, //  6
+	{ "05.k04",		0x2000, 0x64026934, 3 | BRF_GRA }, //  7
+
+	{ "diatec_l.bin",	0x0100, 0xb04d466a, 4 | BRF_GRA }, //  8 proms
+	{ "diatec_h.bin",	0x0100, 0x938601b1, 4 | BRF_GRA }, //  9
+};
+
+STD_ROM_PICK(unclepoo)
+STD_ROM_FN(unclepoo)
+
+struct BurnDriver BurnDrvUnclepoo = {
+	"unclepoo", NULL, NULL, NULL, "1983",
+	"Uncle Poo\0", NULL, "Diatec", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
+	NULL, unclepooRomInfo, unclepooRomName, NULL, NULL, UnclepooInputInfo, UnclepooDIPInfo,
+	unclepooInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x100,
+	224, 256, 3, 4
+};
 
 // Lover Boy
 

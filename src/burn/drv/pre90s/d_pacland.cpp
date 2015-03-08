@@ -142,7 +142,7 @@ static void bankswitch(INT32 nBank)
 
 	nBank = (nBank & 0x07) * 0x2000;
 
-	M6809MapMemory(DrvMainROM + 0x10000 + nBank, 0x4000, 0x5fff, M6809_ROM);
+	M6809MapMemory(DrvMainROM + 0x10000 + nBank, 0x4000, 0x5fff, MAP_ROM);
 }
 
 static void pacland_main_write(UINT16 address, UINT8 data)
@@ -155,7 +155,7 @@ static void pacland_main_write(UINT16 address, UINT8 data)
 	if ((address & 0xf000) == 0x7000) {
 		INT32 bit = ~address & (1 << 11);
 		interrupt_enable[0] = bit ? 1 : 0;
-		if (!bit) M6809SetIRQLine(0, M6809_IRQSTATUS_NONE);
+		if (!bit) M6809SetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return;
 	}
 
@@ -235,7 +235,7 @@ static void pacland_mcu_write(UINT16 address, UINT8 data)
 	if ((address & 0xc000) == 0x4000) {
 		INT32 bit = (~address >> 13) & 1;
 		interrupt_enable[1] = bit;
-		if (!bit) HD63701SetIRQLine(0, HD63701_IRQSTATUS_NONE);
+		if (!bit) HD63701SetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return;
 	}
 }
@@ -492,19 +492,19 @@ static INT32 DrvInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvVidRAM0,		0x0000, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM1,		0x1000, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		0x2000, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvMainROM + 0x8000,	0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvVidRAM0,		0x0000, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM1,		0x1000, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		0x2000, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvMainROM + 0x8000,	0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(pacland_main_write);
 	M6809SetReadHandler(pacland_main_read);
 	M6809Close();
 
 	HD63701Init(1);
 	// Open
-	HD63701MapMemory(DrvMCUROM + 0x8000,	0x8000, 0xbfff, HD63701_ROM);
-	HD63701MapMemory(DrvMCURAM,		0xc000, 0xc7ff, HD63701_RAM);
-	HD63701MapMemory(DrvMCUROM + 0xf000,	0xf000, 0xffff, HD63701_ROM);
+	HD63701MapMemory(DrvMCUROM + 0x8000,	0x8000, 0xbfff, MAP_ROM);
+	HD63701MapMemory(DrvMCURAM,		0xc000, 0xc7ff, MAP_RAM);
+	HD63701MapMemory(DrvMCUROM + 0xf000,	0xf000, 0xffff, MAP_ROM);
 	HD63701SetWritePortHandler(pacland_mcu_write_port);
 	HD63701SetReadPortHandler(pacland_mcu_read_port);
 	HD63701SetWriteHandler(pacland_mcu_write);
@@ -593,7 +593,7 @@ static void draw_fg_layer(INT32 priority)
 		INT32 sx = (offs & 0x3f) * 8;
 		INT32 sy = (offs / 0x40) * 8;
 
-		if (sy >= 40 && sy < 232) sx -= scrollx;
+		sx -= (sy >= 40 && sy < 232) ? scrollx : 24;
 		if (sx < -7) sx += 512;
 		if (sx >= nScreenWidth) continue;
 
@@ -773,14 +773,14 @@ static INT32 DrvFrame()
 		INT32 nSegment = nCyclesTotal[0] / nInterleave;
 
 		nCyclesDone[0] += M6809Run(nSegment);
-		if (i == (nInterleave - 1) && interrupt_enable[0]) M6809SetIRQLine(0, M6809_IRQSTATUS_ACK);
+		if (i == (nInterleave - 1) && interrupt_enable[0]) M6809SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		nSegment = nCyclesTotal[1] / nInterleave;
 
 		if (mcu_reset) {
 			nCyclesDone[1] += nSegment;
 		} else {
 			nCyclesDone[1] += HD63701Run(nSegment);
-			if (i == (nInterleave - 1) && interrupt_enable[1]) HD63701SetIRQLine(0, HD63701_IRQSTATUS_ACK);
+			if (i == (nInterleave - 1) && interrupt_enable[1]) HD63701SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		}
 		
 		if (pBurnSoundOut) {

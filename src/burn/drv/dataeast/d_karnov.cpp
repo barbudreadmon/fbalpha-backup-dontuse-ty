@@ -343,7 +343,7 @@ static void karnov_i8751_w(INT32 data)
 	if (data==0x401) i8751_return=0x4138; /* ^Whistling wind */
 	if (data==0x408) i8751_return=0x4276; /* ^Heavy Gates */
 	
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO); /* Signal main cpu task is complete */
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO); /* Signal main cpu task is complete */
 	i8751_needs_ack=1;
 }
 
@@ -394,7 +394,7 @@ static void wndrplnt_i8751_w(INT32 data)
 	if (data==0x501) i8751_return=0x6bf8;
 	if (data==0x500) i8751_return=0x4e75;
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 	i8751_needs_ack=1;
 }
 
@@ -508,7 +508,7 @@ static void chelnov_i8751_w(INT32 data)
 		}
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 	i8751_needs_ack=1;
 }
 
@@ -517,14 +517,14 @@ static void karnov_control_w(INT32 offset, INT32 data)
 	switch (offset<<1)
 	{
 		case 0:
-			SekSetIRQLine(6, SEK_IRQSTATUS_NONE);
+			SekSetIRQLine(6, CPU_IRQSTATUS_NONE);
 
 			if (i8751_needs_ack)
 			{
 				if (i8751_coin_pending)
 				{
 					i8751_return=i8751_coin_pending;
-					SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+					SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 					i8751_coin_pending=0;
 				}
 				else if (i8751_command_queue)
@@ -542,7 +542,7 @@ static void karnov_control_w(INT32 offset, INT32 data)
 
 		case 2:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);			
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);			
 			break;
 
 		case 4:
@@ -572,7 +572,7 @@ static void karnov_control_w(INT32 offset, INT32 data)
 			break;
 
 		case 0xe:
-			SekSetIRQLine(7, SEK_IRQSTATUS_NONE);
+			SekSetIRQLine(7, CPU_IRQSTATUS_NONE);
 			break;
 	}
 }
@@ -679,9 +679,9 @@ UINT8 karnov_sound_read(UINT16 address)
 static void DrvYM3526FMIRQHandler(INT32, INT32 nStatus)
 {	
 	if (nStatus) {
-		M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_ACK);
+		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_ACK);
 	} else {
-		M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_NONE);
+		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -707,17 +707,16 @@ static INT32 DrvDoReset()
 	memset (AllRam, 0, RamEnd - AllRam);
 
 	SekOpen(0);
-	SekReset();
-	SekClose();
-
 	M6502Open(0);
+
+	SekReset();
+	M6502Reset();
+
 	BurnYM3526Reset();
 	BurnYM2203Reset();
-	M6502Close();
 
-	M6502Open(0);
-	M6502Reset();
 	M6502Close();
+	SekClose();
 
 	i8751_return = 0;
 	i8751_needs_ack = 0;
@@ -883,12 +882,12 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x05ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x060000, 0x063fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x080000, 0x080fff, SM_RAM);
-	SekMapMemory(DrvVidRAM,		0x0a0000, 0x0a07ff, SM_RAM);
-	SekMapMemory(DrvVidRAM,		0x0a0800, 0x0a0fff, SM_RAM);
-	SekMapMemory(DrvPfRAM,		0x0a1000, 0x0a17ff, SM_WRITE);
+	SekMapMemory(Drv68KROM,		0x000000, 0x05ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x060000, 0x063fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x080000, 0x080fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM,		0x0a0000, 0x0a07ff, MAP_RAM);
+	SekMapMemory(DrvVidRAM,		0x0a0800, 0x0a0fff, MAP_RAM);
+	SekMapMemory(DrvPfRAM,		0x0a1000, 0x0a17ff, MAP_WRITE);
 	SekSetWriteWordHandler(0,	karnov_main_write_word);
 	SekSetWriteByteHandler(0,	karnov_main_write_byte);
 	SekSetReadWordHandler(0,	karnov_main_read_word);
@@ -897,8 +896,8 @@ static INT32 DrvInit()
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(Drv6502RAM,		0x0000, 0x05ff, M6502_RAM);
-	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
+	M6502MapMemory(Drv6502RAM,		0x0000, 0x05ff, MAP_RAM);
+	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, MAP_ROM);
 	M6502SetReadHandler(karnov_sound_read);
 	M6502SetWriteHandler(karnov_sound_write);
 	M6502Close();
@@ -956,7 +955,9 @@ static void draw_txt_layer(INT32 swap)
 			sx ^= 0xf8;
 		}
 
-		sy -= 8;
+		if (microcontroller_id == WNDRPLNT) {
+			sy -= 8;
+		}
 
 		INT32 code  = BURN_ENDIAN_SWAP_INT16(vram[offs]) & 0x0fff;
 		INT32 color = BURN_ENDIAN_SWAP_INT16(vram[offs]) >> 14;
@@ -1061,7 +1062,7 @@ static void draw_sprites()
 
 		sprite_routine(sprite, x, y, color, flipy, flipx);
 
-    		if (extra) sprite_routine(sprite2, x, y + 16, color, flipy, flipx);
+		if (extra) sprite_routine(sprite2, x, y + 16, color, flipy, flipx);
 	}
 }
 
@@ -1092,7 +1093,7 @@ static INT32 DrvDraw()
 
 static void DrvInterrupt()
 {
-	static INT32 latch;
+	static INT32 latch = 0;
 
 	if (DrvInput[2] == coin_mask) latch=1;
 	if (DrvInput[2] != coin_mask && latch)
@@ -1104,13 +1105,14 @@ static void DrvInterrupt()
 		else
 		{
 			i8751_return = DrvInput[2] | 0x8000;
-			SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
+			SekRun(100);
 			i8751_needs_ack=1;
 		}
 		latch=0;
 	}
 
-	SekSetIRQLine(7, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(7, CPU_IRQSTATUS_AUTO);
 }
 
 static INT32 DrvFrame()
@@ -1132,7 +1134,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	INT32 nInterleave = 32;
+	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 10000000 / 60, 1500000 / 60 };
 
 	M6502Open(0);
@@ -1142,25 +1144,23 @@ static INT32 DrvFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		if (i == 1) vblank = 0x80;
-		if (i == 31) {
-			vblank = 0;
+		if (i == 240) {
+			vblank = 0x00;
 			DrvInterrupt();
 		}
 
-		BurnTimerUpdate(i * (nCyclesTotal[0] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[0] / nInterleave));
 		
-		BurnTimerUpdateYM3526(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[1] / nInterleave));
 	}
 
 	BurnTimerEndFrame(nCyclesTotal[0]);
 	BurnTimerEndFrameYM3526(nCyclesTotal[1]);
 	
 	if (pBurnSoundOut) {
-		BurnYM3526Update(pBurnSoundOut, nBurnSoundLen);	
+		BurnYM3526Update(pBurnSoundOut, nBurnSoundLen);
 		BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
 	}
-
 
 	SekClose();
 	M6502Close();
@@ -1192,8 +1192,16 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekScan(nAction);
 		M6502Scan(nAction);
 
+		SekOpen(0);
+		M6502Open(0);
 		BurnYM3526Scan(nAction, pnMin);
 		BurnYM2203Scan(nAction, pnMin);
+		M6502Close();
+		SekClose();
+
+		if (nAction & ACB_WRITE) {
+			BurnYM2203Reset(); // Prevent hung sounds on savestate load (weird!) - dink
+		}
 
 		SCAN_VAR(i8751_return);
 		SCAN_VAR(i8751_needs_ack);
@@ -1258,7 +1266,7 @@ struct BurnDriver BurnDrvKarnov = {
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_DATAEAST, GBF_PLATFORM | GBF_HORSHOOT, 0,
 	NULL, karnovRomInfo, karnovRomName, NULL, NULL, KarnovInputInfo, KarnovDIPInfo,
 	KarnovInit, DrvExit, DrvFrame, DrvDraw, DrvScan, 
-	&DrvRecalc, 0x300, 256, 240, 4, 3
+	&DrvRecalc, 0x300, 256, 248, 4, 3
 };
 
 
@@ -1306,7 +1314,7 @@ struct BurnDriver BurnDrvKarnova = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_PLATFORM | GBF_HORSHOOT, 0,
 	NULL, karnovaRomInfo, karnovaRomName, NULL, NULL, KarnovInputInfo, KarnovDIPInfo,
 	KarnovInit, DrvExit, DrvFrame, DrvDraw, DrvScan, 
-	&DrvRecalc, 0x300, 256, 240, 4, 3
+	&DrvRecalc, 0x300, 256, 248, 4, 3
 };
 
 
@@ -1362,7 +1370,7 @@ struct BurnDriver BurnDrvKarnovj = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_PLATFORM | GBF_HORSHOOT, 0,
 	NULL, karnovjRomInfo, karnovjRomName, NULL, NULL, KarnovInputInfo, KarnovDIPInfo,
 	KarnovjInit, DrvExit, DrvFrame, DrvDraw, DrvScan, 
-	&DrvRecalc, 0x300, 256, 240, 4, 3
+	&DrvRecalc, 0x300, 256, 248, 4, 3
 };
 
 
@@ -1418,7 +1426,7 @@ struct BurnDriver BurnDrvWndrplnt = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_PREFIX_DATAEAST, GBF_VERSHOOT, 0,
 	NULL, wndrplntRomInfo, wndrplntRomName, NULL, NULL, KarnovInputInfo, WndrplntDIPInfo,
 	WndrplntInit, DrvExit, DrvFrame, DrvDraw, DrvScan, 
-	&DrvRecalc, 0x300, 240, 256, 3, 4
+	&DrvRecalc, 0x300, 248, 256, 3, 4
 };
 
 
@@ -1477,7 +1485,7 @@ struct BurnDriver BurnDrvChelnov = {
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_DATAEAST, GBF_PLATFORM | GBF_HORSHOOT, 0,
 	NULL, chelnovRomInfo, chelnovRomName, NULL, NULL, ChelnovInputInfo, ChelnovDIPInfo,
 	ChelnovInit, DrvExit, DrvFrame, DrvDraw, DrvScan, 
-	&DrvRecalc, 0x300, 256, 240, 4, 3
+	&DrvRecalc, 0x300, 256, 248, 4, 3
 };
 
 
@@ -1536,7 +1544,7 @@ struct BurnDriver BurnDrvChelnovu = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_PLATFORM | GBF_HORSHOOT, 0,
 	NULL, chelnovuRomInfo, chelnovuRomName, NULL, NULL, ChelnovInputInfo, ChelnovuDIPInfo,
 	ChelnovuInit, DrvExit, DrvFrame, DrvDraw, DrvScan, 
-	&DrvRecalc, 0x300, 256, 240, 4, 3
+	&DrvRecalc, 0x300, 256, 248, 4, 3
 };
 
 
@@ -1595,5 +1603,5 @@ struct BurnDriver BurnDrvChelnovj = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_PLATFORM | GBF_HORSHOOT, 0,
 	NULL, chelnovjRomInfo, chelnovjRomName, NULL, NULL, ChelnovInputInfo, ChelnovuDIPInfo,
 	ChelnovjInit, DrvExit, DrvFrame, DrvDraw, DrvScan, 
-	&DrvRecalc, 0x300, 256, 240, 4, 3
+	&DrvRecalc, 0x300, 256, 248, 4, 3
 };

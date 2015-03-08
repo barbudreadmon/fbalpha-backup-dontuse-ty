@@ -671,8 +671,8 @@ static INT32 CommonInit(INT32 (*pInitCallback)(), INT32 punchout, INT32 reverse_
 
 	M6502Init(0, TYPE_N2A03);
 	M6502Open(0);
-	M6502MapMemory(DrvSndRAM, 0x0000, 0x07ff, M6502_RAM);
-	M6502MapMemory(DrvSndROM, 0xe000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvSndRAM, 0x0000, 0x07ff, MAP_RAM);
+	M6502MapMemory(DrvSndROM, 0xe000, 0xffff, MAP_ROM);
 	M6502SetWriteHandler(sound_write);
 	M6502SetReadHandler(sound_read);
 	M6502Close();
@@ -1083,7 +1083,7 @@ static INT32 DrvFrame()
 
 	if (*interrupt_enable) ZetNmi();
 
-	M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+	M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 
 	nesapuUpdate(0, pBurnSoundOut, nBurnSoundLen);
 	vlm5030Update(0, pBurnSoundOut, nBurnSoundLen);

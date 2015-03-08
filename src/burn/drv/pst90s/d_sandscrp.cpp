@@ -10,8 +10,6 @@
 #include "kaneko_tmap.h"
 #include "pandora.h"
 
-//#define SOUND_BYPASS_HACK
-
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
 static UINT8 *AllRam;
@@ -58,10 +56,6 @@ static UINT8 DrvJoy3[16];
 static UINT8 DrvDips[2];
 static UINT16 DrvInputs[3];
 static UINT8 DrvReset;
-
-#ifdef SOUND_BYPASS_HACK
-static INT32 dip_counter_hack;
-#endif
 
 static struct BurnInputInfo SandscrpInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 coin"	},
@@ -245,7 +239,7 @@ static void update_irq_state()
 {
 	INT32 irq = (vblank_irq || sprite_irq || unknown_irq) ? 1 : 0;
 
-	SekSetIRQLine(1, irq ? SEK_IRQSTATUS_ACK : SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(1, irq ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static void __fastcall sandscrp_main_write_word(UINT32 address, UINT16 data)
@@ -311,17 +305,9 @@ static UINT16 __fastcall sandscrp_main_read_word(UINT32 address)
 
 		case 0xe00000:
 			latch2_full = 0;
-#ifdef SOUND_BYPASS_HACK // hack to bypass sound cpu failure
-			dip_counter_hack++;
-			if (dip_counter_hack < 3) return DrvDips[0];
-			if (dip_counter_hack < 5) return DrvDips[1];
-#endif
 			return soundlatch2;
 
 		case 0xe40000:
-#ifdef SOUND_BYPASS_HACK // hack to bypass sound cpu failure
-			return (latch1_full ? 0x80 : 0) | 0x40;
-#endif
 			return (latch1_full ? 0x80 : 0) | (latch2_full ? 0x40 : 0);
 
 		case 0xec0000:
@@ -377,7 +363,7 @@ static void bankswitch(INT32 bank)
 {
 	nDrvZ80Bank = bank & 7;
 
-	ZetMapMemory(DrvZ80ROM + ((bank & 0x07) * 0x4000), 0x8000, 0xbfff, ZET_ROM);
+	ZetMapMemory(DrvZ80ROM + ((bank & 0x07) * 0x4000), 0x8000, 0xbfff, MAP_ROM);
 }
 
 static void __fastcall sandscrp_sound_write_port(UINT16 port, UINT8 data)
@@ -440,7 +426,7 @@ static UINT8 DrvYM2203PortB(UINT32)
 
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
-	ZetSetIRQLine(0, (nStatus) ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
@@ -480,9 +466,6 @@ static INT32 DrvDoReset(INT32 full_reset)
 	latch2_full = 0;
 	watchdog = 0;
 
-#ifdef SOUND_BYPASS_HACK
-	dip_counter_hack = 0;
-#endif
 	return 0;
 }
 
@@ -601,39 +584,32 @@ static INT32 DrvInit(INT32 type)
 		DrvFillTransTable();
 	}
 
-#if 0
-	*((UINT16*)(Drv68KROM + 0xc5a)) = 0x4e71; // skip sound check!
-	*((UINT16*)(Drv68KROM + 0xc8e)) = 0x4e71; // skip sound check!
-	*((UINT16*)(Drv68KROM + 0xcc4)) = 0x4e71; // skip sound check!
-	*((UINT16*)(Drv68KROM + 0xcfe)) = 0x4e71; // skip sound check!
-#endif
-
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvVidRegs,	0x300000, 0x30000f|0x3ff, SM_RAM);
-	SekMapMemory(DrvVideoRAM,	0x400000, 0x403fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x500000, 0x501fff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x600000, 0x600fff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x700000, 0x70ffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvVidRegs,	0x300000, 0x30000f|0x3ff, MAP_RAM);
+	SekMapMemory(DrvVideoRAM,	0x400000, 0x403fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x500000, 0x501fff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x600000, 0x600fff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x700000, 0x70ffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	sandscrp_main_write_word);
 	SekSetWriteByteHandler(0,	sandscrp_main_write_byte);
 	SekSetReadWordHandler(0,	sandscrp_main_read_word);
 	SekSetReadByteHandler(0,	sandscrp_main_read_byte);
 
-	SekMapHandler(1,		0x500000, 0x501fff, SM_WRITE);
+	SekMapHandler(1,		0x500000, 0x501fff, MAP_WRITE);
 	SekSetWriteWordHandler(1,	sandscrp_pandora_write_word);
 	SekSetWriteByteHandler(1,	sandscrp_pandora_write_byte);
 
-	SekMapHandler(2,		0x600000, 0x600fff, SM_WRITE);
+	SekMapHandler(2,		0x600000, 0x600fff, MAP_WRITE);
 	SekSetWriteWordHandler(2,	sandscrp_palette_write_word);
 	SekSetWriteByteHandler(2,	sandscrp_palette_write_byte);
 	SekClose();
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,	0x0000, 0xbfff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,	0xc000, 0xdfff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,	0x0000, 0xbfff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,	0xc000, 0xdfff, MAP_RAM);
 	ZetSetOutHandler(sandscrp_sound_write_port);
 	ZetSetInHandler(sandscrp_sound_read_port);
 	ZetClose();

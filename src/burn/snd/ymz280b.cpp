@@ -8,6 +8,7 @@ static INT32 nYMZ280BSampleRate;
 bool bESPRaDeMixerKludge = false;
 
 UINT8* YMZ280BROM;
+UINT32 YMZ280BROMSIZE = 0xffffff; // 16meg max addressable rom size
 void (*pYMZ280BRAMWrite)(INT32 offset, INT32 nValue) = NULL;
 INT32 (*pYMZ280BRAMRead)(INT32 offset) = NULL;
 
@@ -166,6 +167,13 @@ INT32 YMZ280BInit(INT32 nClock, void (*IRQCallback)(INT32))
 	return 0;
 }
 
+INT32 YMZ280BInit(INT32 nClock, void (*IRQCallback)(INT32), INT32 rom_len)
+{
+	YMZ280BROMSIZE = rom_len;
+
+	return YMZ280BInit(nClock, IRQCallback);
+}
+
 void YMZ280BSetRoute(INT32 nIndex, double nVolume, INT32 nRouteDir)
 {
 #if defined FBA_DEBUG
@@ -192,6 +200,7 @@ void YMZ280BExit()
 	pYMZ280BRAMWrite = NULL;
 	pYMZ280BRAMRead = NULL;
 	bESPRaDeMixerKludge = false;
+	YMZ280BROMSIZE = 0xffffff;
 
 	DebugSnd_YMZ280BInitted = 0;
 }
@@ -253,10 +262,22 @@ inline static void RampChannel()
 #endif
 }
 
+UINT8 ymz280b_read_memory(UINT32 offset)
+{
+	if (offset < YMZ280BROMSIZE) {
+		return YMZ280BROM[offset];
+	} else {
+		// Battle Bakraid, rom length 0xC00000 tries to read from 0xFFFF00 twice in level 5 at the first mid-boss.
+		// Possile protection?  Or just a bug?  Hmmm..
+		bprintf(0, _T("ymz280b bad offset: %d!! (max. size: %d)\n"), offset, YMZ280BROMSIZE);
+		return 0;
+	}
+}
+
 inline static void decode_adpcm()
 {
 	// Get next value & compute delta
-	nDelta = YMZ280BROM[channelInfo->nPosition >> 1];
+	nDelta = ymz280b_read_memory(channelInfo->nPosition >> 1);
 	if (channelInfo->nPosition & 1) {
 		nDelta &= 0x0F;
 	} else {
@@ -287,7 +308,7 @@ inline static void decode_adpcm()
 
 inline static void decode_pcm8()
 {
-	nDelta = YMZ280BROM[channelInfo->nPosition >> 1];
+	nDelta = ymz280b_read_memory(channelInfo->nPosition >> 1);
 
 	channelInfo->nSample = (INT8)nDelta * 256;
 	channelInfo->nPosition+=2;
@@ -295,7 +316,7 @@ inline static void decode_pcm8()
 
 inline static void decode_pcm16()
 {
-	nDelta = (INT16)((YMZ280BROM[channelInfo->nPosition / 2 + 1] << 8) + YMZ280BROM[channelInfo->nPosition / 2]);
+	nDelta = (INT16)((ymz280b_read_memory(channelInfo->nPosition / 2 + 1) << 8) + ymz280b_read_memory(channelInfo->nPosition / 2));
 
 	channelInfo->nSample = nDelta;
 	channelInfo->nPosition+=4;
@@ -382,7 +403,7 @@ inline static void RenderADPCMLoop_Linear()
 
 			do {
 				// Check for end of sample
-				if (channelInfo->nPosition == channelInfo->nLoopStop) {
+				if (channelInfo->nPosition >= channelInfo->nLoopStop) {
 					channelInfo->nStep = channelInfo->nLoopStep;
 					channelInfo->nSample = channelInfo->nLoopSample;
 					channelInfo->nPosition = channelInfo->nLoopStart;
@@ -569,7 +590,7 @@ void YMZ280BWriteRegister(UINT8 nValue)
 
 						if (YMZ280BChannelInfo[nWriteChannel].nMode > 1) {
 #ifdef DEBUG
-		//					bprintf(0,_T("Sample Start: %08X - Stop: %08X.\n"),YMZ280BChannelInfo[nWriteChannel].nSampleStart, YMZ280BChannelInfo[nWriteChannel].nSampleStop);
+							//bprintf(0,_T("Sample Start: %08X - Stop: %08X.\n"),YMZ280BChannelInfo[nWriteChannel].nSampleStart, YMZ280BChannelInfo[nWriteChannel].nSampleStop);
 #endif
 						}
 

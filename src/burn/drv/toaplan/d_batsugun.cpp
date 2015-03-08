@@ -504,9 +504,9 @@ static INT32 DrvInit()
 	{
 		SekInit(0, 0x68000);									// Allocate 68000
 		SekOpen(0);
-		SekMapMemory(Rom01,		0x000000, 0x07FFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,		0x100000, 0x10FFFF, SM_RAM);
-		SekMapMemory(RamPal,	0x400000, 0x400FFF, SM_RAM);	// Palette RAM
+		SekMapMemory(Rom01,		0x000000, 0x07FFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,		0x100000, 0x10FFFF, MAP_RAM);
+		SekMapMemory(RamPal,	0x400000, 0x400FFF, MAP_RAM);	// Palette RAM
 		SekSetReadWordHandler(0, batsugunReadWord);
 		SekSetReadByteHandler(0, batsugunReadByte);
 		SekSetWriteWordHandler(0, batsugunWriteWord);
@@ -647,7 +647,7 @@ static INT32 DrvFrame()
 
 #if 0
 			// The VBlank interrupt isn't actually used
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 #endif
 		}
 

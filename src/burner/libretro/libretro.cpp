@@ -6,7 +6,7 @@
 
 #include "cd/cd_interface.h"
 
-#define FBA_VERSION "v0.2.97.34"
+#define FBA_VERSION "v0.2.97.35"
 
 static retro_environment_t environ_cb;
 static retro_log_printf_t log_cb;

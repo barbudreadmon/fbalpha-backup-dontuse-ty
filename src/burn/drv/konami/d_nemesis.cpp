@@ -15,10 +15,6 @@ extern "C" {
 #include "ay8910.h"
 }
 
-/*
-	Need to hook up analog inputs for konamigt, rf2, citybomb, hcrash
-*/
-
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
 static UINT8 *AllRam;
@@ -74,7 +70,6 @@ static UINT8 DrvDips[4];
 static UINT8 DrvReset;
 static UINT16 DrvInputs[4];
 static INT32 DrvAnalogPort0 = 0;
-static INT32 DrvAnalogPort1 = 0;
 
 static INT32 ay8910_enable = 0;
 static INT32 ym2151_enable = 0;
@@ -83,6 +78,7 @@ static INT32 k005289_enable = 0;
 static INT32 k007232_enable = 0;
 static INT32 k051649_enable = 0;
 static INT32 vlm5030_enable = 0;
+static INT32 hcrash_mode = 0;
 
 #define A(a, b, c, d) {a, b, (UINT8*)(c), d}
 
@@ -305,9 +301,6 @@ static struct BurnInputInfo CitybombInputList[] = {
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 2"	},
 	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 fire 3"	},
 
-	A("Accelerator"       , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
-	A("Wheel    "         , BIT_ANALOG_REL, &DrvAnalogPort1 , "mouse y-axis"),
-
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 coin"	},
 	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p2 start"	},
 	{"P2 Up",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 up"		},
@@ -350,7 +343,7 @@ static struct BurnInputInfo HcrashInputList[] = {
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 start"	},
 	{"Accelerator",		BIT_DIGITAL,	DrvJoy4 + 6,	"p1 fire 1"	},
 	{"Brake",		BIT_DIGITAL,	DrvJoy4 + 5,	"p1 fire 2"	},
-	{"Gear Shift",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 3"	},
+	{"Jump",		BIT_DIGITAL,	DrvJoy4 + 4,	"p1 fire 3"	},
 
 	A("Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
 
@@ -997,81 +990,81 @@ STDDIPINFO(Blkpnthr)
 
 static struct BurnDIPInfo CitybombDIPList[]=
 {
-	{0x16, 0xff, 0xff, 0xff, NULL			},
-	{0x17, 0xff, 0xff, 0x53, NULL			},
-	{0x18, 0xff, 0xff, 0x8c, NULL			},
+	{0x14, 0xff, 0xff, 0xff, NULL			},
+	{0x15, 0xff, 0xff, 0x53, NULL			},
+	{0x16, 0xff, 0xff, 0x8c, NULL			},
 
 	{0   , 0xfe, 0   ,   16, "Coin A"		},
-	{0x16, 0x01, 0x0f, 0x02, "4 Coins 1 Credits"	},
-	{0x16, 0x01, 0x0f, 0x05, "3 Coins 1 Credits"	},
-	{0x16, 0x01, 0x0f, 0x08, "2 Coins 1 Credits"	},
-	{0x16, 0x01, 0x0f, 0x04, "3 Coins 2 Credits"	},
-	{0x16, 0x01, 0x0f, 0x01, "4 Coins 3 Credits"	},
-	{0x16, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"	},
-	{0x16, 0x01, 0x0f, 0x03, "3 Coins 4 Credits"	},
-	{0x16, 0x01, 0x0f, 0x07, "2 Coins 3 Credits"	},
-	{0x16, 0x01, 0x0f, 0x0e, "1 Coin  2 Credits"	},
-	{0x16, 0x01, 0x0f, 0x06, "2 Coins 5 Credits"	},
-	{0x16, 0x01, 0x0f, 0x0d, "1 Coin  3 Credits"	},
-	{0x16, 0x01, 0x0f, 0x0c, "1 Coin  4 Credits"	},
-	{0x16, 0x01, 0x0f, 0x0b, "1 Coin  5 Credits"	},
-	{0x16, 0x01, 0x0f, 0x0a, "1 Coin  6 Credits"	},
-	{0x16, 0x01, 0x0f, 0x09, "1 Coin  7 Credits"	},
-	{0x16, 0x01, 0x0f, 0x00, "Free Play"		},
+	{0x14, 0x01, 0x0f, 0x02, "4 Coins 1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x05, "3 Coins 1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x08, "2 Coins 1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x04, "3 Coins 2 Credits"	},
+	{0x14, 0x01, 0x0f, 0x01, "4 Coins 3 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x03, "3 Coins 4 Credits"	},
+	{0x14, 0x01, 0x0f, 0x07, "2 Coins 3 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0e, "1 Coin  2 Credits"	},
+	{0x14, 0x01, 0x0f, 0x06, "2 Coins 5 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0d, "1 Coin  3 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0c, "1 Coin  4 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0b, "1 Coin  5 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0a, "1 Coin  6 Credits"	},
+	{0x14, 0x01, 0x0f, 0x09, "1 Coin  7 Credits"	},
+	{0x14, 0x01, 0x0f, 0x00, "Free Play"		},
 
 	{0   , 0xfe, 0   ,   16, "Coin B"		},
-	{0x16, 0x01, 0xf0, 0x20, "4 Coins 1 Credits"	},
-	{0x16, 0x01, 0xf0, 0x50, "3 Coins 1 Credits"	},
-	{0x16, 0x01, 0xf0, 0x80, "2 Coins 1 Credits"	},
-	{0x16, 0x01, 0xf0, 0x40, "3 Coins 2 Credits"	},
-	{0x16, 0x01, 0xf0, 0x10, "4 Coins 3 Credits"	},
-	{0x16, 0x01, 0xf0, 0xf0, "1 Coin  1 Credits"	},
-	{0x16, 0x01, 0xf0, 0x30, "3 Coins 4 Credits"	},
-	{0x16, 0x01, 0xf0, 0x70, "2 Coins 3 Credits"	},
-	{0x16, 0x01, 0xf0, 0xe0, "1 Coin  2 Credits"	},
-	{0x16, 0x01, 0xf0, 0x60, "2 Coins 5 Credits"	},
-	{0x16, 0x01, 0xf0, 0xd0, "1 Coin  3 Credits"	},
-	{0x16, 0x01, 0xf0, 0xc0, "1 Coin  4 Credits"	},
-	{0x16, 0x01, 0xf0, 0xb0, "1 Coin  5 Credits"	},
-	{0x16, 0x01, 0xf0, 0xa0, "1 Coin  6 Credits"	},
-	{0x16, 0x01, 0xf0, 0x90, "1 Coin  7 Credits"	},
-	{0x16, 0x01, 0xf0, 0x00, "Invalid"		},
+	{0x14, 0x01, 0xf0, 0x20, "4 Coins 1 Credits"	},
+	{0x14, 0x01, 0xf0, 0x50, "3 Coins 1 Credits"	},
+	{0x14, 0x01, 0xf0, 0x80, "2 Coins 1 Credits"	},
+	{0x14, 0x01, 0xf0, 0x40, "3 Coins 2 Credits"	},
+	{0x14, 0x01, 0xf0, 0x10, "4 Coins 3 Credits"	},
+	{0x14, 0x01, 0xf0, 0xf0, "1 Coin  1 Credits"	},
+	{0x14, 0x01, 0xf0, 0x30, "3 Coins 4 Credits"	},
+	{0x14, 0x01, 0xf0, 0x70, "2 Coins 3 Credits"	},
+	{0x14, 0x01, 0xf0, 0xe0, "1 Coin  2 Credits"	},
+	{0x14, 0x01, 0xf0, 0x60, "2 Coins 5 Credits"	},
+	{0x14, 0x01, 0xf0, 0xd0, "1 Coin  3 Credits"	},
+	{0x14, 0x01, 0xf0, 0xc0, "1 Coin  4 Credits"	},
+	{0x14, 0x01, 0xf0, 0xb0, "1 Coin  5 Credits"	},
+	{0x14, 0x01, 0xf0, 0xa0, "1 Coin  6 Credits"	},
+	{0x14, 0x01, 0xf0, 0x90, "1 Coin  7 Credits"	},
+	{0x14, 0x01, 0xf0, 0x00, "Invalid"		},
 
 //	{0   , 0xfe, 0   ,    2, "Cabinet"		},
-//	{0x17, 0x01, 0x04, 0x00, "Upright"		},
-//	{0x17, 0x01, 0x04, 0x04, "Cocktail"		},
+//	{0x15, 0x01, 0x04, 0x00, "Upright"		},
+//	{0x15, 0x01, 0x04, 0x04, "Cocktail"		},
 
 	{0   , 0xfe, 0   ,    0, "Qualify"		},
-	{0x17, 0x01, 0x18, 0x18, "Long"			},
-	{0x17, 0x01, 0x18, 0x10, "Normal"		},
-	{0x17, 0x01, 0x18, 0x08, "Short"		},
-	{0x17, 0x01, 0x18, 0x00, "Very Short"		},
+	{0x15, 0x01, 0x18, 0x18, "Long"			},
+	{0x15, 0x01, 0x18, 0x10, "Normal"		},
+	{0x15, 0x01, 0x18, 0x08, "Short"		},
+	{0x15, 0x01, 0x18, 0x00, "Very Short"		},
 
 	{0   , 0xfe, 0   ,    2, "Difficulty"		},
-	{0x17, 0x01, 0x60, 0x60, "Easy"			},
-	{0x17, 0x01, 0x60, 0x40, "Normal"		},
-	{0x17, 0x01, 0x60, 0x20, "Hard"			},
-	{0x17, 0x01, 0x60, 0x00, "Hardest"		},
+	{0x15, 0x01, 0x60, 0x60, "Easy"			},
+	{0x15, 0x01, 0x60, 0x40, "Normal"		},
+	{0x15, 0x01, 0x60, 0x20, "Hard"			},
+	{0x15, 0x01, 0x60, 0x00, "Hardest"		},
 
 	{0   , 0xfe, 0   ,    4, "Demo Sounds"		},
-	{0x17, 0x01, 0x80, 0x80, "Off"			},
-	{0x17, 0x01, 0x80, 0x00, "On"			},
+	{0x15, 0x01, 0x80, 0x80, "Off"			},
+	{0x15, 0x01, 0x80, 0x00, "On"			},
 
 //	{0   , 0xfe, 0   ,    4, "Flip Screen"		},
-//	{0x18, 0x01, 0x02, 0x00, "Off"			},
-//	{0x18, 0x01, 0x02, 0x02, "On"			},
+//	{0x16, 0x01, 0x02, 0x00, "Off"			},
+//	{0x16, 0x01, 0x02, 0x02, "On"			},
 
 	{0   , 0xfe, 0   ,    2, "Upright Controls"	},
-	{0x18, 0x01, 0x04, 0x04, "Single"		},
-	{0x18, 0x01, 0x04, 0x00, "Dual"			},
+	{0x16, 0x01, 0x04, 0x04, "Single"		},
+	{0x16, 0x01, 0x04, 0x00, "Dual"			},
 
 	{0   , 0xfe, 0   ,    2, "Service Mode"		},
-	{0x18, 0x01, 0x08, 0x08, "Off"			},
-	{0x18, 0x01, 0x08, 0x00, "On"			},
+	{0x16, 0x01, 0x08, 0x08, "Off"			},
+	{0x16, 0x01, 0x08, 0x00, "On"			},
 
 	{0   , 0xfe, 0   ,    2, "Device Type"		},
-	{0x18, 0x01, 0x80, 0x00, "Handle"		},
-	{0x18, 0x01, 0x80, 0x80, "Joystick"		},
+	{0x16, 0x01, 0x80, 0x00, "Handle (broken!)"		},
+	{0x16, 0x01, 0x80, 0x80, "Joystick"		},
 };
 
 STDDIPINFO(Citybomb)
@@ -1148,8 +1141,8 @@ STDDIPINFO(Konamigt)
 static struct BurnDIPInfo HcrashDIPList[]=
 {
 	{0x08, 0xff, 0xff, 0xff, NULL			},
-	{0x09, 0xff, 0xff, 0x5e, NULL			},
-	{0x0a, 0xff, 0xff, 0xff, NULL			},
+	{0x09, 0xff, 0xff, 0x41, NULL			},
+	{0x0a, 0xff, 0xff, 0x0d, NULL			},
 
 	{0   , 0xfe, 0   ,   16, "Coin A"		},
 	{0x08, 0x01, 0x0f, 0x02, "4 Coins 1 Credits"	},
@@ -1188,7 +1181,7 @@ static struct BurnDIPInfo HcrashDIPList[]=
 	{0x08, 0x01, 0xf0, 0x00, "Invalid"		},
 
 	{0   , 0xfe, 0   ,    1, "Cabinet"		},
-	{0x09, 0x01, 0x03, 0x01, "Konami GT with brake"	},
+	{0x09, 0x01, 0x03, 0x01, "Konami GT with brake"		},
 
 	{0   , 0xfe, 0   ,    4, "Difficulty"		},
 	{0x09, 0x01, 0x60, 0x60, "Easy"			},
@@ -1219,17 +1212,29 @@ static struct BurnDIPInfo HcrashDIPList[]=
 
 STDDIPINFO(Hcrash)
 
-static UINT16 konamigt_read_analog()
+static UINT32 scalerange(UINT32 x, UINT32 in_min, UINT32 in_max, UINT32 out_min, UINT32 out_max) {
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+static UINT8 konamigt_read_wheel()
+{
+	UINT8 Temp = 0x7f + (DrvAnalogPort0 >> 4);
+	UINT8 Temp2 = 0;
+	if (Temp < 0x01) Temp = 0x01;
+	if (Temp > 0xfe) Temp = 0xfe;
+	Temp2 = scalerange(Temp, 0x3f, 0xbe, 0x25, 0x50); // konami gt scalings
+	//bprintf(0, _T("Port0-temp[%X] scaled[%X]\n"), Temp, Temp2); // debug, do not remove.
+	return Temp2;
+}
+
+static UINT16 konamigt_read_analog(int /*Offset*/)
 {
 	UINT16 nRet = 0;
 
-	if (DrvInputs[3] & 0x20) nRet |= 0x0300;
-	if (DrvInputs[3] & 0x40) nRet |= 0xf000;
+	if (DrvInputs[3] & 0x20) nRet |= 0x0300; // break
+	if (DrvInputs[3] & 0x40) nRet |= 0xf000; // accel
 
-	if (DrvAnalogPort0)
-	{
-		nRet |= 0x40; // analog wheel input here!!
-	}
+	nRet |= konamigt_read_wheel();
 
 	return nRet;
 }
@@ -1257,7 +1262,7 @@ static void __fastcall nemesis_main_write_byte(UINT32 address, UINT8 data)
 		case 0x05e004:
 			if (data & 1) {
 				ZetSetVector(0xff);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			}
 		return;
 
@@ -1305,10 +1310,10 @@ static UINT8 __fastcall nemesis_main_read_byte(UINT32 address)
 			return  DrvDips[2];
 
 		case 0x070000:
-			return konamigt_read_analog() >> 8;
+			return konamigt_read_analog(0) >> 8;
 
 		case 0x070001:
-			return konamigt_read_analog() & 0xff;
+			return konamigt_read_analog(1) & 0xff;
 	}
 
 //	bprintf (0, _T("RB %5.5x\n"), address);
@@ -1322,7 +1327,7 @@ static UINT16 __fastcall nemesis_main_read_word(UINT32 address)
 	{
 		case 0x070000:
 		case 0x0c2000:
-			return konamigt_read_analog();
+			return konamigt_read_analog(0);
 	}
 
 //	bprintf (0, _T("RW %5.5x\n"), address);
@@ -1351,7 +1356,7 @@ static void __fastcall salamand_main_write_byte(UINT32 address, UINT8 data)
 	switch (address)
 	{
 		case 0x0a0000:
-			if (data & 0x08) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			if (data & 0x08) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x0a0001:
@@ -1389,7 +1394,7 @@ static void __fastcall salamand_main_write_word(UINT32 address, UINT16 data)
 			*flipscreen = data & 0x04;
 			*tilemap_flip_x = data & 0x04;
 			*tilemap_flip_y = data & 0x08;
-			if (data & 0x0800) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			if (data & 0x0800) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		}
 		return;
 	}
@@ -1433,22 +1438,31 @@ static UINT8 __fastcall hcrash_main_read_byte(UINT32 address)
 			return DrvDips[1];
 
 		case 0x0c0007:
-			return DrvInputs[2];
+			return DrvDips[2]; //DrvInputs[2];
 
 		case 0x0c000b:
 			return DrvInputs[0];
 
 		case 0x0c2000:
-			return konamigt_read_analog() >> 8;
+			return konamigt_read_analog(0) >> 8;
 
 		case 0x0c2001:
-			return konamigt_read_analog() & 0xff;
+			return konamigt_read_analog(1) & 0xff;
 
 		case 0x0c4001:
-			return DrvInputs[1];
+			return DrvInputs[3];
 
-		case 0x0c4003: // WEC Le Mans inputs..
-			return 0;
+		case 0x0c4002:
+		case 0x0c4003:
+			switch (selected_ip & 0xf)
+			{                               				// From WEC Le Mans Schems:
+				case 0xc:  return (DrvInputs[3] & 0x40);	// Accel - Schems: Accelevr
+				case 0:    return (DrvInputs[3] & 0x40);
+				case 0xd:  return konamigt_read_wheel();	// Wheel - Schems: Handlevr
+				case 1:    return konamigt_read_wheel();
+
+			    default: return ~0;
+			}
 	}
 
 //	bprintf (0, _T("RB %5.5x\n"), address);
@@ -1461,7 +1475,7 @@ static void __fastcall hcrash_main_write_byte(UINT32 address, UINT8 data)
 	switch (address)
 	{
 		case 0x0a0000:
-			if (data & 0x08) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			if (data & 0x08) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x0a0001:
@@ -1497,7 +1511,8 @@ static void __fastcall hcrash_main_write_byte(UINT32 address, UINT8 data)
 		case 0x0c2805:
 		return;
 
-		case 0x0c4001:
+		case 0x0c4000:
+		case 0x0c4001: //bprintf(0, _T("s_ip ad[%X:%X]"), address & 1, data);
 			selected_ip = data;
 		return;
 	}
@@ -1537,7 +1552,7 @@ static void __fastcall gx400_main_write_byte(UINT32 address, UINT8 data)
 		case 0x05e004:
 			if (data & 1) {
 				ZetSetVector(0xff);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			}
 		return;
 
@@ -1589,10 +1604,10 @@ static UINT8 __fastcall gx400_main_read_byte(UINT32 address)
 			return DrvInputs[2];
 
 		case 0x070000:
-			return konamigt_read_analog() >> 8;
+			return konamigt_read_analog(0) >> 8;
 
 		case 0x070001:
-			return konamigt_read_analog() & 0xff;
+			return konamigt_read_analog(1) & 0xff;
 	}
 
 //	bprintf (0, _T("RB %5.5x\n"), address);
@@ -1617,7 +1632,7 @@ static void __fastcall citybomb_main_write_byte(UINT32 address, UINT8 data)
 		case 0x078000:
 		case 0x0f8000:
 			// coin counters
-			if (data & 0x08) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			if (data & 0x08) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			selected_ip = (~data & 0x10) >> 4;
 		return;
 
@@ -1649,7 +1664,7 @@ static void __fastcall citybomb_main_write_word(UINT32 address, UINT16 data)
 			*flipscreen = data & 0x04;
 			*tilemap_flip_x = data & 0x04;
 			*tilemap_flip_y = data & 0x08;
-			if (data & 0x0800) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			if (data & 0x0800) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			selected_ip = (~data & 0x1000) >> 12;
 		}
 		return;
@@ -1663,10 +1678,10 @@ static UINT8 __fastcall citybomb_main_read_byte(UINT32 address)
 	switch (address)
 	{
 		case 0x0c2000:
-			return konamigt_read_analog() >> 8;
+			return konamigt_read_analog(0) >> 8;
 
 		case 0x0c2001:
-			return konamigt_read_analog() & 0xff;
+			return konamigt_read_analog(1) & 0xff;
 
 		case 0x070001:
 		case 0x0f0001:
@@ -1761,7 +1776,7 @@ static UINT8 __fastcall nemesis_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0xe001:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0xe086:
@@ -1815,7 +1830,7 @@ static UINT8 __fastcall salamand_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0xa000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0xc000:
@@ -1901,7 +1916,7 @@ static UINT8 __fastcall citybomb_sound_read(UINT16 address)
 			return BurnYM3812Read(0, address & 1);
 
 		case 0xd000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 	}
 
@@ -2123,12 +2138,12 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
-static void NemesisSoundInit()
+static void NemesisSoundInit(INT32 konamigtmode)
 {
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0x4000, 0x47ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0x4000, 0x47ff, MAP_RAM);
 	ZetSetWriteHandler(nemesis_sound_write);
 	ZetSetReadHandler(nemesis_sound_read);
 	ZetClose();
@@ -2139,33 +2154,60 @@ static void NemesisSoundInit()
 	AY8910Init(0, 14318180/8, nBurnSoundRate, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
 	AY8910Init(1, 14318180/8, nBurnSoundRate, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
 	AY8910SetAllRoutes(0, 0.35, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(1, 1.00, BURN_SND_ROUTE_BOTH);
+	AY8910SetAllRoutes(1, (konamigtmode) ? 0.20 : 1.00, BURN_SND_ROUTE_BOTH);
 
 	ay8910_enable = 1;
 	k005289_enable = 1;
 }
 
-static void Gx400SoundInit()
+static void Gx400SoundInit(INT32 rf2mode)
 {
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x1fff, ZET_ROM);
-	ZetMapMemory(DrvShareRAM,		0x4000, 0x7fff, ZET_RAM);
-	ZetMapMemory(DrvVLMROM,			0x8000, 0x87ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x1fff, MAP_ROM);
+	ZetMapMemory(DrvShareRAM,		0x4000, 0x7fff, MAP_RAM);
+	ZetMapMemory(DrvVLMROM,			0x8000, 0x87ff, MAP_RAM);
 	ZetSetWriteHandler(nemesis_sound_write);
 	ZetSetReadHandler(nemesis_sound_read);
 	ZetClose();
 
+	K005289Init(3579545, K005289ROM);
+	K005289SetRoute(BURN_SND_K005289_ROUTE_1, (rf2mode) ? 0.60 : 0.35, BURN_SND_ROUTE_BOTH);
+
 	AY8910Init(0, 14318180/8, nBurnSoundRate, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
 	AY8910Init(1, 14318180/8, nBurnSoundRate, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
-	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(1, 1.00, BURN_SND_ROUTE_BOTH);
-
-	K005289Init(3579545, K005289ROM);
-	K005289SetRoute(BURN_SND_K005289_ROUTE_1, 0.60, BURN_SND_ROUTE_BOTH);
+	AY8910SetAllRoutes(0, (rf2mode) ? 0.80 : 0.20, BURN_SND_ROUTE_BOTH);
+	AY8910SetAllRoutes(1, (rf2mode) ? 0.40 : 1.00, BURN_SND_ROUTE_BOTH);
 
 	vlm5030Init(0,  3579545, salamand_vlm_sync, DrvVLMROM, 0x0800, 1);
-	vlm5030SetAllRoutes(0, 2.50, BURN_SND_ROUTE_BOTH);
+	vlm5030SetAllRoutes(0, 0.70, BURN_SND_ROUTE_BOTH);
+
+	ay8910_enable = 1;
+	k005289_enable = 1;
+	vlm5030_enable = 1;
+}
+
+static void TwinbeeGx400SoundInit()
+{
+	ZetInit(0);
+	ZetOpen(0);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x1fff, MAP_ROM);
+	ZetMapMemory(DrvShareRAM,		0x4000, 0x7fff, MAP_RAM);
+	ZetMapMemory(DrvVLMROM,			0x8000, 0x87ff, MAP_RAM);
+	ZetSetWriteHandler(nemesis_sound_write);
+	ZetSetReadHandler(nemesis_sound_read);
+	ZetClose();
+
+	K005289Init(3579545, K005289ROM);
+	K005289SetRoute(BURN_SND_K005289_ROUTE_1, 0.20, BURN_SND_ROUTE_BOTH);
+
+	AY8910Init(0, 14318180/8, nBurnSoundRate, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
+	AY8910Init(1, 14318180/8, nBurnSoundRate, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
+	AY8910SetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH); // melody & hat
+	AY8910SetAllRoutes(1, 1.00, BURN_SND_ROUTE_BOTH); // drums, explosions
+
+	vlm5030Init(0,  3579545, salamand_vlm_sync, DrvVLMROM, 0x0800, 1);
+	vlm5030SetAllRoutes(0, 3.10, BURN_SND_ROUTE_BOTH);
 
 	ay8910_enable = 1;
 	k005289_enable = 1;
@@ -2176,8 +2218,8 @@ static void SalamandSoundInit()
 {
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0x8000, 0x87ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0x8000, 0x87ff, MAP_RAM);
 	ZetSetWriteHandler(salamand_sound_write);
 	ZetSetReadHandler(salamand_sound_read);
 	ZetClose();
@@ -2188,10 +2230,10 @@ static void SalamandSoundInit()
 
 	K007232Init(0,  3579545, K007232ROM, 0x20000);
 	K007232SetPortWriteHandler(0, DrvK007232VolCallback);
-	K007232PCMSetAllRoutes(0, 0.08, BURN_SND_ROUTE_BOTH);
+	K007232PCMSetAllRoutes(0, (hcrash_mode) ? 0.10 : 0.08, BURN_SND_ROUTE_BOTH);
 
 	vlm5030Init(0,  3579545, salamand_vlm_sync, DrvVLMROM, 0x4000, 1);
-	vlm5030SetAllRoutes(0, 2.50, BURN_SND_ROUTE_BOTH);
+	vlm5030SetAllRoutes(0, (hcrash_mode) ? 0.60 : 2.50, BURN_SND_ROUTE_BOTH);
 
 	ym2151_enable = 1;
 	k007232_enable = 1;
@@ -2202,8 +2244,8 @@ static void CitybombSoundInit()
 {
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0x8000, 0x87ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0x8000, 0x87ff, MAP_RAM);
 	ZetSetWriteHandler(citybomb_sound_write);
 	ZetSetReadHandler(citybomb_sound_read);
 	ZetClose();
@@ -2251,33 +2293,33 @@ static INT32 NemesisInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvCharRAM,		0x040000, 0x04ffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvCharRAM,		0x040000, 0x04ffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, MAP_RAM);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll2 = (UINT16*)(DrvScrollRAM + 0x00f00);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f80);
-	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, SM_RAM);
-	SekMapMemory(Drv68KRAM0,		0x060000, 0x067fff, SM_RAM);
+	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, MAP_RAM);
+	SekMapMemory(Drv68KRAM0,		0x060000, 0x067fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		nemesis_main_write_word);
 	SekSetWriteByteHandler(0,		nemesis_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		nemesis_main_read_byte);
-	SekMapHandler(1,			0x040000, 0x04ffff, SM_WRITE);
+	SekMapHandler(1,			0x040000, 0x04ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
-	SekMapHandler(2,			0x05a000, 0x05afff, SM_WRITE);
+	SekMapHandler(2,			0x05a000, 0x05afff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
 	SekClose();
 
-	NemesisSoundInit();
+	NemesisSoundInit(0);
 
 	palette_write = nemesis_palette_update;
 
@@ -2315,33 +2357,33 @@ static INT32 KonamigtInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvCharRAM,		0x040000, 0x04ffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvCharRAM,		0x040000, 0x04ffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, MAP_RAM);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll2 = (UINT16*)(DrvScrollRAM + 0x00f00);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f80);
-	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, SM_RAM);
-	SekMapMemory(Drv68KRAM0,		0x060000, 0x067fff, SM_RAM);
+	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, MAP_RAM);
+	SekMapMemory(Drv68KRAM0,		0x060000, 0x067fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		nemesis_main_write_word);
 	SekSetWriteByteHandler(0,		konamigt_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		nemesis_main_read_byte);
-	SekMapHandler(1,			0x040000, 0x04ffff, SM_WRITE);
+	SekMapHandler(1,			0x040000, 0x04ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
-	SekMapHandler(2,			0x05a000, 0x05afff, SM_WRITE);
+	SekMapHandler(2,			0x05a000, 0x05afff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
 	SekClose();
 
-	NemesisSoundInit();
+	NemesisSoundInit(1);
 
 	palette_write = nemesis_palette_update;
 
@@ -2376,16 +2418,16 @@ static INT32 SalamandInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,		0x080000, 0x087fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x090000, 0x091fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x100000, 0x100fff, SM_RAM);
-	SekMapMemory(DrvVidRAM0,		0x101000, 0x101fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x102000, 0x102fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x103000, 0x103fff, SM_RAM);
-	SekMapMemory(DrvCharRAM,		0x120000, 0x12ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x180000, 0x180fff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x190000, 0x191fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,		0x080000, 0x087fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x090000, 0x091fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x100000, 0x100fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,		0x101000, 0x101fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x102000, 0x102fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x103000, 0x103fff, MAP_RAM);
+	SekMapMemory(DrvCharRAM,		0x120000, 0x12ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x180000, 0x180fff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x190000, 0x191fff, MAP_RAM);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f00);
@@ -2394,10 +2436,10 @@ static INT32 SalamandInit()
 	SekSetWriteByteHandler(0,		salamand_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		salamand_main_read_byte);
-	SekMapHandler(1,			0x120000, 0x12ffff, SM_WRITE);
+	SekMapHandler(1,			0x120000, 0x12ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
-	SekMapHandler(2,			0x090000, 0x091fff, SM_WRITE);
+	SekMapHandler(2,			0x090000, 0x091fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
 	SekClose();
@@ -2435,28 +2477,28 @@ static INT32 BlkpnthrInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,			0x080000, 0x081fff, SM_RAM);
-	SekMapMemory(Drv68KRAM0,		0x090000, 0x097fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x100000, 0x100fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x101000, 0x101fff, SM_RAM);
-	SekMapMemory(DrvVidRAM0,		0x102000, 0x102fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x103000, 0x103fff, SM_RAM);
-	SekMapMemory(DrvCharRAM,		0x120000, 0x12ffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x180000, 0x181fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,			0x080000, 0x081fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM0,		0x090000, 0x097fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x100000, 0x100fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x101000, 0x101fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,		0x102000, 0x102fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x103000, 0x103fff, MAP_RAM);
+	SekMapMemory(DrvCharRAM,		0x120000, 0x12ffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x180000, 0x181fff, MAP_RAM);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll2 = (UINT16*)(DrvScrollRAM + 0x00f00);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f80);
-	SekMapMemory(DrvSprRAM,			0x190000, 0x190fff, SM_RAM);
+	SekMapMemory(DrvSprRAM,			0x190000, 0x190fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		salamand_main_write_word);
 	SekSetWriteByteHandler(0,		salamand_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		salamand_main_read_byte);
-	SekMapHandler(1,			0x120000, 0x12ffff, SM_WRITE);
+	SekMapHandler(1,			0x120000, 0x12ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
-	SekMapHandler(2,			0x080000, 0x081fff, SM_WRITE);
+	SekMapHandler(2,			0x080000, 0x081fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
 	SekClose();
@@ -2497,16 +2539,16 @@ static INT32 HcrashInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,		0x080000, 0x087fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x090000, 0x091fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x100000, 0x100fff, SM_RAM);
-	SekMapMemory(DrvVidRAM0,		0x101000, 0x101fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x102000, 0x102fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x103000, 0x103fff, SM_RAM);
-	SekMapMemory(DrvCharRAM,		0x120000, 0x12ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x180000, 0x180fff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x190000, 0x191fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,		0x080000, 0x087fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x090000, 0x091fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x100000, 0x100fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,		0x101000, 0x101fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x102000, 0x102fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x103000, 0x103fff, MAP_RAM);
+	SekMapMemory(DrvCharRAM,		0x120000, 0x12ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x180000, 0x180fff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x190000, 0x191fff, MAP_RAM);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f00);
@@ -2515,14 +2557,15 @@ static INT32 HcrashInit()
 	SekSetWriteByteHandler(0,		hcrash_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		hcrash_main_read_byte);
-	SekMapHandler(1,			0x120000, 0x12ffff, SM_WRITE);
+	SekMapHandler(1,			0x120000, 0x12ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
-	SekMapHandler(2,			0x090000, 0x091fff, SM_WRITE);
+	SekMapHandler(2,			0x090000, 0x091fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
 	SekClose();
-	
+
+	hcrash_mode = 1;
 	SalamandSoundInit();
 
 	palette_write = salamand_palette_update;
@@ -2557,36 +2600,39 @@ static INT32 Gx400Init()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x00ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,		0x010000, 0x01ffff, SM_RAM);
-	SekMapMemory(DrvCharRAM,		0x030000, 0x03ffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x00ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,		0x010000, 0x01ffff, MAP_RAM);
+	SekMapMemory(DrvCharRAM,		0x030000, 0x03ffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, MAP_RAM);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll2 = (UINT16*)(DrvScrollRAM + 0x00f00);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f80);
-	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, SM_RAM);
-	SekMapMemory(Drv68KRAM2,		0x057000, 0x057fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, SM_RAM);
-	SekMapMemory(Drv68KRAM1,		0x060000, 0x07ffff, SM_RAM);
-	SekMapMemory(Drv68KROM + 0x10000,	0x080000, 0x0bffff, SM_ROM);
+	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM2,		0x057000, 0x057fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, MAP_RAM);
+	SekMapMemory(Drv68KRAM1,		0x060000, 0x07ffff, MAP_RAM);
+	SekMapMemory(Drv68KROM + 0x10000,	0x080000, 0x0bffff, MAP_ROM);
 	SekSetWriteWordHandler(0,		nemesis_main_write_word);
 	SekSetWriteByteHandler(0,		gx400_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		gx400_main_read_byte);
-	SekMapHandler(1,			0x030000, 0x03ffff, SM_WRITE);
+	SekMapHandler(1,			0x030000, 0x03ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
-	SekMapHandler(2,			0x05a000, 0x05afff, SM_WRITE);
+	SekMapHandler(2,			0x05a000, 0x05afff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
 	SekClose();
-
-	Gx400SoundInit();
+	if (strstr(BurnDrvGetTextA(DRV_NAME), "twin")) {
+		TwinbeeGx400SoundInit();
+	} else {
+		Gx400SoundInit((strstr(BurnDrvGetTextA(DRV_NAME), "gwarr")) ? 1 : 0);
+	}
 
 	palette_write = nemesis_palette_update;
 
@@ -2624,35 +2670,35 @@ static INT32 Rf2_gx400Init()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x00ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,		0x010000, 0x01ffff, SM_RAM);
-	SekMapMemory(DrvCharRAM,		0x030000, 0x03ffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x00ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,		0x010000, 0x01ffff, MAP_RAM);
+	SekMapMemory(DrvCharRAM,		0x030000, 0x03ffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x050000, 0x051fff, MAP_RAM);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll2 = (UINT16*)(DrvScrollRAM + 0x00f00);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f80);
-	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, SM_RAM);
-	SekMapMemory(Drv68KRAM1,		0x060000, 0x067fff, SM_RAM);
-	SekMapMemory(Drv68KROM + 0x10000,	0x080000, 0x0bffff, SM_ROM);
+	SekMapMemory(DrvVidRAM0,		0x052000, 0x052fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x053000, 0x053fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x054000, 0x054fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x055000, 0x055fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x056000, 0x056fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x05a000, 0x05afff, MAP_RAM);
+	SekMapMemory(Drv68KRAM1,		0x060000, 0x067fff, MAP_RAM);
+	SekMapMemory(Drv68KROM + 0x10000,	0x080000, 0x0bffff, MAP_ROM);
 	SekSetWriteWordHandler(0,		nemesis_main_write_word);
 	SekSetWriteByteHandler(0,		gx400_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		gx400_main_read_byte);
-	SekMapHandler(1,			0x030000, 0x03ffff, SM_WRITE);
+	SekMapHandler(1,			0x030000, 0x03ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
-	SekMapHandler(2,			0x05a000, 0x05afff, SM_WRITE);
+	SekMapHandler(2,			0x05a000, 0x05afff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
 	SekClose();
 
-	Gx400SoundInit();
+	Gx400SoundInit(1);
 
 	palette_write = nemesis_palette_update;
 
@@ -2689,29 +2735,29 @@ static INT32 CitybombInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x01ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,		0x080000, 0x087fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x0e0000, 0x0e1fff, SM_RAM);
-	SekMapMemory(Drv68KROM + 0x40000,	0x100000, 0x1bffff, SM_ROM);
-	SekMapMemory(DrvCharRAM,		0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(DrvVidRAM0,		0x210000, 0x210fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x211000, 0x211fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x212000, 0x212fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x213000, 0x213fff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x300000, 0x301fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x01ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,		0x080000, 0x087fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x0e0000, 0x0e1fff, MAP_RAM);
+	SekMapMemory(Drv68KROM + 0x40000,	0x100000, 0x1bffff, MAP_ROM);
+	SekMapMemory(DrvCharRAM,		0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,		0x210000, 0x210fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x211000, 0x211fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x212000, 0x212fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x213000, 0x213fff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x300000, 0x301fff, MAP_RAM);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll2 = (UINT16*)(DrvScrollRAM + 0x00f00);
 	yscroll1 = (UINT16*)(DrvScrollRAM + 0x00f80);
-	SekMapMemory(DrvSprRAM,			0x310000, 0x310fff, SM_RAM);
+	SekMapMemory(DrvSprRAM,			0x310000, 0x310fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		citybomb_main_write_word);
 	SekSetWriteByteHandler(0,		citybomb_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		citybomb_main_read_byte);
-	SekMapHandler(2,			0x0e0000, 0x0e1fff, SM_WRITE);
+	SekMapHandler(2,			0x0e0000, 0x0e1fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
-	SekMapHandler(1,			0x200000, 0x20ffff, SM_WRITE);
+	SekMapHandler(1,			0x200000, 0x20ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
 	SekClose();
@@ -2749,17 +2795,17 @@ static INT32 NyanpaniInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x01ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,		0x040000, 0x047fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x060000, 0x061fff, SM_RAM);
-	SekMapMemory(Drv68KROM + 0x40000,	0x100000, 0x13ffff, SM_ROM);
-	SekMapMemory(DrvVidRAM0,		0x200000, 0x200fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0x201000, 0x201fff, SM_RAM);
-	SekMapMemory(DrvColRAM0,		0x202000, 0x202fff, SM_RAM);
-	SekMapMemory(DrvColRAM1,		0x203000, 0x203fff, SM_RAM);
-	SekMapMemory(DrvCharRAM,		0x210000, 0x21ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x300000, 0x300fff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,		0x310000, 0x311fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x01ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,		0x040000, 0x047fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x060000, 0x061fff, MAP_RAM);
+	SekMapMemory(Drv68KROM + 0x40000,	0x100000, 0x13ffff, MAP_ROM);
+	SekMapMemory(DrvVidRAM0,		0x200000, 0x200fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x201000, 0x201fff, MAP_RAM);
+	SekMapMemory(DrvColRAM0,		0x202000, 0x202fff, MAP_RAM);
+	SekMapMemory(DrvColRAM1,		0x203000, 0x203fff, MAP_RAM);
+	SekMapMemory(DrvCharRAM,		0x210000, 0x21ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x300000, 0x300fff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,		0x310000, 0x311fff, MAP_RAM);
 	xscroll1 = (UINT16*)(DrvScrollRAM + 0x00000);
 	xscroll2 = (UINT16*)(DrvScrollRAM + 0x00400);
 	yscroll2 = (UINT16*)(DrvScrollRAM + 0x00f00);
@@ -2768,10 +2814,10 @@ static INT32 NyanpaniInit()
 	SekSetWriteByteHandler(0,		citybomb_main_write_byte);
 	SekSetReadWordHandler(0,		nemesis_main_read_word);
 	SekSetReadByteHandler(0,		citybomb_main_read_byte);
-	SekMapHandler(2,			0x060000, 0x061fff, SM_WRITE);
+	SekMapHandler(2,			0x060000, 0x061fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, 		nemesis_palette_write_word);
 	SekSetWriteByteHandler(2, 		nemesis_palette_write_byte);
-	SekMapHandler(1,			0x210000, 0x21ffff, SM_WRITE);
+	SekMapHandler(1,			0x210000, 0x21ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, 		nemesis_charram_write_word);
 	SekSetWriteByteHandler(1, 		nemesis_charram_write_byte);
 	SekClose();
@@ -2814,6 +2860,7 @@ static INT32 DrvExit()
 	k007232_enable = 0;
 	k051649_enable = 0;
 	vlm5030_enable = 0;
+	hcrash_mode = 0;
 
 	return 0;
 }
@@ -3012,7 +3059,7 @@ static INT32 NemesisFrame()
 		segment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(segment);
 		if (i == (nInterleave - 4) && *m68k_irq_enable) // should be 2500...
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
@@ -3069,10 +3116,10 @@ static INT32 KonamigtFrame()
 		nCyclesDone[0] += SekRun(segment);
 
 		if (*m68k_irq_enable && i == 240 && (nCurrentFrame & 1) == 0)
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		if (*m68k_irq_enable2 && i == 0)
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
@@ -3135,7 +3182,7 @@ static INT32 SalamandFrame()
 		segment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(segment);
 		if (i == (nInterleave - 4) && *m68k_irq_enable) // should be 2500...
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
@@ -3208,10 +3255,10 @@ static INT32 HcrashFrame()
 		nCyclesDone[0] += SekRun(segment);
 
 		if (*m68k_irq_enable && i == 240 && (nCurrentFrame & 1) == 0)
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		if (*m68k_irq_enable2 && i == 0)
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
@@ -3286,7 +3333,7 @@ static INT32 BlkpnthrFrame()
 		segment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(segment);
 		if (i == (nInterleave - 4) && *m68k_irq_enable)
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
@@ -3359,13 +3406,13 @@ static INT32 Gx400Frame()
 		nCyclesDone[0] += SekRun(segment);
 
 		if (*m68k_irq_enable && (i == 240) && (nCurrentFrame & 1) == 0)
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		if (*m68k_irq_enable2 && (i == 0))
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
 		if (*m68k_irq_enable4 && (i == 120))
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
@@ -3424,7 +3471,7 @@ static INT32 CitybombFrame()
 	nCyclesDone[0] += SekRun(nCyclesTotal[0]);
 
 	if (*m68k_irq_enable) // 2500...
-		SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+		SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 	BurnTimerEndFrameYM3812(nCyclesTotal[1]);
 

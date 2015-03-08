@@ -270,9 +270,9 @@ inline static INT32 crospangSynchroniseStream(INT32 nSoundRate)
 void crospangYM3812IrqHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -433,13 +433,13 @@ static INT32 DrvInit(INT32 (*pRomLoadCallback)())
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(DrvFgRAM,		0x120000, 0x1207ff, SM_RAM);
-	SekMapMemory(DrvBgRAM,		0x122000, 0x1227ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x200000, 0x2005ff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x210000, 0x2107ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x320000, 0x32ffff, SM_RAM); // crospang, heuksun
-	SekMapMemory(Drv68KRAM,		0x3a0000, 0x3affff, SM_RAM); // bestri
+	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(DrvFgRAM,		0x120000, 0x1207ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM,		0x122000, 0x1227ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x200000, 0x2005ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x210000, 0x2107ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x320000, 0x32ffff, MAP_RAM); // crospang, heuksun
+	SekMapMemory(Drv68KRAM,		0x3a0000, 0x3affff, MAP_RAM); // bestri
 	SekSetWriteByteHandler(0,	crospang_write_byte);
 	SekSetWriteWordHandler(0,	crospang_write_word);
 	SekSetReadByteHandler(0,	crospang_read_byte);
@@ -628,7 +628,7 @@ static INT32 DrvFrame()
 	ZetOpen(0);
 
 	SekRun(nTotalCycles[0]);
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		BurnTimerEndFrameYM3812(nTotalCycles[1]);

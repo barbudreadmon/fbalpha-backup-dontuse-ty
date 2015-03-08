@@ -227,10 +227,13 @@ void deco16_sprite_decode(UINT8 *gfx, INT32 len)
 	BurnFree (tmp);
 }
 
+INT32 deco16_y_skew = 0;
+
 void deco16_draw_layer_by_line(INT32 draw_start, INT32 draw_end, INT32 tmap, UINT16 *dest, INT32 flags)
 {
 	INT32 size		= deco16_layer_size_select[tmap];
 	if (size == -1) return;
+	if (deco16_y_skew) draw_end += deco16_y_skew;
 
 	INT32 control		= deco16_pf_control[tmap / 2][6];
 	if (tmap & 1) control >>= 8; 
@@ -319,8 +322,8 @@ void deco16_draw_layer_by_line(INT32 draw_start, INT32 draw_end, INT32 tmap, UIN
 					INT32 pxl = src[xxx^flipx];
 
 					if (tmask[pxl] && t_mask) continue;
-
-					dest[y * nScreenWidth + xxx + sx] = pxl | color;
+					if (y - deco16_y_skew >= 0)
+						dest[(y - deco16_y_skew) * nScreenWidth + xxx + sx] = pxl | color;
 					deco16_prio_map[y * 512 + xxx + sx] = priority;
 				}
 			}
@@ -728,7 +731,7 @@ INT32 deco16_soundlatch;
 static void deco16YM2151IrqHandler(INT32 state)
 {
 #ifdef ENABLE_HUC6280
-	h6280SetIRQLine(1, state ? H6280_IRQSTATUS_ACK : H6280_IRQSTATUS_NONE);
+	h6280SetIRQLine(1, state ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 #else
 	state = state;
 #endif
@@ -837,7 +840,7 @@ static UINT8 deco16_sound_read(UINT32 address)
 		case 0x140000:
 		case 0x140001:
 #ifdef ENABLE_HUC6280
-			h6280SetIRQLine(0, H6280_IRQSTATUS_NONE);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_NONE);
 #endif
 			return deco16_soundlatch;
 	}
@@ -866,8 +869,8 @@ void deco16SoundInit(UINT8 *rom, UINT8 *ram, INT32 huc_clock, INT32 ym2203, void
 #ifdef ENABLE_HUC6280
 	h6280Init(0);
 	h6280Open(0);
-	h6280MapMemory(rom, 	0x000000, 0x00ffff, H6280_ROM);
-	h6280MapMemory(ram,	0x1f0000, 0x1f1fff, H6280_RAM);
+	h6280MapMemory(rom, 	0x000000, 0x00ffff, MAP_ROM);
+	h6280MapMemory(ram,	0x1f0000, 0x1f1fff, MAP_RAM);
 	h6280SetWriteHandler(deco16_sound_write);
 	h6280SetReadHandler(deco16_sound_read);
 	h6280Close();

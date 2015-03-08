@@ -276,11 +276,11 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Rom,	0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(VidRam,	0x100000, 0x101fff, SM_RAM);
-	SekMapMemory(PalRam,	0x200000, 0x1007ff, SM_ROM);
-	SekMapMemory(SprRam,	0x440000, 0x440fff, SM_RAM);
-	SekMapMemory(WorkRam,	0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(Rom,	0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(VidRam,	0x100000, 0x101fff, MAP_RAM);
+	SekMapMemory(PalRam,	0x200000, 0x1007ff, MAP_ROM);
+	SekMapMemory(SprRam,	0x440000, 0x440fff, MAP_RAM);
+	SekMapMemory(WorkRam,	0xffc000, 0xffffff, MAP_RAM);
 	SekSetWriteByteHandler(0, drtomy_write_byte);
 	SekSetWriteWordHandler(0, drtomy_write_word);
 	SekSetReadByteHandler(0, drtomy_read_byte);
@@ -434,7 +434,7 @@ static INT32 DrvFrame()
 
 	SekOpen(0);
 	SekRun(12000000 / 60);
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 	SekClose();
 
 	if (pBurnSoundOut) {

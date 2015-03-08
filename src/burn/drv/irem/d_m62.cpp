@@ -2078,7 +2078,7 @@ void __fastcall M62Z80PortWrite(UINT16 a, UINT8 d)
 			if ((d & 0x80) == 0) {
 				M62SoundLatch = d & 0x7f;
 			} else {
-				M6803SetIRQLine(M6803_IRQ_LINE, M6803_IRQSTATUS_ACK);
+				M6803SetIRQLine(M6803_IRQ_LINE, CPU_IRQSTATUS_ACK);
 			}
 			return;
 		}
@@ -2385,7 +2385,7 @@ void M62M6803WriteByte(UINT16 a, UINT8 d)
 	
 	switch (a) {
 		case 0x0800: {
-			M6803SetIRQLine(M6803_IRQ_LINE, M6803_IRQSTATUS_NONE);
+			M6803SetIRQLine(M6803_IRQ_LINE, CPU_IRQSTATUS_NONE);
 			return;
 		}
 		
@@ -2503,7 +2503,7 @@ inline static INT32 M62SynchroniseStream(INT32 nSoundRate)
 
 static void M62MSM5205Vck0()
 {
-	M6803SetIRQLine(M6803_INPUT_LINE_NMI, M6803_IRQSTATUS_AUTO);
+	M6803SetIRQLine(M6803_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 	M62SlaveMSM5205VClckReset = 1;
 }
 
@@ -3383,7 +3383,7 @@ static void M62MachineInit()
 	ZetClose();
 	
 	M6803Init(1);
-	M6803MapMemory(M62M6803Rom, 0x4000, 0xffff, M6803_ROM);
+	M6803MapMemory(M62M6803Rom, 0x4000, 0xffff, MAP_ROM);
 	M6803SetReadHandler(M62M6803ReadByte);
 	M6803SetWriteHandler(M62M6803WriteByte);
 	M6803SetReadPortHandler(M62M6803ReadPort);
@@ -3398,13 +3398,13 @@ static void M62MachineInit()
 
 	MSM5205Init(0, M62SynchroniseStream, 384000, M62MSM5205Vck0, MSM5205_S96_4B, 1);
 	MSM5205Init(1, M62SynchroniseStream, 384000, NULL, MSM5205_SEX_4B, 1);
-	MSM5205SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
-	MSM5205SetRoute(1, 0.50, BURN_SND_ROUTE_BOTH);
+	MSM5205SetRoute(0, 0.20, BURN_SND_ROUTE_BOTH);
+	MSM5205SetRoute(1, 0.20, BURN_SND_ROUTE_BOTH);
 	
 	AY8910Init(0, 894886, nBurnSoundRate, &M62SoundLatchRead, NULL, NULL, &AY8910_0PortBWrite);
 	AY8910Init(1, 894886, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910SetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH);
-	AY8910SetAllRoutes(1, 0.50, BURN_SND_ROUTE_BOTH);
+	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
+	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 	
 	GenericTilesInit();
 	
@@ -4730,7 +4730,7 @@ static INT32 M62Frame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
-		if (i == (nInterleave - 1)) ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		ZetClose();
 		
 		nCurrentCPU = 1;

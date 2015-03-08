@@ -213,7 +213,7 @@ void vendetta_main_write(UINT16 address, UINT8 data)
 
 		case 0x5fe4:
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x5fe6:
@@ -289,7 +289,7 @@ UINT8 vendetta_main_read(UINT16 address)
 
 		case 0x5fe4:
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			return 0;
 
 		case 0x5fe6:
@@ -349,7 +349,7 @@ void esckids_main_write(UINT16 address, UINT8 data)
 
 		case 0x3fd4:
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x3fd6:
@@ -420,7 +420,7 @@ UINT8 esckids_main_read(UINT16 address)
 
 		case 0x3fd4:
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			return 0;
 
 		case 0x3fd6:
@@ -486,7 +486,7 @@ UINT8 __fastcall vendetta_sound_read(UINT16 address)
 	}
 
 	if (address >= 0xfc00 && address < 0xfc30) {
-		if ((address & 0x3f) == 0x01) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if ((address & 0x3f) == 0x01) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 
 		return K053260Read(0, address & 0xff);
 	}
@@ -499,7 +499,7 @@ static void vendetta_set_lines(INT32 lines)
 	nDrvBank[0] = lines;
 
 	if (lines < 0x1c) {
-		konamiMapMemory(DrvKonROM + 0x10000 + (lines * 0x2000), 0x0000 | bankoffset, 0x1fff | bankoffset, KON_ROM);
+		konamiMapMemory(DrvKonROM + 0x10000 + (lines * 0x2000), 0x0000 | bankoffset, 0x1fff | bankoffset, MAP_ROM);
 	}
 }
 
@@ -595,19 +595,6 @@ static INT32 MemIndex()
 	return 0;
 }
 
-static INT32 DrvGfxDecode()
-{
-	INT32 Plane[4] = { 0x018, 0x010, 0x008, 0x000 };
-	INT32 XOffs[8] = { 0x000, 0x001, 0x002, 0x003, 0x004, 0x005, 0x006, 0x007 };
-	INT32 YOffs[8] = { 0x000, 0x020, 0x040, 0x060, 0x080, 0x0a0, 0x0c0, 0x0e0 };
-
-	GfxDecode(0x8000, 4, 8, 8, Plane, XOffs, YOffs, 0x100, DrvGfxROM0, DrvGfxROMExp0);
-
-	K053247GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x400000);
-
-	return 0;
-}
-
 static const eeprom_interface vendetta_eeprom_intf =
 {
 	7,			// address bits
@@ -647,7 +634,8 @@ static INT32 DrvInit(INT32 nGame)
 
 		if (BurnLoadRom(DrvSndROM  + 0x000000,  8, 1)) return 1;
 
-		DrvGfxDecode();
+		K052109GfxDecode(DrvGfxROM0, DrvGfxROMExp0, 0x100000);
+		K053247GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x400000);
 	}
 
 	if (nGame) // escape kids
@@ -656,9 +644,9 @@ static INT32 DrvInit(INT32 nGame)
 
 		konamiInit(0);
 		konamiOpen(0);
-		konamiMapMemory(DrvKonRAM,	     0x0000, 0x1fff, KON_RAM);
-		konamiMapMemory(DrvKonROM + 0x10000, 0x6000, 0x7fff, KON_ROM);
-		konamiMapMemory(DrvKonROM + 0x08000, 0x8000, 0xffff, KON_ROM);
+		konamiMapMemory(DrvKonRAM,	     0x0000, 0x1fff, MAP_RAM);
+		konamiMapMemory(DrvKonROM + 0x10000, 0x6000, 0x7fff, MAP_ROM);
+		konamiMapMemory(DrvKonROM + 0x08000, 0x8000, 0xffff, MAP_ROM);
 		konamiSetWriteHandler(esckids_main_write);
 		konamiSetReadHandler(esckids_main_read);
 		konamiSetlinesCallback(vendetta_set_lines);
@@ -677,9 +665,9 @@ static INT32 DrvInit(INT32 nGame)
 
 		konamiInit(0);
 		konamiOpen(0);
-		konamiMapMemory(DrvKonROM + 0x10000, 0x0000, 0x1fff, KON_ROM);
-		konamiMapMemory(DrvKonRAM,	     0x2000, 0x3fff, KON_RAM);
-		konamiMapMemory(DrvKonROM + 0x08000, 0x8000, 0xffff, KON_ROM);
+		konamiMapMemory(DrvKonROM + 0x10000, 0x0000, 0x1fff, MAP_ROM);
+		konamiMapMemory(DrvKonRAM,	     0x2000, 0x3fff, MAP_RAM);
+		konamiMapMemory(DrvKonROM + 0x08000, 0x8000, 0xffff, MAP_ROM);
 		konamiSetWriteHandler(vendetta_main_write);
 		konamiSetReadHandler(vendetta_main_read);
 		konamiSetlinesCallback(vendetta_set_lines);
@@ -841,7 +829,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	if (irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, KONAMI_IRQSTATUS_AUTO);
+	if (irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;

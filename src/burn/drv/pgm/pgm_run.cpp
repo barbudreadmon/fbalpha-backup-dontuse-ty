@@ -35,7 +35,7 @@ static UINT8 *Mem = NULL, *MemEnd = NULL;
 static UINT8 *RamStart, *RamEnd;
 
 UINT8 *PGM68KBIOS, *PGM68KROM, *PGMTileROM, *PGMTileROMExp, *PGMSPRColROM, *PGMSPRMaskROM, *PGMARMROM;
-UINT8 *PGMARMRAM0, *PGMUSER0, *PGMARMRAM1, *PGMARMRAM2, *PGMARMShareRAM, *PGMARMShareRAM2;
+UINT8 *PGMARMRAM0, *PGMUSER0, *PGMARMRAM1, *PGMARMRAM2, *PGMARMShareRAM, *PGMARMShareRAM2, *PGMProtROM;
 
 UINT8 nPgmPalRecalc = 0;
 static UINT8 nPgmZ80Work = 0;
@@ -70,6 +70,8 @@ static INT32 pgmMemIndex()
 	PGM68KROM	= Next; Next += nPGM68KROMLen;
 
 	PGMUSER0	= Next; Next += nPGMExternalARMLen;
+
+	PGMProtROM	= PGMUSER0 + 0x10000; // Olds, Killbld, drgw3
 
 	if (BurnDrvGetHardwareCode() & HARDWARE_IGS_USE_ARM_CPU) {
 		PGMARMROM	= Next; Next += 0x0004000;
@@ -219,6 +221,13 @@ static INT32 pgmGetRoms(bool bLoad)
 				}
 			}
 			continue;
+		}
+
+		if ((ri.nType & BRF_PRG) && (ri.nType & 0x0f) == 9)
+		{
+			if (bLoad) {
+				BurnLoadRom(PGMProtROM, i, 1);
+			}
 		}
 	}
 
@@ -636,36 +645,36 @@ INT32 pgmInit()
 		// ketsui and espgaluda
 		if (BurnDrvGetHardwareCode() & HARDWARE_IGS_JAMMAPCB)
 		{
-			SekMapMemory(PGM68KROM,				0x000000, (nPGM68KROMLen-1), SM_ROM);			// 68000 ROM (no bios)
+			SekMapMemory(PGM68KROM,				0x000000, (nPGM68KROMLen-1), MAP_ROM);			// 68000 ROM (no bios)
 		}
 		else
 		{
-			SekMapMemory(PGM68KBIOS,			0x000000, 0x07ffff, SM_ROM);				// 68000 BIOS
-			SekMapMemory(PGM68KROM,				0x100000, (nPGM68KROMLen-1)+0x100000, SM_ROM);		// 68000 ROM
+			SekMapMemory(PGM68KBIOS,			0x000000, 0x07ffff, MAP_ROM);				// 68000 BIOS
+			SekMapMemory(PGM68KROM,				0x100000, (nPGM68KROMLen-1)+0x100000, MAP_ROM);		// 68000 ROM
 		}
 
                 for (INT32 i = 0; i < 0x100000; i+=0x20000) {		// Main Ram + Mirrors...
-                        SekMapMemory(PGM68KRAM,            		0x800000 | i, 0x81ffff | i, SM_RAM);
+                        SekMapMemory(PGM68KRAM,            		0x800000 | i, 0x81ffff | i, MAP_RAM);
                 }
 
 		// Ripped from FBA Shuffle.
                 for (INT32 i = 0; i < 0x100000; i+=0x08000) {		// Video Ram + Mirrors...
-                        SekMapMemory((UINT8 *)PGMBgRAM,		0x900000 | i, 0x900fff | i, SM_RAM);
-                        SekMapMemory((UINT8 *)PGMBgRAM,		0x901000 | i, 0x901fff | i, SM_RAM); // mirror
-                        SekMapMemory((UINT8 *)PGMBgRAM,		0x902000 | i, 0x902fff | i, SM_RAM); // mirror
-                        SekMapMemory((UINT8 *)PGMBgRAM,		0x903000 | i, 0x904fff | i, SM_RAM); // mirror
+                        SekMapMemory((UINT8 *)PGMBgRAM,		0x900000 | i, 0x900fff | i, MAP_RAM);
+                        SekMapMemory((UINT8 *)PGMBgRAM,		0x901000 | i, 0x901fff | i, MAP_RAM); // mirror
+                        SekMapMemory((UINT8 *)PGMBgRAM,		0x902000 | i, 0x902fff | i, MAP_RAM); // mirror
+                        SekMapMemory((UINT8 *)PGMBgRAM,		0x903000 | i, 0x904fff | i, MAP_RAM); // mirror
 
-                        SekMapMemory((UINT8 *)PGMTxtRAM,	0x904000 | i, 0x905fff | i, SM_RAM);
-                        SekMapMemory((UINT8 *)PGMTxtRAM,	0x906000 | i, 0x906fff | i, SM_RAM); // mirror
+                        SekMapMemory((UINT8 *)PGMTxtRAM,	0x904000 | i, 0x905fff | i, MAP_RAM);
+                        SekMapMemory((UINT8 *)PGMTxtRAM,	0x906000 | i, 0x906fff | i, MAP_RAM); // mirror
 
-                        SekMapMemory((UINT8 *)PGMRowRAM,	0x907000 | i, 0x907fff | i, SM_RAM);
+                        SekMapMemory((UINT8 *)PGMRowRAM,	0x907000 | i, 0x907fff | i, MAP_RAM);
                 }
 
-		SekMapMemory((UINT8 *)PGMPalRAM,		0xa00000, 0xa013ff, SM_ROM); // palette
-		SekMapMemory((UINT8 *)PGMVidReg,		0xb00000, 0xb0ffff, SM_RAM); // should be mirrored?
+		SekMapMemory((UINT8 *)PGMPalRAM,		0xa00000, 0xa013ff, MAP_ROM); // palette
+		SekMapMemory((UINT8 *)PGMVidReg,		0xb00000, 0xb0ffff, MAP_RAM); // should be mirrored?
 
-		SekMapHandler(1,					0xa00000, 0xa013ff, SM_WRITE);
-		SekMapHandler(2,					0xc10000, 0xc1ffff, SM_READ | SM_WRITE);
+		SekMapHandler(1,					0xa00000, 0xa013ff, MAP_WRITE);
+		SekMapHandler(2,					0xc10000, 0xc1ffff, MAP_READ | MAP_WRITE);
 
 		SekSetReadWordHandler(0, PgmReadWord);
 		SekSetReadByteHandler(0, PgmReadByte);
@@ -843,11 +852,11 @@ INT32 pgmFrame()
 		}
 
 		if (i == ((PGM_INTER_LEAVE / 2)-1) && !nPGMDisableIRQ4) {
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 	ics2115_frame();
 

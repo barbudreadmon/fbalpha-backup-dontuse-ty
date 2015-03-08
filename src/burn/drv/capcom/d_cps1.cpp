@@ -4699,6 +4699,30 @@ static struct BurnRomInfo Cworld2jRomDesc[] = {
 STD_ROM_PICK(Cworld2j)
 STD_ROM_FN(Cworld2j)
 
+static struct BurnRomInfo Cworld2jaRomDesc[] = {
+	{ "q5 - 34_90629b.8f",      0x080000, 0xde54487f, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
+	{ "q5 - 33_90629b.6f",      0x080000, 0x93248458, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
+
+	{ "q5 - 06_90629b.8a",      0x080000, 0x09d0e7ce, BRF_GRA | CPS1_TILES },
+	{ "q5 - 08_90629b.10a",     0x080000, 0x22e4ce9a, BRF_GRA | CPS1_TILES },
+	{ "q5 - 05_90629b.7a",      0x080000, 0xf7b3aed6, BRF_GRA | CPS1_TILES },
+	{ "q5 - 07_90629b.9a",      0x080000, 0x520c6c88, BRF_GRA | CPS1_TILES },
+
+	{ "q5 - 09_90629b.12a",     0x010000, 0xe14dc524, BRF_PRG | CPS1_Z80_PROGRAM }, // == q5_23.13b
+
+	{ "q5 - 18_90629b.11c",     0x020000, 0xd10c1b68, BRF_SND | CPS1_OKIM6295_SAMPLES }, // == q5_30.12c
+	{ "q5 - 19_90629b.12c",     0x020000, 0x7d17e496, BRF_SND | CPS1_OKIM6295_SAMPLES }, // == q5_31.13c
+	
+	A_BOARD_PLDS
+	
+	{ "q529b.1a",      0x000117, 0x00000000, BRF_OPT | BRF_NODUMP},	// b-board PLDs
+	{ "iob1.11d",      0x000117, 0x3abc0700, BRF_OPT },
+	{ "ioc1.ic1",      0x000117, 0x0d182081, BRF_OPT },	// c-board PLDs
+};
+
+STD_ROM_PICK(Cworld2ja)
+STD_ROM_FN(Cworld2ja)
+
 static struct BurnRomInfo DinoRomDesc[] = {
 	{ "cde_23a.8f",    0x080000, 0x8f4e585e, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
 	{ "cde_22a.7f",    0x080000, 0x9278aa12, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
@@ -6636,15 +6660,15 @@ static struct BurnRomInfo KodhRomDesc[] = {
 	{ "2.096",         0x080000, 0xbc121ff2, BRF_GRA | CPS1_TILES },
 	{ "3.096",         0x080000, 0xf463ae22, BRF_GRA | CPS1_TILES },
 	{ "4.096",         0x080000, 0x01308733, BRF_GRA | CPS1_TILES },
-	{ "kod11.rom",     0x080000, 0x113358f3, BRF_GRA | CPS1_TILES },
-	{ "kod13.rom",     0x080000, 0x38853c44, BRF_GRA | CPS1_TILES },
+	{ "5.096",     	   0x080000, 0x113358f3, BRF_GRA | CPS1_TILES },
+	{ "6.096",         0x080000, 0x38853c44, BRF_GRA | CPS1_TILES },
 	{ "7.096",         0x080000, 0xc7ab4704, BRF_GRA | CPS1_TILES },
-	{ "kod12.rom",     0x080000, 0x402b9b4f, BRF_GRA | CPS1_TILES },
+	{ "8.096",     	   0x080000, 0x402b9b4f, BRF_GRA | CPS1_TILES },
 
-	{ "kd09.bin",      0x010000, 0xbac6ec26, BRF_PRG | CPS1_Z80_PROGRAM },
+	{ "9.096",         0x010000, 0xf5514510, BRF_PRG | CPS1_Z80_PROGRAM },
 
-	{ "kd18.bin",      0x020000, 0x4c63181d, BRF_SND | CPS1_OKIM6295_SAMPLES },
-	{ "kd19.bin",      0x020000, 0x92941b80, BRF_SND | CPS1_OKIM6295_SAMPLES },
+	{ "18.096",        0x020000, 0x69ecb2c8, BRF_SND | CPS1_OKIM6295_SAMPLES },
+	{ "19.096",        0x020000, 0x02d851c1, BRF_SND | CPS1_OKIM6295_SAMPLES },
 };
 
 STD_ROM_PICK(Kodh)
@@ -12381,6 +12405,7 @@ static const struct GameConfig ConfigTable[] =
 	{ "cawingbl"    , CPS_B_16    , mapper_CA24B , 0, NULL                },
 	{ "cawingb2"    , CPS_B_16    , mapper_CA24B , 0, NULL                },
 	{ "cworld2j"    , CPS_B_21_BT6, mapper_Q522B , 0, NULL                },
+	{ "cworld2ja"   , CPS_B_21_DEF, mapper_Q522B , 0, NULL                },
 	{ "dino"        , CPS_B_21_QS2, mapper_CD63B , 0, dino_decode         },
 	{ "dinou"       , CPS_B_21_QS2, mapper_CD63B , 0, dino_decode         },
 	{ "dinoj"       , CPS_B_21_QS2, mapper_CD63B , 0, dino_decode         },
@@ -13179,7 +13204,7 @@ static INT32 CawingblInit()
 	nRet = DrvInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0x882000, 0x882fff, SM_READ | SM_WRITE);
+	SekMapHandler(1, 0x882000, 0x882fff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, CawingblInputReadByte);
 	SekSetReadWordHandler(1, CawingblInputReadWord);
 	SekSetWriteByteHandler(1, CawingblInputWriteByte);
@@ -13215,7 +13240,7 @@ static INT32 Cawingb2Init()
 	nRet = DrvInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0x882000, 0x882fff, SM_READ | SM_WRITE);
+	SekMapHandler(1, 0x882000, 0x882fff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, CawingblInputReadByte);
 	SekSetReadWordHandler(1, CawingblInputReadWord);
 	SekSetWriteByteHandler(1, CawingblInputWriteByte);
@@ -13306,10 +13331,10 @@ static INT32 DinopicInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x991fff, SM_RAM);
-	SekMapHandler(1, 0x980000, 0x98000f, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x991fff, MAP_RAM);
+	SekMapHandler(1, 0x980000, 0x98000f, MAP_WRITE);
 	SekSetWriteWordHandler(1, DinopicScrollWrite);
-	SekMapHandler(2, 0x800200, 0x8002ff, SM_WRITE);
+	SekMapHandler(2, 0x800200, 0x8002ff, MAP_WRITE);
 	SekSetWriteWordHandler(2, DinopicLayerWrite);
 	SekClose();
 	
@@ -13330,7 +13355,7 @@ static INT32 DinohInit()
 	nRet = TwelveMhzInit();
 
 	SekOpen(0);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, DinohuntQSharedRamRead);
 	SekClose();
 
@@ -13349,7 +13374,7 @@ static INT32 Dinopic4Init()
 	nRet = TwelveMhzInit();
 	
 /*	SekOpen(0);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, DinohuntQSharedRamRead);
 	SekClose();*/
 	
@@ -13381,7 +13406,7 @@ static INT32 DinotInit()
 	nRet = TwelveMhzInit();
 
 	SekOpen(0);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, DinohuntQSharedRamRead);
 	SekClose();
 
@@ -13404,10 +13429,10 @@ static INT32 DinotpicInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x991fff, SM_RAM);
-	SekMapHandler(1, 0x980000, 0x98000f, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x991fff, MAP_RAM);
+	SekMapHandler(1, 0x980000, 0x98000f, MAP_WRITE);
 	SekSetWriteWordHandler(1, DinopicScrollWrite);
-	SekMapHandler(2, 0x800200, 0x8002ff, SM_WRITE);
+	SekMapHandler(2, 0x800200, 0x8002ff, MAP_WRITE);
 	SekSetWriteWordHandler(2, DinopicLayerWrite);
 	SekClose();
 	
@@ -13424,7 +13449,7 @@ static INT32 DinohuntInit()
 	nRet = TwelveMhzInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, DinohuntQSharedRamRead);
 	SekClose();
 	
@@ -13526,7 +13551,7 @@ static INT32 FfightblInit()
 	INT32 nRet = DrvInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0x880000, 0x89ffff, SM_READ | SM_WRITE);
+	SekMapHandler(1, 0x880000, 0x89ffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, FcrashInputReadByte);
 	SekSetReadWordHandler(1, FcrashInputReadWord);
 	SekSetWriteByteHandler(1, FcrashInputWriteByte);
@@ -13564,7 +13589,7 @@ static INT32 FcrashInit()
 	INT32 nRet = DrvInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0x880000, 0x89ffff, SM_READ | SM_WRITE);
+	SekMapHandler(1, 0x880000, 0x89ffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, FcrashInputReadByte);
 	SekSetReadWordHandler(1, FcrashInputReadWord);
 	SekSetWriteByteHandler(1, FcrashInputWriteByte);
@@ -13654,7 +13679,7 @@ static void GanabareTimeKeeperTick()
 	if ((GetCurrentFrame() % 60) == 0) TimeKeeperTick(); // refresh is 59.61
 	
 	SekOpen(0);
-	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	SekClose();
 }
 
@@ -13673,7 +13698,7 @@ static INT32 GanbareInit()
 	INT32 nRet = DrvInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0xff0000, 0xffffff, SM_RAM);
+	SekMapHandler(1, 0xff0000, 0xffffff, MAP_RAM);
 	SekSetReadByteHandler(1, GanbareTimeKeeperReadByte);
 	SekSetReadWordHandler(1, GanbareTimeKeeperReadWord);
 	SekSetWriteByteHandler(1, GanbareTimeKeeperWriteByte);
@@ -13855,12 +13880,12 @@ static INT32 DaimakaibInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x991fff, SM_RAM);
-	SekMapHandler(1, 0x880000, 0x88ffff, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x991fff, MAP_RAM);
+	SekMapHandler(1, 0x880000, 0x88ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, Daimakaib88WriteWord);
-	SekMapHandler(2, 0x980000, 0x98ffff, SM_WRITE);
+	SekMapHandler(2, 0x980000, 0x98ffff, MAP_WRITE);
 	SekSetWriteWordHandler(2, Daimakaib98WriteWord);
-	SekMapHandler(3, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(3, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(3, DaimakaibFFWriteByte);
 	SekSetWriteWordHandler(3, DaimakaibFFWriteWord);
 	SekClose();
@@ -14012,8 +14037,8 @@ static INT32 KnightsbInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0x980000, 0x98ffff, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0x980000, 0x98ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, Knightsb98WriteWord);
 	SekClose();
 	
@@ -14154,12 +14179,12 @@ static INT32 KodbInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x900000, 0x903fff, SM_RAM);
-	SekMapMemory(CpsBootlegSpriteRam, 0x904000, 0x907fff, SM_RAM);
-	SekMapHandler(1, 0x980000, 0x99ffff, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x900000, 0x903fff, MAP_RAM);
+	SekMapMemory(CpsBootlegSpriteRam, 0x904000, 0x907fff, MAP_RAM);
+	SekMapHandler(1, 0x980000, 0x99ffff, MAP_WRITE);
 	SekSetWriteByteHandler(1, Kodb98WriteByte);
 	SekSetWriteWordHandler(1, Kodb98WriteWord);
-	SekMapHandler(2, 0x992000, 0x992009, SM_READ);
+	SekMapHandler(2, 0x992000, 0x992009, MAP_READ);
 	SekSetReadByteHandler(2, KodbInputReadByte);
 	SekClose();
 	
@@ -14427,12 +14452,12 @@ static INT32 PunipicInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, PunipicF18Read);
-	SekMapHandler(2, 0x980000, 0x980fff, SM_WRITE);
+	SekMapHandler(2, 0x980000, 0x980fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, Punipic98WriteWord);
-	SekMapHandler(3, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(3, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(3, PunipicFFWriteByte);
 	SekSetWriteWordHandler(3, PunipicFFWriteWord);
 	SekClose();
@@ -14463,12 +14488,12 @@ static INT32 Punipic2Init()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, PunipicF18Read);
-	SekMapHandler(2, 0x980000, 0x980fff, SM_WRITE);
+	SekMapHandler(2, 0x980000, 0x980fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, Punipic98WriteWord);
-	SekMapHandler(3, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(3, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(3, PunipicFFWriteByte);
 	SekSetWriteWordHandler(3, PunipicFFWriteWord);
 	SekClose();
@@ -14492,12 +14517,12 @@ static INT32 Punipic3Init()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, PunipicF18Read);
-	SekMapHandler(2, 0x980000, 0x980fff, SM_WRITE);
+	SekMapHandler(2, 0x980000, 0x980fff, MAP_WRITE);
 	SekSetWriteWordHandler(2, Punipic98WriteWord);
-	SekMapHandler(3, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(3, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(3, PunipicFFWriteByte);
 	SekSetWriteWordHandler(3, PunipicFFWriteWord);
 	SekClose();
@@ -14755,9 +14780,9 @@ static INT32 Sf2bInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, SM_RAM);
-	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, SM_RAM); // mirror?
-	SekMapHandler(1, 0x708000, 0x7fffff, SM_READ | SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, MAP_RAM);
+	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, MAP_RAM); // mirror?
+	SekMapHandler(1, 0x708000, 0x7fffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, Sf2bReadByte);
 	SekSetReadWordHandler(1, Sf2bReadWord);
 	SekSetWriteByteHandler(1, Sf2bWriteByte);
@@ -14805,8 +14830,8 @@ static INT32 Sf2dkot2Init()
 	nRet = Sf2ceInit();
 
 	SekOpen(0);
-	SekMapMemory(CpsRom + 0x000000, 0x280000, 0x2fffff, SM_ROM);
-	SekMapMemory(CpsRom + 0x080000, 0x200000, 0x27ffff, SM_ROM);
+	SekMapMemory(CpsRom + 0x000000, 0x280000, 0x2fffff, MAP_ROM);
+	SekMapMemory(CpsRom + 0x080000, 0x200000, 0x27ffff, MAP_ROM);
 	SekClose();
 
 	return nRet;
@@ -14854,7 +14879,7 @@ static INT32 Sf2rbInit()
 	INT32 nRet = Sf2ceInit();
 
 	SekOpen(0);
-	SekMapHandler(1, 0x200000, 0x2fffff, SM_READ);
+	SekMapHandler(1, 0x200000, 0x2fffff, MAP_READ);
 	SekSetReadByteHandler(1, Sf2rbProtReadByte);
 	SekSetReadWordHandler(1, Sf2rbProtReadWord);
 	SekClose();
@@ -14897,7 +14922,7 @@ static INT32 Sf2rb2Init()
 	INT32 nRet = Sf2ceInit();
 
 	SekOpen(0);
-	SekMapHandler(1, 0x200000, 0x2fffff, SM_READ);
+	SekMapHandler(1, 0x200000, 0x2fffff, MAP_READ);
 	SekSetReadByteHandler(1, Sf2rb2ProtReadByte);
 	SekSetReadWordHandler(1, Sf2rb2ProtReadWord);
 	SekClose();
@@ -15201,9 +15226,9 @@ static INT32 Sf2mdtInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, SM_RAM);
-	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, SM_RAM); // mirror? can use either of this - seems to make no difference
-	SekMapHandler(1, 0x708000, 0x7fffff, SM_READ | SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, MAP_RAM);
+	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, MAP_RAM); // mirror? can use either of this - seems to make no difference
+	SekMapHandler(1, 0x708000, 0x7fffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, Sf2mdtReadByte);
 	SekSetReadWordHandler(1, Sf2mdtReadWord);
 	SekSetWriteByteHandler(1, Sf2mdtWriteByte);
@@ -15236,10 +15261,10 @@ static INT32 Sf2mdtaInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, SM_RAM);
-	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, SM_RAM); // mirror? can use either of this - seems to make no difference
-	SekMapMemory(CpsRamFF, 0xfc0000, 0xfcffff, SM_RAM);	
-	SekMapHandler(1, 0x708000, 0x7fffff, SM_READ | SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, MAP_RAM);
+	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, MAP_RAM); // mirror? can use either of this - seems to make no difference
+	SekMapMemory(CpsRamFF, 0xfc0000, 0xfcffff, MAP_RAM);	
+	SekMapHandler(1, 0x708000, 0x7fffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, Sf2mdtReadByte);
 	SekSetReadWordHandler(1, Sf2mdtReadWord);
 	SekSetWriteByteHandler(1, Sf2mdtWriteByte);
@@ -15272,10 +15297,10 @@ static INT32 Sf2mdtbInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, SM_RAM);
-	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, SM_RAM); // mirror? can use either of this - seems to make no difference
-	SekMapMemory(CpsRamFF, 0xfc0000, 0xfcffff, SM_RAM);	
-	SekMapHandler(1, 0x708000, 0x7fffff, SM_READ | SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x700000, 0x703fff, MAP_RAM);
+	SekMapMemory(CpsBootlegSpriteRam, 0x704000, 0x707fff, MAP_RAM); // mirror? can use either of this - seems to make no difference
+	SekMapMemory(CpsRamFF, 0xfc0000, 0xfcffff, MAP_RAM);	
+	SekMapHandler(1, 0x708000, 0x7fffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(1, Sf2mdtReadByte);
 	SekSetReadWordHandler(1, Sf2mdtReadWord);
 	SekSetWriteByteHandler(1, Sf2mdtWriteByte);
@@ -15413,8 +15438,8 @@ static INT32 Sf2ceeab2Init()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0x980000, 0x980fff, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0x980000, 0x980fff, MAP_WRITE);
 	SekSetWriteWordHandler(1, Sf2ceeablScrollWrite);
 	SekClose();
 	
@@ -15640,7 +15665,7 @@ static INT32 Sf2ceuablInit()
 	nRet = Sf2ceInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0x800000, 0x800200, SM_RAM);
+	SekMapHandler(1, 0x800000, 0x800200, MAP_RAM);
 	SekSetReadByteHandler(1, Sf2ceuablReadByte);
 	SekSetWriteByteHandler(1, Sf2ceuablWriteByte);
 	SekSetWriteWordHandler(1, Sf2ceuablWriteWord);
@@ -15721,7 +15746,7 @@ static INT32 Sf2ceuab7Init()
 	INT32 nRet = Sf2ceInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0x570000, 0x57ffff, SM_READ | SM_WRITE);
+	SekMapHandler(1, 0x570000, 0x57ffff, MAP_READ | MAP_WRITE);
 	SekSetReadWordHandler(1, Sf2ceuab7ProtReadWord);
 	SekSetWriteWordHandler(1, Sf2ceuab7ProtWriteWord);
 	SekClose();
@@ -15778,7 +15803,7 @@ static INT32 Sf2dongbInit()
 	INT32 nRet = Sf2ceInit();
 
 	SekOpen(0);
-	SekMapHandler(1, 0x180000, 0x1fffff, SM_READ);
+	SekMapHandler(1, 0x180000, 0x1fffff, MAP_READ);
 	SekSetReadByteHandler(1, Sf2dongbProtReadByte);
 	SekSetReadWordHandler(1, Sf2dongbProtReadWord);
 	SekClose();
@@ -15838,7 +15863,7 @@ static INT32 Sf2hfjbInit()
 	INT32 nRet = Sf2ceInit();
 	
 	SekOpen(0);
-	SekMapHandler(1, 0x800000, 0x807fff, SM_WRITE);
+	SekMapHandler(1, 0x800000, 0x807fff, MAP_WRITE);
 	SekSetWriteByteHandler(1, Sf2hfjbWriteByte);
 	SekSetWriteWordHandler(1, Sf2hfjbWriteWord);
 	SekClose();
@@ -15963,15 +15988,15 @@ static INT32 SlampicInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsZRom, 0xf00000, 0xf0ffff, SM_ROM);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0xf18000, 0xf19fff, SM_READ);
+	SekMapMemory(CpsZRom, 0xf00000, 0xf0ffff, MAP_ROM);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0xf18000, 0xf19fff, MAP_READ);
 	SekSetReadByteHandler(1, SlampicF18Read);
-	SekMapHandler(2, 0xf1e000, 0xf1ffff, SM_READ);
+	SekMapHandler(2, 0xf1e000, 0xf1ffff, MAP_READ);
 	SekSetReadByteHandler(2, SlampicF18Read);
-	SekMapHandler(3, 0x980000, 0x980fff, SM_WRITE);
+	SekMapHandler(3, 0x980000, 0x980fff, MAP_WRITE);
 	SekSetWriteWordHandler(3, SlampicScrollWrite);
-	SekMapHandler(4, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(4, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(4, SlampicFFWriteByte);
 	SekSetWriteWordHandler(4, SlampicFFWriteWord);
 	SekClose();
@@ -16095,10 +16120,10 @@ static INT32 VarthbInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0x980000, 0x980fff, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0x980000, 0x980fff, MAP_WRITE);
 	SekSetWriteWordHandler(1, VarthbScrollWriteWord);
-	SekMapHandler(2, 0x800000, 0x807fff, SM_WRITE);
+	SekMapHandler(2, 0x800000, 0x807fff, MAP_WRITE);
 	SekSetWriteByteHandler(2, VarthbRegWriteByte);
 	SekSetWriteWordHandler(2, VarthbRegWriteWord);
 	SekClose();
@@ -16256,15 +16281,15 @@ static INT32 WofhInit()
 	nRet = TwelveMhzInit();
 	
 	SekOpen(0);
-	SekMapHandler(3, 0x880000, 0x89ffff, SM_READ | SM_WRITE);
+	SekMapHandler(3, 0x880000, 0x89ffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(3, WofhInputReadByte);
 	SekSetReadWordHandler(3, WofhInputReadWord);
 	SekSetWriteByteHandler(3, WofhInputWriteByte);
 	SekSetWriteWordHandler(3, WofhInputWriteWord);
-	SekMapHandler(4, 0x135000, 0x135fff, SM_READ);
+	SekMapHandler(4, 0x135000, 0x135fff, MAP_READ);
 	SekSetReadByteHandler(4, Wofh135ReadByte);
 	SekSetReadWordHandler(4, Wofh135ReadWord);
-	SekMapHandler(5, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(5, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(5, WofbFFWriteByte);
 	SekSetWriteWordHandler(5, WofbFFWriteWord);
 	SekClose();
@@ -16317,18 +16342,18 @@ static INT32 SgyxzInit()
 	nRet = TwelveMhzInit();
 	
 	SekOpen(0);
-	SekMapHandler(3, 0x880000, 0x89ffff, SM_READ | SM_WRITE);
+	SekMapHandler(3, 0x880000, 0x89ffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(3, WofhInputReadByte);
 	SekSetReadWordHandler(3, WofhInputReadWord);
 	SekSetWriteByteHandler(3, WofhInputWriteByte);
 	SekSetWriteWordHandler(3, WofhInputWriteWord);
-	SekMapHandler(4, 0x135000, 0x135fff, SM_READ);
+	SekMapHandler(4, 0x135000, 0x135fff, MAP_READ);
 	SekSetReadByteHandler(4, Wofh135ReadByte);
 	SekSetReadWordHandler(4, Wofh135ReadWord);
-	SekMapHandler(5, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(5, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(5, WofbFFWriteByte);
 	SekSetWriteWordHandler(5, WofbFFWriteWord);
-	SekMapHandler(6, 0x900000, 0x9007FF, SM_WRITE);
+	SekMapHandler(6, 0x900000, 0x9007FF, MAP_WRITE);
 	SekSetWriteLongHandler(6, SgyxzSpriteRamWriteLong);
 	SekClose();
 
@@ -16365,12 +16390,12 @@ static INT32 Wof3jsaInit()
 	INT32 nRet = TwelveMhzInit();
 	
 	SekOpen(0);
-	SekMapHandler(3, 0x880000, 0x89ffff, SM_READ | SM_WRITE);
+	SekMapHandler(3, 0x880000, 0x89ffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(3, WofhInputReadByte);
 	SekSetReadWordHandler(3, WofhInputReadWord);
 	SekSetWriteByteHandler(3, WofhInputWriteByte);
 	SekSetWriteWordHandler(3, WofhInputWriteWord);
-	SekMapHandler(4, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(4, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(4, WofbFFWriteByte);
 	SekSetWriteWordHandler(4, WofbFFWriteWord);
 	SekClose();
@@ -16475,12 +16500,12 @@ static INT32 Wof3sjInit()
 	INT32 nRet = TwelveMhzInit();
 	
 	SekOpen(0);
-	SekMapHandler(3, 0x880000, 0x89ffff, SM_READ | SM_WRITE);
+	SekMapHandler(3, 0x880000, 0x89ffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(3, Wof3sjInputReadByte);
 	SekSetReadWordHandler(3, Wof3sjInputReadWord);
 	SekSetWriteByteHandler(3, Wof3sjInputWriteByte);
 	SekSetWriteWordHandler(3, Wof3sjInputWriteWord);
-	SekMapHandler(4, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(4, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(4, WofbFFWriteByte);
 	SekSetWriteWordHandler(4, WofbFFWriteWord);
 	SekClose();
@@ -16501,12 +16526,12 @@ static INT32 WofsjInit()
 	INT32 nRet = TwelveMhzInit();
 	
 	SekOpen(0);
-	SekMapHandler(3, 0x880000, 0x89ffff, SM_READ | SM_WRITE);
+	SekMapHandler(3, 0x880000, 0x89ffff, MAP_READ | MAP_WRITE);
 	SekSetReadByteHandler(3, Wof3sjInputReadByte);
 	SekSetReadWordHandler(3, Wof3sjInputReadWord);
 	SekSetWriteByteHandler(3, Wof3sjInputWriteByte);
 	SekSetWriteWordHandler(3, Wof3sjInputWriteWord);
-	SekMapHandler(4, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(4, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(4, WofbFFWriteByte);
 	SekSetWriteWordHandler(4, WofbFFWriteWord);
 	SekClose();
@@ -16636,10 +16661,10 @@ static INT32 WofbInit()
 	CpsBootlegSpriteRam = (UINT8*)BurnMalloc(0x4000);
 	
 	SekOpen(0);
-	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, SM_RAM);
-	SekMapHandler(1, 0x980000, 0x98ffff, SM_WRITE);
+	SekMapMemory(CpsBootlegSpriteRam, 0x990000, 0x993fff, MAP_RAM);
+	SekMapHandler(1, 0x980000, 0x98ffff, MAP_WRITE);
 	SekSetWriteWordHandler(1, Wofb98WriteWord);
-	SekMapHandler(2, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(2, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(2, WofbFFWriteByte);
 	SekSetWriteWordHandler(2, WofbFFWriteWord);
 	SekClose();
@@ -16894,10 +16919,20 @@ struct BurnDriver BurnDrvCpsCps1demo = {
 
 struct BurnDriver BurnDrvCpsCworld2j = {
 	"cworld2j", NULL, NULL, NULL, "1992",
-	"Capcom World 2 (920611 Japan)\0", NULL, "Capcom", "CPS1",
-	L"Capcom World 2 (\u30AF\u30A4\u30BA\uFF15 \u3042\u3069\u3079\u3093\u3061\u3083\u30FC\u304F\u3044\u305A \u304B\u3077\u3053\u3093\u308F\u30FC\u308B\u3069\uFF12 920611 Japan)\0", NULL, NULL, NULL,
+	"Adventure Quiz Capcom World 2 (920611 Japan)\0", NULL, "Capcom", "CPS1",
+	L"Adventure Quiz Capcom World 2 (\u30AF\u30A4\u30BA\uFF15 \u3042\u3069\u3079\u3093\u3061\u3083\u30FC\u304F\u3044\u305A \u304B\u3077\u3053\u3093\u308F\u30FC\u308B\u3069\uFF12 920611 Japan)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_CAPCOM_CPS1, GBF_PUZZLE, 0,
 	NULL, Cworld2jRomInfo, Cworld2jRomName, NULL, NULL, Cworld2jInputInfo, Cworld2jDIPInfo,
+	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvCpsCworld2ja = {
+	"cworld2ja", "cworld2j", NULL, NULL, "1992",
+	"Adventure Quiz Capcom World 2 (Japan 920611, B-Board 90629B-3, no battery)\0", NULL, "Capcom", "CPS1",
+	L"Adevnture Quiz Capcom World 2 (\u30AF\u30A4\u30BA\uFF15 \u3042\u3069\u3079\u3093\u3061\u3083\u30FC\u304F\u3044\u305A \u304B\u3077\u3053\u3093\u308F\u30FC\u308B\u3069\uFF12 Japan 920611, B-Board 90629B-3, no battery)\0", NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS1, GBF_PUZZLE, 0,
+	NULL, Cworld2jaRomInfo, Cworld2jaRomName, NULL, NULL, Cworld2jInputInfo, Cworld2jDIPInfo,
 	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };

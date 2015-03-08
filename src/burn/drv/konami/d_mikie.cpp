@@ -159,7 +159,7 @@ static void mikie_main_write(UINT16 a, UINT8 d)
 		case 0x2002:
 			if (*sound_irq == 0 && d == 1) {
 				ZetSetVector(0xff);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			}
 			*sound_irq = d;
 		return;
@@ -233,7 +233,7 @@ static UINT8 __fastcall mikie_sound_read(UINT16 a)
 	switch (a)
 	{
 		case 0x8003:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0x8005:
@@ -303,14 +303,12 @@ static void DrvPaletteInit()
 
 static INT32 DrvGfxDecode()
 {
-	INT32 Plane0[4]  = { 0, 1, 2, 3 };
-	INT32 Plane1[4]  = { 0, 4, 256*128*8+0, 256*128*8+4 };
-	INT32 XOffs0[8] = { 0*4, 1*4, 2*4, 3*4, 4*4, 5*4, 6*4, 7*4 };
-	INT32 YOffs0[8] = { 0*4*8, 1*4*8, 2*4*8, 3*4*8, 4*4*8, 5*4*8, 6*4*8, 7*4*8 };
-	INT32 XOffs1[16] = { 32*8+0, 32*8+1, 32*8+2, 32*8+3, 16*8+0, 16*8+1, 16*8+2, 16*8+3,
-			0, 1, 2, 3, 48*8+0, 48*8+1, 48*8+2, 48*8+3 };
-	INT32 YOffs1[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16,
-			32*16, 33*16, 34*16, 35*16, 36*16, 37*16, 38*16, 39*16 };
+	INT32 Plane0[4]  = { STEP4(0,1) };
+	INT32 Plane1[4]  = { STEP2(0,4), STEP2(256*128*8, 4) };
+	INT32 XOffs0[8] = { STEP8(0,4) };
+	INT32 YOffs0[8] = { STEP8(0,32) };
+	INT32 XOffs1[16] = { STEP4(256, 1), STEP4(128, 1), STEP4(0, 1), STEP4(240,1) };
+	INT32 YOffs1[16] = { STEP8(0,16), STEP8(512, 16) };
 
 	UINT8 *buf = (UINT8*)BurnMalloc(0x10000);
 
@@ -400,19 +398,19 @@ static INT32 DrvInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809RAM,	0x0000, 0x00ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,	0x2800, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvColRAM,	0x3800, 0x3bff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,	0x3c00, 0x3fff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM,	0x6000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809RAM,	0x0000, 0x00ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,	0x2800, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvColRAM,	0x3800, 0x3bff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,	0x3c00, 0x3fff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM,	0x6000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(mikie_main_write);
 	M6809SetReadHandler(mikie_main_read);
 	M6809Close();
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,		0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,		0x4000, 0x43ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,		0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,		0x4000, 0x43ff, MAP_RAM);
 	ZetSetWriteHandler(mikie_sound_write);
 	ZetSetReadHandler(mikie_sound_read);
 	ZetClose();
@@ -556,7 +554,7 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += M6809Run(nCyclesTotal[0] / nInterleave);
 		nCyclesDone[1] += ZetRun(nCyclesTotal[1] / nInterleave);
 
-		if (i == 240 && *irq_mask) M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+		if (i == 240 && *irq_mask) M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
 		// Render Sound Segment
 		if (pBurnSoundOut) {
@@ -641,7 +639,7 @@ STD_ROM_FN(mikie)
 
 struct BurnDriver BurnDrvMikie = {
 	"mikie", NULL, NULL, NULL, "1984",
-	"Mikie\0", NULL, "Konami", "Miscellaneous",
+	"Mikie\0", NULL, "Konami", "GX469",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, mikieRomInfo, mikieRomName, NULL, NULL, MikieInputInfo, MikieDIPInfo,
@@ -678,7 +676,7 @@ STD_ROM_FN(mikiej)
 
 struct BurnDriver BurnDrvMikiej = {
 	"mikiej", "mikie", NULL, NULL, "1984",
-	"Shinnyuushain Tooru-kun\0", NULL, "Konami", "Miscellaneous",
+	"Shinnyuushain Tooru-kun\0", NULL, "Konami", "GX469",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, mikiejRomInfo, mikiejRomName, NULL, NULL, MikieInputInfo, MikieDIPInfo,
@@ -715,7 +713,7 @@ STD_ROM_FN(mikiehs)
 
 struct BurnDriver BurnDrvMikiehs = {
 	"mikiehs", "mikie", NULL, NULL, "1984",
-	"Mikie (High School Graffiti)\0", NULL, "Konami", "Miscellaneous",
+	"Mikie (High School Graffiti)\0", NULL, "Konami", "GX469",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, mikiehsRomInfo, mikiehsRomName, NULL, NULL, MikieInputInfo, MikieDIPInfo,

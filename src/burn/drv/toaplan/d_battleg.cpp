@@ -40,6 +40,26 @@ static struct BurnRomInfo bgareggaRomDesc[] = {
 STD_ROM_PICK(bgaregga)
 STD_ROM_FN(bgaregga)
 
+static struct BurnRomInfo bgareggazRomDesc[] = {
+	{ "garegga-prg0.bin",     0x080000, 0x6F4AF466, BRF_ESS | BRF_PRG }, //  0 CPU #0 code (even)
+	{ "garegga-prg1.bin",     0x080000, 0xB4DC9A48, BRF_ESS | BRF_PRG }, //  1				(odd)
+
+	{ "rom4.bin",     0x200000, 0xB333D81F, BRF_GRA },			 //  2 GP9001 Tile data
+	{ "rom3.bin",     0x200000, 0x51B9EBFB, BRF_GRA },			 //  3
+	{ "rom2.bin",     0x200000, 0xB330E5E2, BRF_GRA },			 //  4
+	{ "rom1.bin",     0x200000, 0x7EAFDD70, BRF_GRA },			 //  5
+
+	{ "text.u81",     0x008000, 0xE67FD534, BRF_GRA },			 //  6 Extra text layer tile data
+
+	{ "snd.bin",      0x020000, 0x68632952, BRF_ESS | BRF_PRG }, //  7 Z80 program
+
+	{ "rom5.bin",     0x100000, 0xF6D49863, BRF_SND },			 //  8 MSM6295 ADPCM data
+};
+
+
+STD_ROM_PICK(bgareggaz)
+STD_ROM_FN(bgareggaz)
+
 static struct BurnRomInfo bgareghkRomDesc[] = {
 	{ "prg_0.rom",    0x080000, 0x26E0019E, BRF_ESS | BRF_PRG }, //  0 CPU #0 code (even)
 	{ "prg_1.rom",    0x080000, 0x2CCFDD1E, BRF_ESS | BRF_PRG }, //  1				(odd)
@@ -638,7 +658,7 @@ void __fastcall battlegWriteByte(UINT32 sekAddress, UINT8 byteValue)
 			nSoundCommand = byteValue;
 
 			// Trigger Z80 interrupt, and allow the Z80 to process it
-			ZetRaiseIrq(255);
+			ZetSetIRQLine(0xff, CPU_IRQSTATUS_AUTO);
 			nCyclesDone[1] += ZetRun(0x0200);
 			break;
 
@@ -689,7 +709,7 @@ static INT32 DrvDoReset()
 {
 	SekOpen(0);
 	nIRQPending = 0;
-    SekSetIRQLine(0, SEK_IRQSTATUS_NONE);
+    SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 	SekReset();
 	SekClose();
 
@@ -739,13 +759,13 @@ static INT32 battlegInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom01,			0x000000, 0x0FFFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,			0x100000, 0x10FFFF, SM_RAM);
-		SekMapMemory(RamPal,		0x400000, 0x400FFF, SM_RAM);	// Palette RAM
-		SekMapMemory(Ram02,			0x401000, 0x4017FF, SM_RAM);	// Unused
-		SekMapMemory(ExtraTRAM,		0x500000, 0x501FFF, SM_RAM);
-		SekMapMemory(ExtraTSelect,	0x502000, 0x502FFF, SM_RAM);	// 0x502000 - Scroll; 0x502200 - RAM
-		SekMapMemory(ExtraTScroll,	0x503000, 0x503FFF, SM_RAM);	// 0x203000 - Offset; 0x503200 - RAM
+		SekMapMemory(Rom01,			0x000000, 0x0FFFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,			0x100000, 0x10FFFF, MAP_RAM);
+		SekMapMemory(RamPal,		0x400000, 0x400FFF, MAP_RAM);	// Palette RAM
+		SekMapMemory(Ram02,			0x401000, 0x4017FF, MAP_RAM);	// Unused
+		SekMapMemory(ExtraTRAM,		0x500000, 0x501FFF, MAP_RAM);
+		SekMapMemory(ExtraTSelect,	0x502000, 0x502FFF, MAP_RAM);	// 0x502000 - Scroll; 0x502200 - RAM
+		SekMapMemory(ExtraTScroll,	0x503000, 0x503FFF, MAP_RAM);	// 0x203000 - Offset; 0x503200 - RAM
 
 		SekSetReadWordHandler(0, battlegReadWord);
 		SekSetReadByteHandler(0, battlegReadByte);
@@ -891,7 +911,7 @@ static INT32 DrvFrame()
 			}
 
 			nIRQPending = 1;
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 			ToaBufferGP9001Sprites();
 
@@ -949,7 +969,7 @@ static INT32 DrvFrame()
 
 struct BurnDriver BurnDrvBgaregga = {
 	"bgaregga", NULL, NULL, NULL, "1996",
-	"Battle Garegga (World) (Sat Feb 3 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
+	"Battle Garegga (Europe / USA / Japan / Asia) (Sat Feb 3 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, bgareggaRomInfo, bgareggaRomName, NULL, NULL, battlegInputInfo, bgareggaDIPInfo,
@@ -957,9 +977,19 @@ struct BurnDriver BurnDrvBgaregga = {
 	240, 320, 3, 4
 };
 
+struct BurnDriver BurnDrvBgareggaz = {
+	"bgareggaz", "bgaregga", NULL, NULL, "2008",
+	"Battle Garegga Zakk version (Europe / USA / Japan / Asia) (Sat Feb 3 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
+	NULL, bgareggazRomInfo, bgareggazRomName, NULL, NULL, battlegInputInfo, bgareggaDIPInfo,
+	battlegInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &ToaRecalcPalette, 0x800,
+	240, 320, 3, 4
+};
+
 struct BurnDriver BurnDrvBgaregcn = {
 	"bgareggacn", "bgaregga", NULL, NULL, "1996",
-	"Battle Garegga - Type 2 (China / Denmark?) (Tue Apr 2 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
+	"Battle Garegga - Type 2 (Denmark / China) (Tue Apr 2 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, bgaregcnRomInfo, bgaregcnRomName, NULL, NULL, battlegInputInfo, bgaregcnDIPInfo,
@@ -969,7 +999,7 @@ struct BurnDriver BurnDrvBgaregcn = {
 
 struct BurnDriver BurnDrvBgaregt2 = {
 	"bgareggat2", "bgaregga", NULL, NULL, "1996",
-	"Battle Garegga - Type 2 (World) (Sat Mar 2 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
+	"Battle Garegga - Type 2 (Europe / USA / Japan / Asia) (Sat Mar 2 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, bgaregt2RomInfo, bgaregt2RomName, NULL, NULL, battlegInputInfo, bgareggaDIPInfo,
@@ -979,7 +1009,7 @@ struct BurnDriver BurnDrvBgaregt2 = {
 
 struct BurnDriver BurnDrvBgaregnv = {
 	"bgaregganv", "bgaregga", NULL, NULL, "1996",
-	"Battle Garegga - New Version (Hong Kong / Austria?) (Sat Mar 2 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
+	"Battle Garegga - New Version (Austria / Hong Kong) (Sat Mar 2 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, bgaregnvRomInfo, bgaregnvRomName, NULL, NULL, battlegInputInfo, bgareghkDIPInfo,
@@ -989,7 +1019,7 @@ struct BurnDriver BurnDrvBgaregnv = {
 
 struct BurnDriver BurnDrvBgareghk = {
 	"bgareggahk", "bgaregga", NULL, NULL, "1996",
-	"Battle Garegga (Hong Kong / Austria?) (Sat Feb 3 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
+	"Battle Garegga (Austria / Hong Kong) (Sat Feb 3 1996)\0", NULL, "Raizing / 8ing", "Toaplan GP9001 based",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, bgareghkRomInfo, bgareghkRomName, NULL, NULL, battlegInputInfo, bgareghkDIPInfo,
@@ -1010,7 +1040,7 @@ struct BurnDriver BurnDrvBgaregtw = {
 struct BurnDriver BurnDrvBgareggabl = {
 	"bgareggabl", "bgaregga", NULL, NULL, "1996",
 	"1945 Part 2 (Battle Garaga hack)\0", NULL, "hack", "Toaplan GP9001 based",
-	L"1945 Part 2\0\uFF11\uFF19\uFF14\uFF15\u4E8C\u4EE3 (Battle Garrega Chinese hack)\0", NULL, NULL, NULL,
+	L"1945 Part 2\0\uFF11\uFF19\uFF14\uFF15\u4E8C\u4EE3 (Chinese hack of Battle Garegga)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW | BDF_HACK, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, bgareggablRomInfo, bgareggablRomName, NULL, NULL, battlegInputInfo, bgareggaDIPInfo,
 	BgareggablInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &ToaRecalcPalette, 0x800,

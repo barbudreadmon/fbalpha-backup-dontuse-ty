@@ -235,9 +235,9 @@ UINT8 __fastcall aquarium_sound_in(UINT16 port)
 void aquariumYM2151IrqHandler(INT32 Irq)
 {
 	if (Irq) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -394,13 +394,13 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvMidRAM,		0xc00000, 0xc00fff, SM_RAM);
-	SekMapMemory(DrvBakRAM,		0xc01000, 0xc01fff, SM_RAM);
-	SekMapMemory(DrvTxtRAM,		0xc02000, 0xc03fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0xc80000, 0xc81fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0xd00000, 0xd00fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0xff0000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvMidRAM,		0xc00000, 0xc00fff, MAP_RAM);
+	SekMapMemory(DrvBakRAM,		0xc01000, 0xc01fff, MAP_RAM);
+	SekMapMemory(DrvTxtRAM,		0xc02000, 0xc03fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0xc80000, 0xc81fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0xd00000, 0xd00fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0xff0000, 0xffffff, MAP_RAM);
 	SekSetWriteByteHandler(0,	aquarium_write_byte);
 	SekSetWriteWordHandler(0,	aquarium_write_word);
 	SekSetReadByteHandler(0,	aquarium_read_byte);
@@ -681,7 +681,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		nSegment = nBurnSoundLen - nSoundBufferPos;

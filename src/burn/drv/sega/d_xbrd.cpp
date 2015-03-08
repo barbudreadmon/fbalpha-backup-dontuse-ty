@@ -1,4 +1,5 @@
 #include "sys16.h"
+#include "segapcm.h"
 
 /*====================================================
 Input defs
@@ -1698,12 +1699,12 @@ Memory Handlers
 ====================================================*/
 
 typedef UINT8 (*io_custom_read)(UINT8);
-static io_custom_read iochip_custom_read[2][4];
+static io_custom_read iochip_custom_read[2][8] = {{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }, { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }};
 
 typedef void (*io_custom_write)(UINT8);
-static io_custom_write iochip_custom_write[2][4];
+static io_custom_write iochip_custom_write[2][8] = {{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }, { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }};
 
-static UINT8 iochip_regs[2][8];
+static UINT8 iochip_regs[2][8] = {{ 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }};
 
 static UINT8 LastsurvMux = 0;
 static INT32 LastsurvPosition[2] = { 0, 0 };
@@ -2486,8 +2487,11 @@ static INT32 LoffireInit()
 	BurnGunInit(2, true);
 	
 	System16ProcessAnalogControlsDo = LoffireProcessAnalogControls;
-	
-	return System16Init();
+	INT32 rc = System16Init();
+	SegaPCMSetRoute(0, BURN_SND_SEGAPCM_ROUTE_1, 1.0, BURN_SND_ROUTE_BOTH);
+	SegaPCMSetRoute(0, BURN_SND_SEGAPCM_ROUTE_2, 1.0, BURN_SND_ROUTE_BOTH);
+
+	return rc;
 }
 
 static UINT8 RacheroProcessAnalogControls(UINT16 value)
@@ -2675,7 +2679,7 @@ static INT32 XBoardExit()
 {
 	memset(iochip_regs, 0, sizeof(iochip_regs));
 	
-	for (INT32 i = 0; i < 4; i++) {
+	for (INT32 i = 0; i < 8; i++) {
 		iochip_custom_read[0][i] = NULL;
 		iochip_custom_read[1][i] = NULL;
 		iochip_custom_write[0][i] = NULL;
@@ -2763,7 +2767,7 @@ struct BurnDriver BurnDrvGprider = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEMX | HARDWARE_SEGA_SPRITE_LOAD32 | HARDWARE_SEGA_FD1094_ENC, GBF_RACING, 0,
 	NULL, GpriderRomInfo, GpriderRomName, NULL, NULL, GpriderInputInfo, GpriderDIPInfo,
-	GpriderInit, XBoardExit, XBoardFrame, NULL, XBoardScan,
+	GpriderInit, XBoardExit, XBoardFrameGPRider, NULL, XBoardScan,
 	NULL, 0x6000, 320, 224, 4, 3
 };
 
@@ -2773,7 +2777,7 @@ struct BurnDriver BurnDrvGpriderj = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEMX | HARDWARE_SEGA_SPRITE_LOAD32 | HARDWARE_SEGA_FD1094_ENC, GBF_RACING, 0,
 	NULL, GpriderjRomInfo, GpriderjRomName, NULL, NULL, GpriderInputInfo, GpriderDIPInfo,
-	GpriderInit, XBoardExit, XBoardFrame, NULL, XBoardScan,
+	GpriderInit, XBoardExit, XBoardFrameGPRider, NULL, XBoardScan,
 	NULL, 0x6000, 320, 224, 4, 3
 };
 
@@ -2783,7 +2787,7 @@ struct BurnDriver BurnDrvGprideru = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEMX | HARDWARE_SEGA_SPRITE_LOAD32 | HARDWARE_SEGA_FD1094_ENC, GBF_RACING, 0,
 	NULL, GprideruRomInfo, GprideruRomName, NULL, NULL, GpriderInputInfo, GpriderDIPInfo,
-	GpriderInit, XBoardExit, XBoardFrame, NULL, XBoardScan,
+	GpriderInit, XBoardExit, XBoardFrameGPRider, NULL, XBoardScan,
 	NULL, 0x6000, 320, 224, 4, 3
 };
 

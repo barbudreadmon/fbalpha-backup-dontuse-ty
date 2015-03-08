@@ -393,7 +393,7 @@ static void bishi_tile_callback(INT32 layer, INT32 *code, INT32 *color, INT32 */
 
 static void bishi_sound_irq(INT32 status)
 {
-	SekSetIRQLine(1, (status) ? SEK_IRQSTATUS_ACK : SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(1, (status) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvDoReset()
@@ -480,10 +480,10 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x400000, 0x407fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0xb00000, 0xb03fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0xb04000, 0xb047ff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x400000, 0x407fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0xb00000, 0xb03fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0xb04000, 0xb047ff, MAP_ROM);
 	SekSetWriteWordHandler(0,	bishi_write_word);
 	SekSetWriteByteHandler(0,	bishi_write_byte);
 	SekSetReadWordHandler(0,	bishi_read_word);
@@ -598,8 +598,8 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += SekRun(nCyclesTotal[0] / nInterleave);
 
 		if (control_data & 0x800) {
-			if (i == 0) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-			if (i == 240) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
+			if (i == 0) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+			if (i == 240) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
 
 		}
 	}

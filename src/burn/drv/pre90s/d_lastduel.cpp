@@ -867,9 +867,9 @@ void __fastcall LastduelZ80Write(UINT16 a, UINT8 d)
 inline static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -952,13 +952,13 @@ static INT32 DrvInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam        , 0xfc1800, 0xfc1fff, SM_RAM);
-	SekMapMemory(DrvVideoRam         , 0xfc8000, 0xfc9fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0xfcc000, 0xfcc7ff, SM_RAM);
-	SekMapMemory(DrvScroll1Ram       , 0xfd4000, 0xfd7fff, SM_RAM);
-	SekMapMemory(DrvScroll2Ram       , 0xfd8000, 0xfdffff, SM_RAM);
-	SekMapMemory(Drv68KRam           , 0xff0000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam        , 0xfc1800, 0xfc1fff, MAP_RAM);
+	SekMapMemory(DrvVideoRam         , 0xfc8000, 0xfc9fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0xfcc000, 0xfcc7ff, MAP_RAM);
+	SekMapMemory(DrvScroll1Ram       , 0xfd4000, 0xfd7fff, MAP_RAM);
+	SekMapMemory(DrvScroll2Ram       , 0xfd8000, 0xfdffff, MAP_RAM);
+	SekMapMemory(Drv68KRam           , 0xff0000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0, Madgear68KWriteWord);
 	SekSetReadByteHandler(0, Madgear68KReadByte);
 	SekClose();
@@ -1047,13 +1047,13 @@ static INT32 Ledstrm2Init()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam        , 0xfc1800, 0xfc1fff, SM_RAM);
-	SekMapMemory(DrvVideoRam         , 0xfc8000, 0xfc9fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0xfcc000, 0xfcc7ff, SM_RAM);
-	SekMapMemory(DrvScroll1Ram       , 0xfd4000, 0xfd7fff, SM_RAM);
-	SekMapMemory(DrvScroll2Ram       , 0xfd8000, 0xfdffff, SM_RAM);
-	SekMapMemory(Drv68KRam           , 0xff0000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam        , 0xfc1800, 0xfc1fff, MAP_RAM);
+	SekMapMemory(DrvVideoRam         , 0xfc8000, 0xfc9fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0xfcc000, 0xfcc7ff, MAP_RAM);
+	SekMapMemory(DrvScroll1Ram       , 0xfd4000, 0xfd7fff, MAP_RAM);
+	SekMapMemory(DrvScroll2Ram       , 0xfd8000, 0xfdffff, MAP_RAM);
+	SekMapMemory(Drv68KRam           , 0xff0000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0, Madgear68KWriteWord);
 	SekSetReadByteHandler(0, Madgear68KReadByte);
 	SekClose();
@@ -1141,13 +1141,13 @@ static INT32 LastduelInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x05ffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam        , 0xfc0800, 0xfc0fff, SM_RAM);
-	SekMapMemory(DrvVideoRam         , 0xfcc000, 0xfcdfff, SM_RAM);
-	SekMapMemory(DrvScroll1Ram       , 0xfd0000, 0xfd3fff, SM_RAM);
-	SekMapMemory(DrvScroll2Ram       , 0xfd4000, 0xfd7fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0xfd8000, 0xfd87ff, SM_RAM);
-	SekMapMemory(Drv68KRam           , 0xfe0000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x05ffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam        , 0xfc0800, 0xfc0fff, MAP_RAM);
+	SekMapMemory(DrvVideoRam         , 0xfcc000, 0xfcdfff, MAP_RAM);
+	SekMapMemory(DrvScroll1Ram       , 0xfd0000, 0xfd3fff, MAP_RAM);
+	SekMapMemory(DrvScroll2Ram       , 0xfd4000, 0xfd7fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0xfd8000, 0xfd87ff, MAP_RAM);
+	SekMapMemory(Drv68KRam           , 0xfe0000, 0xffffff, MAP_RAM);
 	SekSetReadWordHandler(0, Lastduel68KReadWord);
 	SekSetWriteWordHandler(0, Lastduel68KWriteWord);
 	SekSetWriteByteHandler(0, Lastduel68KWriteByte);
@@ -1246,13 +1246,13 @@ static INT32 LastduelbInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x05ffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam        , 0xfc0800, 0xfc0fff, SM_RAM);
-	SekMapMemory(DrvVideoRam         , 0xfcc000, 0xfcdfff, SM_RAM);
-	SekMapMemory(DrvScroll1Ram       , 0xfd0000, 0xfd3fff, SM_RAM);
-	SekMapMemory(DrvScroll2Ram       , 0xfd4000, 0xfd7fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0xfd8000, 0xfd87ff, SM_RAM);
-	SekMapMemory(Drv68KRam           , 0xfe0000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x05ffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam        , 0xfc0800, 0xfc0fff, MAP_RAM);
+	SekMapMemory(DrvVideoRam         , 0xfcc000, 0xfcdfff, MAP_RAM);
+	SekMapMemory(DrvScroll1Ram       , 0xfd0000, 0xfd3fff, MAP_RAM);
+	SekMapMemory(DrvScroll2Ram       , 0xfd4000, 0xfd7fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0xfd8000, 0xfd87ff, MAP_RAM);
+	SekMapMemory(Drv68KRam           , 0xfe0000, 0xffffff, MAP_RAM);
 	SekSetReadWordHandler(0, Lastduel68KReadWord);
 	SekSetWriteWordHandler(0, Lastduel68KWriteWord);
 	SekSetWriteByteHandler(0, Lastduel68KWriteByte);
@@ -1728,7 +1728,7 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == 33 || i == 66) SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+		if (i == 33 || i == 66) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		ZetOpen(0);
@@ -1744,7 +1744,7 @@ static INT32 DrvFrame()
 	if (pBurnDraw) DrvDraw();
 	
 	SekOpen(0);
-	SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	memcpy(DrvSpriteRamBuffer, DrvSpriteRam, 0x800);
@@ -1776,7 +1776,7 @@ static INT32 LastduelFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == 33 || i == 66) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == 33 || i == 66) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		ZetOpen(0);
@@ -1792,7 +1792,7 @@ static INT32 LastduelFrame()
 	if (pBurnDraw) LastduelDraw();
 	
 	SekOpen(0);
-	SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	memcpy(DrvSpriteRamBuffer, DrvSpriteRam, 0x800);

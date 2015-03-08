@@ -62,7 +62,7 @@ STDINPUTINFO(uopoko)
 static void UpdateIRQStatus()
 {
 	nIRQPending = (nVideoIRQ == 0 || nSoundIRQ == 0 || nUnknownIRQ == 0);
-	SekSetIRQLine(1, nIRQPending ? SEK_IRQSTATUS_ACK : SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(1, nIRQPending ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 UINT8 __fastcall uopokoReadByte(UINT32 sekAddress)
@@ -441,7 +441,7 @@ static INT32 LoadRoms()
 
 	// Load YMZ280B data
 	BurnLoadRom(YMZ280BROM, 4, 1);
-	
+
 	BurnLoadRom(DefaultEEPROM, 5, 1);
 
 	return 0;
@@ -512,13 +512,13 @@ static INT32 DrvInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom01,					0x000000, 0x0FFFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,					0x100000, 0x10FFFF, SM_RAM);
-		SekMapMemory(CaveSpriteRAM,			0x400000, 0x40FFFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[0],		0x500000, 0x507FFF, SM_RAM);
+		SekMapMemory(Rom01,					0x000000, 0x0FFFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,					0x100000, 0x10FFFF, MAP_RAM);
+		SekMapMemory(CaveSpriteRAM,			0x400000, 0x40FFFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[0],		0x500000, 0x507FFF, MAP_RAM);
 
-		SekMapMemory(CavePalSrc,			0x800000, 0x80FFFF, SM_ROM);	// Palette RAM (write goes through handler)
-		SekMapHandler(1,					0x800000, 0x80FFFF, SM_WRITE);	//
+		SekMapMemory(CavePalSrc,			0x800000, 0x80FFFF, MAP_ROM);	// Palette RAM (write goes through handler)
+		SekMapHandler(1,					0x800000, 0x80FFFF, MAP_WRITE);	//
 
 		SekSetReadWordHandler(0, uopokoReadWord);
 		SekSetReadByteHandler(0, uopokoReadByte);
@@ -538,7 +538,7 @@ static INT32 DrvInit()
 	CaveSpriteInit(1, 0x800000);
 	CaveTileInitLayer(0, 0x400000, 8, 0x4000);
 
-	YMZ280BInit(16934400, &TriggerSoundIRQ);
+	YMZ280BInit(16934400, &TriggerSoundIRQ, 0x200000);
 	YMZ280BSetRoute(BURN_SND_YMZ280B_YMZ280B_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	YMZ280BSetRoute(BURN_SND_YMZ280B_YMZ280B_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
 
@@ -558,7 +558,7 @@ static struct BurnRomInfo uopokoRomDesc[] = {
 
 	{ "cave_cv-02_u49.u49",     0x400000, 0x12fb11bb, BRF_GRA }, //  3 Layer 0 Tile data
 
-	{ "came_cv-02_u4.u4",       0x200000, 0xa2d0d755, BRF_SND }, //  4 YMZ280B (AD)PCM data
+	{ "cave_cv-02_u4.u4",       0x200000, 0xa2d0d755, BRF_SND }, //  4 YMZ280B (AD)PCM data
 	
 	{ "eeprom-uopoko.bin", 		0x0080, 0xf4a24b95, BRF_ESS | BRF_PRG },
 };
@@ -575,7 +575,7 @@ static struct BurnRomInfo uopokojRomDesc[] = {
 
 	{ "cave_cv-02_u49.u49",     0x400000, 0x12fb11bb, BRF_GRA }, //  3 Layer 0 Tile data
 
-	{ "came_cv-02_u4.u4",       0x200000, 0xa2d0d755, BRF_SND }, //  4 YMZ280B (AD)PCM data
+	{ "cave_cv-02_u4.u4",       0x200000, 0xa2d0d755, BRF_SND }, //  4 YMZ280B (AD)PCM data
 	
 	{ "eeprom-uopoko.bin", 		0x0080, 0xf4a24b95, BRF_ESS | BRF_PRG },
 };

@@ -580,9 +580,9 @@ static void powerinsIRQHandler(INT32, INT32 nStatus)
 //	bprintf(PRINT_NORMAL, _T("powerinsIRQHandler %i\n"), nStatus);
 	
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -599,7 +599,7 @@ static double powerinsGetTime()
 static INT32 DrvDoReset()
 {
 	SekOpen(0);
-	SekSetIRQLine(0, SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 	SekReset();
 	SekClose();
 	
@@ -799,19 +799,19 @@ static INT32 powerinsInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom68K,		0x000000, 0x0FFFFF, SM_ROM);	// CPU 0 ROM
+		SekMapMemory(Rom68K,		0x000000, 0x0FFFFF, MAP_ROM);	// CPU 0 ROM
 		SekMapMemory((UINT8 *)RamPal,
-									0x120000, 0x120FFF, SM_ROM);	// palette
+									0x120000, 0x120FFF, MAP_ROM);	// palette
 		SekMapMemory((UINT8 *)RamBg,
-									0x140000, 0x143fff, SM_RAM);	// b ground
+									0x140000, 0x143fff, MAP_RAM);	// b ground
 		SekMapMemory((UINT8 *)RamFg,		
-									0x170000, 0x170fff, SM_RAM);	// f ground
+									0x170000, 0x170fff, MAP_RAM);	// f ground
 		SekMapMemory((UINT8 *)RamFg,		
-									0x171000, 0x171fff, SM_RAM);	// f ground Mirror
+									0x171000, 0x171fff, MAP_RAM);	// f ground Mirror
 		SekMapMemory((UINT8 *)RamSpr,
-									0x180000, 0x18ffff, SM_RAM);	// sprites
+									0x180000, 0x18ffff, MAP_RAM);	// sprites
 
-		SekMapHandler(1,			0x120000, 0x120FFF, SM_WRITE);
+		SekMapHandler(1,			0x120000, 0x120FFF, MAP_WRITE);
 
 
 		SekSetReadWordHandler(0, powerinsReadWord);
@@ -1043,7 +1043,7 @@ static INT32 powerinsFrame()
 	if ( game_drv == GAME_POWERINA ) {
 		nCyclesTotal[0] = (INT32)((INT64)12000000 * nBurnCPUSpeedAdjust / (0x0100 * 60));
 		SekRun(nCyclesTotal[0]);
-		SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 		if (pBurnSoundOut) MSM6295Render(0, pBurnSoundOut, nBurnSoundLen);
 	}
@@ -1060,7 +1060,7 @@ static INT32 powerinsFrame()
 			BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
 		}
 
-		SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	}	
 	
 	if (game_drv == GAME_POWERINB) {
@@ -1077,11 +1077,11 @@ static INT32 powerinsFrame()
 			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 			nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
 			if ((i & 180) == 0) {
-				ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 			}
 		}
 
-		SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	}
 
 	SekClose();

@@ -211,7 +211,7 @@ static void atetris_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x3800:
-			M6502SetIRQLine(0, M6502_IRQSTATUS_NONE);
+			M6502SetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x3c00:
@@ -290,15 +290,15 @@ static INT32 CommonInit(INT32 boot)
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, M6502_RAM);
-	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, M6502_RAM);
-	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, M6502_ROM);
-	M6502MapMemory(DrvPalRAM,		0x2100, 0x21ff, M6502_ROM);
-	M6502MapMemory(DrvPalRAM,		0x2200, 0x22ff, M6502_ROM);
-	M6502MapMemory(DrvPalRAM,		0x2300, 0x23ff, M6502_ROM);
-	M6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, M6502_ROM);
-	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, M6502_ROM);
-	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, M6502_ROM);
+	M6502MapMemory(Drv6502RAM,		0x0000, 0x0fff, MAP_RAM);
+	M6502MapMemory(DrvVidRAM,		0x1000, 0x1fff, MAP_RAM);
+	M6502MapMemory(DrvPalRAM,		0x2000, 0x20ff, MAP_ROM);
+	M6502MapMemory(DrvPalRAM,		0x2100, 0x21ff, MAP_ROM);
+	M6502MapMemory(DrvPalRAM,		0x2200, 0x22ff, MAP_ROM);
+	M6502MapMemory(DrvPalRAM,		0x2300, 0x23ff, MAP_ROM);
+	M6502MapMemory(DrvNVRAM,		0x2400, 0x25ff, MAP_ROM);
+	M6502MapMemory(DrvNVRAM,		0x2600, 0x27ff, MAP_ROM);
+	M6502MapMemory(Drv6502ROM + 0x8000,	0x8000, 0xffff, MAP_ROM);
 	M6502SetReadHandler(atetris_read);
 	M6502SetReadOpHandler(atetris_read);
 	M6502SetReadOpArgHandler(atetris_read);
@@ -414,7 +414,7 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += M6502Run(nCyclesTotal[0] / nInterleave);
 
 		if (i == 16 || i == 48 || i == 80 || i == 112 || i == 146 || i == 176 || i == 208 || i == 240)
-			M6502SetIRQLine(0, (i & 0x20) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
+			M6502SetIRQLine(0, (i & 0x20) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 
 		if (i == 240) vblank = 0x40;
 	}

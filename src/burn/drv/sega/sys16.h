@@ -103,6 +103,7 @@ extern bool System16BTileAlt;
 extern bool Shangon;
 extern bool Hangon;
 extern bool AlienSyndrome;
+extern bool HammerAway;
 extern bool System16Z80Enable;
 
 extern INT32 System16YM2413IRQInterval;
@@ -157,6 +158,7 @@ INT32 HangonFrame();
 INT32 HangonYM2203Frame();
 INT32 OutrunFrame();
 INT32 XBoardFrame();
+INT32 XBoardFrameGPRider();
 INT32 YBoardFrame();
 INT32 System16Scan(INT32 nAction, INT32 *pnMin);
 

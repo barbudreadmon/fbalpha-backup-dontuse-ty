@@ -160,7 +160,7 @@ static void bankswitch(INT32 data)
 	*nDrvKonBank = data & 0x0f;
 	INT32 bankaddress = *nDrvKonBank * 0x2000;
 
-	konamiMapMemory(DrvKonROM + 0x10000 + bankaddress, 0x6000, 0x7fff, KON_ROM);
+	konamiMapMemory(DrvKonROM + 0x10000 + bankaddress, 0x6000, 0x7fff, MAP_ROM);
 }
 
 static void playfield_write(INT32 address, INT32 data, UINT8 *ctrl, UINT8 *spr, UINT8 *buf)
@@ -212,7 +212,7 @@ void hcastle_write(UINT16 address, UINT8 data)
 			t -= ZetTotalCycles();
 			if (t > 1) ZetRun((INT32)t);
 
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		}
 		return;
 
@@ -321,7 +321,7 @@ UINT8 __fastcall hcastle_sound_read(UINT16 address)
 			return BurnYM3812Read(0, address & 1);
 
 		case 0xd000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 	}
 
@@ -405,28 +405,12 @@ static INT32 MemIndex()
 	return 0;
 }
 
-static INT32 DrvGfxDecode()
+static void DrvGfxExpand(UINT8 *src, INT32 len)
 {
-	INT32 Plane[4] = { 0x000, 0x001, 0x002, 0x003 };
-	INT32 XOffs[8] = { 0x008, 0x00c, 0x000, 0x004, 0x018, 0x01c, 0x010, 0x014 };
-	INT32 YOffs[8] = { 0x000, 0x020, 0x040, 0x060, 0x080, 0x0a0, 0x0c0, 0x0e0 };
-
-	UINT8 *tmp = (UINT8*)BurnMalloc(0x100000);
-	if (tmp == NULL) {
-		return 1;
+	for (INT32 i = (len - 1) * 2; i >= 0; i-=2) {
+		src[i+0] = src[i/2] >> 4;
+		src[i+1] = src[i/2] & 0xf;
 	}
-
-	memcpy (tmp, DrvGfxROM0, 0x100000);
-
-	GfxDecode(0x8000, 4, 8, 8, Plane, XOffs, YOffs, 0x100, tmp, DrvGfxROM0);
-
-	memcpy (tmp, DrvGfxROM1, 0x100000);
-
-	GfxDecode(0x8000, 4, 8, 8, Plane, XOffs, YOffs, 0x100, tmp, DrvGfxROM1);
-
-	BurnFree (tmp);
-
-	return 0;
 }
 
 static void DrvPaletteInit()
@@ -469,9 +453,11 @@ static INT32 DrvInit()
 
 		if (BurnLoadRom(DrvGfxROM0 + 0x00000,  3, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM0 + 0x80000,  4, 1)) return 1;
+		BurnByteswap(DrvGfxROM0, 0x100000);
 
 		if (BurnLoadRom(DrvGfxROM1 + 0x00000,  5, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM1 + 0x80000,  6, 1)) return 1;
+		BurnByteswap(DrvGfxROM1, 0x100000);
 
 		if (BurnLoadRom(DrvSndROM  + 0x00000,  7, 1)) return 1;
 
@@ -481,20 +467,21 @@ static INT32 DrvInit()
 		if (BurnLoadRom(DrvPalROM  + 0x00300, 11, 1)) return 1;
 
 		DrvPaletteInit();
-		DrvGfxDecode();
+		DrvGfxExpand(DrvGfxROM0, 0x100000);
+		DrvGfxExpand(DrvGfxROM1, 0x100000);
 	}
 
 	konamiInit(0);
 	konamiOpen(0);
-	konamiMapMemory(DrvKonRAM0,		0x0000, 0x00ff, KON_ROM); //020-03f
-	konamiMapMemory(DrvKonRAM1,		0x0200, 0x02ff, KON_ROM); //220-23f
-	konamiMapMemory(DrvPalRAM,		0x0600, 0x1fff, KON_RAM);
-	konamiMapMemory(DrvPf1RAM,		0x2000, 0x2fff, KON_RAM);
-	konamiMapMemory(DrvSprRAM1,		0x3000, 0x3fff, KON_RAM);
-	konamiMapMemory(DrvPf2RAM,		0x4000, 0x4fff, KON_RAM);
-	konamiMapMemory(DrvSprRAM2,		0x5000, 0x5fff, KON_RAM);
-	konamiMapMemory(DrvKonROM + 0x10000,	0x6000, 0x7fff, KON_ROM);
-	konamiMapMemory(DrvKonROM,		0x8000, 0xffff, KON_ROM);
+	konamiMapMemory(DrvKonRAM0,		0x0000, 0x00ff, MAP_ROM); //020-03f
+	konamiMapMemory(DrvKonRAM1,		0x0200, 0x02ff, MAP_ROM); //220-23f
+	konamiMapMemory(DrvPalRAM,		0x0600, 0x1fff, MAP_RAM);
+	konamiMapMemory(DrvPf1RAM,		0x2000, 0x2fff, MAP_RAM);
+	konamiMapMemory(DrvSprRAM1,		0x3000, 0x3fff, MAP_RAM);
+	konamiMapMemory(DrvPf2RAM,		0x4000, 0x4fff, MAP_RAM);
+	konamiMapMemory(DrvSprRAM2,		0x5000, 0x5fff, MAP_RAM);
+	konamiMapMemory(DrvKonROM + 0x10000,	0x6000, 0x7fff, MAP_ROM);
+	konamiMapMemory(DrvKonROM,		0x8000, 0xffff, MAP_ROM);
 	konamiSetWriteHandler(hcastle_write);
 	konamiSetReadHandler(hcastle_read);
 	konamiClose();
@@ -767,7 +754,7 @@ static INT32 DrvFrame()
 	konamiOpen(0);
 
 	konamiRun(nCyclesTotal[0]);
-	konamiSetIrqLine(KONAMI_IRQ_LINE, KONAMI_IRQSTATUS_AUTO);
+	konamiSetIrqLine(KONAMI_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 
 	BurnTimerEndFrameYM3812(nCyclesTotal[1]);
 
@@ -852,7 +839,7 @@ STD_ROM_FN(hcastle)
 
 struct BurnDriver BurnDrvHcastle = {
 	"hcastle", NULL, NULL, NULL, "1988",
-	"Haunted Castle (ver. M)\0", NULL, "Konami", "Miscellaneous",
+	"Haunted Castle (ver. M)\0", NULL, "Konami", "GX768",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT | GBF_PLATFORM, 0,
 	NULL, hcastleRomInfo, hcastleRomName, NULL, NULL, HcastleInputInfo, HcastleDIPInfo,
@@ -890,7 +877,7 @@ STD_ROM_FN(hcastlek)
 
 struct BurnDriver BurnDrvHcastlek = {
 	"hcastlek", "hcastle", NULL, NULL, "1988",
-	"Haunted Castle (ver. K)\0", NULL, "Konami", "Miscellaneous",
+	"Haunted Castle (ver. K)\0", NULL, "Konami", "GX768",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT | GBF_PLATFORM, 0,
 	NULL, hcastlekRomInfo, hcastlekRomName, NULL, NULL, HcastleInputInfo, HcastleDIPInfo,
@@ -928,7 +915,7 @@ STD_ROM_FN(hcastlee)
 
 struct BurnDriver BurnDrvHcastlee = {
 	"hcastlee", "hcastle", NULL, NULL, "1988",
-	"Haunted Castle (ver. E)\0", NULL, "Konami", "Miscellaneous",
+	"Haunted Castle (ver. E)\0", NULL, "Konami", "GX768",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT | GBF_PLATFORM, 0,
 	NULL, hcastleeRomInfo, hcastleeRomName, NULL, NULL, HcastleInputInfo, HcastleDIPInfo,
@@ -966,7 +953,7 @@ STD_ROM_FN(akumajou)
 
 struct BurnDriver BurnDrvAkumajou = {
 	"akumajou", "hcastle", NULL, NULL, "1988",
-	"Akuma-Jou Dracula (Japan ver. P)\0", NULL, "Konami", "Miscellaneous",
+	"Akuma-Jou Dracula (Japan ver. P)\0", NULL, "Konami", "GX768",
 	L"\u60AA\u9B54\u57CE \u30C9\u30E9\u30AD\u30E5\u30E9 (Japan ver. P)\0Akuma-Jou Dracula\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT | GBF_PLATFORM, 0,
 	NULL, akumajouRomInfo, akumajouRomName, NULL, NULL, HcastleInputInfo, HcastleDIPInfo,
@@ -1004,7 +991,7 @@ STD_ROM_FN(akumajoun)
 
 struct BurnDriver BurnDrvAkumajoun = {
 	"akumajoun", "hcastle", NULL, NULL, "1988",
-	"Akuma-Jou Dracula (Japan ver. N)\0", NULL, "Konami", "Miscellaneous",
+	"Akuma-Jou Dracula (Japan ver. N)\0", NULL, "Konami", "GX768",
 	L"\u60AA\u9B54\u57CE \u30C9\u30E9\u30AD\u30E5\u30E9 (Japan ver. N)\0Akuma-Jou Dracula\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT | GBF_PLATFORM, 0,
 	NULL, akumajounRomInfo, akumajounRomName, NULL, NULL, HcastleInputInfo, HcastleDIPInfo,

@@ -11,7 +11,6 @@
 #define HARDWARE_KANEKO_SKNS	HARDWARE_KANEKO_MISC
 #endif
 
-
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
 static UINT8 *AllRam;
@@ -78,6 +77,7 @@ static UINT32 speedhack_address = ~0;
 static UINT32 speedhack_pc[2] = { 0, 0 };
 static UINT8 m_region = 0; /* 0 Japan, 1 Europe, 2 Asia, 3 USA, 4 Korea */
 static UINT32 draw_layer_speedhack = 0;
+static UINT32 Vblokbrk = 0;
 static struct BurnRomInfo emptyRomDesc[] = {
 	{ "",                    0,          0, 0 },
 };
@@ -168,6 +168,30 @@ static struct BurnDIPInfo SknsDIPList[]=
 };
 
 STDDIPINFO(Skns)
+
+static struct BurnDIPInfo VblokbrkDIPList[]=
+{
+	{0x17, 0xff, 0xff, 0xff, NULL		},
+	{0x18, 0xff, 0xff, 0x00, NULL		},
+
+	{0   , 0xfe, 0   ,    2, "Service Mode"	},
+	{0x17, 0x01, 0x01, 0x01, "Off"		},
+	{0x17, 0x01, 0x01, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Flip Screen"	},
+	{0x17, 0x01, 0x02, 0x02, "Off"		},
+	{0x17, 0x01, 0x02, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Use Backup Ram"},
+	{0x17, 0x01, 0x40, 0x00, "No"		},
+	{0x17, 0x01, 0x40, 0x40, "Yes"		},
+
+	{0   , 0xfe, 0   ,    2, "Freeze"	},
+	{0x17, 0x01, 0x80, 0x00, "Freezes the game"},
+	{0x17, 0x01, 0x80, 0x80, "Right value"	},
+};
+
+STDDIPINFO(Vblokbrk)
 
 static struct BurnInputInfo CyvernInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 10,	"p1 coin"},
@@ -909,10 +933,15 @@ static int DrvDoReset()
 	memset (DrvTmpScreenBuf, 0xff, 0x8000);
 
 	Sh2Open(0);
-	Sh2Reset( *(UINT32 *)(DrvSh2ROM + 0), *(UINT32 *)(DrvSh2ROM + 4) );
-        if (sprite_kludge_y == -272) // sengekistriker
-            Sh2SetVBR(0x6000000);
-        else Sh2SetVBR(0x4000000);
+	if (Vblokbrk) {
+		Sh2Reset(); // VS Block Breaker / Saru Kani must run through the Super Kaneko BIOS for nvram to work!
+		draw_layer_speedhack = 0; // this gets enabled after the BIOS runs through its intro.
+	} else { // Run everything else directly, bypassing the bios.
+		Sh2Reset( *(UINT32 *)(DrvSh2ROM + 0), *(UINT32 *)(DrvSh2ROM + 4) );
+		if (sprite_kludge_y == -272) // sengekistriker
+			Sh2SetVBR(0x6000000);
+		else Sh2SetVBR(0x4000000);
+	}
 	Sh2Close();
 
 	YMZ280BReset();
@@ -1014,19 +1043,19 @@ static int DrvInit(INT32 bios)
 	Sh2Init(1);
 	Sh2Open(0);
 
-	Sh2MapMemory(DrvSh2BIOS,		0x00000000, 0x0007ffff, SH2_ROM);
-	Sh2MapMemory(DrvNvRAM,			0x00800000, 0x00801fff, SH2_RAM);
-	Sh2MapMemory(DrvSprRAM,			0x02000000, 0x02003fff, SH2_RAM);
-	Sh2MapMemory(DrvSprRegs,		0x02100000, 0x0210003f, SH2_RAM); // sprite regs
-	Sh2MapMemory(DrvV3Regs,			0x02400000, 0x0240007f, SH2_RAM);
-	Sh2MapMemory(DrvVidRAM,			0x02500000, 0x02507fff, SH2_RAM); //0-4000, 4000-7fff A, B
-	Sh2MapMemory(DrvLineRAM,		0x02600000, 0x02607fff, SH2_RAM);
-	Sh2MapMemory(DrvPalRegs,		0x02a00000, 0x02a0001f, SH2_ROM);
-	Sh2MapMemory(DrvPalRAM,			0x02a40000, 0x02a5ffff, SH2_RAM);
-	Sh2MapMemory(DrvSh2ROM,			0x04000000, 0x041fffff, SH2_ROM);
-	Sh2MapMemory(DrvGfxRAM,			0x04800000, 0x0483ffff, SH2_ROM); // tilemap B, graphics tiles
-	Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, SH2_RAM);
-	Sh2MapMemory(DrvCacheRAM,		0xc0000000, 0xc0000fff, SH2_RAM);
+	Sh2MapMemory(DrvSh2BIOS,		0x00000000, 0x0007ffff, MAP_ROM);
+	Sh2MapMemory(DrvNvRAM,			0x00800000, 0x00801fff, MAP_RAM);
+	Sh2MapMemory(DrvSprRAM,			0x02000000, 0x02003fff, MAP_RAM);
+	Sh2MapMemory(DrvSprRegs,		0x02100000, 0x0210003f, MAP_RAM); // sprite regs
+	Sh2MapMemory(DrvV3Regs,			0x02400000, 0x0240007f, MAP_RAM);
+	Sh2MapMemory(DrvVidRAM,			0x02500000, 0x02507fff, MAP_RAM); //0-4000, 4000-7fff A, B
+	Sh2MapMemory(DrvLineRAM,		0x02600000, 0x02607fff, MAP_RAM);
+	Sh2MapMemory(DrvPalRegs,		0x02a00000, 0x02a0001f, MAP_ROM);
+	Sh2MapMemory(DrvPalRAM,			0x02a40000, 0x02a5ffff, MAP_RAM);
+	Sh2MapMemory(DrvSh2ROM,			0x04000000, 0x041fffff, MAP_ROM);
+	Sh2MapMemory(DrvGfxRAM,			0x04800000, 0x0483ffff, MAP_ROM); // tilemap B, graphics tiles
+	Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, MAP_RAM);
+	Sh2MapMemory(DrvCacheRAM,		0xc0000000, 0xc0000fff, MAP_RAM);
 
 	Sh2SetReadByteHandler (0,		suprnova_read_byte);
 	Sh2SetReadWordHandler (0,		suprnova_read_word);
@@ -1035,7 +1064,7 @@ static int DrvInit(INT32 bios)
 	Sh2SetWriteWordHandler(0,		suprnova_write_word);
 	Sh2SetWriteLongHandler(0,		suprnova_write_long);
 
-	Sh2MapHandler(1,			0x06000000, 0x060fffff, SH2_ROM);
+	Sh2MapHandler(1,			0x06000000, 0x060fffff, MAP_ROM);
 	Sh2SetReadByteHandler (1,		suprnova_hack_read_byte);
 	Sh2SetReadWordHandler (1,		suprnova_hack_read_word);
 	Sh2SetReadLongHandler (1,		suprnova_hack_read_long);
@@ -1044,7 +1073,7 @@ static int DrvInit(INT32 bios)
 
 	YMZ280BInit(16666666, NULL);
 
-	if (strstr(BurnDrvGetTextA(DRV_NAME), "pan")) {
+	if (strstr(BurnDrvGetTextA(DRV_NAME), "pan") || strstr(BurnDrvGetTextA(DRV_NAME), "saruk") || strstr(BurnDrvGetTextA(DRV_NAME), "vblok")) {
 		// Disable draw_layer() speed hack for Panic Street & Gals Panic 2,3,4etc
 		draw_layer_speedhack = 0;
 	} else {
@@ -1073,6 +1102,9 @@ static int DrvExit()
 
 	free(AllMem);
 	AllMem = NULL;
+
+	suprnova_alt_enable_background = 0;
+	Vblokbrk = 0;
 
 	speedhack_address = ~0;
 	memset (speedhack_pc, 0, 2 * sizeof(int));
@@ -1585,6 +1617,10 @@ static int DrvFrame()
 		DrvInputs[2] = 0xffffffff; 
 	}
 
+	if (Vblokbrk && Sh2TotalCycles() >= 398084698) {
+		draw_layer_speedhack = 1; // Turn on the speedhack after the SKNS Bios is done with its intro
+	}
+
 	//INT32 nSoundBufferPos = 0;
 	INT32 nTotalCycles = 28638000 / 60;
 	INT32 nInterleave = 262;
@@ -1595,28 +1631,28 @@ static int DrvFrame()
 		Sh2Run(segment);
 		// irqs
 		if (i == 1) {
-			Sh2SetIRQLine(1, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(1, CPU_IRQSTATUS_AUTO);
 			Sh2Run(0);
-			Sh2SetIRQLine(1, SH2_IRQSTATUS_NONE);
+			Sh2SetIRQLine(1, CPU_IRQSTATUS_NONE);
 		} else if (i == 240) {
-			Sh2SetIRQLine(5, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(5, CPU_IRQSTATUS_AUTO);
 			Sh2Run(0);
-			Sh2SetIRQLine(5, SH2_IRQSTATUS_NONE);
-                } 
-                { // fire irq9 every interleave iteration.
-			Sh2SetIRQLine(9, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(5, CPU_IRQSTATUS_NONE);
+		}
+		{ // fire irq9 every interleave iteration.
+			Sh2SetIRQLine(9, CPU_IRQSTATUS_AUTO);
 			Sh2Run(0);
-			Sh2SetIRQLine(9, SH2_IRQSTATUS_NONE);
-                        if (i%125==0 && i!=0) { //125 = every 8 ms (per 261 interleave)
-                            Sh2SetIRQLine(11, SH2_IRQSTATUS_AUTO);
-                            Sh2Run(0);
-                            Sh2SetIRQLine(11, SH2_IRQSTATUS_NONE);
-                        }
-                        if (i%31==0 && i!=0) { //31=every 2 ms
-                            Sh2SetIRQLine(15, SH2_IRQSTATUS_AUTO);
-                            Sh2Run(0);
-                            Sh2SetIRQLine(15, SH2_IRQSTATUS_NONE);
-                        }
+			Sh2SetIRQLine(9, CPU_IRQSTATUS_NONE);
+			if (i%125==0 && i!=0) { //125 = every 8 ms (per 261 interleave)
+				Sh2SetIRQLine(11, CPU_IRQSTATUS_AUTO);
+				Sh2Run(0);
+				Sh2SetIRQLine(11, CPU_IRQSTATUS_NONE);
+			}
+			if (i%31==0 && i!=0) { //31=every 2 ms
+				Sh2SetIRQLine(15, CPU_IRQSTATUS_AUTO);
+				Sh2Run(0);
+				Sh2SetIRQLine(15, CPU_IRQSTATUS_NONE);
+			}
 		}
 
 		/*if (pBurnSoundOut && (i & 1)) {
@@ -2764,16 +2800,18 @@ static int VblokbrkInit()
 {
 	sprite_kludge_x = -1;
 	sprite_kludge_y = -1;
+	suprnova_alt_enable_background = 1;
+	Vblokbrk = 1;
 
 	return DrvInit(2 /*Asia*/);
 }
 
 struct BurnDriver BurnDrvVblokbrk = {
 	"vblokbrk", NULL, "skns", NULL, "1997",
-	"VS Block Breaker (Asia)\0", "imperfect inputs", "Kaneko / Mediaworks", "Miscellaneous",
+	"VS Block Breaker (Asia)\0", NULL, "Kaneko / Mediaworks", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_KANEKO_SKNS, GBF_BALLPADDLE, 0,
-	NULL, vblokbrkRomInfo, vblokbrkRomName, NULL, NULL, VblokbrkInputInfo, SknsDIPInfo, //VblokbrkInputInfo, VblokbrkDIPInfo,
+	NULL, vblokbrkRomInfo, vblokbrkRomName, NULL, NULL, VblokbrkInputInfo, VblokbrkDIPInfo,
 	VblokbrkInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
@@ -2800,16 +2838,18 @@ static int SarukaniInit()
 {
 	sprite_kludge_x = -1;
 	sprite_kludge_y = -1;
+	suprnova_alt_enable_background = 1;
+	Vblokbrk = 1;
 
 	return DrvInit(0 /*Japan*/);
 }
 
 struct BurnDriver BurnDrvSarukani = {
 	"sarukani", "vblokbrk", "skns", NULL, "1997",
-	"Saru-Kani-Hamu-Zou (Japan)\0", "imperfect inputs", "Kaneko / Mediaworks", "Miscellaneous",
+	"Saru-Kani-Hamu-Zou (Japan)\0", NULL, "Kaneko / Mediaworks", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KANEKO_SKNS, GBF_BALLPADDLE, 0,
-	NULL, sarukaniRomInfo, sarukaniRomName, NULL, NULL, VblokbrkInputInfo, SknsDIPInfo, //VblokbrkInputInfo, VblokbrkDIPInfo,
+	NULL, sarukaniRomInfo, sarukaniRomName, NULL, NULL, VblokbrkInputInfo, VblokbrkDIPInfo,
 	SarukaniInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };

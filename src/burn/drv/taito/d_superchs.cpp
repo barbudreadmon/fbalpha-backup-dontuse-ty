@@ -79,7 +79,7 @@ UINT8 __fastcall TaitoF3Sound68KReadByte(UINT32 a)
 		if (Offset == 0x0e) return 0x01;
 
 		if (Offset == 0x0f) {
-			SekSetIRQLine(6, SEK_IRQSTATUS_NONE);
+			SekSetIRQLine(6, CPU_IRQSTATUS_NONE);
 			return 0x00;
 		}
 	
@@ -614,7 +614,7 @@ void __fastcall Superchs68K1WriteByte(UINT32 a, UINT8 d)
 		case 0x340000:
 		case 0x340001:
 		case 0x340002: {
-			SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
 			return;
 		}
 		
@@ -671,7 +671,7 @@ void __fastcall Superchs68K1WriteWord(UINT32 a, UINT16 d)
 				SekOpen(0);
 			}
 //			if (d & 0x8000) {
-//				SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
+//				SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
 //			}
 			return;
 		}
@@ -830,12 +830,12 @@ static INT32 SuperchsInit()
 	
 	SekInit(0, 0x68EC020);
 	SekOpen(0);
-	SekMapMemory(Taito68KRom1             , 0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(Taito68KRam1             , 0x100000, 0x11ffff, SM_RAM);
-	SekMapMemory(TC0480SCPRam             , 0x180000, 0x18ffff, SM_RAM);
-	SekMapMemory(TaitoSharedRam           , 0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(TaitoF3SharedRam         , 0x2c0000, 0x2c07ff, SM_RAM);
-	SekMapMemory(TaitoPaletteRam          , 0x280000, 0x287fff, SM_RAM);
+	SekMapMemory(Taito68KRom1             , 0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Taito68KRam1             , 0x100000, 0x11ffff, MAP_RAM);
+	SekMapMemory(TC0480SCPRam             , 0x180000, 0x18ffff, MAP_RAM);
+	SekMapMemory(TaitoSharedRam           , 0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(TaitoF3SharedRam         , 0x2c0000, 0x2c07ff, MAP_RAM);
+	SekMapMemory(TaitoPaletteRam          , 0x280000, 0x287fff, MAP_RAM);
 	SekSetReadByteHandler(0, Superchs68K1ReadByte);
 	SekSetWriteByteHandler(0, Superchs68K1WriteByte);
 	SekSetReadWordHandler(0, Superchs68K1ReadWord);	
@@ -846,10 +846,10 @@ static INT32 SuperchsInit()
 	
 	SekInit(1, 0x68000);
 	SekOpen(1);
-	SekMapMemory(Taito68KRom2             , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Taito68KRam2             , 0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(TaitoSharedRam           , 0x800000, 0x80ffff, SM_RAM);
-	SekMapMemory(Taito68KRam2 + 0x10000   , 0xa00000, 0xa001ff, SM_RAM);
+	SekMapMemory(Taito68KRom2             , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Taito68KRam2             , 0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(TaitoSharedRam           , 0x800000, 0x80ffff, MAP_RAM);
+	SekMapMemory(Taito68KRam2 + 0x10000   , 0xa00000, 0xa001ff, MAP_RAM);
 	SekSetReadByteHandler(0, Superchs68K2ReadByte);
 	SekSetWriteByteHandler(0, Superchs68K2WriteByte);
 	SekSetReadWordHandler(0, Superchs68K2ReadWord);	
@@ -858,13 +858,13 @@ static INT32 SuperchsInit()
 	
 	SekInit(2, 0x68000);
 	SekOpen(2);
-	SekMapMemory(TaitoF3SoundRam          , 0x000000, 0x00ffff, SM_RAM);
-	SekMapMemory(TaitoF3SoundRam          , 0x010000, 0x01ffff, SM_RAM);
-	SekMapMemory(TaitoF3SoundRam          , 0x020000, 0x02ffff, SM_RAM);
-	SekMapMemory(TaitoF3SoundRam          , 0x030000, 0x03ffff, SM_RAM);
-	SekMapMemory(Taito68KRom3             , 0xc00000, 0xc1ffff, SM_ROM);
-	SekMapMemory(Taito68KRom3 + 0x20000   , 0xc20000, 0xc3ffff, SM_ROM);
-	SekMapMemory(TaitoF3SoundRam          , 0xff0000, 0xffffff, SM_RAM);
+	SekMapMemory(TaitoF3SoundRam          , 0x000000, 0x00ffff, MAP_RAM);
+	SekMapMemory(TaitoF3SoundRam          , 0x010000, 0x01ffff, MAP_RAM);
+	SekMapMemory(TaitoF3SoundRam          , 0x020000, 0x02ffff, MAP_RAM);
+	SekMapMemory(TaitoF3SoundRam          , 0x030000, 0x03ffff, MAP_RAM);
+	SekMapMemory(Taito68KRom3             , 0xc00000, 0xc1ffff, MAP_ROM);
+	SekMapMemory(Taito68KRom3 + 0x20000   , 0xc20000, 0xc3ffff, MAP_ROM);
+	SekMapMemory(TaitoF3SoundRam          , 0xff0000, 0xffffff, MAP_RAM);
 	SekSetReadByteHandler(0, TaitoF3Sound68KReadByte);
 	SekSetWriteByteHandler(0, TaitoF3Sound68KWriteByte);
 	SekSetReadWordHandler(0, TaitoF3Sound68KReadWord);	
@@ -1150,7 +1150,7 @@ static INT32 SuperchsFrame()
 		nNext = (i + 1) * nTaitoCyclesTotal[nCurrentCPU] / nInterleave;
 		nTaitoCyclesSegment = nNext - nTaitoCyclesDone[nCurrentCPU];
 		nTaitoCyclesDone[nCurrentCPU] += SekRun(nTaitoCyclesSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		if (SuperchsCpuACtrl & 0x200) {
@@ -1159,7 +1159,7 @@ static INT32 SuperchsFrame()
 			nNext = (i + 1) * nTaitoCyclesTotal[nCurrentCPU] / nInterleave;
 			nTaitoCyclesSegment = nNext - nTaitoCyclesDone[nCurrentCPU];
 			nTaitoCyclesDone[nCurrentCPU] += SekRun(nTaitoCyclesSegment);
-			if (i == (nInterleave - 1)) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			if (i == (nInterleave - 1)) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 			SekClose();
 		}
 		
@@ -1174,7 +1174,7 @@ static INT32 SuperchsFrame()
 				TaitoF3SoundTriggerIRQCyclesMode = IRQ_TRIGGER_OFF;
 				if (M68681IMR & 0x08) {
 //					bprintf(PRINT_NORMAL, _T("%x\n"), TaitoF3VectorReg);
-					SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+					SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 					IMRStatus |= 0x08;
 				}
 			}		
@@ -1185,7 +1185,7 @@ static INT32 SuperchsFrame()
 //				TaitoF3SoundTriggerIRQCyclesMode = IRQ_TRIGGER_OFF;
 				if (M68681IMR & 0x08) {
 //					bprintf(PRINT_NORMAL, _T("%x\n"), TaitoF3VectorReg);
-					SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+					SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 					IMRStatus |= 0x08;
 				}
 				TaitoF3SoundTriggerIRQPulseCycleCounter = 0;

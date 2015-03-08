@@ -251,11 +251,11 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x080000, 0x083fff, SM_RAM);
-	SekMapMemory(DrvBgVRAM,		0x200000, 0x200fff, SM_RAM);
-	SekMapMemory(DrvFgVRAM,		0x210000, 0x213fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x220000, 0x2203ff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x080000, 0x083fff, MAP_RAM);
+	SekMapMemory(DrvBgVRAM,		0x200000, 0x200fff, MAP_RAM);
+	SekMapMemory(DrvFgVRAM,		0x210000, 0x213fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x220000, 0x2203ff, MAP_RAM);
 	SekSetWriteWordHandler(0,	pass_write_word);
 	SekSetWriteByteHandler(0,	pass_write_byte);
 	SekSetReadWordHandler(0,	pass_read_word);
@@ -434,7 +434,7 @@ static INT32 DrvFrame()
 		BurnTimerUpdate(i * nSegment);
 	}
 
-	ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+	ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 	BurnTimerEndFrame(nTotalCycles[1]);
 	
 	if (pBurnSoundOut) {
@@ -442,7 +442,7 @@ static INT32 DrvFrame()
 		MSM6295Render(0, pBurnSoundOut, nBurnSoundLen);
 	}
 
-	SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 	ZetClose();
 	SekClose();

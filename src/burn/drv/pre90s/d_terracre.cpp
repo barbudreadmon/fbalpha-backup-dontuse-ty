@@ -757,7 +757,7 @@ void __fastcall Terracre68KWriteWord(UINT32 a, UINT16 d)
 {
 	switch (a) {
 		case 0x026000: {
-			DrvFlipScreen = d;
+			DrvFlipScreen = d & 0x04;
 			return;
 		}
 		
@@ -878,7 +878,7 @@ void __fastcall Amazon68KWriteWord(UINT32 a, UINT16 d)
 {
 	switch (a) {
 		case 0x046000: {
-			DrvFlipScreen = d;
+			DrvFlipScreen = d & 0x04;
 			return;
 		}
 		
@@ -1039,11 +1039,11 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x01ffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam        , 0x020000, 0x021fff, SM_RAM);
-	SekMapMemory(DrvBgVideoRam       , 0x022000, 0x022fff, SM_RAM);
-//	SekMapMemory(Drv68KRam           , 0x023000, 0x023fff, SM_RAM);
-	SekMapMemory(DrvFgVideoRam       , 0x028000, 0x0287ff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x01ffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam        , 0x020000, 0x021fff, MAP_RAM);
+	SekMapMemory(DrvBgVideoRam       , 0x022000, 0x022fff, MAP_RAM);
+//	SekMapMemory(Drv68KRam           , 0x023000, 0x023fff, MAP_RAM);
+	SekMapMemory(DrvFgVideoRam       , 0x028000, 0x0287ff, MAP_RAM);
 	SekSetReadWordHandler(0, Terracre68KReadWord);
 	SekSetWriteWordHandler(0, Terracre68KWriteWord);
 	SekSetReadByteHandler(0, Terracre68KReadByte);
@@ -1080,8 +1080,8 @@ static INT32 DrvInit()
 	
 	DACInit(0, 0, 1, TerracreSyncDAC);
 	DACInit(1, 0, 1, TerracreSyncDAC);
-	DACSetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
-	DACSetRoute(1, 0.50, BURN_SND_ROUTE_BOTH);
+	DACSetRoute(0, 0.40, BURN_SND_ROUTE_BOTH);
+	DACSetRoute(1, 0.40, BURN_SND_ROUTE_BOTH);
 	
 	GenericTilesInit();
 	
@@ -1107,10 +1107,10 @@ static INT32 DrvAmazonInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x01ffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam        , 0x040000, 0x040fff, SM_RAM);
-	SekMapMemory(DrvBgVideoRam       , 0x042000, 0x042fff, SM_RAM);
-	SekMapMemory(DrvFgVideoRam       , 0x050000, 0x050fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x01ffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam        , 0x040000, 0x040fff, MAP_RAM);
+	SekMapMemory(DrvBgVideoRam       , 0x042000, 0x042fff, MAP_RAM);
+	SekMapMemory(DrvFgVideoRam       , 0x050000, 0x050fff, MAP_RAM);
 	SekSetReadWordHandler(0, Amazon68KReadWord);
 	SekSetWriteWordHandler(0, Amazon68KWriteWord);
 	SekSetReadByteHandler(0, Amazon68KReadByte);
@@ -1707,17 +1707,11 @@ static INT32 DrvFrame()
 {
 	INT32 nCyclesTotal[2] = { 8000000 / 60, 4000000 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
-	
-	INT32 nInterleave = 100;
+	INT32 nInterleave = 17*8; // 136
 	
 	if (DrvReset) DrvDoReset();
 
 	DrvMakeInputs();
-	
-	INT32 Z80IRQSlice[9];
-	for (INT32 i = 0; i < 9; i++) {
-		Z80IRQSlice[i] = (INT32)((double)((nInterleave * (i + 1)) / 10));
-	}
 	
 	SekNewFrame();
 	ZetNewFrame();
@@ -1730,25 +1724,20 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		nCurrentCPU = 1;
 		ZetOpen(0);
 		if (DrvUseYM2203) {
-#if 0
-			// The sound cpu fails to read the latches if we run this here
-			BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
-#endif
+			BurnTimerUpdate((i + 1) * (nCyclesTotal[nCurrentCPU] / nInterleave));
 		} else {
-			BurnTimerUpdateYM3526(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
+			BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[nCurrentCPU] / nInterleave));
 		}
-		for (INT32 j = 0; j < 9; j++) {
-			if (i == Z80IRQSlice[j]) {
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
-				nCyclesDone[1] += ZetRun(4000);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
-			}
+		{ // 136 times per frame.
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
+			nCyclesDone[1] += ZetRun(100);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		}
 		ZetClose();
 	}

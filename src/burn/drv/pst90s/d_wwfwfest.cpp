@@ -635,9 +635,9 @@ static INT32 SpriteYOffsets[16]     = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80
 static void DrvYM2151IrqHandler(INT32 Irq)
 {
 	if (Irq) {
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -703,12 +703,12 @@ static INT32 DrvInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvBg0VideoRam      , 0x080000, 0x080fff, SM_RAM);
-	SekMapMemory(DrvBg1VideoRam      , 0x082000, 0x082fff, SM_RAM);
-	SekMapMemory(DrvCharVideoRam     , 0x0c0000, 0x0c1fff, SM_ROM);
-	SekMapMemory(DrvSpriteRam        , 0x0c2000, 0x0c3fff, SM_RAM);
-	SekMapMemory(Drv68KRam           , 0x1c0000, 0x1c3fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvBg0VideoRam      , 0x080000, 0x080fff, MAP_RAM);
+	SekMapMemory(DrvBg1VideoRam      , 0x082000, 0x082fff, MAP_RAM);
+	SekMapMemory(DrvCharVideoRam     , 0x0c0000, 0x0c1fff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam        , 0x0c2000, 0x0c3fff, MAP_RAM);
+	SekMapMemory(Drv68KRam           , 0x1c0000, 0x1c3fff, MAP_RAM);
 	SekSetReadWordHandler(0, Wwfwfest68KReadWord);
 	SekSetWriteWordHandler(0, Wwfwfest68KWriteWord);
 	SekSetReadByteHandler(0, Wwfwfest68KReadByte);
@@ -1099,7 +1099,7 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == 5) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 5) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		if (i == 5) DrvVBlank = 1;
 		SekClose();
 		
@@ -1124,7 +1124,7 @@ static INT32 DrvFrame()
 	}
 	
 	SekOpen(0);
-	SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	// Make sure the buffer is entirely filled.

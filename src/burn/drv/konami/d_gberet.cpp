@@ -576,21 +576,21 @@ static void Graphics_Decode(INT32 *CharPlanes, INT32 *CharXOffs, INT32 *CharYOff
 
 static void DrvGfxDecode()
 {
-	static INT32 Planes[4] = { 0, 1, 2, 3 };
-	static INT32 XOffs[16] = { 0, 4, 8, 12, 16, 20, 24, 28, 256, 260, 264, 268, 272, 276, 280, 284 };
-	static INT32 YOffs[16] = { 0, 32, 64, 96, 128, 160, 192, 224, 512, 544, 576, 608, 640, 672, 704, 736 };
+	static INT32 Planes[4] = { STEP4(0,1) };
+	static INT32 XOffs[16] = { STEP8(0,4), STEP8(256,4) };
+	static INT32 YOffs[16] = { STEP8(0,32), STEP8(512,32) };
 
 	Graphics_Decode(Planes, XOffs, YOffs, Planes, XOffs, YOffs, 0x400);
 }
 
 static void BootGfxDecode()
 {
-	static INT32 CharPlanes[4] = { 0, 1, 2, 3 };
+	static INT32 CharPlanes[4] = { STEP4(0,1) };
 	static INT32 CharXOffs[8]  = { 24, 28, 0, 4, 8, 12, 16, 20 };
-	static INT32 CharYOffs[8]  = { 0, 32, 64, 96, 128, 160, 192, 224 };
+	static INT32 CharYOffs[8]  = { STEP8(0, 32) };
 	static INT32 SpriPlanes[4] = { 0, 0x20000, 0x40000, 0x60000 };
-	static INT32 SpriXOffs[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 128, 129, 130, 131, 132, 133, 134, 135 };
-	static INT32 SpriYOffs[16] = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120 };
+	static INT32 SpriXOffs[16] = { STEP8(0, 1), STEP8(128, 1) };
+	static INT32 SpriYOffs[16] = { STEP16(0, 8) };
 
 	Graphics_Decode(CharPlanes, CharXOffs, CharYOffs, SpriPlanes, SpriXOffs, SpriYOffs, 0x100);
 }
@@ -916,7 +916,7 @@ static INT32 DrvFrame()
 		nCyclesDone = ZetRun(nCyclesSegment);
 
 		if (irq_enable && i == (nInterleave - 1)) {
-			ZetRaiseIrq(0);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 
 		if (nmi_enable && (i & 1)) {
@@ -1008,7 +1008,7 @@ STD_ROM_FN(gberet)
 
 struct BurnDriver BurnDrvGberet = {
 	"gberet", NULL, NULL, NULL, "1985",
-	"Green Beret\0", NULL, "Konami", "Miscellaneous",
+	"Green Beret\0", NULL, "Konami", "GX577",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, gberetRomInfo, gberetRomName, NULL, NULL, DrvInputInfo, gberetDIPInfo,
@@ -1041,7 +1041,7 @@ STD_ROM_FN(rushatck)
 
 struct BurnDriver BurnDrvRushatck = {
 	"rushatck", "gberet", NULL, NULL, "1985",
-	"Rush'n Attack (US)\0", NULL, "Konami", "Miscellaneous",
+	"Rush'n Attack (US)\0", NULL, "Konami", "GX577",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, rushatckRomInfo, rushatckRomName, NULL, NULL, DrvInputInfo, gberetDIPInfo,
@@ -1082,7 +1082,7 @@ static INT32 gberetbInit()
 
 struct BurnDriver BurnDrvGberetb = {
 	"gberetb", "gberet", NULL, NULL, "1985",
-	"Green Beret (bootleg)\0", NULL, "bootleg", "Miscellaneous",
+	"Green Beret (bootleg)\0", NULL, "bootleg", "GX577",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, gberetbRomInfo, gberetbRomName, NULL, NULL, gberetbInputInfo, gberetbDIPInfo,

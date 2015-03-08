@@ -160,7 +160,7 @@ void __fastcall ginganin_write_word(UINT32 address, UINT16 data)
 
 		case 0x06000e:
 			*soundlatch = data & 0xff;
-			M6809SetIRQLine(0x20, M6809_IRQSTATUS_AUTO); // nmi
+			M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO); // nmi
 		return;
 	}
 }
@@ -380,12 +380,12 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM, 		0x000000, 0x01ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM, 		0x020000, 0x023fff, SM_RAM);
-	SekMapMemory(DrvTxtRAM, 		0x030000, 0x0307ff, SM_RAM);
-	SekMapMemory(DrvSprRAM, 		0x040000, 0x0407ff, SM_RAM);
-	SekMapMemory(DrvPalRAM, 		0x050000, 0x0507ff, SM_RAM);
-	SekMapMemory(DrvFgRAM,  		0x068000, 0x06bfff, SM_RAM);
+	SekMapMemory(Drv68KROM, 		0x000000, 0x01ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM, 		0x020000, 0x023fff, MAP_RAM);
+	SekMapMemory(DrvTxtRAM, 		0x030000, 0x0307ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM, 		0x040000, 0x0407ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM, 		0x050000, 0x0507ff, MAP_RAM);
+	SekMapMemory(DrvFgRAM,  		0x068000, 0x06bfff, MAP_RAM);
 	SekSetWriteWordHandler(0,		ginganin_write_word);
 	SekSetWriteByteHandler(0,		ginganin_write_byte);
 	SekSetReadWordHandler(0,		ginganin_read_word);
@@ -394,8 +394,8 @@ static INT32 DrvInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM + 0x4000,	0x4000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM + 0x4000,	0x4000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(ginganin_sound_write);
 	M6809SetReadHandler(ginganin_sound_read);
 	M6809Close();
@@ -577,7 +577,7 @@ static void sound_interrupt()
 	if (MC6840_flag) {
 		if (MC6840_ctr > MC6840_tempo) {
 			MC6840_ctr = 0;
-			M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		} else {
 			MC6840_ctr++;
 		}
@@ -613,7 +613,7 @@ static INT32 DrvFrame()
 
 		nSegment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(nSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		nSegment = nCyclesTotal[1] / nInterleave;
 		BurnTimerUpdateY8950(i * (nCyclesTotal[1] / nInterleave));

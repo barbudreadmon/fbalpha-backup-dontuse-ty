@@ -1028,6 +1028,45 @@ static struct BurnDIPInfo ExctleagDIPList[]=
 
 STDDIPINFO(Exctleag)
 
+static struct BurnDIPInfo FantzonetaDIPList[]=
+{
+	// Default Values
+	{0x13, 0xff, 0xff, 0xff, NULL                                 },
+	{0x14, 0xff, 0xff, 0xfc, NULL                                 },
+	
+	// Dip 1
+	{0   , 0xfe, 0   , 2   , "Cabinet"                            },
+	{0x14, 0x01, 0x01, 0x00, "Upright"                            },
+	{0x14, 0x01, 0x01, 0x01, "Cocktail"                           },
+	
+	{0   , 0xfe, 0   , 2   , "Demo Sounds"                        },
+	{0x14, 0x01, 0x02, 0x02, "Off"                                },
+	{0x14, 0x01, 0x02, 0x00, "On"                                 },
+	
+	{0   , 0xfe, 0   , 4   , "Lives"                              },
+	{0x14, 0x01, 0x0c, 0x08, "2"                                  },
+	{0x14, 0x01, 0x0c, 0x0c, "3"                                  },
+	{0x14, 0x01, 0x0c, 0x04, "4"                                  },
+	{0x14, 0x01, 0x0c, 0x00, "240"                                },
+	
+	{0   , 0xfe, 0   , 4   , "Extra Ship Cost"                    },
+	{0x14, 0x01, 0x30, 0x30, "5000"                               },
+	{0x14, 0x01, 0x30, 0x20, "10000"                              },
+	{0x14, 0x01, 0x30, 0x10, "15000"                              },
+	{0x14, 0x01, 0x30, 0x00, "20000"                              },
+	
+	{0   , 0xfe, 0   , 4   , "Difficulty"                         },
+	{0x14, 0x01, 0xc0, 0x80, "Easy"                               },
+	{0x14, 0x01, 0xc0, 0xc0, "Normal"                             },
+	{0x14, 0x01, 0xc0, 0x40, "Hard"                               },
+	{0x14, 0x01, 0xc0, 0x00, "Hardest"                            },
+	
+	// Dip 2
+	SYSTEM16B_COINAGE(0x14)
+};
+
+STDDIPINFO(Fantzoneta)
+
 static struct BurnDIPInfo Fantzn2xDIPList[]=
 {
 	// Default Values
@@ -1984,7 +2023,7 @@ static struct BurnRomInfo AltbeastRomDesc[] = {
 	{ "opr-11672.a11",  0x20000, 0xbbd7f460, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "opr-11673.a12",  0x20000, 0x400c4a36, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0078.mcu",   0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0078.c2",    0x01000, 0x00000000, BRF_NODUMP },
 };
 
 
@@ -2022,7 +2061,7 @@ static struct BurnRomInfo AltbeastjRomDesc[] = {
 	{ "opr-11672.a11",  0x20000, 0xbbd7f460, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "opr-11673.a12",  0x20000, 0x400c4a36, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0077.mcu",   0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0077.c2",    0x01000, 0x00000000, BRF_NODUMP },
 };
 
 
@@ -2234,7 +2273,7 @@ static struct BurnRomInfo Altbeast6RomDesc[] = {
 	{ "opr-11672.a11",  0x20000, 0xbbd7f460, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "opr-11673.a12",  0x20000, 0x400c4a36, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0076.mcu",   0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0076.c2",    0x01000, 0x00000000, BRF_NODUMP },
 };
 
 
@@ -2749,7 +2788,7 @@ static struct BurnRomInfo Ddux1RomDesc[] = {
 
 	{ "epr-11916.a10",  0x08000, 0x7ab541cf, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
 	
-	{ "317-0095.bin",   0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0095.c2",    0x01000, 0x00000000, BRF_NODUMP }, // Intel i8751 protection MCU
 };
 
 
@@ -3019,30 +3058,30 @@ STD_ROM_PICK(Eswatbl)
 STD_ROM_FN(Eswatbl)
 
 static struct BurnRomInfo ExctleagRomDesc[] = {
-	{ "epr-11939.a04",   0x10000, 0x117dd98f, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11936.a01",   0x10000, 0x0863de60, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11940.a05",   0x10000, 0xdec83274, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11937.a02",   0x10000, 0x4ebda367, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11941.a06",   0x10000, 0x4df2d451, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11938.a03",   0x10000, 0x07c08d47, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11939.a4",    0x10000, 0x117dd98f, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11936.a1",    0x10000, 0x0863de60, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11940.a5",    0x10000, 0xdec83274, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11937.a2",    0x10000, 0x4ebda367, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11941.a6",    0x10000, 0x4df2d451, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11938.a3",    0x10000, 0x07c08d47, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
 
 	{ "epr-11942.b09",   0x10000, 0xeb70e827, SYS16_ROM_TILES | BRF_GRA },
 	{ "epr-11943.b10",   0x10000, 0xd97c8982, SYS16_ROM_TILES | BRF_GRA },
 	{ "epr-11944.b11",   0x10000, 0xa75cae80, SYS16_ROM_TILES | BRF_GRA },
 	
-	{ "epr-11950.b01",   0x10000, 0xaf497849, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11954.b05",   0x10000, 0x5fa2106c, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11951.b02",   0x10000, 0xc04fa974, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11955.b06",   0x10000, 0x86a0c368, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11952.b03",   0x10000, 0xe64a9761, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11956.b07",   0x10000, 0xaff5c2fa, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11953.b04",   0x10000, 0x4cae3999, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11957.b08",   0x10000, 0x218f835b, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11950.b1",    0x10000, 0xaf497849, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11954.b5",    0x10000, 0x5fa2106c, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11951.b2",    0x10000, 0xc04fa974, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11955.b6",    0x10000, 0x86a0c368, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11952.b3",    0x10000, 0xe64a9761, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11956.b7",    0x10000, 0xaff5c2fa, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11953.b4",    0x10000, 0x4cae3999, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11957.b8",    0x10000, 0x218f835b, SYS16_ROM_SPRITES | BRF_GRA },
 
-	{ "epr-11945.a07",   0x08000, 0xc2a83012, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11945.a7",    0x08000, 0xc2a83012, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
 	
-	{ "epr-11140.a08",   0x08000, 0xb297371b, SYS16_ROM_UPD7759DATA | BRF_SND },
-	{ "epr-11141.a09",   0x08000, 0x19756aa6, SYS16_ROM_UPD7759DATA | BRF_SND },
+	{ "epr-11140.a8",    0x08000, 0xb297371b, SYS16_ROM_UPD7759DATA | BRF_SND },
+	{ "epr-11141.a9",    0x08000, 0x19756aa6, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "epr-11142.a10",   0x08000, 0x25d26c66, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "epr-11143.a11",   0x08000, 0x848b7b77, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
@@ -3052,6 +3091,26 @@ static struct BurnRomInfo ExctleagRomDesc[] = {
 
 STD_ROM_PICK(Exctleag)
 STD_ROM_FN(Exctleag)
+
+static struct BurnRomInfo FantzonetaRomDesc[] = {
+	{ "fzta__a07.bin",  0x020000, 0xad07d1fd, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "fzta__a05.bin",  0x020000, 0x47dbe11b, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	
+	{ "fzta__a14.bin",  0x010000, 0x9468ab33, SYS16_ROM_TILES | BRF_GRA },
+	{ "fzta__a15.bin",  0x010000, 0x22a3cf75, SYS16_ROM_TILES | BRF_GRA },
+	{ "fzta__a16.bin",  0x010000, 0x25cba87f, SYS16_ROM_TILES | BRF_GRA },
+	
+	{ "fzta__b01.bin",  0x020000, 0x0beb4a22, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "fzta__b05.bin",  0x020000, 0x7f676c69, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "fzta__a01.bin",  0x020000, 0x40e1db9a, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "fzta__b10.bin",  0x020000, 0xacbb5cff, SYS16_ROM_SPRITES | BRF_GRA },
+			
+	{ "fzta__a10.bin",  0x008000, 0xdab6fcd0, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
+};
+
+
+STD_ROM_PICK(Fantzoneta)
+STD_ROM_FN(Fantzoneta)
 
 static struct BurnRomInfo Fantzn2xRomDesc[] = {
 	{ "fz2.a7",         0x020000, 0x94c05f0b, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
@@ -3245,7 +3304,7 @@ static struct BurnRomInfo GoldnaxeRomDesc[] = {
 	
 	{ "mpr-12384.ic6",  0x20000, 0x6218d8e7, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0123a.bin",  0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0123a.c2",   0x01000, 0x00000000, BRF_NODUMP }, // Intel i8751 protection MCU
 };
 
 
@@ -3299,7 +3358,7 @@ static struct BurnRomInfo Goldnaxe2RomDesc[] = {
 	
 	{ "mpr-12384.a11",  0x20000, 0x6218d8e7, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0112.bin",   0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0112.c2",    0x01000, 0x00000000, BRF_NODUMP }, // Intel i8751 protection MCU
 };
 
 
@@ -3985,30 +4044,30 @@ STD_ROM_PICK(Sonicbom)
 STD_ROM_FN(Sonicbom)
 
 static struct BurnRomInfo SuprleagRomDesc[] = {
-	{ "epr-11133.a04",   0x10000, 0xeed72f37, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11130.a01",   0x10000, 0xe2451676, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11134.a05",   0x10000, 0xccd857f5, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11131.a02",   0x10000, 0x9b78c2cc, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11135.a06",   0x10000, 0x3735e0e1, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-11132.a03",   0x10000, 0xff199325, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11133.a4",    0x10000, 0xeed72f37, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11130.a1",    0x10000, 0xe2451676, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11134.a5",    0x10000, 0xccd857f5, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11131.a2",    0x10000, 0x9b78c2cc, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11135.a6",    0x10000, 0x3735e0e1, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11132.a3",    0x10000, 0xff199325, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
 
-	{ "epr-11136.b09",   0x10000, 0xc3860ce4, SYS16_ROM_TILES | BRF_GRA },
+	{ "epr-11136.b9",    0x10000, 0xc3860ce4, SYS16_ROM_TILES | BRF_GRA },
 	{ "epr-11137.b10",   0x10000, 0x92d96187, SYS16_ROM_TILES | BRF_GRA },
 	{ "epr-11138.b11",   0x10000, 0xc01dc773, SYS16_ROM_TILES | BRF_GRA },
 	
-	{ "epr-11144.b01",   0x10000, 0xb31de51c, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11148.b05",   0x10000, 0x126e1309, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11145.b02",   0x10000, 0x4223d2c3, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11149.b06",   0x10000, 0x694d3765, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11146.b03",   0x10000, 0xbf0359b6, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11150.b07",   0x10000, 0x9fc0aded, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11147.b04",   0x10000, 0x3e592772, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-11151.b08",   0x10000, 0x9de95169, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11144.b1",    0x10000, 0xb31de51c, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11148.b5",    0x10000, 0x126e1309, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11145.b2",    0x10000, 0x4223d2c3, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11149.b6",    0x10000, 0x694d3765, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11146.b3",    0x10000, 0xbf0359b6, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11150.b7",    0x10000, 0x9fc0aded, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11147.b4",    0x10000, 0x3e592772, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-11151.b8",    0x10000, 0x9de95169, SYS16_ROM_SPRITES | BRF_GRA },
 
-	{ "epr-11139.a07",   0x08000, 0x9cbd99da, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
+	{ "epr-11139.a7",    0x08000, 0x9cbd99da, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
 	
-	{ "epr-11140.a08",   0x08000, 0xb297371b, SYS16_ROM_UPD7759DATA | BRF_SND },
-	{ "epr-11141.a09",   0x08000, 0x19756aa6, SYS16_ROM_UPD7759DATA | BRF_SND },
+	{ "epr-11140.a8",    0x08000, 0xb297371b, SYS16_ROM_UPD7759DATA | BRF_SND },
+	{ "epr-11141.a9",    0x08000, 0x19756aa6, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "epr-11142.a10",   0x08000, 0x25d26c66, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "epr-11143.a11",   0x08000, 0x848b7b77, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
@@ -4155,7 +4214,7 @@ static struct BurnRomInfo TturfRomDesc[] = {
 	{ "opr-12329.a11",  0x10000, 0xed9a686d, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "opr-12330.a12",  0x10000, 0xfb762bca, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0104.bin",   0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0104.c2",    0x01000, 0x00000000, BRF_NODUMP }, // Intel i8751 protection MCU
 };
 
 
@@ -4163,10 +4222,10 @@ STD_ROM_PICK(Tturf)
 STD_ROM_FN(Tturf)
 
 static struct BurnRomInfo TturfuRomDesc[] = {
-	{ "epr-12266.bin",  0x10000, 0xf549def8, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-12264.bin",  0x10000, 0xf7cdb289, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-12267.bin",  0x10000, 0x3c3ce191, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
-	{ "epr-12265.bin",  0x10000, 0x8cdadd9a, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-12266.a1",   0x10000, 0xf549def8, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-12264.a4",   0x10000, 0xf7cdb289, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-12267.a2",   0x10000, 0x3c3ce191, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-12265.a5",   0x10000, 0x8cdadd9a, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
 
 	{ "epr-12268.a14",  0x10000, 0xe0dac07f, SYS16_ROM_TILES | BRF_GRA },
 	{ "epr-12269.a15",  0x10000, 0x457a8790, SYS16_ROM_TILES | BRF_GRA },
@@ -4188,7 +4247,7 @@ static struct BurnRomInfo TturfuRomDesc[] = {
 	{ "epr-12274.a10",  0x08000, 0x8207f0c4, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "epr-12275.a11",  0x08000, 0x182f3c3d, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0099.bin",   0x01000, 0xf676e3e4, BRF_OPT },
+	{ "317-0099.c2",    0x01000, 0xf676e3e4, BRF_OPT }, // Intel i8751 protection MCU
 };
 
 
@@ -4214,7 +4273,7 @@ static struct BurnRomInfo Wb3RomDesc[] = {
 
 	{ "epr-12127.a10",  0x08000, 0x0bb901bb, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
 	
-	{ "317-0098.bin",   0x01000, 0x00000000, BRF_NODUMP },
+	{ "317-0098.c2",    0x01000, 0x00000000, BRF_NODUMP }, // Intel i8751 protection MCU
 };
 
 
@@ -4222,7 +4281,7 @@ STD_ROM_PICK(Wb3)
 STD_ROM_FN(Wb3)
 
 static struct BurnRomInfo Wb32RomDesc[] = {
-	{ "epr-12100.a6",   0x10000, 0xf5ca4abc, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-12100.a4",   0x10000, 0xf5ca4abc, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
 	{ "epr-12098.a1",   0x10000, 0xd998e5e5, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
 	{ "epr-12101.a5",   0x10000, 0x6146492b, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
 	{ "epr-12099.a2",   0x10000, 0x3e243b45, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
@@ -4355,7 +4414,7 @@ static struct BurnRomInfo WrestwarRomDesc[] = {
 	{ "mpr-12148.a11",  0x20000, 0xfb9a7f29, SYS16_ROM_UPD7759DATA | BRF_SND },
 	{ "mpr-12149.a12",  0x20000, 0xd6617b19, SYS16_ROM_UPD7759DATA | BRF_SND },
 	
-	{ "317-0103.bin",   0x01000, 0xaa0710f5, BRF_OPT }
+	{ "317-0103.c2",   0x01000, 0xaa0710f5, BRF_OPT } // Intel i8751 protection MCU
 };
 
 
@@ -4485,7 +4544,7 @@ UINT8 __fastcall BootlegZ80Read(UINT16 a)
 	switch (a) {
 		case 0xe000:
 		case 0xe800: {
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return System16SoundLatch;
 		}
 	}
@@ -4578,7 +4637,7 @@ void __fastcall System16BWriteByte(UINT32 a, UINT8 d)
 		case 0xfe0007: {
 			System16SoundLatch = d;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -4607,7 +4666,7 @@ void __fastcall AliensynWriteByte(UINT32 a, UINT8 d)
 		case 0xc00007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -4621,7 +4680,7 @@ void __fastcall AltbeastblSoundWriteByte(UINT32 a, UINT8 d)
 			System16SoundLatch = d;
 			bprintf(PRINT_NORMAL, _T("Sound Latch Wrote %x\n"), d);
 //			ZetOpen(0);
-//			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+//			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 //			ZetClose();
 			return;
 		}
@@ -4829,7 +4888,7 @@ void __fastcall BayrouteWriteByte(UINT32 a, UINT8 d)
 		case 0xff0007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -4881,7 +4940,7 @@ void __fastcall BulletWriteByte(UINT32 a, UINT8 d)
 		case 0xc00007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -4962,7 +5021,7 @@ void __fastcall CottonWriteByte(UINT32 a, UINT8 d)
 		case 0xff0007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -5078,7 +5137,7 @@ void __fastcall DduxblWriteByte(UINT32 a, UINT8 d)
 		case 0xc40007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -5238,7 +5297,7 @@ void __fastcall EswatSoundWriteByte(UINT32 a, UINT8 d)
 		case 0x123407: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -5305,7 +5364,7 @@ void __fastcall EswatblSoundWriteByte(UINT32 a, UINT8 d)
 		case 0xc42007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -5513,7 +5572,7 @@ void __fastcall FpointblWriteByte(UINT32 a, UINT8 d)
 		case 0x600007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 
@@ -5804,7 +5863,7 @@ void __fastcall PassshtWriteByte(UINT32 a, UINT8 d)
 		case 0xc00007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -5916,7 +5975,7 @@ void __fastcall RiotcityWriteByte(UINT32 a, UINT8 d)
 		case 0xf00007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6026,7 +6085,7 @@ void __fastcall RyukyuWriteByte(UINT32 a, UINT8 d)
 		case 0xff0007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6092,7 +6151,7 @@ void __fastcall SdibSoundWriteByte(UINT32 a, UINT8 d)
 		case 0x123407: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6149,7 +6208,7 @@ void __fastcall SjryukoWriteByte(UINT32 a, UINT8 d)
 		case 0xc00007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6177,7 +6236,7 @@ void __fastcall SonicbomWriteByte(UINT32 a, UINT8 d)
 		case 0x123407: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6234,7 +6293,7 @@ void __fastcall TetrisblSndWriteByte(UINT32 a, UINT8 d)
 		case 0xc42007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6306,7 +6365,7 @@ void __fastcall ToryumonWriteByte(UINT32 a, UINT8 d)
 		case 0xfe0007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6350,7 +6409,7 @@ void __fastcall Wb3WriteByte(UINT32 a, UINT8 d)
 		case 0xdf0007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -6452,7 +6511,7 @@ static INT32 AliensynInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xc00006, 0xc00007, SM_WRITE);
+		SekMapHandler(1, 0xc00006, 0xc00007, MAP_WRITE);
 		SekSetWriteByteHandler(1, AliensynWriteByte);
 		SekClose();
 		AlienSyndrome = true;
@@ -6467,7 +6526,7 @@ static INT32 Aliensyn3Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xc00006, 0xc00007, SM_WRITE);
+		SekMapHandler(1, 0xc00006, 0xc00007, MAP_WRITE);
 		SekSetWriteByteHandler(1, AliensynWriteByte);
 		SekClose();
 		AlienSyndrome = true;
@@ -6489,7 +6548,7 @@ void Altbeast_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp >> 8;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x30c4)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -6508,7 +6567,7 @@ void Altbeastj_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp >> 8;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x30d4)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -6527,7 +6586,7 @@ void Altbeast6_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp >> 8;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x3098)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -6664,9 +6723,9 @@ static INT32 AltbeastblInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x418000, 0x418031, SM_WRITE);
+		SekMapHandler(1, 0x418000, 0x418031, MAP_WRITE);
 		SekSetWriteWordHandler(1, AltbeastblGfxWriteWord);
-		SekMapHandler(2, 0xc42006, 0xc42007, SM_WRITE);
+		SekMapHandler(2, 0xc42006, 0xc42007, MAP_WRITE);
 		SekSetWriteByteHandler(2, AltbeastblSoundWriteByte);
 		SekClose();
 		
@@ -6680,12 +6739,12 @@ void AtomicpMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x01ffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x01ffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x01ffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x01ffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0, System16BWriteWord);
 	SekSetReadByteHandler(0, AtomicpReadByte);
 	SekSetWriteByteHandler(0, AtomicpWriteByte);
@@ -6712,7 +6771,7 @@ static INT32 AurailInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xfc0000, 0xfc0003, SM_WRITE);
+		SekMapHandler(1, 0xfc0000, 0xfc0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, AurailWriteByte);
 		SekClose();
 	}
@@ -6728,7 +6787,7 @@ static INT32 Aurail1Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xfc0000, 0xfc0003, SM_WRITE);
+		SekMapHandler(1, 0xfc0000, 0xfc0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, AurailWriteByte);
 		SekClose();
 	}
@@ -6744,7 +6803,7 @@ static INT32 AurailjInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xfc0000, 0xfc0003, SM_WRITE);
+		SekMapHandler(1, 0xfc0000, 0xfc0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, AurailWriteByte);
 		SekClose();
 	}
@@ -6756,13 +6815,13 @@ void BayrouteMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0bffff, SM_FETCH);
-	SekMapMemory(System16Ram           , 0x500000, 0x503fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x600000, 0x6007ff, SM_RAM);
-	SekMapMemory(System16TileRam       , 0x700000, 0x70ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x710000, 0x710fff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x800000, 0x800fff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0bffff, MAP_FETCH);
+	SekMapMemory(System16Ram           , 0x500000, 0x503fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x600000, 0x6007ff, MAP_RAM);
+	SekMapMemory(System16TileRam       , 0x700000, 0x70ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x710000, 0x710fff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x800000, 0x800fff, MAP_RAM);
 	SekSetReadByteHandler(0, BayrouteReadByte);
 	SekSetWriteByteHandler(0, BayrouteWriteByte);
 	SekSetWriteWordHandler(0, BayrouteWriteWord);
@@ -6789,16 +6848,16 @@ void Blox16bMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0, System16BWriteWord);
 	SekSetReadByteHandler(0, System16BReadByte);
 	SekSetWriteByteHandler(0, System16BWriteByte);
-	SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+	SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 	SekSetWriteByteHandler(1, Fantzn2xWriteByte);
 	SekClose();
 }
@@ -6838,7 +6897,7 @@ static INT32 BulletInit()
 	if (!nRet) {
 		SekOpen(0);
 		SekSetReadByteHandler(0, BulletReadByte);
-		SekMapHandler(1, 0xc00006, 0xc00007, SM_WRITE);
+		SekMapHandler(1, 0xc00006, 0xc00007, MAP_WRITE);
 		SekSetWriteByteHandler(1, BulletWriteByte);
 		SekClose();
 	}
@@ -6849,13 +6908,13 @@ void CottonMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0fffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0fffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x500000, 0x500fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0x200000, 0x203fff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0fffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0fffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x500000, 0x500fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0x200000, 0x203fff, MAP_RAM);
 	SekSetReadByteHandler(0, CottonReadByte);
 	SekSetWriteByteHandler(0, CottonWriteByte);
 	SekSetWriteWordHandler(0, CottonWriteWord);
@@ -6877,7 +6936,7 @@ void Ddux_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp >> 8;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x0bd0)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -6891,7 +6950,7 @@ static INT32 DduxInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+		SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, DduxWriteByte);
 		SekClose();
 	}
@@ -6908,7 +6967,7 @@ static INT32 Ddux1Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+		SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, DduxWriteByte);
 		SekClose();
 	}
@@ -6929,9 +6988,9 @@ static INT32 DduxblInit()
 	if (!nRet) {
 		SekOpen(0);
 		SekSetWriteByteHandler(0, DduxblWriteByte);
-		SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+		SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, DduxWriteByte);
-		SekMapHandler(2, 0xc46000, 0xc46027, SM_WRITE);
+		SekMapHandler(2, 0xc46000, 0xc46027, MAP_WRITE);
 		SekSetWriteByteHandler(2, DduxblGfxWriteByte);
 		SekSetWriteWordHandler(2, DduxblGfxWriteWord);
 		SekClose();
@@ -6955,7 +7014,7 @@ static INT32 DunkshotInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xc43000, 0xc4301f, SM_READ);
+		SekMapHandler(1, 0xc43000, 0xc4301f, MAP_READ);
 		SekSetReadByteHandler(1, DunkshotReadByte);
 		SekClose();
 		
@@ -7018,13 +7077,13 @@ void EswatMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0bffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0bffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 	SekSetReadByteHandler(0, System16BReadByte);
 	SekSetWriteByteHandler(0, System16BWriteByte);
 	SekSetWriteWordHandler(0, System16BWriteWord);
@@ -7042,18 +7101,18 @@ static INT32 EswatInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x123406, 0x123407, SM_WRITE);
+		SekMapHandler(1, 0x123406, 0x123407, MAP_WRITE);
 		SekSetWriteByteHandler(1, EswatSoundWriteByte);
 		
-		SekMapHandler(2, 0x3e0000, 0x3e0fff, SM_RAM);
+		SekMapHandler(2, 0x3e0000, 0x3e0fff, MAP_RAM);
 		SekSetReadWordHandler(2, EswatMultiply0ReadWord);
 		SekSetWriteWordHandler(2, EswatMultiply0WriteWord);
 		
-		SekMapHandler(3, 0x3e1000, 0x3e1fff, SM_RAM);
+		SekMapHandler(3, 0x3e1000, 0x3e1fff, MAP_RAM);
 		SekSetReadWordHandler(3, EswatCompare0ReadWord);
 		SekSetWriteWordHandler(3, EswatCompare0WriteWord);
 		
-		SekMapHandler(4, 0x3e2000, 0x3e2003, SM_WRITE);
+		SekMapHandler(4, 0x3e2000, 0x3e2003, MAP_WRITE);
 		SekSetWriteByteHandler(4, EswatWriteByte);
 		SekClose();
 		
@@ -7089,22 +7148,22 @@ static INT32 Eswatj1Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapMemory(System16Rom + 0x40000 , 0x080000, 0x0bffff, SM_READ);	// mirror
-		SekMapMemory(System16Code + 0x40000, 0x080000, 0x0bffff, SM_FETCH);	// mirror
-		SekMapMemory(System16Ram           , 0xff0000, 0xff3fff, SM_RAM);
+		SekMapMemory(System16Rom + 0x40000 , 0x080000, 0x0bffff, MAP_READ);	// mirror
+		SekMapMemory(System16Code + 0x40000, 0x080000, 0x0bffff, MAP_FETCH);	// mirror
+		SekMapMemory(System16Ram           , 0xff0000, 0xff3fff, MAP_RAM);
 		
-		SekMapHandler(1, 0x123406, 0x123407, SM_WRITE);
+		SekMapHandler(1, 0x123406, 0x123407, MAP_WRITE);
 		SekSetWriteByteHandler(1, EswatSoundWriteByte);
 		
-		SekMapHandler(2, 0x3e0000, 0x3e0fff, SM_RAM);
+		SekMapHandler(2, 0x3e0000, 0x3e0fff, MAP_RAM);
 		SekSetReadWordHandler(2, EswatMultiply0ReadWord);
 		SekSetWriteWordHandler(2, EswatMultiply0WriteWord);
 		
-		SekMapHandler(3, 0x3e1000, 0x3e1fff, SM_RAM);
+		SekMapHandler(3, 0x3e1000, 0x3e1fff, MAP_RAM);
 		SekSetReadWordHandler(3, EswatCompare0ReadWord);
 		SekSetWriteWordHandler(3, EswatCompare0WriteWord);
 		
-		SekMapHandler(4, 0x3f0000, 0x3f0003, SM_WRITE);
+		SekMapHandler(4, 0x3f0000, 0x3f0003, MAP_WRITE);
 		SekSetWriteByteHandler(4, Eswatj1WriteByte);
 		SekClose();
 		
@@ -7148,14 +7207,14 @@ static INT32 EswatblInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x418000, 0x418031, SM_WRITE);
+		SekMapHandler(1, 0x418000, 0x418031, MAP_WRITE);
 		SekSetWriteWordHandler(1, EswatblGfxWriteWord);
 		SekSetWriteByteHandler(1, EswatblGfxWriteByte);
 		
-		SekMapHandler(2, 0xc42006, 0xc42007, SM_WRITE);
+		SekMapHandler(2, 0xc42006, 0xc42007, MAP_WRITE);
 		SekSetWriteByteHandler(2, EswatblSoundWriteByte);
 		
-		SekMapHandler(3, 0x3e2000, 0x3e2003, SM_WRITE);
+		SekMapHandler(3, 0x3e2000, 0x3e2003, MAP_WRITE);
 		SekSetWriteByteHandler(3, EswatWriteByte);
 
 		SekClose();
@@ -7222,21 +7281,32 @@ static INT32 ExctleagScan(INT32 nAction,INT32 *pnMin)
 	return System16Scan(nAction, pnMin);;
 }
 
+static INT32 FantzonetaInit()
+{
+	// Start off with some sprite rom and let the load routine add on the rest
+	System16SpriteRomSize = 0x180000 - 0x80000;
+
+	INT32 nRet = System16Init();
+	memcpy(System16Sprites + 0x100000, System16Sprites + 0x040000, 0x40000);
+	
+	return nRet;
+}
+
 void Fantzn2xMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0fffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0fffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0x200000, 0x23ffff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0fffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0fffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0x200000, 0x23ffff, MAP_RAM);
 	SekSetWriteWordHandler(0, System16BWriteWord);
 	SekSetReadByteHandler(0, System16BReadByte);
 	SekSetWriteByteHandler(0, System16BWriteByte);
-	SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+	SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 	SekSetWriteByteHandler(1, Fantzn2xWriteByte);
 	SekClose();
 }
@@ -7295,16 +7365,16 @@ void FantzntaMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0, System16BWriteWord);
 	SekSetReadByteHandler(0, System16BReadByte);
 	SekSetWriteByteHandler(0, System16BWriteByte);
-	SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+	SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 	SekSetWriteByteHandler(1, Fantzn2xWriteByte);
 	SekClose();
 }
@@ -7350,7 +7420,7 @@ static INT32 FpointblInit()
 		SekSetReadByteHandler(0, FpointblReadByte);
 		SekSetWriteByteHandler(0, FpointblWriteByte);
 		
-		SekMapHandler(1, 0xc46000, 0xc46031, SM_WRITE);
+		SekMapHandler(1, 0xc46000, 0xc46031, MAP_WRITE);
 		SekSetWriteWordHandler(1, FpointblGfxWriteWord);
 		SekClose();
 		
@@ -7364,24 +7434,24 @@ void GoldnaxeMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0bffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x100000, 0x10ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x110000, 0x110fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x200000, 0x2007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x400000, 0x4007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x500000, 0x5007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x700000, 0x7007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x800000, 0x8007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x900000, 0x9007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x600000, 0x6007ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x140000, 0x140fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);	
+	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0bffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x100000, 0x10ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x110000, 0x110fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x200000, 0x2007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x400000, 0x4007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x500000, 0x5007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x700000, 0x7007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x800000, 0x8007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x900000, 0x9007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x600000, 0x6007ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x140000, 0x140fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);	
 	SekSetReadByteHandler(0, System16BReadByte);
 	SekSetWriteByteHandler(0, System16BWriteByte);
 	
-	SekMapHandler(1, 0x100000, 0x10ffff, SM_WRITE);
+	SekMapHandler(1, 0x100000, 0x10ffff, MAP_WRITE);
 	SekSetWriteByteHandler(1, GoldnaxeTileWriteByte);
 	SekSetWriteWordHandler(1, GoldnaxeTileWriteWord);
 	SekClose();
@@ -7406,7 +7476,7 @@ void Goldnaxe_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp >> 8;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x2cfc)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -7428,19 +7498,19 @@ static INT32 GoldnaxeInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(2, 0x1e0000, 0x1e0fff, SM_RAM);
+		SekMapHandler(2, 0x1e0000, 0x1e0fff, MAP_RAM);
 		SekSetReadWordHandler(2, GoldnaxeCompare1ReadWord);
 		SekSetWriteWordHandler(2, GoldnaxeCompare1WriteWord);
 		
-		SekMapHandler(3, 0x1f0000, 0x1f0fff, SM_RAM);
+		SekMapHandler(3, 0x1f0000, 0x1f0fff, MAP_RAM);
 		SekSetReadWordHandler(3, GoldnaxeMultiply0ReadWord);
 		SekSetWriteWordHandler(3, GoldnaxeMultiply0WriteWord);
 		
-		SekMapHandler(4, 0x1f1000, 0x1f1fff, SM_RAM);
+		SekMapHandler(4, 0x1f1000, 0x1f1fff, MAP_RAM);
 		SekSetReadWordHandler(4, GoldnaxeCompare0ReadWord);
 		SekSetWriteWordHandler(4, GoldnaxeCompare0WriteWord);
 		
-		SekMapHandler(5, 0x1f2000, 0x1f2003, SM_WRITE);
+		SekMapHandler(5, 0x1f2000, 0x1f2003, MAP_WRITE);
 		SekSetWriteByteHandler(5, Goldnaxe1WriteByte);
 		SekClose();
 		
@@ -7474,19 +7544,19 @@ static INT32 Goldnaxe1Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(2, 0x1e0000, 0x1e0fff, SM_RAM);
+		SekMapHandler(2, 0x1e0000, 0x1e0fff, MAP_RAM);
 		SekSetReadWordHandler(2, GoldnaxeCompare1ReadWord);
 		SekSetWriteWordHandler(2, GoldnaxeCompare1WriteWord);
 		
-		SekMapHandler(3, 0x1f0000, 0x1f0fff, SM_RAM);
+		SekMapHandler(3, 0x1f0000, 0x1f0fff, MAP_RAM);
 		SekSetReadWordHandler(3, GoldnaxeMultiply0ReadWord);
 		SekSetWriteWordHandler(3, GoldnaxeMultiply0WriteWord);
 		
-		SekMapHandler(4, 0x1f1000, 0x1f1fff, SM_RAM);
+		SekMapHandler(4, 0x1f1000, 0x1f1fff, MAP_RAM);
 		SekSetReadWordHandler(4, GoldnaxeCompare0ReadWord);
 		SekSetWriteWordHandler(4, GoldnaxeCompare0WriteWord);
 		
-		SekMapHandler(5, 0x1f2000, 0x1f2003, SM_WRITE);
+		SekMapHandler(5, 0x1f2000, 0x1f2003, MAP_WRITE);
 		SekSetWriteByteHandler(5, Goldnaxe1WriteByte);
 		SekClose();
 		
@@ -7522,7 +7592,7 @@ static INT32 Goldnaxe2Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(2, 0x1f0000, 0x1f0003, SM_WRITE);
+		SekMapHandler(2, 0x1f0000, 0x1f0003, MAP_WRITE);
 		SekSetWriteByteHandler(2, Goldnaxe3WriteByte);
 		SekClose();
 	
@@ -7557,7 +7627,7 @@ static INT32 Goldnaxe3Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(2, 0x1f0000, 0x1f0003, SM_WRITE);
+		SekMapHandler(2, 0x1f0000, 0x1f0003, MAP_WRITE);
 		SekSetWriteByteHandler(2, Goldnaxe3WriteByte);
 		SekClose();
 		
@@ -7586,10 +7656,10 @@ static INT32 HwchampInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+		SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, HwchampWriteByte);
 		
-		SekMapHandler(2, 0xc43020, 0xc43025, SM_RAM);
+		SekMapHandler(2, 0xc43020, 0xc43025, MAP_RAM);
 		SekSetReadWordHandler(2, HwchampCtrlReadWord);
 		SekSetWriteWordHandler(2, HwchampCtrlWriteWord);
 		SekClose();
@@ -7624,7 +7694,7 @@ static INT32 MvpInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x3f2000, 0x3f2003, SM_WRITE);
+		SekMapHandler(1, 0x3f2000, 0x3f2003, MAP_WRITE);
 		SekSetWriteByteHandler(1, MvpWriteByte);
 		SekClose();
 	
@@ -7660,7 +7730,7 @@ static INT32 MvpjInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x3f0000, 0x3f0003, SM_WRITE);
+		SekMapHandler(1, 0x3f0000, 0x3f0003, MAP_WRITE);
 		SekSetWriteByteHandler(1, MvpjWriteByte);
 		SekClose();
 	
@@ -7686,7 +7756,7 @@ static INT32 PassshtInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xc00006, 0xc00007, SM_WRITE);
+		SekMapHandler(1, 0xc00006, 0xc00007, MAP_WRITE);
 		SekSetWriteByteHandler(1, PassshtWriteByte);
 		SekClose();
 	}
@@ -7700,9 +7770,9 @@ static INT32 PassshtaInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xc00006, 0xc00007, SM_WRITE);
+		SekMapHandler(1, 0xc00006, 0xc00007, MAP_WRITE);
 		SekSetWriteByteHandler(1, PassshtWriteByte);
-		SekMapHandler(2, 0xc43000, 0xc43007, SM_READ);
+		SekMapHandler(2, 0xc43000, 0xc43007, MAP_READ);
 		SekSetReadByteHandler(2, PassshtaReadByte);
 		SekClose();
 	}
@@ -7718,13 +7788,13 @@ static INT32 PassshtbInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xc46000, 0xc46031, SM_WRITE);
+		SekMapHandler(1, 0xc46000, 0xc46031, MAP_WRITE);
 		SekSetWriteWordHandler(1, PassshtbGfxWriteWord);
 		
-//		SekMapHandler(2, 0x842000, 0x842001, SM_READ);
+//		SekMapHandler(2, 0x842000, 0x842001, MAP_READ);
 //		SekSetReadByteHandler(2, PassshtbReadByte);
 		
-//		SekMapHandler(2, 0xc42006, 0xc42007, SM_WRITE);
+//		SekMapHandler(2, 0xc42006, 0xc42007, MAP_WRITE);
 //		SekSetWriteByteHandler(2, TetrisblSndWriteByte);
 		SekClose();
 		
@@ -7738,13 +7808,13 @@ void RiotcityMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0bffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0xfa0000, 0xfaffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0xfb0000, 0xfb0fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0xf40000, 0xf407ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0xf60000, 0xf60fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0bffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0xfa0000, 0xfaffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0xfb0000, 0xfb0fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0xf40000, 0xf407ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0xf60000, 0xf60fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 	SekSetReadByteHandler(0, RiotcityReadByte);
 	SekSetWriteByteHandler(0, RiotcityWriteByte);
 	SekSetWriteWordHandler(0, RiotcityWriteWord);
@@ -7785,14 +7855,14 @@ void RyukyuMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0bffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x300800, 0x300fff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x500000, 0x500fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0x200000, 0x203fff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0bffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x300800, 0x300fff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x500000, 0x500fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0x200000, 0x203fff, MAP_RAM);
 	SekSetReadWordHandler(0, RyukyuReadWord);
 	SekSetWriteWordHandler(0, RyukyuWriteWord);
 	SekSetReadByteHandler(0, System16BReadByte);
@@ -7816,7 +7886,7 @@ static INT32 SdibInit()
 	if (!nRet) {
 		SekOpen(0);
 		SekSetReadByteHandler(0, SdibReadByte);
-		SekMapHandler(1, 0x123406, 0x123407, SM_WRITE);
+		SekMapHandler(1, 0x123406, 0x123407, MAP_WRITE);
 		SekSetWriteByteHandler(1, SdibSoundWriteByte);		
 		SekClose();
 	}
@@ -7833,7 +7903,7 @@ static INT32 SdiblInit()
 	if (!nRet) {
 		SekOpen(0);
 		SekSetReadByteHandler(0, SdibReadByte);
-		SekMapHandler(1, 0x123406, 0x123407, SM_WRITE);
+		SekMapHandler(1, 0x123406, 0x123407, MAP_WRITE);
 		SekSetWriteByteHandler(1, SdibSoundWriteByte);		
 		SekClose();
 	}
@@ -7922,9 +7992,9 @@ static INT32 SonicbomInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x123406, 0x123407, SM_WRITE);
+		SekMapHandler(1, 0x123406, 0x123407, MAP_WRITE);
 		SekSetWriteByteHandler(1, SonicbomWriteByte);
-		SekMapHandler(2, 0xc42000, 0xc42003, SM_READ);
+		SekMapHandler(2, 0xc42000, 0xc42003, MAP_READ);
 		SekSetReadWordHandler(2, SonicbomReadWord);
 		SekClose();
 	}
@@ -7940,10 +8010,10 @@ static INT32 TetrisblInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0x418000, 0x418031, SM_WRITE);
+		SekMapHandler(1, 0x418000, 0x418031, MAP_WRITE);
 		SekSetWriteWordHandler(1, TetrisblGfxWriteWord);
 		
-		SekMapHandler(2, 0xc42006, 0xc42007, SM_WRITE);
+		SekMapHandler(2, 0xc42006, 0xc42007, MAP_WRITE);
 		SekSetWriteByteHandler(2, TetrisblSndWriteByte);
 		SekClose();
 		
@@ -7988,9 +8058,9 @@ static INT32 ToryumonInit()
 		SekOpen(0);
 		SekSetReadByteHandler(0, ToryumonReadByte);
 		SekSetWriteByteHandler(0, ToryumonWriteByte);
-		SekMapMemory(System16Ram, 0xff0000, 0xff3fff, SM_RAM);
-		SekMapMemory(System16Ram, 0xff4000, 0xff7fff, SM_RAM);
-		SekMapMemory(System16Ram, 0xff8000, 0xffbfff, SM_RAM);
+		SekMapMemory(System16Ram, 0xff0000, 0xff3fff, MAP_RAM);
+		SekMapMemory(System16Ram, 0xff4000, 0xff7fff, MAP_RAM);
+		SekMapMemory(System16Ram, 0xff8000, 0xffbfff, MAP_RAM);
 		SekClose();
 	}
 
@@ -8001,13 +8071,13 @@ void TturfMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0bffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x500000, 0x500fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0x200000, 0x203fff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0bffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x300000, 0x3007ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x500000, 0x500fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0x200000, 0x203fff, MAP_RAM);
 	SekSetReadByteHandler(0, TturfReadByte);
 	SekSetWriteByteHandler(0, TturfWriteByte);
 	SekSetWriteWordHandler(0, System16BWriteWord);
@@ -8026,7 +8096,7 @@ void Tturf_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp & 0xff;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x01d0)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -8075,7 +8145,7 @@ void Wb3_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp >> 8;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x0008)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -8114,7 +8184,7 @@ static INT32 Wb32Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xdf0006, 0xdf0007, SM_WRITE);
+		SekMapHandler(1, 0xdf0006, 0xdf0007, MAP_WRITE);
 		SekSetWriteByteHandler(1, Wb3WriteByte);
 		SekClose();
 	}
@@ -8131,7 +8201,7 @@ static INT32 Wb33Init()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xdf0006, 0xdf0007, SM_WRITE);
+		SekMapHandler(1, 0xdf0006, 0xdf0007, MAP_WRITE);
 		SekSetWriteByteHandler(1, Wb3WriteByte);
 		SekClose();
 	
@@ -8161,7 +8231,7 @@ static INT32 Wb3bblInit()
 	
 	if (!nRet) {
 		SekOpen(0);
-		SekMapHandler(1, 0xc44000, 0xc46031, SM_WRITE);
+		SekMapHandler(1, 0xc44000, 0xc46031, MAP_WRITE);
 		SekSetWriteWordHandler(1, Wb3bblGfxWriteWord);
 		SekClose();
 		
@@ -8188,18 +8258,18 @@ void WrestwarMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, SM_READ);
-	SekMapMemory(System16Code          , 0x000000, 0x0bffff, SM_FETCH);
-	SekMapMemory(System16TileRam       , 0x100000, 0x10ffff, SM_READ);
-	SekMapMemory(System16TextRam       , 0x110000, 0x110fff, SM_RAM);
-	SekMapMemory(System16SpriteRam     , 0x200000, 0x2007ff, SM_RAM);
-	SekMapMemory(System16PaletteRam    , 0x300000, 0x300fff, SM_RAM);
-	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(System16Rom           , 0x000000, 0x0bffff, MAP_READ);
+	SekMapMemory(System16Code          , 0x000000, 0x0bffff, MAP_FETCH);
+	SekMapMemory(System16TileRam       , 0x100000, 0x10ffff, MAP_READ);
+	SekMapMemory(System16TextRam       , 0x110000, 0x110fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam     , 0x200000, 0x2007ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam    , 0x300000, 0x300fff, MAP_RAM);
+	SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 	SekSetReadByteHandler(0, System16BReadByte);
 	SekSetWriteByteHandler(0, System16BWriteByte);
-	SekMapHandler(1, 0x400000, 0x400003, SM_WRITE);
+	SekMapHandler(1, 0x400000, 0x400003, MAP_WRITE);
 	SekSetWriteByteHandler(1, WrestwarWriteByte);
-	SekMapHandler(2, 0x100000, 0x10ffff, SM_WRITE);
+	SekMapHandler(2, 0x100000, 0x10ffff, MAP_WRITE);
 	SekSetWriteByteHandler(2, WrestwarTileWriteByte);
 	SekSetWriteWordHandler(2, WrestwarTileWriteWord);
 	SekClose();
@@ -8215,7 +8285,7 @@ void Wrestwar_Sim8751()
 	if ((temp & 0xff00) != 0x0000) {
 		System16SoundLatch = temp & 0xff;
 		ZetOpen(0);
-		ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		ZetClose();
 		*((UINT16*)(System16Ram + 0x208e)) = BURN_ENDIAN_SWAP_INT16((UINT16)(temp & 0xff));
 	}
@@ -8629,6 +8699,16 @@ struct BurnDriver BurnDrvExctleag = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM16B | HARDWARE_SEGA_FD1094_ENC | HARDWARE_SEGA_5358, GBF_SPORTSMISC, 0,
 	NULL, ExctleagRomInfo, ExctleagRomName, NULL, NULL, ExctleagInputInfo, ExctleagDIPInfo,
 	ExctleagInit, ExctleagExit, System16BFrame, NULL, ExctleagScan,
+	NULL, 0x1800, 320, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvFantzoneta = {
+	"fantzoneta", "fantzone", NULL, NULL, "2008",
+	"Fantasy Zone (Time Attack, bootleg)\0", NULL, "Sega", "System 16B",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM16B, GBF_HORSHOOT, 0,
+	NULL, FantzonetaRomInfo, FantzonetaRomName, NULL, NULL, System16bInputInfo, FantzonetaDIPInfo,
+	FantzonetaInit, System16Exit, System16BFrame, NULL, System16Scan,
 	NULL, 0x1800, 320, 224, 4, 3
 };
 
@@ -9495,7 +9575,7 @@ void __fastcall IsgsmWriteByte(UINT32 a, UINT8 d)
 		case 0xfe0007: {
 			System16SoundLatch = d & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -9519,7 +9599,7 @@ void __fastcall IsgsmWriteByte(UINT32 a, UINT8 d)
 		}
 		
 		case 0xfe000b: {
-			SekMapMemory(System16Rom + 0x300000, 0x000000, 0x0fffff, SM_ROM);
+			SekMapMemory(System16Rom + 0x300000, 0x000000, 0x0fffff, MAP_ROM);
 			GameRomMapped = 1;
 			return;
 		}
@@ -9603,14 +9683,14 @@ static void IsgsmMap68K()
 {
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(System16Rom            , 0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(System16ExtraRam       , 0x200000, 0x23ffff, SM_RAM);
-	SekMapMemory(System16TileRam        , 0x400000, 0x40ffff, SM_READ);
-	SekMapMemory(System16TextRam        , 0x410000, 0x410fff, SM_RAM);
-	SekMapMemory(System16SpriteRam      , 0x440000, 0x4407ff, SM_RAM);
-	SekMapMemory(System16PaletteRam     , 0x840000, 0x840fff, SM_RAM);
-	SekMapMemory(System16Rom + 0x100000 , 0xee0000, 0xefffff, SM_ROM);
-	SekMapMemory(System16Ram            , 0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(System16Rom            , 0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(System16ExtraRam       , 0x200000, 0x23ffff, MAP_RAM);
+	SekMapMemory(System16TileRam        , 0x400000, 0x40ffff, MAP_READ);
+	SekMapMemory(System16TextRam        , 0x410000, 0x410fff, MAP_RAM);
+	SekMapMemory(System16SpriteRam      , 0x440000, 0x4407ff, MAP_RAM);
+	SekMapMemory(System16PaletteRam     , 0x840000, 0x840fff, MAP_RAM);
+	SekMapMemory(System16Rom + 0x100000 , 0xee0000, 0xefffff, MAP_ROM);
+	SekMapMemory(System16Ram            , 0xffc000, 0xffffff, MAP_RAM);
 	SekSetReadWordHandler(0, IsgsmReadWord);
 	SekSetWriteWordHandler(0, IsgsmWriteWord);
 	SekSetReadByteHandler(0, IsgsmReadByte);
@@ -9790,7 +9870,7 @@ static INT32 IsgsmScan(INT32 nAction,INT32 *pnMin)
 		if (nAction & ACB_WRITE) {
 			if (GameRomMapped) {
 				SekOpen(0);
-				SekMapMemory(System16Rom + 0x300000, 0x000000, 0x0fffff, SM_ROM);
+				SekMapMemory(System16Rom + 0x300000, 0x000000, 0x0fffff, MAP_ROM);
 				SekClose();
 			}
 			

@@ -167,7 +167,7 @@ static void ajax_main_bankswitch(INT32 data)
 
 	ajax_priority = data & 0x08;
 
-	konamiMapMemory(DrvKonROM + nBank, 0x6000, 0x7fff, KON_ROM);
+	konamiMapMemory(DrvKonROM + nBank, 0x6000, 0x7fff, MAP_ROM);
 }
 
 void ajax_main_write(UINT16 address, UINT8 data)
@@ -178,12 +178,12 @@ void ajax_main_write(UINT16 address, UINT8 data)
 		{
 			case 0x0000:
 				if (address == 0 && firq_enable) {
-					M6809SetIRQLine(1, M6809_IRQSTATUS_AUTO);
+					M6809SetIRQLine(1, CPU_IRQSTATUS_AUTO);
 				}
 			break;
 
 			case 0x0001:
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			break;
 
 			case 0x0002:
@@ -261,7 +261,7 @@ static void ajax_sub_bankswitch(UINT8 data)
 	firq_enable = data & 0x10;
 
 	INT32 nBank = ((data & 0x0f) << 13) + 0x10000;
-	M6809MapMemory(DrvM6809ROM + nBank, 0x8000, 0x9fff, M6809_ROM); 
+	M6809MapMemory(DrvM6809ROM + nBank, 0x8000, 0x9fff, MAP_ROM); 
 }
 
 void ajax_sub_write(UINT16 address, UINT8 data)
@@ -354,7 +354,7 @@ UINT8 __fastcall ajax_sound_read(UINT16 address)
 			return BurnYM2151ReadStatus();
 
 		case 0xe000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 	}
 
@@ -462,25 +462,7 @@ static INT32 MemIndex()
 	return 0;
 }
 
-static INT32 DrvGfxDecode()
-{
-	INT32 Plane0[4]  = { 0x018, 0x010, 0x008, 0x000 };
-	INT32 Plane1[4]  = { 0x000, 0x008, 0x010, 0x018 };
-	INT32 XOffs0[16] = { 0x000, 0x001, 0x002, 0x003, 0x004, 0x005, 0x006, 0x007,
-			   0x100, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107 };
-	INT32 YOffs0[16] = { 0x000, 0x020, 0x040, 0x060, 0x080, 0x0a0, 0x0c0, 0x0e0,
-			   0x200, 0x220, 0x240, 0x260, 0x280, 0x2a0, 0x2c0, 0x2e0 };
-
-	konami_rom_deinterleave_2(DrvGfxROM0, 0x080000);
-	konami_rom_deinterleave_2(DrvGfxROM1, 0x100000);
-
-	GfxDecode(0x04000, 4,  8,  8, Plane0, XOffs0, YOffs0, 0x100, DrvGfxROM0, DrvGfxROMExp0);
-	GfxDecode(0x02000, 4, 16, 16, Plane1, XOffs0, YOffs0, 0x400, DrvGfxROM1, DrvGfxROMExp1);
-
-	return 0;
-}
-
-static INT32 DrvInit()
+static INT32 DrvInit(INT32 type)
 {
 	GenericTilesInit();
 
@@ -502,32 +484,32 @@ static INT32 DrvInit()
 
 		if (BurnLoadRom(DrvZ80ROM  + 0x000000,  4, 1)) return 1;
 
-		if (strcmp(BurnDrvGetTextA(DRV_NAME), "ajax") == 0) {
-			if (BurnLoadRom(DrvGfxROM0 + 0x000000,  5, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x000001,  6, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x020000,  7, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x020001,  8, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x040000,  9, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x040001, 10, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x060000, 11, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x060001, 12, 2)) return 1;
+		if (type) {
+			if (BurnLoadRom(DrvGfxROM0 + 0x000000,  5, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x000001,  6, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x000002,  7, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x000003,  8, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x040000,  9, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x040001, 10, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x040002, 11, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x040003, 12, 4)) return 1;
 
-			if (BurnLoadRom(DrvGfxROM1 + 0x000000, 13, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x000001, 14, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x020000, 15, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x020001, 16, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x040000, 17, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x040001, 18, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x060000, 19, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x060001, 20, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x080000, 21, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x080001, 22, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x0a0000, 23, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x0a0001, 24, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x0c0000, 25, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x0c0001, 26, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x0e0000, 27, 2)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x0e0001, 28, 2)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x000000, 13, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x000001, 14, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x000002, 15, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x000003, 16, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x040000, 17, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x040001, 18, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x040002, 19, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x040003, 20, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x080000, 21, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x080001, 22, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x080002, 23, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x080003, 24, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x0c0000, 25, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x0c0001, 26, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x0c0002, 27, 4)) return 1;
+			if (BurnLoadRom(DrvGfxROM1 + 0x0c0003, 28, 4)) return 1;
 
 			if (BurnLoadRom(DrvGfxROM2 + 0x000000, 29, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM2 + 0x040000, 30, 1)) return 1;
@@ -546,11 +528,11 @@ static INT32 DrvInit()
 			if (BurnLoadRom(DrvSndROM1 + 0x060000, 41, 1)) return 1;
 			if (BurnLoadRom(DrvSndROM1 + 0x070000, 42, 1)) return 1;
 		} else {
-			if (BurnLoadRom(DrvGfxROM0 + 0x000000,  5, 1)) return 1;
-			if (BurnLoadRom(DrvGfxROM0 + 0x040000,  6, 1)) return 1;
+			if (BurnLoadRomExt(DrvGfxROM0 + 0x000000,  5, 4, LD_GROUP(2))) return 1;
+			if (BurnLoadRomExt(DrvGfxROM0 + 0x000002,  6, 4, LD_GROUP(2))) return 1;
 
-			if (BurnLoadRom(DrvGfxROM1 + 0x000000,  7, 1)) return 1;
-			if (BurnLoadRom(DrvGfxROM1 + 0x080000,  8, 1)) return 1;
+			if (BurnLoadRomExt(DrvGfxROM1 + 0x000000,  7, 4, LD_GROUP(2))) return 1;
+			if (BurnLoadRomExt(DrvGfxROM1 + 0x000002,  8, 4, LD_GROUP(2))) return 1;
 
 			if (BurnLoadRom(DrvGfxROM2 + 0x000000,  9, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM2 + 0x040000, 10, 1)) return 1;
@@ -559,25 +541,26 @@ static INT32 DrvInit()
 			if (BurnLoadRom(DrvSndROM1 + 0x000000, 12, 1)) return 1;
 		}
 
-		DrvGfxDecode();
+		K052109GfxDecode(DrvGfxROM0, DrvGfxROMExp0, 0x080000);
+		K051960GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x100000);
 	}
 
 	konamiInit(0);
 	konamiOpen(0);
-	konamiMapMemory(DrvPalRAM,		0x1000, 0x1fff, KON_RAM);
-	konamiMapMemory(DrvShareRAM,		0x2000, 0x3fff, KON_RAM);
-	konamiMapMemory(DrvKonRAM,		0x4000, 0x5fff, KON_RAM);
-	konamiMapMemory(DrvKonROM + 0x10000, 	0x6000, 0x7fff, KON_ROM);
-	konamiMapMemory(DrvKonROM + 0x08000,	0x8000, 0xffff, KON_ROM);
+	konamiMapMemory(DrvPalRAM,		0x1000, 0x1fff, MAP_RAM);
+	konamiMapMemory(DrvShareRAM,		0x2000, 0x3fff, MAP_RAM);
+	konamiMapMemory(DrvKonRAM,		0x4000, 0x5fff, MAP_RAM);
+	konamiMapMemory(DrvKonROM + 0x10000, 	0x6000, 0x7fff, MAP_ROM);
+	konamiMapMemory(DrvKonROM + 0x08000,	0x8000, 0xffff, MAP_ROM);
 	konamiSetWriteHandler(ajax_main_write);
 	konamiSetReadHandler(ajax_main_read);
 	konamiClose();
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvShareRAM,		0x2000, 0x3fff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM  + 0x10000,	0x8000, 0x9fff, M6809_ROM);
-	M6809MapMemory(DrvM6809ROM  + 0x0a000,	0xa000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvShareRAM,		0x2000, 0x3fff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM  + 0x10000,	0x8000, 0x9fff, MAP_ROM);
+	M6809MapMemory(DrvM6809ROM  + 0x0a000,	0xa000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(ajax_sub_write);
 	M6809SetReadHandler(ajax_sub_read);
 	M6809Close();
@@ -720,7 +703,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	if (K051960_irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, KONAMI_IRQSTATUS_AUTO);
+	if (K051960_irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
@@ -796,27 +779,27 @@ static struct BurnRomInfo ajaxRomDesc[] = {
 
 	{ "770c13-a.f3",	0x10000, 0x4ef6fff2, 4 | BRF_GRA },           //  5 K052109 Tiles
 	{ "770c13-c.f4",	0x10000, 0x97ffbab6, 4 | BRF_GRA },           //  6
-	{ "770c13-b.e3",	0x10000, 0x86fdd706, 4 | BRF_GRA },           //  7
-	{ "770c13-d.e4",	0x10000, 0x7d7acb2d, 4 | BRF_GRA },           //  8
-	{ "770c12-a.f5",	0x10000, 0x6c0ade68, 4 | BRF_GRA },           //  9
-	{ "770c12-c.f6",	0x10000, 0x61fc39cc, 4 | BRF_GRA },           // 10
+	{ "770c12-a.f5",	0x10000, 0x6c0ade68, 4 | BRF_GRA },           //  7
+	{ "770c12-c.f6",	0x10000, 0x61fc39cc, 4 | BRF_GRA },           //  8
+	{ "770c13-b.e3",	0x10000, 0x86fdd706, 4 | BRF_GRA },           //  9
+	{ "770c13-d.e4",	0x10000, 0x7d7acb2d, 4 | BRF_GRA },           // 10
 	{ "770c12-b.e5",	0x10000, 0x5f221cc6, 4 | BRF_GRA },           // 11
 	{ "770c12-d.e6",	0x10000, 0xf1edb2f4, 4 | BRF_GRA },           // 12
 
 	{ "770c09-a.f8",	0x10000, 0x76690fb8, 5 | BRF_GRA },           // 13 K051960 Tiles
 	{ "770c09-e.f9",	0x10000, 0x17b482c9, 5 | BRF_GRA },           // 14
-	{ "770c09-b.e8",	0x10000, 0xcd1709d1, 5 | BRF_GRA },           // 15
-	{ "770c09-f.e9",	0x10000, 0xcba4b47e, 5 | BRF_GRA },           // 16
-	{ "770c09-c.d8",	0x10000, 0xbfd080b8, 5 | BRF_GRA },           // 17
-	{ "770c09-g.d9",	0x10000, 0x77d58ea0, 5 | BRF_GRA },           // 18
-	{ "770c09-d.c8",	0x10000, 0x6f955600, 5 | BRF_GRA },           // 19
-	{ "770c09-h.c9",	0x10000, 0x494a9090, 5 | BRF_GRA },           // 20
-	{ "770c08-a.f10",	0x10000, 0xefd29a56, 5 | BRF_GRA },           // 21
-	{ "770c08-e.f11",	0x10000, 0x6d43afde, 5 | BRF_GRA },           // 22
-	{ "770c08-b.e10",	0x10000, 0xf3374014, 5 | BRF_GRA },           // 23
-	{ "770c08-f.e11",	0x10000, 0xf5ba59aa, 5 | BRF_GRA },           // 24
-	{ "770c08-c.d10",	0x10000, 0x28e7088f, 5 | BRF_GRA },           // 25
-	{ "770c08-g.d11",	0x10000, 0x17da8f6d, 5 | BRF_GRA },           // 26
+	{ "770c08-a.f10",	0x10000, 0xefd29a56, 5 | BRF_GRA },           // 15
+	{ "770c08-e.f11",	0x10000, 0x6d43afde, 5 | BRF_GRA },           // 16
+	{ "770c09-b.e8",	0x10000, 0xcd1709d1, 5 | BRF_GRA },           // 17
+	{ "770c09-f.e9",	0x10000, 0xcba4b47e, 5 | BRF_GRA },           // 18
+	{ "770c08-b.e10",	0x10000, 0xf3374014, 5 | BRF_GRA },           // 19
+	{ "770c08-f.e11",	0x10000, 0xf5ba59aa, 5 | BRF_GRA },           // 20
+	{ "770c09-c.d8",	0x10000, 0xbfd080b8, 5 | BRF_GRA },           // 21
+	{ "770c09-g.d9",	0x10000, 0x77d58ea0, 5 | BRF_GRA },           // 22
+	{ "770c08-c.d10",	0x10000, 0x28e7088f, 5 | BRF_GRA },           // 23
+	{ "770c08-g.d11",	0x10000, 0x17da8f6d, 5 | BRF_GRA },           // 24
+	{ "770c09-d.c8",	0x10000, 0x6f955600, 5 | BRF_GRA },           // 25
+	{ "770c09-h.c9",	0x10000, 0x494a9090, 5 | BRF_GRA },           // 26
 	{ "770c08-d.c10",	0x10000, 0x91591777, 5 | BRF_GRA },           // 27
 	{ "770c08-h.c11",	0x10000, 0xd97d4b15, 5 | BRF_GRA },           // 28
 
@@ -843,13 +826,18 @@ static struct BurnRomInfo ajaxRomDesc[] = {
 STD_ROM_PICK(ajax)
 STD_ROM_FN(ajax)
 
+static INT32 ajaxInit()
+{
+	return DrvInit(1);
+}
+
 struct BurnDriver BurnDrvAjax = {
 	"ajax", NULL, NULL, NULL, "1987",
 	"Ajax\0", NULL, "Konami", "GX770",
 	L"Ajax\0\u30A8\u30FC\u30B8\u30E3\u30C3\u30AF\u30B9\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_VERSHOOT, 0,
 	NULL, ajaxRomInfo, ajaxRomName, NULL, NULL, AjaxInputInfo, AjaxDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
+	ajaxInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	224, 288, 3, 4
 };
 
@@ -884,13 +872,18 @@ static struct BurnRomInfo typhoonRomDesc[] = {
 STD_ROM_PICK(typhoon)
 STD_ROM_FN(typhoon)
 
+static INT32 typhoonInit()
+{
+	return DrvInit(0);
+}
+
 struct BurnDriver BurnDrvTyphoon = {
 	"typhoon", "ajax", NULL, NULL, "1987",
 	"Typhoon\0", NULL, "Konami", "GX770",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_VERSHOOT, 0,
 	NULL, typhoonRomInfo, typhoonRomName, NULL, NULL, AjaxInputInfo, AjaxDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
+	typhoonInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	224, 288, 3, 4
 };
 
@@ -931,6 +924,6 @@ struct BurnDriver BurnDrvAjaxj = {
 	L"Ajax\0\u30A8\u30FC\u30B8\u30E3\u30C3\u30AF\u30B9 (Japan)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_VERSHOOT, 0,
 	NULL, ajaxjRomInfo, ajaxjRomName, NULL, NULL, AjaxInputInfo, AjaxDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
+	typhoonInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	224, 288, 3, 4
 };

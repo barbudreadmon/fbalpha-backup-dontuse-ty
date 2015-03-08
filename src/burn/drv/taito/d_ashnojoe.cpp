@@ -231,9 +231,9 @@ void DrvYM2203WritePortB(UINT32, UINT32 d)
 inline static void DrvIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -383,11 +383,11 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPfRAM,			0x040000, 0x048fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x049000, 0x049fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,			0x04c000, 0x04ffff, SM_RAM);
-	SekMapMemory(Drv68KROM + 0x080000,	0x080000, 0x0bffff, SM_ROM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPfRAM,			0x040000, 0x048fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x049000, 0x049fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,			0x04c000, 0x04ffff, MAP_RAM);
+	SekMapMemory(Drv68KROM + 0x080000,	0x080000, 0x0bffff, MAP_ROM);
 	SekSetWriteWordHandler(0,		ashnojoe_write_word);
 	SekSetWriteByteHandler(0,		ashnojoe_write_byte);
 	SekSetReadWordHandler(0,		ashnojoe_read_word);
@@ -579,7 +579,7 @@ static INT32 DrvFrame()
 		nNext[0] += nCyclesTotal[0] / nInterleave;
 
 		nCyclesDone[0] += SekRun(nNext[0] - nCyclesDone[0]);
-		if (i == (nInterleave - 1)) SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		nNext[1] += nCyclesTotal[1] / nInterleave;
 		BurnTimerUpdate(nNext[1]);

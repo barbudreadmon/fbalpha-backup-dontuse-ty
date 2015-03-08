@@ -40,6 +40,7 @@ static INT32 Twinadv = 0;
 static INT32 Honeydol = 0;
 static INT32 Wintbob = 0;
 static INT32 Snowbro3 = 0;
+static INT32 Toto = 0;
 
 static INT32 HyperpacNumTiles = 0;
 static INT32 HyperpacNumTiles8bpp = 0;
@@ -694,6 +695,23 @@ static struct BurnRomInfo HyperpacRomDesc[] = {
 STD_ROM_PICK(Hyperpac)
 STD_ROM_FN(Hyperpac)
 
+
+static struct BurnRomInfo TotoRomDesc[] = {
+	{ "u60.5j",        0x20000, 0x39203792, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
+	{ "u51.4j",        0x20000, 0x7b846cd4, BRF_ESS | BRF_PRG }, //  1	68000 Program Code
+
+	{ "u107.8k",       0x20000, 0x4486153b, BRF_GRA },			 //  2	Sprites
+	{ "u108.8l",       0x20000, 0x3286cf5f, BRF_GRA },			 //  3	Sprites
+	{ "u109.8m",       0x20000, 0x464d7251, BRF_GRA },			 //  4	Sprites
+	{ "u110.8n",       0x20000, 0x7dea56df, BRF_GRA },			 //  5	Sprites
+
+	{ "u46.4c",        0x08000, 0x77b1ef42, BRF_SND },			 //  6  Z80 Program Code
+};
+
+
+STD_ROM_PICK(Toto)
+STD_ROM_FN(Toto)
+
 static struct BurnRomInfo HyperpacbRomDesc[] = {
 	{ "hpacuh12.bin",  0x20000, 0x633ab2c6, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
 	{ "hpacui12.bin",  0x20000, 0x23dc00d1, BRF_ESS | BRF_PRG }, //  1	68000 Program Code
@@ -1187,9 +1205,9 @@ static INT32 Snowbro3DoReset()
 static void HyperpacYM2151IrqHandler(INT32 Irq)
 {
 	if (Irq) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -1216,9 +1234,9 @@ static inline void snowbrosSynchroniseZ80(INT32 nExtraCycles)
 static void snowbrosFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		ZetSetIRQLine(0xFF, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xFF, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -1708,6 +1726,9 @@ UINT16 __fastcall SnowbrosReadWord(UINT32 a)
 		case 0x500004: {
 			SEK_DEF_READ_WORD(0, a);
 		}
+		case 0x500006: { // Toto Protection
+			return 0x07;
+		}
 	}
 
 	return 0;
@@ -1739,6 +1760,10 @@ UINT8 __fastcall SnowbrosReadByte(UINT32 a)
 
 		case 0x500004: {
 			return 0xff - HyperpacInput[2];
+		}
+		case 0x500006: // Toto Protection
+		case 0x500007: {
+			return 0x07;
 		}
 	}
 
@@ -2007,14 +2032,14 @@ static INT32 HyperpacMachineInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(HyperpacRom       , 0x000000, 0x0fffff, SM_ROM);
+	SekMapMemory(HyperpacRom       , 0x000000, 0x0fffff, MAP_ROM);
 	if (Finalttr) {
-		SekMapMemory(HyperpacRam       , 0x100000, 0x103fff, SM_RAM);
+		SekMapMemory(HyperpacRam       , 0x100000, 0x103fff, MAP_RAM);
 	} else {
-		SekMapMemory(HyperpacRam       , 0x100000, 0x10ffff, SM_RAM);
+		SekMapMemory(HyperpacRam       , 0x100000, 0x10ffff, MAP_RAM);
 	}
-	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6001ff, SM_RAM);
-	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x701fff, SM_RAM);
+	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6001ff, MAP_RAM);
+	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x701fff, MAP_RAM);
 	if (Fourin1boot || Finalttr) {
 		SekSetReadByteHandler(0, HyperpacReadByteLow);
 		SekSetReadWordHandler(0, HyperpacReadWordLow);
@@ -2509,10 +2534,10 @@ static INT32 TwinadvInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(HyperpacRam       , 0x100000, 0x10ffff, SM_RAM);
-	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6001ff, SM_RAM);
-	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x701fff, SM_RAM);
+	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(HyperpacRam       , 0x100000, 0x10ffff, MAP_RAM);
+	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6001ff, MAP_RAM);
+	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x701fff, MAP_RAM);
 	SekSetReadByteHandler(0, HyperpacReadByteLow);
 	SekSetReadWordHandler(0, HyperpacReadWordLow);
 	SekSetWriteByteHandler(0, TwinadvWriteByte);
@@ -2590,10 +2615,10 @@ static INT32 HoneydolInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(HyperpacRam       , 0x100000, 0x10ffff, SM_RAM);
-	SekMapMemory(HyperpacPaletteRam, 0xa00000, 0xa007ff, SM_RAM);
-	SekMapMemory(HyperpacSpriteRam , 0xb00000, 0xb01fff, SM_RAM);
+	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(HyperpacRam       , 0x100000, 0x10ffff, MAP_RAM);
+	SekMapMemory(HyperpacPaletteRam, 0xa00000, 0xa007ff, MAP_RAM);
+	SekMapMemory(HyperpacSpriteRam , 0xb00000, 0xb01fff, MAP_RAM);
 	SekSetReadByteHandler(0, HoneydolReadByte);
 	SekSetReadWordHandler(0, HoneydolReadWord);
 	SekSetWriteByteHandler(0, HoneydolWriteByte);
@@ -2630,6 +2655,35 @@ static INT32 HoneydolInit()
 	return 0;
 }
 
+static void DrvTotoRomDecode()
+{
+	// every single rom has bits 0x10 and 0x08 swapped
+	UINT8 *src = HyperpacRom;
+	int len = 0x40000;
+
+	for (int i = 0; i < len; i++)
+	{
+		src[i] = BITSWAP08(src[i], 7, 6, 5, 3, 4, 2, 1, 0);
+	}
+
+	src = HyperpacTempGfx;
+	len = 0x80000;
+
+	for (int i = 0; i < len; i++)
+	{
+		src[i] = BITSWAP08(src[i], 7, 6, 5, 3, 4, 2, 1, 0);
+	}
+
+	src = HyperpacZ80Rom;
+	len = 0x08000;
+
+	for (int i = 0; i < len; i++)
+	{
+		src[i] = BITSWAP08(src[i], 7, 6, 5, 3, 4, 2, 1, 0);
+	}
+}
+
+
 static INT32 SnowbrosInit()
 {
 	INT32 nRet = 0, nLen;
@@ -2648,6 +2702,23 @@ static INT32 SnowbrosInit()
 
 	HyperpacTempGfx = (UINT8*)BurnMalloc(0x80000);
 
+	if (Toto) {
+		// Load and byte-swap 68000 Program roms
+		nRet = BurnLoadRom(HyperpacRom + 0x00001, 0, 2); if (nRet != 0) return 1;
+		nRet = BurnLoadRom(HyperpacRom + 0x00000, 1, 2); if (nRet != 0) return 1;
+
+		// Load Z80 Program Rom
+		nRet = BurnLoadRom(HyperpacZ80Rom, 6, 1); if (nRet != 0) return 1;
+
+		// Load and Decode Sprite Roms
+		nRet = BurnLoadRom(HyperpacTempGfx + 0x00000, 2, 1); if (nRet != 0) return 1;
+		nRet = BurnLoadRom(HyperpacTempGfx + 0x20000, 3, 1); if (nRet != 0) return 1;
+		nRet = BurnLoadRom(HyperpacTempGfx + 0x40000, 4, 1); if (nRet != 0) return 1;
+		nRet = BurnLoadRom(HyperpacTempGfx + 0x60000, 5, 1); if (nRet != 0) return 1;
+		DrvTotoRomDecode();
+		GfxDecode(HyperpacNumTiles, 4, 16, 16, SnowbrosSpritePlaneOffsets, SnowbrosSpriteXOffsets, SnowbrosSpriteYOffsets, 0x400, HyperpacTempGfx, HyperpacSprites);
+		BurnFree(HyperpacTempGfx);
+	} else
 	if (Wintbob) {
 		// Load and byte-swap 68000 Program roms
 		nRet = BurnLoadRom(HyperpacRom + 0x00001, 0, 2); if (nRet != 0) return 1;
@@ -2686,10 +2757,10 @@ static INT32 SnowbrosInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(HyperpacRam       , 0x100000, 0x103fff, SM_RAM);
-	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6001ff, SM_RAM);
-	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x701fff, SM_RAM);
+	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(HyperpacRam       , 0x100000, 0x103fff, MAP_RAM);
+	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6001ff, MAP_RAM);
+	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x701fff, MAP_RAM);
 	SekSetReadWordHandler(0, SnowbrosReadWord);
 	SekSetWriteWordHandler(0, SnowbrosWriteWord);
 	SekSetReadByteHandler(0, SnowbrosReadByte);
@@ -2723,6 +2794,13 @@ static INT32 SnowbrosInit()
 static INT32 WintbobInit()
 {
 	Wintbob = 1;
+	
+	return SnowbrosInit();
+}
+
+static INT32 TotoInit()
+{
+	Toto = 1;
 	
 	return SnowbrosInit();
 }
@@ -2779,10 +2857,10 @@ static INT32 Snowbro3Init()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(HyperpacRam       , 0x100000, 0x103fff, SM_RAM);
-	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6003ff, SM_RAM);
-	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x7021ff, SM_RAM);
+	SekMapMemory(HyperpacRom       , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(HyperpacRam       , 0x100000, 0x103fff, MAP_RAM);
+	SekMapMemory(HyperpacPaletteRam, 0x600000, 0x6003ff, MAP_RAM);
+	SekMapMemory(HyperpacSpriteRam , 0x700000, 0x7021ff, MAP_RAM);
 	SekSetReadWordHandler(0, Snowbro3ReadWord);
 	SekSetWriteWordHandler(0, Snowbro3WriteWord);
 	SekSetReadByteHandler(0, Snowbro3ReadByte);
@@ -2845,7 +2923,8 @@ static INT32 SnowbrosExit()
 	HyperpacNumTiles = 0;
 	HyperpacNumTiles8bpp = 0;
 	Wintbob = 0;
-	
+	Toto = 0;
+
 	Snowbro3Music = 0;
 	Snowbro3MusicPlaying = 0;
 	Snowbro3 = 0;
@@ -3443,9 +3522,9 @@ static INT32 HyperpacFrame()
 			nSoundBufferPos += nSegmentLength;
 		}
 
-		if (i == 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-		if (i == 2) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
-		if (i == 3) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 	}
 
 	SekClose();
@@ -3511,9 +3590,9 @@ static INT32 PzlbreakFrame()
 			nSoundBufferPos += nSegmentLength;
 		}
 
-		if (i == 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-		if (i == 2) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
-		if (i == 3) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 	}
 
 	SekClose();
@@ -3579,9 +3658,9 @@ static INT32 FinalttrFrame()
 			nSoundBufferPos += nSegmentLength;
 		}
 
-		if (i == 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-		if (i == 2) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
-		if (i == 3) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 	}
 
 	SekClose();
@@ -3638,7 +3717,7 @@ static INT32 TwinadvFrame()
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesSegment = ZetRun(nCyclesSegment);
 		nCyclesDone[nCurrentCPU] += nCyclesSegment;
-		if (i == 2) ZetRaiseIrq(0);
+		if (i == 2) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
@@ -3647,9 +3726,9 @@ static INT32 TwinadvFrame()
 			nSoundBufferPos += nSegmentLength;
 		}
 
-		if (i == 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-		if (i == 2) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
-		if (i == 3) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 	}
 
 	SekClose();
@@ -3699,9 +3778,9 @@ static INT32 HoneydolFrame()
 		nCyclesSegment = nNext - SekTotalCycles();
 		SekRun(nCyclesSegment);
 
-		if (i == 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-		if (i == 2) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
-		if (i == 3) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 	}
 
 	nCycles68KSync = SekTotalCycles();
@@ -3753,9 +3832,9 @@ static INT32 SnowbrosFrame()
 		nCyclesSegment = nNext - SekTotalCycles();
 		SekRun(nCyclesSegment);
 
-		if (i == 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-		if (i == 2) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
-		if (i == 3) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 	}
 
 	nCycles68KSync = SekTotalCycles();
@@ -3800,9 +3879,9 @@ static INT32 Snowbro3Frame()
 		nCyclesSegment = nNext - SekTotalCycles();
 		SekRun(nCyclesSegment);
 
-		if (i == 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
-		if (i == 2) SekSetIRQLine(3, SEK_IRQSTATUS_AUTO);
-		if (i == 3) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		
 		INT32 Status = MSM6295ReadStatus(0);
 		if (Snowbro3MusicPlaying) {
@@ -4173,4 +4252,14 @@ struct BurnDriver BurnDrvBallboy = {
 	NULL, BallboyRomInfo, BallboyRomName, NULL, NULL, SnowbrosInputInfo, SnowbrojDIPInfo,
 	Snowbro3Init, SnowbrosExit, Snowbro3Frame, NULL, Snowbro3Scan,
 	NULL, 0x400, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvToto = {
+	"toto", NULL, NULL, NULL, "1996",
+	"Come Back Toto\0", NULL, "SoftClub", "Kaneko Pandora based",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_PLATFORM, 0,
+	NULL, TotoRomInfo, TotoRomName, NULL, NULL, SnowbrosInputInfo, SnowbrosDIPInfo,
+	TotoInit, SnowbrosExit, SnowbrosFrame, NULL, SnowbrosScan,
+	NULL, 0x200, 256, 224, 4, 3
 };

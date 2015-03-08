@@ -124,7 +124,7 @@ void NMK004_reset()
 
 static void NMK004YM2203IrqHandler(INT32, INT32 nStatus)
 {
-	tlcs90SetIRQLine(0, (nStatus) ? TLCS90_IRQSTATUS_ACK : TLCS90_IRQSTATUS_NONE);
+	tlcs90SetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 inline static double NMK004GetTime()
@@ -143,8 +143,8 @@ void NMK004_init()
 
 	tlcs90Init(0, 8000000);
 	tlcs90Open(0);
-	tlcs90MapMemory(NMK004PROGROM, 0x0000, 0xefff, TLCS90_ROM);
-	tlcs90MapMemory(ram,	       0xf000, 0xf7ff, TLCS90_RAM);
+	tlcs90MapMemory(NMK004PROGROM, 0x0000, 0xefff, MAP_ROM);
+	tlcs90MapMemory(ram,	       0xf000, 0xf7ff, MAP_RAM);
 	tlcs90SetReadHandler(nmk004_tlcs90_read);
 	tlcs90SetWriteHandler(nmk004_tlcs90_write);
 	tlcs90SetWritePortHandler(nmk004_tlcs90_write_port);
@@ -217,7 +217,7 @@ void NMK004NmiWrite(INT32 data)
 {
 	data ^= 0xff; // hack - no game works properly without this being inverted.
 
-	tlcs90SetIRQLine(0x20 /*nmi*/, (data & 1) ? TLCS90_IRQSTATUS_ACK : TLCS90_IRQSTATUS_NONE);
+	tlcs90SetIRQLine(0x20 /*nmi*/, (data & 1) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 void NMK004Write(INT32, INT32 data)

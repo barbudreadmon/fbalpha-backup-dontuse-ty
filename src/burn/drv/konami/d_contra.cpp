@@ -210,7 +210,7 @@ void contra_bankswitch_w(INT32 data)
 	INT32 bankaddress = 0x10000 + nBankData * 0x2000;
 
 	if (bankaddress < 0x28000)
-		M6809MapMemory(DrvM6809ROM0 + bankaddress, 0x6000, 0x7fff, M6809_ROM);
+		M6809MapMemory(DrvM6809ROM0 + bankaddress, 0x6000, 0x7fff, MAP_ROM);
 }
 
 UINT8 DrvContraM6809ReadByte(UINT16 address)
@@ -371,22 +371,12 @@ static INT32 MemIndex()
 	return 0;
 }
 
-static INT32 DrvGfxDecode(UINT8 *src)
+static INT32 DrvGfxExpand(UINT8 *src)
 {
-	INT32 Plane[4] = { 0,  1,  2,  3 };
-	INT32 XOffs[8] = { 0,  4,  8, 12, 16, 20, 24, 28 };
-	INT32 YOffs[8] = { 0, 32, 64, 96, 128, 160, 192, 224 };
-
-	UINT8 *tmp = (UINT8*)BurnMalloc(0x80000);
-	if (tmp == NULL) {
-		return 1;
+	for (INT32 i = 0x80000-1; i>=0; i--) {
+		src[i*2+1] = src[i] & 0xf;
+		src[i*2+0] = src[i] >> 4;
 	}
-
-	memcpy (tmp, src, 0x80000);
-
-	GfxDecode(0x4000, 4, 8, 8, Plane, XOffs, YOffs, 0x100, tmp, src);
-
-	BurnFree (tmp);
 
 	return 0;
 }
@@ -443,9 +433,9 @@ static INT32 DrvDoReset()
 static void DrvYM2151IrqHandler(INT32 Irq)
 {
 	if (Irq) {
-		M6809SetIRQLine(M6809_FIRQ_LINE, M6809_IRQSTATUS_ACK);
+		M6809SetIRQLine(M6809_FIRQ_LINE, CPU_IRQSTATUS_ACK);
 	} else {
-		M6809SetIRQLine(M6809_FIRQ_LINE, M6809_IRQSTATUS_NONE);
+		M6809SetIRQLine(M6809_FIRQ_LINE, CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -487,33 +477,33 @@ static INT32 DrvInit()
 			}
 		}
 
-		DrvGfxDecode(DrvGfxROM0);
-		DrvGfxDecode(DrvGfxROM1);
+		DrvGfxExpand(DrvGfxROM0);
+		DrvGfxExpand(DrvGfxROM1);
 
 		DrvColorTableInit();
 	}
 
 	M6809Init(2);
 	M6809Open(0);
-	M6809MapMemory(DrvPalRAM,		0x0c00, 0x0cff, M6809_ROM);
-	M6809MapMemory(DrvM6809RAM0,		0x1000, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvFgCRAM,		0x2000, 0x23ff, M6809_RAM);
-	M6809MapMemory(DrvFgVRAM,		0x2400, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvTxCRAM,		0x2800, 0x2bff, M6809_RAM);
-	M6809MapMemory(DrvTxVRAM,		0x2c00, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		0x3000, 0x3fff, M6809_RAM);
-	M6809MapMemory(DrvBgCRAM,		0x4000, 0x43ff, M6809_RAM);
-	M6809MapMemory(DrvBgVRAM,		0x4400, 0x47ff, M6809_RAM);
-	M6809MapMemory(DrvM6809RAM1,		0x4800, 0x5fff, M6809_RAM);
-//	M6809MapMemory(DrvM6809ROM0 + 0x10000, 	0x6000, 0x7fff, M6809_ROM);
-	M6809MapMemory(DrvM6809ROM0 + 0x08000,	0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvPalRAM,		0x0c00, 0x0cff, MAP_ROM);
+	M6809MapMemory(DrvM6809RAM0,		0x1000, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvFgCRAM,		0x2000, 0x23ff, MAP_RAM);
+	M6809MapMemory(DrvFgVRAM,		0x2400, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvTxCRAM,		0x2800, 0x2bff, MAP_RAM);
+	M6809MapMemory(DrvTxVRAM,		0x2c00, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		0x3000, 0x3fff, MAP_RAM);
+	M6809MapMemory(DrvBgCRAM,		0x4000, 0x43ff, MAP_RAM);
+	M6809MapMemory(DrvBgVRAM,		0x4400, 0x47ff, MAP_RAM);
+	M6809MapMemory(DrvM6809RAM1,		0x4800, 0x5fff, MAP_RAM);
+//	M6809MapMemory(DrvM6809ROM0 + 0x10000, 	0x6000, 0x7fff, MAP_ROM);
+	M6809MapMemory(DrvM6809ROM0 + 0x08000,	0x8000, 0xffff, MAP_ROM);
 	M6809SetReadHandler(DrvContraM6809ReadByte);
 	M6809SetWriteHandler(DrvContraM6809WriteByte);
 	M6809Close();
 
 	M6809Open(1);
-	M6809MapMemory(DrvM6809RAM2, 		0x6000, 0x67ff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM1 + 0x08000,	0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809RAM2, 		0x6000, 0x67ff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM1 + 0x08000,	0x8000, 0xffff, MAP_ROM);
 	M6809SetReadHandler(DrvContraM6809SoundReadByte);
 	M6809SetWriteHandler(DrvContraM6809SoundWriteByte);
 	M6809Close();
@@ -813,7 +803,7 @@ static INT32 DrvDraw()
 	if (DrvRecalc) {
 		for (INT32 i = 0; i < 0x1000; i++) {
 			INT32 rgb = Palette[DrvColTable[i]];
-			DrvPalette[i] = BurnHighCol(rgb >> 16, rgb >> 8, rgb, 0);
+			DrvPalette[i] = BurnHighCol((rgb >> 16)&0xff, (rgb >> 8)&0xff, rgb&0xff, 0);
 		}
 		DrvRecalc = 0;
 	}
@@ -871,14 +861,14 @@ static INT32 DrvFrame()
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += M6809Run(nCyclesSegment);
 		if (i == (nInterleave - 1)) {
-			M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 		M6809Close();
 
 		nCurrentCPU = 1;
 		M6809Open(nCurrentCPU);
 		if (trigger_sound_irq) {
-			M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 			trigger_sound_irq = 0;
 		}
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
@@ -894,7 +884,7 @@ static INT32 DrvFrame()
 
 		M6809Close();
 	}
-		
+	
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
@@ -905,7 +895,7 @@ static INT32 DrvFrame()
 			M6809Close();
 		}
 	}
-	
+
 	if (pBurnDraw) {
 		DrvDraw();
 	}

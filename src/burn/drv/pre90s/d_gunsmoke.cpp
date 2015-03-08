@@ -681,8 +681,8 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
-		if (i == 274) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
-		if (i == 276) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if (i == 274) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
+		if (i == 276) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		ZetClose();
 
 		// Run Z80 #1
@@ -693,9 +693,9 @@ static INT32 DrvFrame()
 		nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
 		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
 		// execute IRQ quarterly 68.5 (or 69) is 25% of 278 (nInterleave)
-		if (i%69 == 0 && i>0) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
-		// execute ZET_IRQSTATUS_NONE 1 interleave past the last one
-		if ((i-1)%69 == 0 && i>1) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if (i%69 == 0 && i>0) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
+		// execute CPU_IRQSTATUS_NONE 1 interleave past the last one
+		if ((i-1)%69 == 0 && i>1) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		ZetClose();
 	}
 	
@@ -758,7 +758,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 }
 
 
-// Gun.Smoke (World)
+// Gun.Smoke (World, 851115)
 
 static struct BurnRomInfo gunsmokeRomDesc[] = {
 	{ "09n_gs03.bin", 0x8000, 0x40a06cef, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -807,7 +807,7 @@ STD_ROM_FN(gunsmoke)
 
 struct BurnDriver BurnDrvGunsmoke = {
 	"gunsmoke", NULL, NULL, NULL, "1985",
-	"Gun.Smoke (World)\0", NULL, "Capcom", "Miscellaneous",
+	"Gun.Smoke (World, 851115)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokeRomInfo, gunsmokeRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
@@ -816,7 +816,7 @@ struct BurnDriver BurnDrvGunsmoke = {
 };
 
 
-// Gun.Smoke (bootleg)
+// Gun.Smoke (World, 851115)(bootleg)
 // based on world version, warning message patched out
 
 static struct BurnRomInfo gunsmokebRomDesc[] = {
@@ -866,7 +866,7 @@ STD_ROM_FN(gunsmokeb)
 
 struct BurnDriver BurnDrvGunsmokeb = {
 	"gunsmokeb", "gunsmoke", NULL, NULL, "1985",
-	"Gun.Smoke (bootleg)\0", NULL, "bootleg", "Miscellaneous",
+	"Gun.Smoke (World, 851115) (bootleg)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokebRomInfo, gunsmokebRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
@@ -875,7 +875,7 @@ struct BurnDriver BurnDrvGunsmokeb = {
 };
 
 
-// Gun.Smoke (Japan)
+// Gun.Smoke (Japan, 851115)
 
 static struct BurnRomInfo gunsmokejRomDesc[] = {
 	{ "gs03_9n.rom",  0x8000, 0xb56b5df6, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -924,7 +924,7 @@ STD_ROM_FN(gunsmokej)
 
 struct BurnDriver BurnDrvGunsmokej = {
 	"gunsmokej", "gunsmoke", NULL, NULL, "1985",
-	"Gun.Smoke (Japan)\0", NULL, "Capcom", "Miscellaneous",
+	"Gun.Smoke (Japan, 851115)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokejRomInfo, gunsmokejRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
@@ -933,7 +933,7 @@ struct BurnDriver BurnDrvGunsmokej = {
 };
 
 
-// Gun.Smoke (US set 1)
+// Gun.Smoke (US, 851115)
 
 static struct BurnRomInfo gunsmokeuRomDesc[] = {
 	{ "9n_gs03.bin",  0x8000, 0x592f211b, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -982,7 +982,7 @@ STD_ROM_FN(gunsmokeu)
 
 struct BurnDriver BurnDrvGunsmokeu = {
 	"gunsmokeu", "gunsmoke", NULL, NULL, "1985",
-	"Gun.Smoke (US set 1)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
+	"Gun.Smoke (US, 851115)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokeuRomInfo, gunsmokeuRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
@@ -991,7 +991,7 @@ struct BurnDriver BurnDrvGunsmokeu = {
 };
 
 
-// Gun.Smoke (US set 2)
+// Gun.Smoke (US, 860408)
 
 static struct BurnRomInfo gunsmokeuaRomDesc[] = {
 	{ "gs03.9n",      0x8000, 0x51dc3f76, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -1040,7 +1040,7 @@ STD_ROM_FN(gunsmokeua)
 
 struct BurnDriver BurnDrvGunsmokeua = {
 	"gunsmokeua", "gunsmoke", NULL, NULL, "1986",
-	"Gun.Smoke (US set 2)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
+	"Gun.Smoke (US, 860408)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokeuaRomInfo, gunsmokeuaRomName, NULL, NULL, DrvInputInfo, gunsmokeuaDIPInfo,

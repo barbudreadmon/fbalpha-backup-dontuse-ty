@@ -67,7 +67,7 @@ STDINPUTINFO(hotdogst)
 static void UpdateIRQStatus()
 {
 	nIRQPending = (nVideoIRQ == 0 || nSoundIRQ == 0 || nUnknownIRQ == 0);
-	SekSetIRQLine(1, nIRQPending ? SEK_IRQSTATUS_ACK : SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(1, nIRQPending ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 UINT8 __fastcall hotdogstReadByte(UINT32 sekAddress)
@@ -591,9 +591,9 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -661,13 +661,13 @@ static INT32 DrvInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom01,				0x000000, 0x0FFFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,				0x300000, 0x30FFFF, SM_RAM);
-		SekMapMemory(CavePalSrc,			0x408000, 0x408FFF, SM_RAM);	// Palette RAM
-		SekMapMemory(CaveTileRAM[0],			0x880000, 0x887FFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[1],			0x900000, 0x907FFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[2],			0x980000, 0x987FFF, SM_RAM);
-		SekMapMemory(CaveSpriteRAM,			0xf00000, 0xf0fFFF, SM_RAM);
+		SekMapMemory(Rom01,				0x000000, 0x0FFFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,				0x300000, 0x30FFFF, MAP_RAM);
+		SekMapMemory(CavePalSrc,			0x408000, 0x408FFF, MAP_RAM);	// Palette RAM
+		SekMapMemory(CaveTileRAM[0],			0x880000, 0x887FFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[1],			0x900000, 0x907FFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[2],			0x980000, 0x987FFF, MAP_RAM);
+		SekMapMemory(CaveSpriteRAM,			0xf00000, 0xf0fFFF, MAP_RAM);
 
 		SekSetReadByteHandler(0, hotdogstReadByte);
 		SekSetWriteByteHandler(0, hotdogstWriteByte);

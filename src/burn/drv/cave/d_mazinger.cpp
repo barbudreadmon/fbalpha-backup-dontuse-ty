@@ -74,7 +74,7 @@ STDINPUTINFO(mazinger)
 static void UpdateIRQStatus()
 {
 	nIRQPending = (nVideoIRQ == 0 || nSoundIRQ == 0 || nUnknownIRQ == 0);
-	SekSetIRQLine(1, nIRQPending ? SEK_IRQSTATUS_ACK : SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(1, nIRQPending ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 UINT8 __fastcall mazingerReadByte(UINT32 sekAddress)
@@ -634,9 +634,9 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -704,18 +704,18 @@ static INT32 DrvInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom01,				0x000000, 0x07FFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,				0x100000, 0x10FFFF, SM_RAM);
-		SekMapMemory(CaveSpriteRAM,			0x200000, 0x20FFFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[1] + 0x4000,		0x400000, 0x403FFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[1] + 0x4000,		0x404000, 0x407FFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[0] + 0x4000,		0x500000, 0x503FFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[0] + 0x4000,		0x504000, 0x507FFF, SM_RAM);
-		SekMapMemory(CavePalSrc,		   	0xC08000, 0xc087FF, SM_RAM);	// Palette RAM
-		SekMapMemory(CavePalSrc + 0x8800,		0xC08800, 0xC0FFFF, SM_ROM);	// Palette RAM (write goes through handler)
-		SekMapHandler(1,				0xC08800, 0xC0FFFF, SM_WRITE);	//
+		SekMapMemory(Rom01,				0x000000, 0x07FFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,				0x100000, 0x10FFFF, MAP_RAM);
+		SekMapMemory(CaveSpriteRAM,			0x200000, 0x20FFFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[1] + 0x4000,		0x400000, 0x403FFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[1] + 0x4000,		0x404000, 0x407FFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[0] + 0x4000,		0x500000, 0x503FFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[0] + 0x4000,		0x504000, 0x507FFF, MAP_RAM);
+		SekMapMemory(CavePalSrc,		   	0xC08000, 0xc087FF, MAP_RAM);	// Palette RAM
+		SekMapMemory(CavePalSrc + 0x8800,		0xC08800, 0xC0FFFF, MAP_ROM);	// Palette RAM (write goes through handler)
+		SekMapHandler(1,				0xC08800, 0xC0FFFF, MAP_WRITE);	//
 
-		SekMapMemory(Rom01 + 0x80000,			0xD00000, 0xD7FFFF, SM_ROM);	// CPU 0 ROM
+		SekMapMemory(Rom01 + 0x80000,			0xD00000, 0xD7FFFF, MAP_ROM);	// CPU 0 ROM
 
 		SekSetReadByteHandler(0, mazingerReadByte);
 		SekSetWriteByteHandler(0, mazingerWriteByte);

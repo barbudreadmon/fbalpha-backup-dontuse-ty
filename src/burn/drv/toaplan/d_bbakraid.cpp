@@ -431,7 +431,7 @@ static INT32 LoadRoms()
 	BurnLoadRom(YMZ280BROM + 0x000000, 9, 1);
 	BurnLoadRom(YMZ280BROM + 0x400000, 10, 1);
 	BurnLoadRom(YMZ280BROM + 0x800000, 11, 1);
-	
+
 	BurnLoadRom(DefaultEEPROM, 12, 1);
 	
 	return 0;
@@ -457,7 +457,7 @@ static inline void bbakraidSynchroniseZ80(INT32 nExtraCycles)
 static INT32 bbakraidTimerOver(INT32, INT32)
 {
 //	bprintf(PRINT_NORMAL, _T("  - IRQ -> 1.\n"));
-	ZetSetIRQLine(0xFF, ZET_IRQSTATUS_AUTO);
+	ZetSetIRQLine(0xFF, CPU_IRQSTATUS_AUTO);
 
 	return 0;
 }
@@ -544,15 +544,15 @@ static void Map68KTextROM(bool bMapTextROM)
 {
 	if (bMapTextROM) {
 		if (nTextROMStatus != 1) {
-			SekMapMemory(ExtraTROM,  0x200000, 0x207FFF, SM_RAM);	// Extra text tile memory
+			SekMapMemory(ExtraTROM,  0x200000, 0x207FFF, MAP_RAM);	// Extra text tile memory
 
 			nTextROMStatus = 1;
 		}
 	} else {
 		if (nTextROMStatus != 0) {
-			SekMapMemory(ExtraTRAM,	0x200000, 0x201FFF, SM_RAM);	// Extra text tilemap RAM
-			SekMapMemory(RamPal,	0x202000, 0x202FFF, SM_RAM);	// Palette RAM
-			SekMapMemory(Ram01,		0x203000, 0x207FFF, SM_RAM);	// Extra text Scroll & offset; RAM
+			SekMapMemory(ExtraTRAM,	0x200000, 0x201FFF, MAP_RAM);	// Extra text tilemap RAM
+			SekMapMemory(RamPal,	0x202000, 0x202FFF, MAP_RAM);	// Palette RAM
+			SekMapMemory(Ram01,		0x203000, 0x207FFF, MAP_RAM);	// Extra text Scroll & offset; RAM
 
 			nTextROMStatus = 0;
 		}
@@ -675,7 +675,7 @@ void __fastcall bbakraidWriteWord(UINT32 sekAddress, UINT16 wordValue)
 			return;
 
 		case 0x500082:		// Acknowledge interrupt
-			SekSetIRQLine(0, SEK_IRQSTATUS_NONE);
+			SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			nIRQPending = 0;
 			return;
 
@@ -758,7 +758,7 @@ static INT32 DrvDoReset()
 
 	SekOpen(0);
 	nIRQPending = 0;
-	SekSetIRQLine(0, SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 	SekReset();
 	SekClose();
 
@@ -845,8 +845,8 @@ static INT32 bbakraidInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom01,		0x000000, 0x1FFFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram02,		0x208000, 0x20FFFF, SM_RAM);
+		SekMapMemory(Rom01,		0x000000, 0x1FFFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram02,		0x208000, 0x20FFFF, MAP_RAM);
 
 		Map68KTextROM(true);
 
@@ -855,12 +855,12 @@ static INT32 bbakraidInit()
 		SekSetWriteWordHandler(0, bbakraidWriteWord);
 		SekSetWriteByteHandler(0, bbakraidWriteByte);
 
-		SekMapHandler(1,	0x400000, 0x400400, SM_RAM);		// GP9001 addresses
+		SekMapHandler(1,	0x400000, 0x400400, MAP_RAM);		// GP9001 addresses
 
 		SekSetReadWordHandler(1, bbakraidReadWordGP9001);
 		SekSetWriteWordHandler(1, bbakraidWriteWordGP9001);
 
-		SekMapHandler(2,	0x300000, 0x37FFFF, SM_ROM);		// Z80 ROM
+		SekMapHandler(2,	0x300000, 0x37FFFF, MAP_ROM);		// Z80 ROM
 
 		SekSetReadByteHandler(2, bbakraidReadByteZ80ROM);
 		SekSetReadWordHandler(2, bbakraidReadWordZ80ROM);
@@ -881,7 +881,7 @@ static INT32 bbakraidInit()
 
 	DrvZ80Init();				// Initialize Z80
 
-	YMZ280BInit(16934400, NULL);
+	YMZ280BInit(16934400, NULL, 0xC00000);
 	YMZ280BSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 
 	BurnTimerInit(bbakraidTimerOver, NULL);
@@ -1007,7 +1007,7 @@ static INT32 DrvFrame()
 			}
 
 			nIRQPending = 1;
-			SekSetIRQLine(3, SEK_IRQSTATUS_ACK);
+			SekSetIRQLine(3, CPU_IRQSTATUS_ACK);
 
 			ToaBufferGP9001Sprites();
 

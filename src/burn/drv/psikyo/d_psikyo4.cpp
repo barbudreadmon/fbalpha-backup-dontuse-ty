@@ -671,9 +671,9 @@ static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 static void DrvIRQCallback(INT32, INT32 nStatus)
 {
 	if (nStatus)
-		Sh2SetIRQLine(12, SH2_IRQSTATUS_AUTO);
+		Sh2SetIRQLine(12, CPU_IRQSTATUS_AUTO);
 	else
-		Sh2SetIRQLine(12, SH2_IRQSTATUS_NONE);
+		Sh2SetIRQLine(12, CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 gfx_len)
@@ -703,9 +703,9 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 gfx_len)
 
 	Sh2Init(1);
 	Sh2Open(0);
-	Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, SH2_ROM);
-	Sh2MapMemory(DrvSh2ROM + 0x100000,	0x02000000, 0x021fffff, SH2_ROM);
-	Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, SH2_RAM);
+	Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
+	Sh2MapMemory(DrvSh2ROM + 0x100000,	0x02000000, 0x021fffff, MAP_ROM);
+	Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, MAP_RAM);
 	Sh2SetReadByteHandler (0,		ps4_read_byte);
 	Sh2SetReadWordHandler (0,		ps4_read_word);
 	Sh2SetReadLongHandler (0,		ps4_read_long);
@@ -713,7 +713,7 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 gfx_len)
 	Sh2SetWriteWordHandler(0,		ps4_write_word);
 	Sh2SetWriteLongHandler(0,		ps4_write_long);
 
-	Sh2MapHandler(1, 0x06000000 | speedhack_address, 0x0600ffff | speedhack_address, SH2_ROM);
+	Sh2MapHandler(1, 0x06000000 | speedhack_address, 0x0600ffff | speedhack_address, MAP_ROM);
 	Sh2SetReadByteHandler (1,		ps4hack_read_byte);
 	Sh2SetReadWordHandler (1,		ps4hack_read_word);
 	Sh2SetReadLongHandler (1,		ps4hack_read_long);
@@ -919,9 +919,9 @@ static INT32 DrvFrame()
 	}
 
 	BurnTimerEndFrame(28636350 / 60);
-	Sh2SetIRQLine(4, SH2_IRQSTATUS_AUTO);
+	Sh2SetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	Sh2Run(0);
-	Sh2SetIRQLine(4, SH2_IRQSTATUS_NONE);
+	Sh2SetIRQLine(4, CPU_IRQSTATUS_NONE);
 	if (pBurnSoundOut) {
 		BurnYMF278BUpdate(nBurnSoundLen);
 	}

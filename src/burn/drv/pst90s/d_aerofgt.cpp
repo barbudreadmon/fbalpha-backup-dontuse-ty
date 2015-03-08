@@ -4,6 +4,10 @@
  * http://oopsware.googlepages.com
  * http://oopsware.ys168.com
  *
+ *
+ * 12.08.2014
+ *   Add sprite priority bitmap for Turbo Force - see notes in turbofrcDraw();
+ *
  * 6.04.2014
  *   Overhaul graphics routines, now supports multiple color depths and sprite zooming
  *   Clean and merge routines
@@ -68,6 +72,7 @@ static UINT8 DrvRecalc;
 static UINT8 *DeRomBg;
 static UINT8 *DeRomSpr1;
 static UINT8 *DeRomSpr2;
+static UINT8 *RamPrioBitmap;
 
 static UINT32 RamSpr1SizeMask;
 static UINT32 RamSpr2SizeMask;
@@ -1205,9 +1210,9 @@ static void aerofgtFMIRQHandler(INT32, INT32 nStatus)
 	if (ZetGetActive() == -1) return;
 //	bprintf(PRINT_NORMAL, _T("  - IRQ -> %i.\n"), nStatus);
 	if (nStatus) {
-		ZetSetIRQLine(0xFF, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xFF, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -1431,6 +1436,7 @@ static INT32 turbofrcMemIndex()
 
 	RamEnd		= Next;
 
+	RamPrioBitmap	= Next; Next += 352 * 240 * 2; // For turbofrc
 	RamCurPal	= (UINT32 *)Next; Next += 0x000400 * sizeof(UINT32);
 
 	MemEnd		= Next;
@@ -1727,7 +1733,7 @@ static INT32 DrvDoReset()
 	nAerofgtZ80Bank = -1;
 		
 	SekOpen(0);
-	//SekSetIRQLine(0, SEK_IRQSTATUS_NONE);
+	//SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 	SekReset();
 	SekClose();
 
@@ -1755,8 +1761,8 @@ static void aerofgt_sound_init()
 {
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(RomZ80, 0x0000, 0x77ff, ZET_ROM);
-	ZetMapMemory(RamZ80, 0x7800, 0x7fff, ZET_RAM);
+	ZetMapMemory(RomZ80, 0x0000, 0x77ff, MAP_ROM);
+	ZetMapMemory(RamZ80, 0x7800, 0x7fff, MAP_RAM);
 	ZetSetInHandler(aerofgtZ80PortRead);
 	ZetSetOutHandler(aerofgtZ80PortWrite);
 	ZetClose();
@@ -1772,8 +1778,8 @@ static void turbofrc_sound_init()
 {
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(RomZ80, 0x0000, 0x77ff, ZET_ROM);
-	ZetMapMemory(RamZ80, 0x7800, 0x7fff, ZET_RAM);
+	ZetMapMemory(RomZ80, 0x0000, 0x77ff, MAP_ROM);
+	ZetMapMemory(RamZ80, 0x7800, 0x7fff, MAP_RAM);
 	ZetSetInHandler(turbofrcZ80PortRead);
 	ZetSetOutHandler(turbofrcZ80PortWrite);
 	ZetClose();
@@ -1823,14 +1829,14 @@ static INT32 aerofgtInit()
 	{
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(Rom01,			0x000000, 0x07FFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(RamPal,			0x1A0000, 0x1A07FF, SM_ROM);	// Palette
-		SekMapMemory((UINT8 *)RamRaster,	0x1B0000, 0x1B0FFF, SM_RAM);	// Raster / MRA_NOP / MRA_BANK7
-		SekMapMemory((UINT8 *)RamBg1V,		0x1B2000, 0x1B3FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamBg2V,		0x1B4000, 0x1B5FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamSpr1,		0x1C0000, 0x1C7FFF, SM_RAM);
-		SekMapMemory((UINT8 *)RamSpr2,		0x1D0000, 0x1D1FFF, SM_RAM);
-		SekMapMemory(Ram01,			0xFEF000, 0xFFEFFF, SM_RAM);	// 64K Work RAM
+		SekMapMemory(Rom01,			0x000000, 0x07FFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(RamPal,			0x1A0000, 0x1A07FF, MAP_ROM);	// Palette
+		SekMapMemory((UINT8 *)RamRaster,	0x1B0000, 0x1B0FFF, MAP_RAM);	// Raster / MRA_NOP / MRA_BANK7
+		SekMapMemory((UINT8 *)RamBg1V,		0x1B2000, 0x1B3FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamBg2V,		0x1B4000, 0x1B5FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamSpr1,		0x1C0000, 0x1C7FFF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamSpr2,		0x1D0000, 0x1D1FFF, MAP_RAM);
+		SekMapMemory(Ram01,			0xFEF000, 0xFFEFFF, MAP_RAM);	// 64K Work RAM
 //		SekSetReadWordHandler(0, aerofgtReadWord);
 		SekSetReadByteHandler(0, aerofgtReadByte);
 		SekSetWriteWordHandler(0, aerofgtWriteWord);
@@ -1888,19 +1894,19 @@ static INT32 turbofrcInit()
 	{
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(Rom01,			0x000000, 0x0BFFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,			0x0C0000, 0x0CFFFF, SM_RAM);	// 64K Work RAM
-		SekMapMemory((UINT8 *)RamBg1V,		0x0D0000, 0x0D1FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamBg2V,		0x0D2000, 0x0D3FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamSpr1,		0x0E0000, 0x0E3FFF, SM_RAM);
-		SekMapMemory((UINT8 *)RamSpr2,		0x0E4000, 0x0E7FFF, SM_RAM);
-		SekMapMemory(Ram01+0x10000,		0x0F8000, 0x0FBFFF, SM_RAM);	// Work RAM
-		SekMapMemory(Ram01+0x10000,		0xFF8000, 0xFFBFFF, SM_RAM);	// Work RAM
-		SekMapMemory((UINT8 *)RamSpr3,		0x0FC000, 0x0FC7FF, SM_RAM);
-		SekMapMemory((UINT8 *)RamSpr3,		0xFFC000, 0xFFC7FF, SM_RAM);
-		SekMapMemory((UINT8 *)RamRaster,	0x0FD000, 0x0FDFFF, SM_RAM);
-		SekMapMemory((UINT8 *)RamRaster,	0xFFD000, 0xFFDFFF, SM_RAM);
-		SekMapMemory(RamPal,			0x0FE000, 0x0FE7FF, SM_ROM);	// Palette
+		SekMapMemory(Rom01,			0x000000, 0x0BFFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,			0x0C0000, 0x0CFFFF, MAP_RAM);	// 64K Work RAM
+		SekMapMemory((UINT8 *)RamBg1V,		0x0D0000, 0x0D1FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamBg2V,		0x0D2000, 0x0D3FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamSpr1,		0x0E0000, 0x0E3FFF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamSpr2,		0x0E4000, 0x0E7FFF, MAP_RAM);
+		SekMapMemory(Ram01+0x10000,		0x0F8000, 0x0FBFFF, MAP_RAM);	// Work RAM
+		SekMapMemory(Ram01+0x10000,		0xFF8000, 0xFFBFFF, MAP_RAM);	// Work RAM
+		SekMapMemory((UINT8 *)RamSpr3,		0x0FC000, 0x0FC7FF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamSpr3,		0xFFC000, 0xFFC7FF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamRaster,	0x0FD000, 0x0FDFFF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamRaster,	0xFFD000, 0xFFDFFF, MAP_RAM);
+		SekMapMemory(RamPal,			0x0FE000, 0x0FE7FF, MAP_ROM);	// Palette
 //		SekSetReadWordHandler(0, turbofrcReadWord);
 		SekSetReadByteHandler(0, turbofrcReadByte);
 		SekSetWriteWordHandler(0, turbofrcWriteWord);
@@ -1955,16 +1961,16 @@ static INT32 karatblzInit()
 	{
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(Rom01,			0x000000, 0x07FFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory((UINT8 *)RamBg1V,		0x080000, 0x081FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamBg2V,		0x082000, 0x083FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamSpr1,		0x0A0000, 0x0AFFFF, SM_RAM);
-		SekMapMemory((UINT8 *)RamSpr2,		0x0B0000, 0x0BFFFF, SM_RAM);
-		SekMapMemory(Ram01,			0x0C0000, 0x0CFFFF, SM_RAM);	// 64K Work RAM
-		SekMapMemory(Ram01+0x10000,		0x0F8000, 0x0FBFFF, SM_RAM);	// Work RAM
-		SekMapMemory(Ram01+0x10000,		0xFF8000, 0xFFBFFF, SM_RAM);	// Work RAM
-		SekMapMemory((UINT8 *)RamSpr3,		0x0FC000, 0x0FC7FF, SM_RAM);
-		SekMapMemory(RamPal,			0x0FE000, 0x0FE7FF, SM_ROM);	// Palette
+		SekMapMemory(Rom01,			0x000000, 0x07FFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory((UINT8 *)RamBg1V,		0x080000, 0x081FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamBg2V,		0x082000, 0x083FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamSpr1,		0x0A0000, 0x0AFFFF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamSpr2,		0x0B0000, 0x0BFFFF, MAP_RAM);
+		SekMapMemory(Ram01,			0x0C0000, 0x0CFFFF, MAP_RAM);	// 64K Work RAM
+		SekMapMemory(Ram01+0x10000,		0x0F8000, 0x0FBFFF, MAP_RAM);	// Work RAM
+		SekMapMemory(Ram01+0x10000,		0xFF8000, 0xFFBFFF, MAP_RAM);	// Work RAM
+		SekMapMemory((UINT8 *)RamSpr3,		0x0FC000, 0x0FC7FF, MAP_RAM);
+		SekMapMemory(RamPal,			0x0FE000, 0x0FE7FF, MAP_ROM);	// Palette
 //		SekSetReadWordHandler(0, karatblzReadWord);
 		SekSetReadByteHandler(0, karatblzReadByte);
 		SekSetWriteWordHandler(0, karatblzWriteWord);
@@ -2027,13 +2033,13 @@ static INT32 spinlbrkInit()
 	{
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(Rom01,			0x000000, 0x04FFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory((UINT8 *)RamBg1V,		0x080000, 0x080FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamBg2V,		0x082000, 0x083FFF, SM_RAM);
-		SekMapMemory(Ram01,			0xFF8000, 0xFFBFFF, SM_RAM);	// Work RAM
-		SekMapMemory((UINT8 *)RamSpr3,		0xFFC000, 0xFFC7FF, SM_RAM);
-		SekMapMemory((UINT8 *)RamRaster,	0xFFD000, 0xFFD1FF, SM_RAM);
-		SekMapMemory(RamPal,			0xFFE000, 0xFFE7FF, SM_ROM);	// Palette
+		SekMapMemory(Rom01,			0x000000, 0x04FFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory((UINT8 *)RamBg1V,		0x080000, 0x080FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamBg2V,		0x082000, 0x083FFF, MAP_RAM);
+		SekMapMemory(Ram01,			0xFF8000, 0xFFBFFF, MAP_RAM);	// Work RAM
+		SekMapMemory((UINT8 *)RamSpr3,		0xFFC000, 0xFFC7FF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamRaster,	0xFFD000, 0xFFD1FF, MAP_RAM);
+		SekMapMemory(RamPal,			0xFFE000, 0xFFE7FF, MAP_ROM);	// Palette
 		SekSetReadWordHandler(0, spinlbrkReadWord);
 //		SekSetReadByteHandler(0, spinlbrkReadByte);
 		SekSetWriteWordHandler(0, spinlbrkWriteWord);
@@ -2089,16 +2095,16 @@ static INT32 aerofgtbInit()
 	{
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(Rom01,			0x000000, 0x07FFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,			0x0C0000, 0x0CFFFF, SM_RAM);	// 64K Work RAM
-		SekMapMemory((UINT8 *)RamBg1V,		0x0D0000, 0x0D1FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamBg2V,		0x0D2000, 0x0D3FFF, SM_RAM);	
-		SekMapMemory((UINT8 *)RamSpr1,		0x0E0000, 0x0E3FFF, SM_RAM);
-		SekMapMemory((UINT8 *)RamSpr2,		0x0E4000, 0x0E7FFF, SM_RAM);
-		SekMapMemory(Ram01+0x10000,		0x0F8000, 0x0FBFFF, SM_RAM);	// Work RAM
-		SekMapMemory((UINT8 *)RamSpr3,		0x0FC000, 0x0FC7FF, SM_RAM);
-		SekMapMemory(RamPal,			0x0FD000, 0x0FD7FF, SM_ROM);	// Palette
-		SekMapMemory((UINT8 *)RamRaster,	0x0FF000, 0x0FFFFF, SM_RAM);	// Raster 
+		SekMapMemory(Rom01,			0x000000, 0x07FFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,			0x0C0000, 0x0CFFFF, MAP_RAM);	// 64K Work RAM
+		SekMapMemory((UINT8 *)RamBg1V,		0x0D0000, 0x0D1FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamBg2V,		0x0D2000, 0x0D3FFF, MAP_RAM);	
+		SekMapMemory((UINT8 *)RamSpr1,		0x0E0000, 0x0E3FFF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamSpr2,		0x0E4000, 0x0E7FFF, MAP_RAM);
+		SekMapMemory(Ram01+0x10000,		0x0F8000, 0x0FBFFF, MAP_RAM);	// Work RAM
+		SekMapMemory((UINT8 *)RamSpr3,		0x0FC000, 0x0FC7FF, MAP_RAM);
+		SekMapMemory(RamPal,			0x0FD000, 0x0FD7FF, MAP_ROM);	// Palette
+		SekMapMemory((UINT8 *)RamRaster,	0x0FF000, 0x0FFFFF, MAP_RAM);	// Raster 
 		SekSetReadWordHandler(0, aerofgtbReadWord);
 		SekSetReadByteHandler(0, aerofgtbReadByte);
 		SekSetWriteWordHandler(0, aerofgtbWriteWord);
@@ -2146,13 +2152,13 @@ static INT32 pspikesInit()
 	{
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(Rom01,			0x000000, 0x03FFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,			0x100000, 0x10FFFF, SM_RAM);	// 64K Work RAM
-		SekMapMemory((UINT8 *)RamSpr1,		0x200000, 0x203FFF, SM_RAM);
-		SekMapMemory((UINT8 *)RamBg1V,		0xFF8000, 0xFF8FFF, SM_RAM);
-		SekMapMemory((UINT8 *)RamSpr3,		0xFFC000, 0xFFC7FF, SM_RAM);
-		SekMapMemory((UINT8 *)RamRaster,	0xFFD000, 0xFFDFFF, SM_RAM);	// Raster 
-		SekMapMemory(RamPal,			0xFFE000, 0xFFEFFF, SM_ROM);	// Palette
+		SekMapMemory(Rom01,			0x000000, 0x03FFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,			0x100000, 0x10FFFF, MAP_RAM);	// 64K Work RAM
+		SekMapMemory((UINT8 *)RamSpr1,		0x200000, 0x203FFF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamBg1V,		0xFF8000, 0xFF8FFF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamSpr3,		0xFFC000, 0xFFC7FF, MAP_RAM);
+		SekMapMemory((UINT8 *)RamRaster,	0xFFD000, 0xFFDFFF, MAP_RAM);	// Raster 
+		SekMapMemory(RamPal,			0xFFE000, 0xFFEFFF, MAP_ROM);	// Palette
 	//	SekSetReadWordHandler(0, pspikesReadWord);
 		SekSetReadByteHandler(0, pspikesReadByte);
 		SekSetWriteWordHandler(0, pspikesWriteWord);
@@ -2249,7 +2255,73 @@ static void aerofgt_drawsprites(INT32 priority)
 	}
 }
 
-static void turbofrc_drawsprites(INT32 chip,INT32 paloffset, INT32 chip_disabled_pri)
+void RenderZoomedTilePrio(UINT16 *dest, UINT8 *gfx, INT32 code, INT32 color, INT32 t, INT32 sx, INT32 sy, INT32 fx, INT32 fy, INT32 width, INT32 height, INT32 zoomx, INT32 zoomy, UINT8 *pri, INT32 prio, INT32 turbofrc_layer)
+{
+	// Based on MAME sources for tile zooming
+	UINT8 *gfx_base = gfx + (code * width * height);
+	int dh = (zoomy * height + 0x8000) / 0x10000;
+	int dw = (zoomx * width + 0x8000) / 0x10000;
+
+	if (dw && dh)
+	{
+		int dx = (width * 0x10000) / dw;
+		int dy = (height * 0x10000) / dh;
+		int ex = sx + dw;
+		int ey = sy + dh;
+		int x_index_base = 0;
+		int y_index = 0;
+
+		if (fx) {
+			x_index_base = (dw - 1) * dx;
+			dx = -dx;
+		}
+
+		if (fy) {
+			y_index = (dh - 1) * dy;
+			dy = -dy;
+		}
+
+		for (INT32 y = sy; y < ey; y++)
+		{
+			UINT8 *src = gfx_base + (y_index / 0x10000) * width;
+			UINT16 *dst = dest + y * nScreenWidth;
+
+			if (y >= 0 && y < nScreenHeight) 
+			{
+				for (INT32 x = sx, x_index = x_index_base; x < ex; x++)
+				{
+					if (x >= 0 && x < nScreenWidth) {
+						INT32 pxl = src[x_index>>16];
+						
+						// new!
+						// notes: the first layer is going to load the bitmap
+						// - the second layer is going to use it
+
+						if (turbofrc_layer == 1) {
+							if (pxl != t) {
+								pri[y * nScreenWidth + x] |= 0x80;
+								dst[x] = pxl + color;
+							}
+						} else {
+							if ((prio & (1 << pri[y * nScreenWidth + x])) == 0 && pri[y * nScreenWidth + x] < 0x80) {
+								if (pxl != t) {
+									dst[x] = pxl + color;
+								}
+							}
+						}
+						// !new
+					}
+	
+					x_index += dx;
+				}
+			}
+
+			y_index += dy;
+		}
+	}
+}
+
+static void turbofrc_drawsprites(INT32 chip, INT32 turbofrc_layer, INT32 paloffset, INT32 chip_disabled_pri)
 {
 	INT32 attr_start,base,first;
 
@@ -2303,7 +2375,11 @@ static void turbofrc_drawsprites(INT32 chip,INT32 paloffset, INT32 chip_disabled
 				if (chip == 0)	code = BURN_ENDIAN_SWAP_INT16(RamSpr1[map_start & RamSpr1SizeMask]) & RomSpr1SizeMask;
 				else			code = BURN_ENDIAN_SWAP_INT16(RamSpr2[map_start & RamSpr2SizeMask]) & RomSpr2SizeMask;
 
-				RenderZoomedTile(pTransDraw, gfxbase, code, color, 0xf, sx, sy, flipx, flipy, 16, 16, zoomx<<11, zoomy<<11);
+				if (turbofrc_layer)
+					RenderZoomedTilePrio(pTransDraw, gfxbase, code, color, 0xf, sx, sy, flipx, flipy, 16, 16, zoomx<<11, zoomy<<11, RamPrioBitmap, pri, turbofrc_layer);
+				else
+					RenderZoomedTile(pTransDraw, gfxbase, code, color, 0xf, sx, sy, flipx, flipy, 16, 16, zoomx<<11, zoomy<<11);
+
 
 				map_start++;
 			}
@@ -2493,20 +2569,13 @@ static INT32 turbofrcDraw()
 	TileBackground(RamBg1V, DeRomBg + 0x000000, 0, 0x000, scrollx0, bg1scrolly, RamGfxBank + 0);
 	TileBackground(RamBg2V, DeRomBg + 0x140000, 1, 0x100, scrollx1, bg2scrolly, RamGfxBank + 4);
 
-/* 
-	// we use the priority buffer so sprites are drawn front to back 
-	turbofrc_drawsprites(0,-1); //enemy
-	turbofrc_drawsprites(0, 0); //enemy
-	turbofrc_drawsprites(1,-1); //ship
-	turbofrc_drawsprites(1, 0); //intro
-*/
-	// in MAME it use a pri-buf control render to draw sprites from front to back
-	// i'm not use it, is right ???
-	
-	turbofrc_drawsprites(0, 512,  0); 
- 	turbofrc_drawsprites(0, 512, -1); 
-	turbofrc_drawsprites(1, 768,  0); 
-	turbofrc_drawsprites(1, 768, -1); 
+	memset(RamPrioBitmap, 0, 352 * 240); // clear priority
+	// sprite priority-bitmap is only used between the first 2 calls to turbofrc_drawsprites()
+	// it probably could have been implemented better, but it works. -dink
+	turbofrc_drawsprites(0, 1, 512,  0); // big alien (level 3)
+ 	turbofrc_drawsprites(0, 2, 512, -1); // enemies
+	turbofrc_drawsprites(1, 0, 768,  0); // nothing?
+	turbofrc_drawsprites(1, 0, 768, -1); // player
 
 	BurnTransferCopy(RamCurPal);
 
@@ -2529,10 +2598,10 @@ static INT32 karatblzDraw()
  	turbofrc_drawsprites(0,-1); 
 	turbofrc_drawsprites(0, 0); 
 */
-	turbofrc_drawsprites(0, 512,  0); 
- 	turbofrc_drawsprites(0, 512, -1); 
-	turbofrc_drawsprites(1, 768,  0); 
-	turbofrc_drawsprites(1, 768, -1); 
+	turbofrc_drawsprites(0, 0, 512,  0);
+ 	turbofrc_drawsprites(0, 0, 512, -1); 
+	turbofrc_drawsprites(1, 0, 768,  0); 
+	turbofrc_drawsprites(1, 0, 768, -1); 
 
 
 	BurnTransferCopy(RamCurPal);
@@ -2550,10 +2619,10 @@ static INT32 spinlbrkDraw()
 	spinlbrkTileBackground();
 	karatblzTileBackground(RamBg2V, DeRomBg + 0x200000, 1, 0x100, bg2scrollx, bg2scrolly, RamGfxBank[1] & 0x07);
 
-	turbofrc_drawsprites(1,768,-1);	// enemy(near far)
-	turbofrc_drawsprites(1,768, 0);	// enemy(near) fense
- 	turbofrc_drawsprites(0,512, 0); // avatar , post , bullet
-	turbofrc_drawsprites(0,512,-1); 
+	turbofrc_drawsprites(1, 0, 768, -1);	// enemy(near far)
+	turbofrc_drawsprites(1, 0, 768,  0);	// enemy(near) fense
+ 	turbofrc_drawsprites(0, 0, 512,  0); // avatar , post , bullet
+	turbofrc_drawsprites(0, 0, 512, -1);
 
 	BurnTransferCopy(RamCurPal);
 
@@ -2568,10 +2637,10 @@ static INT32 aerofgtbDraw()
 	TileBackground(RamBg1V, DeRomBg + 0x000000, 0, 0x000, scrollx0, bg1scrolly + 2, RamGfxBank + 0);
 	TileBackground(RamBg2V, DeRomBg + 0x100000, 1, 0x100, scrollx1, bg2scrolly + 2, RamGfxBank + 4);
 
-	turbofrc_drawsprites(0,512, 0); 
- 	turbofrc_drawsprites(0,512,-1); 
-	turbofrc_drawsprites(1,768, 0); 
-	turbofrc_drawsprites(1,768,-1);
+	turbofrc_drawsprites(0, 0, 512,  0);
+ 	turbofrc_drawsprites(0, 0, 512, -1);
+	turbofrc_drawsprites(1, 0, 768,  0);
+	turbofrc_drawsprites(1, 0, 768, -1);
 
 	BurnTransferCopy(RamCurPal);
 
@@ -2582,8 +2651,8 @@ static INT32 pspikesDraw()
 {
 	pspikesTileBackground();
 
-	turbofrc_drawsprites(0,1024, 0); 
- 	turbofrc_drawsprites(0,1024,-1); 
+	turbofrc_drawsprites(0, 0, 1024,  0);
+ 	turbofrc_drawsprites(0, 0, 1024, -1);
 
 	BurnTransferCopy(RamCurPal);
 
@@ -2610,7 +2679,7 @@ static INT32 DrvFrame()
 	ZetOpen(0);
 	
 	SekRun(nCyclesTotal[0]);
-	SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 	
 	BurnTimerEndFrame(nCyclesTotal[1]);
 

@@ -159,7 +159,7 @@ void __fastcall aztarac_write_byte(UINT32 address, UINT8 data)
 		*soundlatch = data;
 		sound_status ^= 0x21;
 
-		if (sound_status & 0x20) ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+		if (sound_status & 0x20) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
 		return;
 	}
@@ -380,10 +380,10 @@ static INT32 DrvInit()
 	SekInit(0, 0x68000);
 	SekOpen(0);
 	SekSetIrqCallback(aztarac_irq_callback);
-	SekMapMemory(Drv68KROM,		0x000000, 0x00bfff, SM_ROM);
-	SekMapMemory(DrvNVRAM,		0x022000, 0x0223ff, SM_ROM);
-	SekMapMemory(DrvVecRAM,		0xff8000, 0xffafff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0xffe000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x00bfff, MAP_ROM);
+	SekMapMemory(DrvNVRAM,		0x022000, 0x0223ff, MAP_ROM);
+	SekMapMemory(DrvVecRAM,		0xff8000, 0xffafff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0xffe000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	aztarac_write_word);
 	SekSetWriteByteHandler(0,	aztarac_write_byte);
 	SekSetReadWordHandler(0,	aztarac_read_word);
@@ -509,14 +509,14 @@ static INT32 DrvFrame()
 	for (INT32 i = 0; i < nInterleave; i++, sound_irq_timer++)
 	{
 		nCyclesDone[0] += SekRun(nCyclesTotal[0] / nInterleave);
-		if (i == (nInterleave - 1)) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 		//nCyclesDone[1] += ZetRun((SekTotalCycles() / 4) - ZetTotalCycles());
 		sync_cpu();
 
 		if ((sound_irq_timer % 40) == 39) {	// every 20000 cycles, 50000 / frame
 			sound_status ^= 0x10;
-			if (sound_status & 0x10) ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+			if (sound_status & 0x10) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 	}
 

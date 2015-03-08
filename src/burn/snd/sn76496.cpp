@@ -25,6 +25,7 @@ struct SN76496
 	INT32 Output[4];
 	INT32 bSignalAdd;
 	double nVolume;
+	INT32 StereoMask;	/* the stereo output mask */
 	INT32 nOutputDir;
 };
 
@@ -36,6 +37,169 @@ static struct SN76496 *Chip3 = NULL;
 static struct SN76496 *Chip4 = NULL;
 
 void SN76496Update(INT32 Num, INT16* pSoundBuf, INT32 Length)
+{
+#if defined FBA_DEBUG
+	if (!DebugSnd_SN76496Initted) bprintf(PRINT_ERROR, _T("SN76496Update called without init\n"));
+	if (Num > NumChips) bprintf(PRINT_ERROR, _T("SN76496Update called with invalid chip %x\n"), Num);
+#endif
+
+	INT32 i;
+	struct SN76496 *R = Chip0;
+	
+	if (Num >= MAX_SN76496_CHIPS) return;
+	
+	if (Num == 1) R = Chip1;
+	if (Num == 2) R = Chip2;
+	if (Num == 3) R = Chip3;
+	if (Num == 4) R = Chip4;
+	
+	/* If the volume is 0, increase the counter */
+	for (i = 0;i < 4;i++)
+	{
+		if (R->Volume[i] == 0)
+		{
+			/* note that I do count += length, NOT count = length + 1. You might think */
+			/* it's the same since the volume is 0, but doing the latter could cause */
+			/* interferencies when the program is rapidly modulating the volume. */
+			if (R->Count[i] <= Length*STEP) R->Count[i] += Length*STEP;
+		}
+	}
+
+	while (Length > 0)
+	{
+		INT32 Vol[4];
+		UINT32 Out, Out2 = 0;
+		INT32 Left;
+
+
+		/* vol[] keeps track of how long each square wave stays */
+		/* in the 1 position during the sample period. */
+		Vol[0] = Vol[1] = Vol[2] = Vol[3] = 0;
+
+		for (i = 0;i < 3;i++)
+		{
+			if (R->Output[i]) Vol[i] += R->Count[i];
+			R->Count[i] -= STEP;
+			/* Period[i] is the half period of the square wave. Here, in each */
+			/* loop I add Period[i] twice, so that at the end of the loop the */
+			/* square wave is in the same status (0 or 1) it was at the start. */
+			/* vol[i] is also incremented by Period[i], since the wave has been 1 */
+			/* exactly half of the time, regardless of the initial position. */
+			/* If we exit the loop in the middle, Output[i] has to be inverted */
+			/* and vol[i] incremented only if the exit status of the square */
+			/* wave is 1. */
+			while (R->Count[i] <= 0)
+			{
+				R->Count[i] += R->Period[i];
+				if (R->Count[i] > 0)
+				{
+					R->Output[i] ^= 1;
+					if (R->Output[i]) Vol[i] += R->Period[i];
+					break;
+				}
+				R->Count[i] += R->Period[i];
+				Vol[i] += R->Period[i];
+			}
+			if (R->Output[i]) Vol[i] -= R->Count[i];
+		}
+
+		Left = STEP;
+		do
+		{
+			INT32 NextEvent;
+
+
+			if (R->Count[3] < Left) NextEvent = R->Count[3];
+			else NextEvent = Left;
+
+			if (R->Output[3]) Vol[3] += R->Count[3];
+			R->Count[3] -= NextEvent;
+			if (R->Count[3] <= 0)
+			{
+		        if (R->NoiseMode == 1) /* White Noise Mode */
+		        {
+			        if (((R->RNG & R->WhitenoiseTaps) != R->WhitenoiseTaps) && ((R->RNG & R->WhitenoiseTaps) != 0)) /* crappy xor! */
+					{
+				        R->RNG >>= 1;
+				        R->RNG |= R->FeedbackMask;
+					}
+					else
+					{
+				        R->RNG >>= 1;
+					}
+					R->Output[3] = R->WhitenoiseInvert ? !(R->RNG & 1) : R->RNG & 1;
+				}
+				else /* Periodic noise mode */
+				{
+			        if (R->RNG & 1)
+					{
+				        R->RNG >>= 1;
+				        R->RNG |= R->FeedbackMask;
+					}
+					else
+					{
+				        R->RNG >>= 1;
+					}
+					R->Output[3] = R->RNG & 1;
+				}
+				R->Count[3] += R->Period[3];
+				if (R->Output[3]) Vol[3] += R->Period[3];
+			}
+			if (R->Output[3]) Vol[3] -= R->Count[3];
+
+			Left -= NextEvent;
+		} while (Left > 0);
+
+		if (R->StereoMask != 0xFF)
+		{
+			Out = ((R->StereoMask&0x10) ? Vol[0] * R->Volume[0]:0)
+				+ ((R->StereoMask&0x20) ? Vol[1] * R->Volume[1]:0)
+				+ ((R->StereoMask&0x40) ? Vol[2] * R->Volume[2]:0)
+				+ ((R->StereoMask&0x80) ? Vol[3] * R->Volume[3]:0);
+
+			Out2 = ((R->StereoMask&0x1) ? Vol[0] * R->Volume[0]:0)
+				+ ((R->StereoMask&0x2) ? Vol[1] * R->Volume[1]:0)
+				+ ((R->StereoMask&0x4) ? Vol[2] * R->Volume[2]:0)
+				+ ((R->StereoMask&0x8) ? Vol[3] * R->Volume[3]:0);
+			if (Out2 > MAX_OUTPUT * STEP) Out2 = MAX_OUTPUT * STEP;
+
+			Out2 /= STEP;
+		}
+		else
+		{
+			Out = Vol[0] * R->Volume[0] + Vol[1] * R->Volume[1] +
+				  Vol[2] * R->Volume[2] + Vol[3] * R->Volume[3];
+		}
+
+		if (Out > MAX_OUTPUT * STEP) Out = MAX_OUTPUT * STEP;
+
+		Out /= STEP;
+		
+		INT32 nLeftSample = 0, nRightSample = 0;
+		if ((R->nOutputDir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
+			nLeftSample += (INT32)(Out * R->nVolume);
+		}
+		if ((R->nOutputDir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
+			if (R->StereoMask != 0xFF)
+				nRightSample += (INT32)(Out2 * R->nVolume);
+			else
+				nRightSample += (INT32)(Out * R->nVolume);
+		}
+		
+		if (R->bSignalAdd) {
+			pSoundBuf[0] = BURN_SND_CLIP(pSoundBuf[0] + nLeftSample);
+			pSoundBuf[1] = BURN_SND_CLIP(pSoundBuf[1] + nRightSample);
+		} else {
+			pSoundBuf[0] = BURN_SND_CLIP(nLeftSample);
+			pSoundBuf[1] = BURN_SND_CLIP(nRightSample);
+		}
+		
+		pSoundBuf += 2;
+		Length--;
+	}
+}
+
+void SN76496UpdateToBuffer(INT32 Num, INT16* pSoundBuf, INT32 Length)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_SN76496Initted) bprintf(PRINT_ERROR, _T("SN76496Update called without init\n"));
@@ -154,27 +318,29 @@ void SN76496Update(INT32 Num, INT16* pSoundBuf, INT32 Length)
 
 		if (Out > MAX_OUTPUT * STEP) Out = MAX_OUTPUT * STEP;
 
-		Out /= STEP;
-		
-		INT32 nLeftSample = 0, nRightSample = 0;
-		if ((R->nOutputDir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
-			nLeftSample += (INT32)(Out * R->nVolume);
-		}
-		if ((R->nOutputDir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
-			nRightSample += (INT32)(Out * R->nVolume);
-		}
-		
-		if (R->bSignalAdd) {
-			pSoundBuf[0] = BURN_SND_CLIP(pSoundBuf[0] + nLeftSample);
-			pSoundBuf[1] = BURN_SND_CLIP(pSoundBuf[1] + nRightSample);
-		} else {
-			pSoundBuf[0] = BURN_SND_CLIP(nLeftSample);
-			pSoundBuf[1] = BURN_SND_CLIP(nRightSample);
-		}
-		
-		pSoundBuf += 2;
+		pSoundBuf[0] = BURN_SND_CLIP(((INT32)((Out / STEP) * R->nVolume)));
+		pSoundBuf++;
 		Length--;
 	}
+}
+
+void SN76496StereoWrite(INT32 Num, INT32 Data)
+{
+#if defined FBA_DEBUG
+	if (!DebugSnd_SN76496Initted) bprintf(PRINT_ERROR, _T("SN76496StereoWrite called without init\n"));
+	if (Num > NumChips) bprintf(PRINT_ERROR, _T("SN76496StereoWrite called with invalid chip %x\n"), Num);
+#endif
+
+	struct SN76496 *R = Chip0;
+
+	if (Num >= MAX_SN76496_CHIPS) return;
+	
+	if (Num == 1) R = Chip1;
+	if (Num == 2) R = Chip2;
+	if (Num == 3) R = Chip3;
+	if (Num == 4) R = Chip4;
+
+	R->StereoMask = Data;
 }
 
 void SN76496Write(INT32 Num, INT32 Data)
@@ -266,31 +432,50 @@ static void SN76496SetGain(struct SN76496 *R,INT32 Gain)
 	R->VolTable[15] = 0;
 }
 
+void SN76496Reset()
+{
+#if defined FBA_DEBUG
+	if (!DebugSnd_SN76496Initted) bprintf(PRINT_ERROR, _T("SN76496Reset called without init\n"));
+#endif
+
+	struct SN76496 *R = Chip0;
+	INT32 i, Num;
+
+	for (Num = 0; Num < NumChips; Num++) {
+		if (Num == 0) R = Chip0;
+		if (Num == 1) R = Chip1;
+		if (Num == 2) R = Chip2;
+		if (Num == 3) R = Chip3;
+		if (Num == 4) R = Chip4;
+
+		for (i = 0; i < 4; i++) R->Volume[i] = 0;
+
+		R->LastRegister = 0;
+		for (i = 0; i < 8; i += 2) {
+			R->Register[i + 0] = 0x00;
+			R->Register[i + 1] = 0x0f;
+		}
+
+		for (i = 0; i < 4; i++) {
+			R->Output[i] = 0;
+			R->Period[i] = R->Count[i] = R->UpdateStep;
+		}
+
+		R->FeedbackMask = 0x4000;
+		R->WhitenoiseTaps = 0x03;
+		R->WhitenoiseInvert = 1;
+		R->StereoMask = 0xFF;
+
+		R->RNG = R->FeedbackMask;
+		R->Output[3] = R->RNG & 1;
+	}
+}
+
 static void SN76496Init(struct SN76496 *R, INT32 Clock)
 {
-	INT32 i;
-	
 	R->UpdateStep = (UINT32)(((double)STEP * nBurnSoundRate * 16) / Clock);
-		
-	for (i = 0; i < 4; i++) R->Volume[i] = 0;
-	
-	R->LastRegister = 0;
-	for (i = 0; i < 8; i += 2) {
-		R->Register[i + 0] = 0x00;
-		R->Register[i + 1] = 0x0f;
-	}
-	
-	for (i = 0; i < 4; i++) {
-		R->Output[i] = 0;
-		R->Period[i] = R->Count[i] = R->UpdateStep;
-	}
-	
-	R->FeedbackMask = 0x4000;
-	R->WhitenoiseTaps = 0x03;
-	R->WhitenoiseInvert = 1;
-	
-	R->RNG = R->FeedbackMask;
-	R->Output[3] = R->RNG & 1;
+
+	SN76496Reset();
 }
 
 static void GenericStart(INT32 Num, INT32 Clock, INT32 FeedbackMask, INT32 NoiseTaps, INT32 NoiseInvert, INT32 SignalAdd)

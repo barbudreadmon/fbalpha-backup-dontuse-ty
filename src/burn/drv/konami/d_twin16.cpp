@@ -563,7 +563,7 @@ static void fround_CPU_register_w(INT32 data)
 	{
 		if ((old & 0x08) == 0 && (twin16_CPUA_register & 0x08)) {
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		}
 	}
 }
@@ -574,7 +574,7 @@ static void twin16_CPUA_register_w(INT32 data)
 	{
 		if ((twin16_CPUA_register & 0x08) == 0 && (data & 0x08)) {
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		}
 
 		if ((twin16_CPUA_register & 0x40) && (data & 0x40) == 0)
@@ -583,7 +583,7 @@ static void twin16_CPUA_register_w(INT32 data)
 		if ((twin16_CPUA_register & 0x10) == 0 && (data & 0x10)) {
 			SekClose();
 			SekOpen(1);
-			SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 			SekClose();
 			SekOpen(0);
 		}
@@ -602,13 +602,13 @@ static void twin16_CPUB_register_w(INT32 data)
 		{
 			SekClose();
 			SekOpen(0);
-			SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 			SekClose();
 			SekOpen(1);
 		}
 
 		INT32 offset = (twin16_CPUB_register & 4) << 17;
-		SekMapMemory(DrvGfxROM1 + 0x100000 + offset, 0x700000, 0x77ffff, SM_ROM);
+		SekMapMemory(DrvGfxROM1 + 0x100000 + offset, 0x700000, 0x77ffff, MAP_ROM);
 	}
 }
 
@@ -649,7 +649,7 @@ void __fastcall twin16_main_write_byte(UINT32 address, UINT8 data)
 		case 0xa0008:
 		case 0xa0009:
 			*soundlatch = data;
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0xa0011: // watchdog
@@ -659,7 +659,7 @@ void __fastcall twin16_main_write_byte(UINT32 address, UINT8 data)
 		{
 			*DrvNvRAMBank = data & 0x1f;
 			int offset = data & 0x1f;
-			SekMapMemory(DrvNvRAM + offset * 0x400,	0x0b0000, 0x0b03ff, SM_RAM);
+			SekMapMemory(DrvNvRAM + offset * 0x400,	0x0b0000, 0x0b03ff, MAP_RAM);
 		}
 		return;
 
@@ -811,7 +811,7 @@ UINT8 __fastcall twin16_sound_read(UINT16 address)
 			return *soundlatch2;
 
 		case 0xa000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0xc000:
@@ -975,15 +975,15 @@ static INT32 DrvInit(INT32 (pLoadCallback)())
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM0,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvShareRAM,		0x040000, 0x04ffff, SM_RAM);
-	SekMapMemory(Drv68KRAM0,		0x060000, 0x063fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x080000, 0x080fff, SM_RAM);
-	SekMapMemory(DrvNvRAM,			0x0b0000, 0x0b03ff, SM_RAM);
-	SekMapMemory(DrvVidRAM2,		0x100000, 0x105fff, SM_RAM);
-	SekMapMemory(DrvVidRAM,			0x120000, 0x123fff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x140000, 0x143fff, SM_RAM);
-	SekMapMemory(DrvGfxROM1,		0x500000, 0x6fffff, SM_ROM);
+	SekMapMemory(Drv68KROM0,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvShareRAM,		0x040000, 0x04ffff, MAP_RAM);
+	SekMapMemory(Drv68KRAM0,		0x060000, 0x063fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x080000, 0x080fff, MAP_RAM);
+	SekMapMemory(DrvNvRAM,			0x0b0000, 0x0b03ff, MAP_RAM);
+	SekMapMemory(DrvVidRAM2,		0x100000, 0x105fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM,			0x120000, 0x123fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x140000, 0x143fff, MAP_RAM);
+	SekMapMemory(DrvGfxROM1,		0x500000, 0x6fffff, MAP_ROM);
 	SekSetWriteWordHandler(0,		twin16_main_write_word);
 	SekSetWriteByteHandler(0,		twin16_main_write_byte);
 	SekSetReadWordHandler(0,		twin16_main_read_word);
@@ -992,16 +992,16 @@ static INT32 DrvInit(INT32 (pLoadCallback)())
 
 	SekInit(1, 0x68000);
 	SekOpen(1);
-	SekMapMemory(Drv68KROM1,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvShareRAM,		0x040000, 0x04ffff, SM_RAM);
-	SekMapMemory(Drv68KRAM1,		0x060000, 0x063fff, SM_RAM);
-	SekMapMemory(DrvGfxROM2,		0x080000, 0x09ffff, SM_ROM);
-	SekMapMemory(DrvSprRAM,			0x400000, 0x403fff, SM_RAM);
-	SekMapMemory(DrvVidRAM,			0x480000, 0x483fff, SM_RAM);
-	SekMapMemory(DrvTileRAM,		0x500000, 0x53ffff, SM_ROM);
-	SekMapMemory(DrvGfxROM1,		0x600000, 0x6fffff, SM_ROM);
-	SekMapMemory(DrvGfxROM1 + 0x100000,	0x700000, 0x77ffff, SM_ROM);
-	SekMapMemory(DrvSprGfxRAM,		0x780000, 0x79ffff, SM_RAM);
+	SekMapMemory(Drv68KROM1,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvShareRAM,		0x040000, 0x04ffff, MAP_RAM);
+	SekMapMemory(Drv68KRAM1,		0x060000, 0x063fff, MAP_RAM);
+	SekMapMemory(DrvGfxROM2,		0x080000, 0x09ffff, MAP_ROM);
+	SekMapMemory(DrvSprRAM,			0x400000, 0x403fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM,			0x480000, 0x483fff, MAP_RAM);
+	SekMapMemory(DrvTileRAM,		0x500000, 0x53ffff, MAP_ROM);
+	SekMapMemory(DrvGfxROM1,		0x600000, 0x6fffff, MAP_ROM);
+	SekMapMemory(DrvGfxROM1 + 0x100000,	0x700000, 0x77ffff, MAP_ROM);
+	SekMapMemory(DrvSprGfxRAM,		0x780000, 0x79ffff, MAP_RAM);
 	SekSetWriteWordHandler(0,		twin16_sub_write_word);
 	SekSetWriteByteHandler(0,		twin16_sub_write_byte);
 	SekClose();
@@ -1420,13 +1420,13 @@ static INT32 DrvFrame()
 		SekOpen(0);
 		nSegment = (nTotalCycles[0] - nCyclesDone[0]) / (nInterleave - i);
 		nCyclesDone[0] += SekRun(nSegment);
-		if ((twin16_CPUA_register & 0x20) && i == nInterleave-1) SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+		if ((twin16_CPUA_register & 0x20) && i == nInterleave-1) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		SekClose();
 
 		if (twin16_custom_video != 1) {
 			SekOpen(1);
 			nCyclesDone[1] += SekRun(nSegment);
-			if ((twin16_CPUB_register & 0x02) && i == nInterleave-1) SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+			if ((twin16_CPUB_register & 0x02) && i == nInterleave-1) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 			SekClose();
 		}
 
@@ -1481,7 +1481,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_MEMORY_RAM) {	
 		ba.Data		= AllRam;
 		ba.nLen		= RamEnd - AllRam;
-		ba.nAddress 	= 0x000000;
+		ba.nAddress	= 0x000000;
 		ba.szName	= "All RAM";
 		BurnAcb(&ba);
 	}
@@ -1500,7 +1500,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 
 		UPD7759Scan(0, nAction, pnMin);
 		BurnYM2151Scan(nAction);
-	//	K007232Scan(nAction, pnMin); // crash...
+		K007232Scan(nAction, pnMin);
 
 		SCAN_VAR(gfx_bank);
 		SCAN_VAR(video_register);
@@ -1516,12 +1516,12 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		}
 
 		SekOpen(0);
-		SekMapMemory(DrvNvRAM + (*DrvNvRAMBank * 0x400),	0x0b0000, 0x0b03ff, SM_RAM);
+		SekMapMemory(DrvNvRAM + (*DrvNvRAMBank * 0x400),	0x0b0000, 0x0b03ff, MAP_RAM);
 		SekClose();
 
 		SekOpen(1);
 		INT32 offset = (twin16_CPUB_register & 4) << 17;
-		SekMapMemory(DrvGfxROM1 + 0x100000 + offset, 0x700000, 0x77ffff, SM_ROM);
+		SekMapMemory(DrvGfxROM1 + 0x100000 + offset, 0x700000, 0x77ffff, MAP_ROM);
 		SekClose();
 	}
 

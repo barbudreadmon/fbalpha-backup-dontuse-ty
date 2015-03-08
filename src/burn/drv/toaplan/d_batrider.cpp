@@ -162,19 +162,19 @@ static struct BurnDIPInfo batriderDIPList[] = {
 	{0x17,	0x01, 0x10, 0x10, "On"},
 	// Free play
 	{0,		0xFE, 0,	2,	  "Guest Players"},
-	{0x17,	0x02, 0x20, 0x00, "Disable"},
+	{0x17,	0x02, 0x20, 0x20, "Disable"},
 	{0x15,	0x00, 0x1C, 0x1C, NULL},
-	{0x17,	0x02, 0x20, 0x20, "Enable"},
+	{0x17,	0x02, 0x20, 0x00, "Enable"},
 	{0x15,	0x00, 0x1C, 0x1C, NULL},
 	{0,		0xFE, 0,	2,	  "Player select"},
-	{0x17,	0x02, 0x40, 0x00, "Disable"},
+	{0x17,	0x02, 0x40, 0x40, "Disable"},
 	{0x15,	0x00, 0x1C, 0x1C, NULL},
-	{0x17,	0x02, 0x40, 0x40, "Enable"},
+	{0x17,	0x02, 0x40, 0x00, "Enable"},
 	{0x15,	0x00, 0x1C, 0x1C, NULL},
 	{0,		0xFE, 0,	2,	  "Special Course"},
-	{0x17,	0x02, 0x80, 0x00, "Disable"},
+	{0x17,	0x02, 0x80, 0x80, "Disable"},
 	{0x15,	0x00, 0x1C, 0x1C, NULL},
-	{0x17,	0x02, 0x80, 0x80, "Enable"},
+	{0x17,	0x02, 0x80, 0x00, "Enable"},
 	{0x15,	0x00, 0x1C, 0x1C, NULL},
 
 	// Region
@@ -569,7 +569,7 @@ void __fastcall batriderWriteWord(UINT32 sekAddress, UINT16 wordValue)
 			// Interrupt 4 does this (the same code is also conditionally called from interrupt 2)
 
 			nIRQPending = 1;
-			SekSetIRQLine(4, SEK_IRQSTATUS_ACK);
+			SekSetIRQLine(4, CPU_IRQSTATUS_ACK);
 			break;
 
 		case 0x500060:
@@ -582,7 +582,7 @@ void __fastcall batriderWriteWord(UINT32 sekAddress, UINT16 wordValue)
 			break;
 
 		case 0x500082:								// Acknowledge interrupt
-			SekSetIRQLine(0, SEK_IRQSTATUS_NONE);
+			SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			nIRQPending = 0;
 			break;
 
@@ -659,15 +659,15 @@ static void Map68KTextROM(bool bMapTextROM)
 {
 	if (bMapTextROM) {
 		if (nTextROMStatus != 1) {
-			SekMapMemory(ExtraTROM,	0x200000, 0x207FFF, SM_RAM);	// Extra text tile memory
+			SekMapMemory(ExtraTROM,	0x200000, 0x207FFF, MAP_RAM);	// Extra text tile memory
 
 			nTextROMStatus = 1;
 		}
 	} else {
 		if (nTextROMStatus != 0) {
-			SekMapMemory(ExtraTRAM,	0x200000, 0x201FFF, SM_RAM);	// Extra text tilemap RAM
-			SekMapMemory(RamPal,	0x202000, 0x202FFF, SM_RAM);	// Palette RAM
-			SekMapMemory(Ram01,		0x203000, 0x207FFF, SM_RAM);	// Extra text Scroll & offset; RAM
+			SekMapMemory(ExtraTRAM,	0x200000, 0x201FFF, MAP_RAM);	// Extra text tilemap RAM
+			SekMapMemory(RamPal,	0x202000, 0x202FFF, MAP_RAM);	// Palette RAM
+			SekMapMemory(Ram01,		0x203000, 0x207FFF, MAP_RAM);	// Extra text Scroll & offset; RAM
 
 			nTextROMStatus = 0;
 		}
@@ -685,7 +685,7 @@ static INT32 drvDoReset()
 	SekOpen(0);
 
 	nIRQPending = 0;
-  SekSetIRQLine(0, SEK_IRQSTATUS_NONE);
+  SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 
 	Map68KTextROM(true);
 
@@ -732,8 +732,8 @@ static INT32 drvInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom01, 0x000000, 0x1FFFFF, SM_ROM);		// CPU 0 ROM
-		SekMapMemory(Ram02, 0x208000, 0x20FFFF, SM_RAM);
+		SekMapMemory(Rom01, 0x000000, 0x1FFFFF, MAP_ROM);		// CPU 0 ROM
+		SekMapMemory(Ram02, 0x208000, 0x20FFFF, MAP_RAM);
 
 		Map68KTextROM(true);
 
@@ -742,12 +742,12 @@ static INT32 drvInit()
 		SekSetWriteWordHandler(0, batriderWriteWord);
 		SekSetWriteByteHandler(0, batriderWriteByte);
 
-		SekMapHandler(1,	0x400000, 0x400400, SM_RAM);		// GP9001 addresses
+		SekMapHandler(1,	0x400000, 0x400400, MAP_RAM);		// GP9001 addresses
 
 		SekSetReadWordHandler(1, batriderReadWordGP9001);
 		SekSetWriteWordHandler(1, batriderWriteWordGP9001);
 
-		SekMapHandler(2,	0x300000, 0x37FFFF, SM_ROM);		// Z80 ROM
+		SekMapHandler(2,	0x300000, 0x37FFFF, MAP_ROM);		// Z80 ROM
 
 		SekSetReadByteHandler(2, batriderReadByteZ80ROM);
 		SekSetReadWordHandler(2, batriderReadWordZ80ROM);
@@ -886,7 +886,7 @@ static INT32 drvFrame()
 			}
 
 			nIRQPending = 1;
-			SekSetIRQLine(2, SEK_IRQSTATUS_ACK);
+			SekSetIRQLine(2, CPU_IRQSTATUS_ACK);
 
 			bVBlank = true;
 		}

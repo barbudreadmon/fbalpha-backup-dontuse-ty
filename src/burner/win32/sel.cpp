@@ -39,8 +39,7 @@ bool bIconsLoaded				= 0;
 int nIconsXDiff;
 int nIconsYDiff;
 static HICON hDrvIcon[9999];
-
-static int RomInfoDialog();
+bool bGameInfoOpen				= false;
 
 // Dialog Sizing
 int nSelDlgWidth = 750;
@@ -113,8 +112,9 @@ HTREEITEM hFilterMiscPre90s			= NULL;
 HTREEITEM hFilterMiscPost90s		= NULL;
 HTREEITEM hFilterMegadrive			= NULL;
 HTREEITEM hFilterPce				= NULL;
-HTREEITEM hFilterSnes				= NULL;
+//HTREEITEM hFilterSnes				= NULL;
 HTREEITEM hFilterSms				= NULL;
+HTREEITEM hFilterGg					= NULL;
 HTREEITEM hFilterSg1000				= NULL;
 HTREEITEM hFilterColeco				= NULL;
 HTREEITEM hFilterBootleg			= NULL;
@@ -224,16 +224,18 @@ static int MegadriveValue		= HARDWARE_PREFIX_SEGA_MEGADRIVE >> 24;
 static int MASKMEGADRIVE		= 1 << MegadriveValue;
 static int PCEngineValue		= HARDWARE_PREFIX_PCENGINE >> 24;
 static int MASKPCENGINE			= 1 << PCEngineValue;
-static int SnesValue			= HARDWARE_PREFIX_NINTENDO_SNES >> 24;
-static int MASKSNES				= 1 << SnesValue;
+//static int SnesValue			= HARDWARE_PREFIX_NINTENDO_SNES >> 24;
+//static int MASKSNES				= 1 << SnesValue;
 static int SmsValue				= HARDWARE_PREFIX_SEGA_MASTER_SYSTEM >> 24;
 static int MASKSMS				= 1 << SmsValue;
+static int GgValue				= HARDWARE_PREFIX_SEGA_GAME_GEAR >> 24;
+static int MASKGG				= 1 << GgValue;
 static int Sg1000Value			= HARDWARE_PREFIX_SEGA_SG1000 >> 24;
 static int MASKSG1000			= 1 << Sg1000Value;
 static int ColecoValue			= HARDWARE_PREFIX_COLECO >> 24;
 static int MASKCOLECO			= 1 << ColecoValue;
 
-static int MASKALL				= MASKCAPMISC | MASKCAVE | MASKCPS | MASKCPS2 | MASKCPS3 | MASKDATAEAST | MASKGALAXIAN | MASKIREM | MASKKANEKO | MASKKONAMI | MASKNEOGEO | MASKPACMAN | MASKPGM | MASKPSIKYO | MASKSEGA | MASKSETA | MASKTAITO | MASKTECHNOS | MASKTOAPLAN | MASKMISCPRE90S | MASKMISCPOST90S | MASKMEGADRIVE | MASKPCENGINE | MASKSNES | MASKSMS | MASKSG1000 | MASKCOLECO;
+static int MASKALL				= MASKCAPMISC | MASKCAVE | MASKCPS | MASKCPS2 | MASKCPS3 | MASKDATAEAST | MASKGALAXIAN | MASKIREM | MASKKANEKO | MASKKONAMI | MASKNEOGEO | MASKPACMAN | MASKPGM | MASKPSIKYO | MASKSEGA | MASKSETA | MASKTAITO | MASKTECHNOS | MASKTOAPLAN | MASKMISCPRE90S | MASKMISCPOST90S | MASKMEGADRIVE | MASKPCENGINE | MASKSMS | MASKGG | MASKSG1000 | MASKCOLECO; // | MASKSNES
 
 #define UNAVAILABLE				(1 << 27)
 #define AVAILABLE				(1 << 28)
@@ -346,7 +348,7 @@ static void GetInitialPositions()
 	GetInititalControlPos(IDC_TEXTGENRE, nDlgGenreTxtInitialPos);
 	GetInititalControlPos(IDC_TEXTNOTES, nDlgNotesTxtInitialPos);
 	GetInititalControlPos(IDC_DRVCOUNT, nDlgDrvCountTxtInitialPos);
-	GetInititalControlPos(IDROMINFO, nDlgDrvRomInfoBtnInitialPos);
+	GetInititalControlPos(IDGAMEINFO, nDlgDrvRomInfoBtnInitialPos);
 	GetInititalControlPos(IDC_STATIC1, nDlgSelectGameGrpInitialPos);
 	GetInititalControlPos(IDC_TREE1, nDlgSelectGameLstInitialPos);
 }
@@ -1121,9 +1123,10 @@ static void CreateFilters()
 	_TVCreateFiltersA(hHardware		, IDS_SEL_MISCPRE90S	, hFilterMiscPre90s		, nLoadMenuShowX & MASKMISCPRE90S					);
 	_TVCreateFiltersA(hHardware		, IDS_SEL_MISCPOST90S	, hFilterMiscPost90s	, nLoadMenuShowX & MASKMISCPOST90S					);
 	_TVCreateFiltersA(hHardware		, IDS_SEL_SMS			, hFilterSms			, nLoadMenuShowX & MASKSMS							);
+	_TVCreateFiltersA(hHardware		, IDS_SEL_GG			, hFilterGg				, nLoadMenuShowX & MASKGG							);
 	_TVCreateFiltersA(hHardware		, IDS_SEL_MEGADRIVE		, hFilterMegadrive		, nLoadMenuShowX & MASKMEGADRIVE					);
 	_TVCreateFiltersA(hHardware		, IDS_SEL_PCE			, hFilterPce			, nLoadMenuShowX & MASKPCENGINE						);
-	_TVCreateFiltersA(hHardware		, IDS_SEL_SNES			, hFilterSnes			, nLoadMenuShowX & MASKSNES							);
+//	_TVCreateFiltersA(hHardware		, IDS_SEL_SNES			, hFilterSnes			, nLoadMenuShowX & MASKSNES							);
 	_TVCreateFiltersA(hHardware		, IDS_SEL_SG1000		, hFilterSg1000			, nLoadMenuShowX & MASKSG1000						);
 	_TVCreateFiltersA(hHardware		, IDS_SEL_COLECO		, hFilterColeco			, nLoadMenuShowX & MASKCOLECO						);
 	
@@ -1328,8 +1331,9 @@ static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lP
 				_TreeView_SetCheckState(hFilterList, hFilterMiscPost90s, FALSE);
 				_TreeView_SetCheckState(hFilterList, hFilterMegadrive, FALSE);
 				_TreeView_SetCheckState(hFilterList, hFilterPce, FALSE);
-				_TreeView_SetCheckState(hFilterList, hFilterSnes, FALSE);
+//				_TreeView_SetCheckState(hFilterList, hFilterSnes, FALSE);
 				_TreeView_SetCheckState(hFilterList, hFilterSms, FALSE);
+				_TreeView_SetCheckState(hFilterList, hFilterGg, FALSE);
 				_TreeView_SetCheckState(hFilterList, hFilterSg1000, FALSE);
 				_TreeView_SetCheckState(hFilterList, hFilterColeco, FALSE);
 				
@@ -1360,8 +1364,9 @@ static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lP
 				_TreeView_SetCheckState(hFilterList, hFilterMiscPost90s, TRUE);
 				_TreeView_SetCheckState(hFilterList, hFilterMegadrive, TRUE);
 				_TreeView_SetCheckState(hFilterList, hFilterPce, TRUE);
-				_TreeView_SetCheckState(hFilterList, hFilterSnes, TRUE);
+//				_TreeView_SetCheckState(hFilterList, hFilterSnes, TRUE);
 				_TreeView_SetCheckState(hFilterList, hFilterSms, TRUE);
+				_TreeView_SetCheckState(hFilterList, hFilterGg, TRUE);
 				_TreeView_SetCheckState(hFilterList, hFilterSg1000, TRUE);
 				_TreeView_SetCheckState(hFilterList, hFilterColeco, TRUE);
 				
@@ -1506,8 +1511,9 @@ static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lP
 		if (hItemChanged == hFilterMiscPost90s)		_ToggleGameListing(nLoadMenuShowX, MASKMISCPOST90S);
 		if (hItemChanged == hFilterMegadrive)		_ToggleGameListing(nLoadMenuShowX, MASKMEGADRIVE);
 		if (hItemChanged == hFilterPce)				_ToggleGameListing(nLoadMenuShowX, MASKPCENGINE);
-		if (hItemChanged == hFilterSnes)			_ToggleGameListing(nLoadMenuShowX, MASKSNES);
+//		if (hItemChanged == hFilterSnes)			_ToggleGameListing(nLoadMenuShowX, MASKSNES);
 		if (hItemChanged == hFilterSms)				_ToggleGameListing(nLoadMenuShowX, MASKSMS);
+		if (hItemChanged == hFilterGg)				_ToggleGameListing(nLoadMenuShowX, MASKGG);
 		if (hItemChanged == hFilterSg1000)			_ToggleGameListing(nLoadMenuShowX, MASKSG1000);
 		if (hItemChanged == hFilterColeco)			_ToggleGameListing(nLoadMenuShowX, MASKCOLECO);
 		
@@ -1597,9 +1603,10 @@ static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lP
 					nLoadMenuShowX ^= ASCIIONLY;
 					RebuildEverything();
 					break;
-				case IDROMINFO:
+				case IDGAMEINFO:
 					if (bDrvSelected) {
-						RomInfoDialog();
+						GameInfoDialogCreate(hSelDlg, nBurnDrvActive);
+						SetFocus(hSelList); // Update list for Rescan Romset button
 					} else {
 						MessageBox(hSelDlg, FBALoadStringEx(hAppInst, IDS_ERR_NO_DRIVER_SELECTED, true), FBALoadStringEx(hAppInst, IDS_ERR_ERROR, true), MB_OK);
 					}
@@ -1705,7 +1712,7 @@ static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lP
 		SetControlPosAlignBottomLeftResizeHor(IDC_TEXTGENRE, nDlgGenreTxtInitialPos);
 		SetControlPosAlignBottomLeftResizeHor(IDC_TEXTNOTES, nDlgNotesTxtInitialPos);
 		SetControlPosAlignBottomLeftResizeHor(IDC_DRVCOUNT, nDlgDrvCountTxtInitialPos);
-		SetControlPosAlignBottomRight(IDROMINFO, nDlgDrvRomInfoBtnInitialPos);
+		SetControlPosAlignBottomRight(IDGAMEINFO, nDlgDrvRomInfoBtnInitialPos);
 		
 		SetControlPosAlignTopLeftResizeHorVert(IDC_STATIC1, nDlgSelectGameGrpInitialPos);
 		SetControlPosAlignTopLeftResizeHorVert(IDC_TREE1, nDlgSelectGameLstInitialPos);
@@ -2145,338 +2152,6 @@ int SelDialog(int nMVSCartsOnly, HWND hParentWND)
 	nBurnDrvActive = nOldSelect;
 
 	return nDialogSelect;
-}
-
-// Rom Info Dialog
-
-static HWND hTabControl = NULL;
-static int nRInBurnDrvActive = 0; // see comments in RomInfoDialog()
-
-static INT_PTR CALLBACK RomInfoDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (Msg) {
-		case WM_INITDIALOG: {
-			TCHAR szText[1024] = _T("");
-			TCHAR szFullName[1024] = _T("");
-			TCHAR* pszPosition = szText;
-			TCHAR* pszName = BurnDrvGetText(DRV_FULLNAME);
-
-			pszPosition += _sntprintf(szText, 1024, pszName);
-	
-			pszName = BurnDrvGetText(DRV_FULLNAME);
-			while ((pszName = BurnDrvGetText(DRV_NEXTNAME | DRV_FULLNAME)) != NULL) {
-				if (pszPosition + _tcslen(pszName) - 1024 > szText) {
-					break;
-				}
-				pszPosition += _stprintf(pszPosition, _T(SEPERATOR_2) _T("%s"), pszName);
-			}
-	
-			_tcscpy(szFullName, szText);
-			_stprintf(szText, _T("%s") _T(SEPERATOR_1) _T("%s"), FBALoadStringEx(hAppInst, IDS_ROMINFO_DIALOGTITLE, true), szFullName);
-			SetWindowText(hDlg, szText);
-			
-			// Setup the tabs
-			hTabControl = GetDlgItem(hDlg, IDC_TAB1);
-
-			TC_ITEM tcItem; 
-			tcItem.mask = TCIF_TEXT;
-
-			UINT idsString[2] = { IDS_ROMINFO_ROMS, IDS_ROMINFO_SAMPLES };
-			
-			for(int nIndex = 0; nIndex < 2; nIndex++) {
-				tcItem.pszText = FBALoadStringEx(hAppInst, idsString[nIndex], true);
-				TabCtrl_InsertItem(hTabControl, nIndex, &tcItem);
-			}
-
-			// Set up the rom info list
-			HWND hList = GetDlgItem(hDlg, IDC_LIST1);
-			LV_COLUMN LvCol;
-			LV_ITEM LvItem;
-	
-			ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT);
-	
-			memset(&LvCol, 0, sizeof(LvCol));
-			LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-			LvCol.cx = 200;
-			LvCol.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_NAME, true);
-			SendMessage(hList, LVM_INSERTCOLUMN , 0, (LPARAM)&LvCol);
-			LvCol.cx = 100;
-			LvCol.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_SIZE, true);
-			SendMessage(hList, LVM_INSERTCOLUMN , 1, (LPARAM)&LvCol);
-			LvCol.cx = 100;
-			LvCol.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_CRC32, true);
-			SendMessage(hList, LVM_INSERTCOLUMN , 2, (LPARAM)&LvCol);
-			LvCol.cx = 200;
-			LvCol.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_TYPE, true);
-			SendMessage(hList, LVM_INSERTCOLUMN , 3, (LPARAM)&LvCol);
-			LvCol.cx = 100;
-			LvCol.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_FLAGS, true);
-			SendMessage(hList, LVM_INSERTCOLUMN , 4, (LPARAM)&LvCol);
-			LvCol.cx = 100;
-	
-			memset(&LvItem, 0, sizeof(LvItem));
-			LvItem.mask=  LVIF_TEXT;
-			LvItem.cchTextMax = 256;
-			int RomPos = 0;
-			for (int i = 0; i < 0x100; i++) { // assume max 0x100 roms per game
-				int nRet;
-				struct BurnRomInfo ri;
-				char nLen[16] = "";
-				char nCrc[16] = "";
-				char *szRomName = NULL;
-				TCHAR Type[100] = _T("");
-				TCHAR FormatType[100] = _T("");
-
-				memset(&ri, 0, sizeof(ri));
-	
-				nRet = BurnDrvGetRomInfo(&ri, i);
-				nRet += BurnDrvGetRomName(&szRomName, i, 0);
-		
-				if (ri.nLen == 0) continue;		
-				if (ri.nType & BRF_BIOS) continue;
-		
-				LvItem.iItem = RomPos;
-				LvItem.iSubItem = 0;
-				LvItem.pszText = ANSIToTCHAR(szRomName, NULL, 0);
-				SendMessage(hList, LVM_INSERTITEM, 0, (LPARAM)&LvItem);
-		
-				sprintf(nLen, "%d", ri.nLen);
-				LvItem.iSubItem = 1;
-				LvItem.pszText = ANSIToTCHAR(nLen, NULL, 0);
-				SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-		
-				sprintf(nCrc, "%08X", ri.nCrc);
-				if (!(ri.nType & BRF_NODUMP)) {
-					LvItem.iSubItem = 2;
-					LvItem.pszText = ANSIToTCHAR(nCrc, NULL, 0);
-					SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-				}
-		
-				if (ri.nType & BRF_ESS) _stprintf(Type, FBALoadStringEx(hAppInst, IDS_ROMINFO_ESSENTIAL, true), Type);
-				if (ri.nType & BRF_OPT) _stprintf(Type, FBALoadStringEx(hAppInst, IDS_ROMINFO_OPTIONAL, true), Type);
-				if (ri.nType & BRF_PRG)	_stprintf(Type, FBALoadStringEx(hAppInst, IDS_ROMINFO_PROGRAM, true), Type);
-				if (ri.nType & BRF_GRA) _stprintf(Type, FBALoadStringEx(hAppInst, IDS_ROMINFO_GRAPHICS, true), Type);
-				if (ri.nType & BRF_SND) _stprintf(Type, FBALoadStringEx(hAppInst, IDS_ROMINFO_SOUND, true), Type);
-				if (ri.nType & BRF_BIOS) _stprintf(Type, FBALoadStringEx(hAppInst, IDS_ROMINFO_BIOS, true), Type);
-		
-				for (int j = 0; j < 98; j++) {
-					FormatType[j] = Type[j + 2];
-				}
-		
-				LvItem.iSubItem = 3;
-				LvItem.pszText = FormatType;
-				SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-		
-				LvItem.iSubItem = 4;
-				LvItem.pszText = _T("");
-				if (ri.nType & BRF_NODUMP) LvItem.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_NODUMP, true);
-				SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-		
-				RomPos++;
-			}
-	
-			// Check for board roms
-			if (BurnDrvGetTextA(DRV_BOARDROM)) {
-				char szBoardName[8] = "";
-				unsigned int nOldDrvSelect = nBurnDrvActive;
-				strcpy(szBoardName, BurnDrvGetTextA(DRV_BOARDROM));
-
-				for (unsigned int i = 0; i < nBurnDrvCount; i++) {
-					nBurnDrvActive = i;
-					if (!strcmp(szBoardName, BurnDrvGetTextA(DRV_NAME))) break;
-				}
-			
-				for (int j = 0; j < 0x100; j++) {
-					int nRetBoard;
-					struct BurnRomInfo riBoard;
-					char nLenBoard[16] = "";
-					char nCrcBoard[16] = "";
-					char *szBoardRomName = NULL;
-					TCHAR BoardType[100] = _T("");
-					TCHAR BoardFormatType[100] = _T("");
-
-					memset(&riBoard, 0, sizeof(riBoard));
-
-					nRetBoard = BurnDrvGetRomInfo(&riBoard, j);
-					nRetBoard += BurnDrvGetRomName(&szBoardRomName, j, 0);
-		
-					if (riBoard.nLen == 0) continue;
-				
-					LvItem.iItem = RomPos;
-					LvItem.iSubItem = 0;
-					LvItem.pszText = ANSIToTCHAR(szBoardRomName, NULL, 0);
-					SendMessage(hList, LVM_INSERTITEM, 0, (LPARAM)&LvItem);
-		
-					sprintf(nLenBoard, "%d", riBoard.nLen);
-					LvItem.iSubItem = 1;
-					LvItem.pszText = ANSIToTCHAR(nLenBoard, NULL, 0);
-					SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-		
-					sprintf(nCrcBoard, "%08X", riBoard.nCrc);
-					if (!(riBoard.nType & BRF_NODUMP)) {
-						LvItem.iSubItem = 2;
-						LvItem.pszText = ANSIToTCHAR(nCrcBoard, NULL, 0);
-						SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-					}
-			
-					if (riBoard.nType & BRF_ESS) _stprintf(BoardType, FBALoadStringEx(hAppInst, IDS_ROMINFO_ESSENTIAL, true), BoardType);
-					if (riBoard.nType & BRF_OPT) _stprintf(BoardType, FBALoadStringEx(hAppInst, IDS_ROMINFO_OPTIONAL, true), BoardType);
-					if (riBoard.nType & BRF_PRG) _stprintf(BoardType, FBALoadStringEx(hAppInst, IDS_ROMINFO_PROGRAM, true), BoardType);
-					if (riBoard.nType & BRF_GRA) _stprintf(BoardType, FBALoadStringEx(hAppInst, IDS_ROMINFO_GRAPHICS, true), BoardType);
-					if (riBoard.nType & BRF_SND) _stprintf(BoardType, FBALoadStringEx(hAppInst, IDS_ROMINFO_SOUND, true), BoardType);
-					if (riBoard.nType & BRF_BIOS) _stprintf(BoardType, FBALoadStringEx(hAppInst, IDS_ROMINFO_BIOS, true), BoardType);
-		
-					for (int k = 0; k < 98; k++) {
-						BoardFormatType[k] = BoardType[k + 2];
-					}
-		
-					LvItem.iSubItem = 3;
-					LvItem.pszText = BoardFormatType;
-					SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-			
-					LvItem.iSubItem = 4;
-					LvItem.pszText = _T("");
-					if (riBoard.nType & BRF_NODUMP) LvItem.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_NODUMP, true);
-					SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-			
-					RomPos++;
-				}
-
-				nBurnDrvActive = nOldDrvSelect;
-			}
-			
-			// Set up the sample info list
-			hList = GetDlgItem(hDlg, IDC_LIST2);
-	
-			ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT);
-	
-			memset(&LvCol, 0, sizeof(LvCol));
-			LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-			LvCol.cx = 200;
-			LvCol.pszText = FBALoadStringEx(hAppInst, IDS_ROMINFO_NAME, true);
-			SendMessage(hList, LVM_INSERTCOLUMN , 0, (LPARAM)&LvCol);
-		
-			memset(&LvItem, 0, sizeof(LvItem));
-			LvItem.mask=  LVIF_TEXT;
-			LvItem.cchTextMax = 256;
-			int SamplePos = 0;
-			if (BurnDrvGetTextA(DRV_SAMPLENAME) != NULL) {
-				for (int i = 0; i < 0x100; i++) { // assume max 0x100 samples per game
-					int nRet;
-					struct BurnSampleInfo si;
-					char *szSampleName = NULL;
-
-					memset(&si, 0, sizeof(si));
-
-					nRet = BurnDrvGetSampleInfo(&si, i);
-					nRet += BurnDrvGetSampleName(&szSampleName, i, 0);
-		
-					if (si.nFlags == 0) continue;		
-		
-					LvItem.iItem = SamplePos;
-					LvItem.iSubItem = 0;
-					LvItem.pszText = ANSIToTCHAR(szSampleName, NULL, 0);
-					SendMessage(hList, LVM_INSERTITEM, 0, (LPARAM)&LvItem);
-		
-					SamplePos++;
-				}
-			}
-			
-			ShowWindow(GetDlgItem(hDlg, IDC_LIST1), SW_SHOW);
-			ShowWindow(GetDlgItem(hDlg, IDC_LIST2), SW_HIDE);
-			UpdateWindow(hDlg);
-			
-			WndInMid(hDlg, hSelDlg);
-			SetFocus(hDlg);											// Enable Esc=close
-			return TRUE;
-		}
-		
-		case WM_COMMAND: {
-			int Id = LOWORD(wParam);
-			int Notify = HIWORD(wParam);
-
-			if (Id == IDCANCEL && Notify == BN_CLICKED) {
-				SendMessage(hDlg, WM_CLOSE, 0, 0);
-				return 0;
-			}
-			if (Id == IDRESCAN && Notify == BN_CLICKED) {
-				nBurnDrvActive = nRInBurnDrvActive;
-				// use the nBurnDrvActive value from when the Rom Info button was clicked, because it can/will change
-				// even though the selection list [window below it] doesn't have focus. -dink
-				// for proof/symptoms - uncomment the line below and click the 'rescan' button after moving the window to different places on the screen.
-				//bprintf(0, _T("nBurnDrvActive %d nRInBurnDrvActive %d\n"), nBurnDrvActive, nRInBurnDrvActive);
-
-				switch (BzipOpen(1)) {
-				case 0:
-					gameAv[nRInBurnDrvActive] = 3;
-					break;
-				case 2:
-					gameAv[nRInBurnDrvActive] = 1;
-					break;
-				case 1:
-					gameAv[nRInBurnDrvActive] = 0;
-					BzipClose();
-					BzipOpen(0); // this time, get the missing roms/error message.
-					{
-						HWND hScrnWndtmp = hScrnWnd; // Crash preventer: Make the rominfo dialog (this one) the parent modal for the popup message
-						hScrnWnd = hDlg;
-						FBAPopupDisplay(PUF_TYPE_ERROR);
-						hScrnWnd = hScrnWndtmp;
-					}
-					break;
-				}
-				if (gameAv[nRInBurnDrvActive] > 0) {
-					// if the romset is OK, just say so in the rom info dialog (instead of popping up a window)
-					HWND hList = GetDlgItem(hDlg, IDC_LIST1);
-					LV_ITEM LvItem;
-					memset(&LvItem, 0, sizeof(LvItem));
-					LvItem.mask=  LVIF_TEXT;
-					LvItem.cchTextMax = 256;
-					LvItem.iSubItem = 4;
-					LvItem.pszText = _T("Romset OK!");
-					SendMessage(hList, LVM_SETITEM, 0, (LPARAM)&LvItem);
-					UpdateWindow(hDlg);
-				}
-				BzipClose();
-				WriteGameAvb();
-				return 0;
-			}
-		}
-		
-		case WM_NOTIFY: {
-			NMHDR* pNmHdr = (NMHDR*)lParam;
-
-			if (pNmHdr->code == TCN_SELCHANGE) {
-				int TabPage = TabCtrl_GetCurSel(hTabControl);
-			
-				ShowWindow(GetDlgItem(hDlg, IDC_LIST1), SW_HIDE);
-				ShowWindow(GetDlgItem(hDlg, IDC_LIST2), SW_HIDE);
-				
-				if (TabPage == 0) ShowWindow(GetDlgItem(hDlg, IDC_LIST1), SW_SHOW);
-				if (TabPage == 1) ShowWindow(GetDlgItem(hDlg, IDC_LIST2), SW_SHOW);
-				UpdateWindow(hDlg);
-
-				return FALSE;
-			}
-			break;
-		}
-	
-		case WM_CLOSE: {
-			EndDialog(hDlg, 0);
-			break;
-		}
-	}
-	
-	return 0;
-}
-
-static int RomInfoDialog()
-{
-	nRInBurnDrvActive = nBurnDrvActive; // clicking a button on this dialog somehow also clicks through to the list below it, thus changing nBurnDrvActive.  Original value needed for rescan romset button. -dink
-	FBADialogBox(hAppInst, MAKEINTRESOURCE(IDD_ROMINFO), hSelDlg, (DLGPROC)RomInfoDialogProc);
-	SetFocus(hSelList);
-	
-	return 1;
 }
 
 // -----------------------------------------------------------------------------

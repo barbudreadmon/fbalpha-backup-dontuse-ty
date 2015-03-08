@@ -403,7 +403,7 @@ static void __fastcall tsamurai_main_write(UINT16 address, UINT8 data)
 			soundlatch0 = data;
 			ZetClose();
 			ZetOpen(1);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			ZetOpen(0);
 		return;
@@ -412,7 +412,7 @@ static void __fastcall tsamurai_main_write(UINT16 address, UINT8 data)
 			soundlatch1 = data;
 			ZetClose();
 			ZetOpen(2);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			ZetOpen(0);
 		return;
@@ -494,7 +494,7 @@ static void __fastcall m660_main_write(UINT16 address, UINT8 data)
 			soundlatch2 = data;
 			ZetClose();
 			ZetOpen(3);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			ZetOpen(0);
 		return;
@@ -503,7 +503,7 @@ static void __fastcall m660_main_write(UINT16 address, UINT8 data)
 			soundlatch1 = data;
 			ZetClose();
 			ZetOpen(2);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			ZetOpen(0);
 		return;
@@ -512,7 +512,7 @@ static void __fastcall m660_main_write(UINT16 address, UINT8 data)
 			soundlatch0 = data;
 			ZetClose();
 			ZetOpen(1);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			ZetOpen(0);
 		return;
@@ -627,7 +627,7 @@ static UINT8 __fastcall tsamurai_sound0_read(UINT16 address)
 	{
 		case 0x6000:
 		case 0xc000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return soundlatch0;
 	}
 
@@ -655,7 +655,7 @@ static UINT8 __fastcall tsamurai_sound1_read(UINT16 address)
 	{
 		case 0x6000:
 		case 0xc000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return soundlatch1;
 	}
 
@@ -667,7 +667,7 @@ static UINT8 __fastcall m660_sound2_read(UINT16 address)
 	switch (address)
 	{
 		case 0xc000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return soundlatch2;
 	}
 
@@ -944,12 +944,12 @@ static INT32 DrvInit(INT32 game)
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,	0x0000, 0xbfff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM0,	0xc000, 0xcfff, ZET_RAM);
-	ZetMapMemory(DrvFgVidRAM,	0xe000, 0xe3ff, ZET_RAM);
-	ZetMapMemory(DrvFgColRAM,	0xe400, 0xe7ff, ZET_RAM);
-	ZetMapMemory(DrvBgVidRAM,	0xe800, 0xefff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,		0xf000, 0xf3ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM0,	0x0000, 0xbfff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM0,	0xc000, 0xcfff, MAP_RAM);
+	ZetMapMemory(DrvFgVidRAM,	0xe000, 0xe3ff, MAP_RAM);
+	ZetMapMemory(DrvFgColRAM,	0xe400, 0xe7ff, MAP_RAM);
+	ZetMapMemory(DrvBgVidRAM,	0xe800, 0xefff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,		0xf000, 0xf3ff, MAP_RAM);
 	ZetSetWriteHandler(tsamurai_main_write);
 	ZetSetReadHandler(tsamurai_main_read);
 	ZetSetOutHandler(tsamurai_main_out_port);
@@ -957,16 +957,16 @@ static INT32 DrvInit(INT32 game)
 
 	ZetInit(1);
 	ZetOpen(1);
-	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM1,	0x7f00, 0x7fff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM1,	0x7f00, 0x7fff, MAP_RAM);
 	ZetSetWriteHandler(tsamurai_sound0_write);
 	ZetSetReadHandler(tsamurai_sound0_read);
 	ZetClose();
 
 	ZetInit(2);
 	ZetOpen(2);
-	ZetMapMemory(DrvZ80ROM2,	0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM2,	0x7f00, 0x7fff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM2,	0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM2,	0x7f00, 0x7fff, MAP_RAM);
 	ZetSetWriteHandler(tsamurai_sound1_write);
 	ZetSetReadHandler(tsamurai_sound1_read);
 	ZetClose();
@@ -1060,12 +1060,12 @@ static INT32 m660CommonInit(INT32 game)
 	
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,	0x0000, 0xbfff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM0,	0xc000, 0xcfff, ZET_RAM);
-	ZetMapMemory(DrvFgVidRAM,	0xe000, 0xe3ff, ZET_RAM);
-	ZetMapMemory(DrvFgColRAM,	0xe400, 0xe7ff, ZET_RAM);
-	ZetMapMemory(DrvBgVidRAM,	0xe800, 0xefff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,		0xf000, 0xf3ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM0,	0x0000, 0xbfff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM0,	0xc000, 0xcfff, MAP_RAM);
+	ZetMapMemory(DrvFgVidRAM,	0xe000, 0xe3ff, MAP_RAM);
+	ZetMapMemory(DrvFgColRAM,	0xe400, 0xe7ff, MAP_RAM);
+	ZetMapMemory(DrvBgVidRAM,	0xe800, 0xefff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,		0xf000, 0xf3ff, MAP_RAM);
 	ZetSetWriteHandler(m660_main_write);
 	ZetSetReadHandler(m660_main_read);
 	ZetSetOutHandler(m660_main_out_port);
@@ -1073,24 +1073,24 @@ static INT32 m660CommonInit(INT32 game)
 
 	ZetInit(1);
 	ZetOpen(1);
-	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM1,	0x8000, 0x87ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM1,	0x8000, 0x87ff, MAP_RAM);
 	ZetSetWriteHandler(tsamurai_sound0_write);
 	ZetSetReadHandler(tsamurai_sound0_read);
 	ZetClose();
 
 	ZetInit(2);
 	ZetOpen(2);
-	ZetMapMemory(DrvZ80ROM2,	0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM2,	0x8000, 0x87ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM2,	0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM2,	0x8000, 0x87ff, MAP_RAM);
 	ZetSetWriteHandler(tsamurai_sound1_write);
 	ZetSetReadHandler(tsamurai_sound1_read);
 	ZetClose();
 
 	ZetInit(3);
 	ZetOpen(3);
-	ZetMapMemory(DrvZ80ROM3,	0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM3,	0x8000, 0x87ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM3,	0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM3,	0x8000, 0x87ff, MAP_RAM);
 //	ZetSetWriteHandler(m660_sound2_write); // nothing useful written...
 	ZetSetReadHandler(m660_sound2_read);
 	ZetSetOutHandler(tsamurai_main_out_port); // re-use this since it's the same
@@ -1171,18 +1171,18 @@ static INT32 VsgongfCommonInit(INT32 game)
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,	0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM0,	0xc000, 0xc7ff, ZET_RAM);
-	ZetMapMemory(DrvFgVidRAM,	0xe000, 0xe3ff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,		0xe400, 0xe4ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM0,	0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM0,	0xc000, 0xc7ff, MAP_RAM);
+	ZetMapMemory(DrvFgVidRAM,	0xe000, 0xe3ff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,		0xe400, 0xe4ff, MAP_RAM);
 	ZetSetWriteHandler(vsgongf_main_write);
 	ZetSetReadHandler(tsamurai_main_read); // mostly the same
 	ZetClose();
 
 	ZetInit(1);
 	ZetOpen(1);
-	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM1,	0x6000, 0x63ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM1,	0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM1,	0x6000, 0x63ff, MAP_RAM);
 	ZetSetWriteHandler(vsgongf_sound_write);
 	ZetSetReadHandler(vsgongf_sound_read);
 	ZetSetOutHandler(tsamurai_main_out_port); // re-use this since it's the same

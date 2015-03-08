@@ -1,6 +1,7 @@
- 
+
 // To do:
 //	gondo needs rotary inputs hooked up and doesn't read the i8751 value at all - so coins don't work
+//  csilver - one of the fm chips isn't working (insert coin sound missing etc) btw: background "whine" noise is normal - clicking noise isn't!
 
 #include "tiles_generic.h"
 #include "m6502_intf.h"
@@ -956,7 +957,7 @@ static void bankswitch(INT32 data)
 {
 	RomBank = (data & 0x0f) * 0x4000;
 
-	HD6309MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, HD6309_ROM); // bank
+	HD6309MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM); // bank
 }
 
 void ghostb_main_write(UINT16 address, UINT8 data)
@@ -967,7 +968,7 @@ void ghostb_main_write(UINT16 address, UINT8 data)
 	{
 		case 0x3800:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		case 0x3840:
@@ -1058,12 +1059,12 @@ static INT32 DrvYM3812SynchroniseStream(INT32 nSoundRate)
 
 static INT32 DrvYM2203SynchroniseStream(INT32 nSoundRate)
 {
-	return (INT64)HD6309TotalCycles() * nSoundRate / 1200000;
+	return (INT64)HD6309TotalCycles() * nSoundRate / 12000000;
 }
 
 static double DrvYM2203GetTime()
 {
-	return (double)HD6309TotalCycles() / 1200000;
+	return (double)HD6309TotalCycles() / 12000000;
 }
 
 static INT32 DrvYM2203SynchroniseStream6000000(INT32 nSoundRate)
@@ -1104,9 +1105,9 @@ inline static INT32 CsilverMSM5205SynchroniseStream(INT32 nSoundRate)
 static void DrvYM3812FMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_ACK);
+		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_ACK);
 	} else {
-		M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_NONE);
+		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -1137,10 +1138,10 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvMainROM		= Next; Next += 0x050000;
-	DrvSubROM		= Next; Next += 0x020000;
-	DrvM6502ROM		= Next; Next += 0x020000;
-	DrvM6502OPS		= Next; Next += 0x010000;
+	DrvMainROM		= Next; Next += 0x060000;
+	DrvSubROM		= Next; Next += 0x030000;
+	DrvM6502ROM		= Next; Next += 0x030000;
+	DrvM6502OPS		= Next; Next += 0x020000;
 
 	DrvGfxROM0		= Next; Next += 0x020000;
 	DrvGfxROM1		= Next; Next += 0x100000;
@@ -1154,18 +1155,18 @@ static INT32 MemIndex()
 
 	AllRam			= Next;
 
-	DrvMainRAM		= Next; Next += 0x002000;
-	DrvVidRAM		= Next; Next += 0x000800;
-	DrvPf0RAM		= Next; Next += 0x001000;
-	DrvPf1RAM		= Next; Next += 0x001000;
-	DrvPf0Ctrl		= Next; Next += 0x000020;
-	DrvPf1Ctrl		= Next; Next += 0x000020;
-	DrvRowRAM		= Next; Next += 0x000400;
+	DrvMainRAM		= Next; Next += 0x008000;
+	DrvVidRAM		= Next; Next += 0x001800;
+	DrvPf0RAM		= Next; Next += 0x002000;
+	DrvPf1RAM		= Next; Next += 0x002000;
+	DrvPf0Ctrl		= Next; Next += 0x000040;
+	DrvPf1Ctrl		= Next; Next += 0x000040;
+	DrvRowRAM		= Next; Next += 0x001400;
 	DrvSprRAM		= Next; Next += 0x000800;
 	DrvSprBuf		= Next; Next += 0x000800;
 	DrvPalRAM		= Next; Next += 0x000800;
 
-	DrvM6502RAM		= Next; Next += 0x000800;
+	DrvM6502RAM		= Next; Next += 0x002800;
 
 	soundlatch		= Next; Next += 0x000001;
 	nmi_enable		= Next; Next += 0x000001;
@@ -1319,22 +1320,22 @@ static INT32 DrvInit()
 
 	HD6309Init(0);
 	HD6309Open(0);
-	HD6309MapMemory(DrvMainRAM,		0x0000, 0x17ff, HD6309_RAM);
-	HD6309MapMemory(DrvVidRAM,		0x1800, 0x1fff, HD6309_RAM);
-	HD6309MapMemory(DrvPf0RAM,		0x2000, 0x2bff, HD6309_RAM);// 0 - 27ff
-	HD6309MapMemory(DrvRowRAM,		0x2c00, 0x2fff, HD6309_RAM);// c00-dff
-	HD6309MapMemory(DrvSprRAM,		0x3000, 0x37ff, HD6309_RAM);
-	HD6309MapMemory(DrvMainROM + 0x10000, 0x4000, 0x7fff, HD6309_ROM); // bank
-	HD6309MapMemory(DrvMainROM + 0x08000, 0x8000, 0xffff, HD6309_ROM);
+	HD6309MapMemory(DrvMainRAM,		0x0000, 0x17ff, MAP_RAM);
+	HD6309MapMemory(DrvVidRAM,		0x1800, 0x1fff, MAP_RAM);
+	HD6309MapMemory(DrvPf0RAM,		0x2000, 0x2bff, MAP_RAM);// 0 - 27ff
+	HD6309MapMemory(DrvRowRAM,		0x2c00, 0x2fff, MAP_RAM);// c00-dff
+	HD6309MapMemory(DrvSprRAM,		0x3000, 0x37ff, MAP_RAM);
+	HD6309MapMemory(DrvMainROM + 0x10000, 0x4000, 0x7fff, MAP_ROM); // bank
+	HD6309MapMemory(DrvMainROM + 0x08000, 0x8000, 0xffff, MAP_ROM);
 	HD6309SetWriteHandler(ghostb_main_write);
 	HD6309SetReadHandler(ghostb_main_read);
 	HD6309Close();
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, M6502_RAM);
-	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_READ);
-	M6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, M6502_FETCH);
+	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, MAP_RAM);
+	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_READ);
+	M6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, MAP_FETCH);
 	M6502SetReadHandler(ghostb_sound_read);
 	M6502SetWriteHandler(ghostb_sound_write);
 	M6502Close();
@@ -1602,7 +1603,7 @@ static INT32 DrvDraw()
 static inline void do_interrupt()
 {
 	if (*interrupt_enable) {
-		HD6309SetIRQLine(0, HD6309_IRQSTATUS_AUTO);
+		HD6309SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 	}
 }
 
@@ -1621,7 +1622,7 @@ static void ghostb_interrupt()
 	if (((i8751_out & 0x2) != 0x2) && latch[2]) {latch[2] = 0; do_interrupt(); i8751_return = 0x2001; } /* Player 3 coin */
 	if (((i8751_out & 0x1) != 0x1) && latch[3]) {latch[3] = 0; do_interrupt(); i8751_return = 0x1001; } /* Service */
 
-	if (*nmi_enable) HD6309SetIRQLine(0x20, HD6309_IRQSTATUS_AUTO);
+	if (*nmi_enable) HD6309SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
 }
 
 static INT32 DrvFrame()
@@ -1644,7 +1645,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	INT32 nInterleave = 32;
+	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 12000000 / 58, 1500000 / 58 };
 //	INT32 nCyclesDone[2] = { 0, 0 };
 
@@ -1655,14 +1656,14 @@ static INT32 DrvFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		if (i == 1) vblank = 0;
-		if (i == 31) {
+		if (i == 8) vblank = 0;
+		if (i == 254) {
 			vblank = 8;
 			ghostb_interrupt();
 		}
 
-		BurnTimerUpdate(i * (nCyclesTotal[0] / nInterleave));
-		BurnTimerUpdateYM3812(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[0] / nInterleave));
+		BurnTimerUpdateYM3812((i + 1) * (nCyclesTotal[1] / nInterleave));
 	}
 
 	BurnTimerEndFrame(nCyclesTotal[0]);
@@ -1709,7 +1710,6 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(i8751_value);
 		SCAN_VAR(vblank);
 		SCAN_VAR(RomBank);
-		DrvRecalc = 1;
 	}
 
 	return 0;
@@ -1763,10 +1763,11 @@ static INT32 GhostbScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		HD6309Scan(nAction);
 		BurnYM3812Scan(nAction, pnMin);
+		SCAN_VAR(RomBank);
 		
 		if (nAction & ACB_WRITE) {
 			HD6309Open(0);
-			HD6309MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, HD6309_ROM);
+			HD6309MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM);
 			HD6309Close();
 		}
 	}
@@ -1933,7 +1934,7 @@ static void m6809_bankswitch(INT32 data)
 {
 	RomBank = (data & 0x0f) * 0x4000;
 	
-	M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, M6809_ROM); // bank
+	M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM); // bank
 }
 
 
@@ -1944,7 +1945,7 @@ void cobra_main_write(UINT16 address, UINT8 data)
 	{
 		case 0x3e00:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 			M6502Run(500);
 		return;
 
@@ -2143,24 +2144,24 @@ static INT32 CobraInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvMainRAM,		0x0000, 0x07ff, M6809_RAM);
-	M6809MapMemory(DrvPf0RAM,		0x0800, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvPf1RAM,		0x1000, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,		0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM,		0x3000, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvMainROM + 0x10000,  0x4000, 0x7fff, M6809_ROM);
-	M6809MapMemory(DrvMainROM + 0x08000,  0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvMainRAM,		0x0000, 0x07ff, MAP_RAM);
+	M6809MapMemory(DrvPf0RAM,		0x0800, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvPf1RAM,		0x1000, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,		0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM,		0x3000, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvMainROM + 0x10000,  0x4000, 0x7fff, MAP_ROM);
+	M6809MapMemory(DrvMainROM + 0x08000,  0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(cobra_main_write);
 	M6809SetReadHandler(cobra_main_read);
 	M6809Close();
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, M6502_RAM);
-//	m6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_READ);
-//	m6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, M6502_FETCH);
-	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, MAP_RAM);
+//	m6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_READ);
+//	m6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, MAP_FETCH);
+	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_ROM);
 	M6502SetReadHandler(ghostb_sound_read);
 	M6502SetWriteHandler(ghostb_sound_write);
 	M6502Close();
@@ -2345,11 +2346,11 @@ static INT32 CobraFrame()
 		if (i == 1) vblank = 0x80;
 		if (i == 31) {
 			vblank = 0;
-			M6809SetIRQLine(0x20 /*NMI*/, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0x20 /*NMI*/, CPU_IRQSTATUS_AUTO);
 		}
 
-		BurnTimerUpdate(i * (nCyclesTotal[0] / nInterleave));
-		BurnTimerUpdateYM3812(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[0] / nInterleave));
+		BurnTimerUpdateYM3812((i + 1) * (nCyclesTotal[1] / nInterleave));
 	}
 
 	BurnTimerEndFrame(nCyclesTotal[0]);
@@ -2410,10 +2411,11 @@ static INT32 CobraScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		M6809Scan(nAction);
 		BurnYM3812Scan(nAction, pnMin);
+		SCAN_VAR(RomBank);
 		
 		if (nAction & ACB_WRITE) {
 			M6809Open(0);
-			M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, M6809_ROM);
+			M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM);
 			M6809Close();
 		}
 	}
@@ -2661,7 +2663,7 @@ void srdarwin_main_write(UINT16 address, UINT8 data)
 		case 0x2000:
 			*soundlatch = data;
 //			m6502SetIRQ(M6502_NMI);
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		case 0x2001:
@@ -2777,24 +2779,24 @@ static INT32 SrdarwinInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvMainRAM,		0x0000, 0x05ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		0x0600, 0x07ff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,		0x0800, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvMainRAM + 0x1000,	0x1000, 0x13ff, M6809_RAM);
-	M6809MapMemory(DrvPf0RAM,		0x1400, 0x17ff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM,		0x2800, 0x28ff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM + 0x100,	0x3000, 0x30ff, M6809_RAM);
-	M6809MapMemory(DrvMainROM + 0x10000,  0x4000, 0x7fff, M6809_ROM);
-	M6809MapMemory(DrvMainROM + 0x08000,  0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvMainRAM,		0x0000, 0x05ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		0x0600, 0x07ff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,		0x0800, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvMainRAM + 0x1000,	0x1000, 0x13ff, MAP_RAM);
+	M6809MapMemory(DrvPf0RAM,		0x1400, 0x17ff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM,		0x2800, 0x28ff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM + 0x100,	0x3000, 0x30ff, MAP_RAM);
+	M6809MapMemory(DrvMainROM + 0x10000,  0x4000, 0x7fff, MAP_ROM);
+	M6809MapMemory(DrvMainROM + 0x08000,  0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(srdarwin_main_write);
 	M6809SetReadHandler(srdarwin_main_read);
 	M6809Close();
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, M6502_RAM);
-	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_READ);
-	M6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, M6502_FETCH);
+	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, MAP_RAM);
+	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_READ);
+	M6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, MAP_FETCH);
 	M6502SetReadHandler(ghostb_sound_read);
 	M6502SetWriteHandler(ghostb_sound_write);
 	M6502Close();
@@ -3015,11 +3017,11 @@ static INT32 SrdarwinFrame()
 		if (i == 1) vblank = 0x40;
 		if (i == 31) {
 			vblank = 0;
-			M6809SetIRQLine(0x20 /*NMI*/, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0x20 /*NMI*/, CPU_IRQSTATUS_AUTO);
 		}
 		
-		BurnTimerUpdate(i * (nCyclesTotal[0] / nInterleave));
-		BurnTimerUpdateYM3812(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[0] / nInterleave));
+		BurnTimerUpdateYM3812((i + 1) * (nCyclesTotal[1] / nInterleave));
 	}
 
 	BurnTimerEndFrame(nCyclesTotal[0]);
@@ -3133,7 +3135,7 @@ static void gondo_i8751_write(INT32 offset, UINT8 data)
 	{
 		case 0:
 			i8751_value = (i8751_value & 0xff) | (data << 8);
-			if (*interrupt_enable) HD6309SetIRQLine(0, HD6309_IRQSTATUS_AUTO);
+			if (*interrupt_enable) HD6309SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		break;
 
 		case 1:
@@ -3195,7 +3197,7 @@ void gondo_main_write(UINT16 address, UINT8 data)
 	{
 		case 0x3810:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		case 0x3818:
@@ -3213,7 +3215,6 @@ void gondo_main_write(UINT16 address, UINT8 data)
 
 		case 0x3830:
 			bankswitch(data >> 4);
-
 			*interrupt_enable = data & 1;
 			*nmi_enable	  = data & 2;
 			*flipscreen	  = data & 8;
@@ -3464,13 +3465,13 @@ static INT32 GondoInit()
 
 	HD6309Init(0);
 	HD6309Open(0);
-	HD6309MapMemory(DrvMainRAM,		 0x0000, 0x17ff, HD6309_RAM);
-	HD6309MapMemory(DrvVidRAM,		 0x1800, 0x1fff, HD6309_RAM);
-	HD6309MapMemory(DrvPf0RAM,		 0x2000, 0x27ff, HD6309_RAM);
-	HD6309MapMemory(DrvPalRAM,		 0x2800, 0x2fff, HD6309_RAM);//xxxxBBBBGGGGRRRR_split
-	HD6309MapMemory(DrvSprRAM,		 0x3000, 0x37ff, HD6309_RAM);
-	HD6309MapMemory(DrvMainROM + 0x10000, 0x4000, 0x7fff, HD6309_ROM); // bank
-	HD6309MapMemory(DrvMainROM + 0x08000, 0x8000, 0xffff, HD6309_ROM);
+	HD6309MapMemory(DrvMainRAM,		 0x0000, 0x17ff, MAP_RAM);
+	HD6309MapMemory(DrvVidRAM,		 0x1800, 0x1fff, MAP_RAM);
+	HD6309MapMemory(DrvPf0RAM,		 0x2000, 0x27ff, MAP_RAM);
+	HD6309MapMemory(DrvPalRAM,		 0x2800, 0x2fff, MAP_RAM);//xxxxBBBBGGGGRRRR_split
+	HD6309MapMemory(DrvSprRAM,		 0x3000, 0x37ff, MAP_RAM);
+	HD6309MapMemory(DrvMainROM + 0x10000, 0x4000, 0x7fff, MAP_ROM); // bank
+	HD6309MapMemory(DrvMainROM + 0x08000, 0x8000, 0xffff, MAP_ROM);
 	HD6309SetWriteHandler(gondo_main_write);
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "garyoret")) {
 		HD6309SetReadHandler(garyoret_main_read);
@@ -3481,8 +3482,8 @@ static INT32 GondoInit()
 	
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, M6502_RAM);
-	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, MAP_RAM);
+	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_ROM);
 	M6502SetReadHandler(ghostb_sound_read);
 	M6502SetWriteHandler(gondo_sound_write);
 	M6502Close();
@@ -3494,7 +3495,7 @@ static INT32 GondoInit()
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 	
 	BurnYM2203Init(1, 1500000, NULL, DrvYM2203SynchroniseStream, DrvYM2203GetTime, 1);
-	BurnTimerAttachHD6309(1200000);
+	BurnTimerAttachHD6309(12000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.23, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_2, 0.23, BURN_SND_ROUTE_BOTH);
@@ -3658,25 +3659,25 @@ static INT32 GondoFrame()
 		}
 	}
 
-	INT32 nInterleave = 32;
+	INT32 nInterleave = 272;
 	INT32 nCyclesTotal[2] = { 12000000 / 58, 1500000 / 58 };
-//	INT32 nCyclesDone[2] = { 0, 0 };
 
 	M6502Open(0);
 	HD6309Open(0);
 
-	vblank = 0x80;
+	//vblank = 0x00;
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		if (i == 1) vblank = 0;
-		if (i == 31) {
+		if (i == 7) vblank = 0;
+
+		if (i == 270) {
 			vblank = 0x80;
-			if (*nmi_enable) HD6309SetIRQLine(0x20, HD6309_IRQSTATUS_AUTO);
+			if (*nmi_enable) HD6309SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
 		}
 		
-		BurnTimerUpdate(i * (nCyclesTotal[0] / nInterleave));
-		BurnTimerUpdateYM3526(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[0] / nInterleave));
+		BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[1] / nInterleave));
 	}
 
 	BurnTimerEndFrame(nCyclesTotal[0]);
@@ -3704,10 +3705,11 @@ static INT32 GondoScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		HD6309Scan(nAction);
 		BurnYM3526Scan(nAction, pnMin);
+		SCAN_VAR(RomBank);
 		
 		if (nAction & ACB_WRITE) {
 			HD6309Open(0);
-			HD6309MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, HD6309_ROM);
+			HD6309MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM);
 			HD6309Close();
 		}
 	}
@@ -3909,29 +3911,29 @@ void oscar_main_write(UINT16 address, UINT8 data)
 
 		case 0x3d80:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		case 0x3e80: 
 			HD6309Close();
 			HD6309Open(1);
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_ACK);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_ACK);
 			HD6309Close();
 			HD6309Open(0);
 		return;
 
 		case 0x3e81:
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_NONE);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x3e82:
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_ACK);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x3e83:
 			HD6309Close();
 			HD6309Open(1);
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_NONE);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_NONE);
 			HD6309Close();
 			HD6309Open(0);
 		return;
@@ -3949,7 +3951,7 @@ void oscar_sub_write(UINT16 address, UINT8 )
 	switch (address)
 	{
 		case 0x3e80: 
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_ACK);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_ACK);
 			HD6309Close();
 			HD6309Open(0);
 		return;
@@ -3957,7 +3959,7 @@ void oscar_sub_write(UINT16 address, UINT8 )
 		case 0x3e81:
 			HD6309Close();
 			HD6309Open(0);
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_NONE);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_NONE);
 			HD6309Close();
 			HD6309Open(1);
 		return;
@@ -3965,13 +3967,13 @@ void oscar_sub_write(UINT16 address, UINT8 )
 		case 0x3e82:
 			HD6309Close();
 			HD6309Open(0);
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_ACK);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_ACK);
 			HD6309Close();
 			HD6309Open(1);
 		return;
 
 		case 0x3e83:
-			HD6309SetIRQLine(0, HD6309_IRQSTATUS_NONE);
+			HD6309SetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return;
 	}
 }
@@ -4068,31 +4070,31 @@ static INT32 OscarInit()
 
 	HD6309Init(0);
 	HD6309Open(0);
-	HD6309MapMemory(DrvMainRAM,		 0x0000, 0x1fff, HD6309_RAM); // all shared?
-	HD6309MapMemory(DrvVidRAM,		 0x2000, 0x28ff, HD6309_RAM);
-	HD6309MapMemory(DrvPf0RAM,		 0x2800, 0x2fff, HD6309_RAM);
-	HD6309MapMemory(DrvSprRAM,		 0x3000, 0x37ff, HD6309_RAM);
-	HD6309MapMemory(DrvPalRAM,		 0x3800, 0x3bff, HD6309_RAM); // xxxxBBBBGGGGRRRR_be_w
-	HD6309MapMemory(DrvMainROM + 0x10000, 0x4000, 0x7fff, HD6309_ROM); // bank
-	HD6309MapMemory(DrvMainROM + 0x08000, 0x8000, 0xffff, HD6309_ROM);
+	HD6309MapMemory(DrvMainRAM,		 0x0000, 0x1fff, MAP_RAM); // all shared?
+	HD6309MapMemory(DrvVidRAM,		 0x2000, 0x28ff, MAP_RAM);
+	HD6309MapMemory(DrvPf0RAM,		 0x2800, 0x2fff, MAP_RAM);
+	HD6309MapMemory(DrvSprRAM,		 0x3000, 0x37ff, MAP_RAM);
+	HD6309MapMemory(DrvPalRAM,		 0x3800, 0x3bff, MAP_RAM); // xxxxBBBBGGGGRRRR_be_w
+	HD6309MapMemory(DrvMainROM + 0x10000, 0x4000, 0x7fff, MAP_ROM); // bank
+	HD6309MapMemory(DrvMainROM + 0x08000, 0x8000, 0xffff, MAP_ROM);
 	HD6309SetWriteHandler(oscar_main_write);
 	HD6309SetReadHandler(oscar_main_read);
 	HD6309Close();
 
 	HD6309Init(1);
 	HD6309Open(1);
-	HD6309MapMemory(DrvMainRAM,		0x0000, 0x0eff, HD6309_RAM); // all shared? AM_RANGE(0x0f00, 0x0fff) AM_RAM not?
-	HD6309MapMemory(DrvPalRAM + 0x400,	0x0f00, 0x0fff, HD6309_RAM); // not really pal...
-	HD6309MapMemory(DrvMainRAM + 0x1000,	0x1000, 0x1fff, HD6309_RAM); // all shared? AM_RANGE(0x0f00, 0x0fff) AM_RAM not?
-	HD6309MapMemory(DrvSubROM + 0x04000, 0x4000, 0xffff, HD6309_ROM);
+	HD6309MapMemory(DrvMainRAM,		0x0000, 0x0eff, MAP_RAM); // all shared? AM_RANGE(0x0f00, 0x0fff) AM_RAM not?
+	HD6309MapMemory(DrvPalRAM + 0x400,	0x0f00, 0x0fff, MAP_RAM); // not really pal...
+	HD6309MapMemory(DrvMainRAM + 0x1000,	0x1000, 0x1fff, MAP_RAM); // all shared? AM_RANGE(0x0f00, 0x0fff) AM_RAM not?
+	HD6309MapMemory(DrvSubROM + 0x04000, 0x4000, 0xffff, MAP_ROM);
 	HD6309SetWriteHandler(oscar_sub_write); // 0x3e80, 0x3e83 used...
 	HD6309Close();
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, M6502_RAM);
-	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_READ);
-	M6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, M6502_FETCH);
+	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, MAP_RAM);
+	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_READ);
+	M6502MapMemory(DrvM6502OPS + 0x8000, 0x8000, 0xffff, MAP_FETCH);
 	M6502SetReadHandler(ghostb_sound_read);
 	M6502SetWriteHandler(gondo_sound_write);
 	M6502Close();
@@ -4203,7 +4205,7 @@ static INT32 OscarFrame()
 			if ((DrvInputs[2] & 7) == 7) latch = 1;
 			if ((DrvInputs[2] & 7) != 7 && latch) {
 				latch = 0;
-				HD6309SetIRQLine(0x20, HD6309_IRQSTATUS_AUTO);
+				HD6309SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
 			}
 			vblank = 0x80;
 		}
@@ -4211,9 +4213,9 @@ static INT32 OscarFrame()
 		HD6309Close();
 
 		HD6309Open(1);
-		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[1] / nInterleave));
 		HD6309Close();
-		BurnTimerUpdateYM3526(i * (nCyclesTotal[2] / nInterleave));
+		BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[2] / nInterleave));
 	}
 
 	HD6309Open(1);
@@ -4414,7 +4416,7 @@ static void lastmiss_i8751_write(INT32 offset, INT32 data)
 	{
 		case 0:
 		i8751_value = (i8751_value & 0xff) | (data << 8);
-		M6809SetIRQLine(1, M6809_IRQSTATUS_AUTO); /* Signal main cpu */
+		M6809SetIRQLine(1, CPU_IRQSTATUS_AUTO); /* Signal main cpu */
 		break;
 
 		case 1:
@@ -4448,7 +4450,7 @@ static void shackled_i8751_write(INT32 offset, INT32 data)
 	{
 	case 0: /* High byte */
 		i8751_value = (i8751_value & 0xff) | (data << 8);
-		M6809SetIRQLine(1, M6809_IRQSTATUS_AUTO); /* Signal main cpu */
+		M6809SetIRQLine(1, CPU_IRQSTATUS_AUTO); /* Signal main cpu */
 		break;
 	case 1: /* Low byte */
 		i8751_value = (i8751_value & 0xff00) | data;
@@ -4478,11 +4480,11 @@ void lastmiss_main_write(UINT16 address, UINT8 data)
 	{
 		case 0x1803:
 			if (M6809GetActive() == 0) { // main
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 			} else {
 				M6809Close();
 				M6809Open(0);
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 				M6809Close();
 				M6809Open(1);
 			}
@@ -4492,11 +4494,11 @@ void lastmiss_main_write(UINT16 address, UINT8 data)
 			if (M6809GetActive() == 0) { // main
 				M6809Close();
 				M6809Open(1);
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 				M6809Close();
 				M6809Open(0);
 			} else {
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 			}
 		return;
 
@@ -4510,7 +4512,7 @@ void lastmiss_main_write(UINT16 address, UINT8 data)
 
 		case 0x180c:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		// main cpu only!
@@ -4718,34 +4720,34 @@ static INT32 LastmissInit()
 
 	M6809Init(2);
 	M6809Open(0);
-	M6809MapMemory(DrvMainRAM,		 0x0000, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM,		 0x1000, 0x17ff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,		 0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		 0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvMainRAM + 0x1000,	 0x3000, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvPf0RAM,		 0x3800, 0x3fff, M6809_RAM);
-	M6809MapMemory(DrvMainROM + 0x10000,     0x4000, 0x7fff, M6809_ROM);
-	M6809MapMemory(DrvMainROM + 0x08000,     0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvMainRAM,		 0x0000, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM,		 0x1000, 0x17ff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,		 0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		 0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvMainRAM + 0x1000,	 0x3000, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvPf0RAM,		 0x3800, 0x3fff, MAP_RAM);
+	M6809MapMemory(DrvMainROM + 0x10000,     0x4000, 0x7fff, MAP_ROM);
+	M6809MapMemory(DrvMainROM + 0x08000,     0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(lastmiss_main_write);
 	M6809SetReadHandler(lastmiss_main_read);
 	M6809Close();
 
 	M6809Open(1);
-	M6809MapMemory(DrvMainRAM,		 0x0000, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM,		 0x1000, 0x17ff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,		 0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		 0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvMainRAM + 0x1000,	 0x3000, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvPf0RAM,		 0x3800, 0x3fff, M6809_RAM);
-	M6809MapMemory(DrvSubROM + 0x04000,      0x4000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvMainRAM,		 0x0000, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM,		 0x1000, 0x17ff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,		 0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		 0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvMainRAM + 0x1000,	 0x3000, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvPf0RAM,		 0x3800, 0x3fff, MAP_RAM);
+	M6809MapMemory(DrvSubROM + 0x04000,      0x4000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(lastmiss_main_write);
 	M6809SetReadHandler(lastmiss_main_read);
 	M6809Close();
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, M6502_RAM);
-	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvM6502RAM,          0x0000, 0x05ff, MAP_RAM);
+	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_ROM);
 	M6502SetReadHandler(ghostb_sound_read);
 	M6502SetWriteHandler(gondo_sound_write);
 	M6502Close();
@@ -4927,11 +4929,11 @@ static INT32 LastmissFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		if (i == 8 * 10) vblank = 0x80;
-		if (i == 248 * 10) vblank = 0;
+		if (i == 8 * 10) vblank = 0x00;
+		if (i == 248 * 10) vblank = 0x80;
 
 		M6809Open(0);
-		BurnTimerUpdate(i * (nCyclesTotal[0] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[0] / nInterleave));
 		M6809Close();
 
 		M6809Open(1);
@@ -4943,7 +4945,7 @@ static INT32 LastmissFrame()
 		}
 		M6809Close();
 		
-		BurnTimerUpdateYM3526(i * (nCyclesTotal[2] / nInterleave));
+		BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[2] / nInterleave));
 	}
 
 	M6809Open(0);
@@ -4972,10 +4974,11 @@ static INT32 LastmissScan(INT32 nAction, INT32 *pnMin)
 		BurnYM3526Scan(nAction, pnMin);
 		
 		SCAN_VAR(stopsubcpu);
+		SCAN_VAR(RomBank);
 		
 		if (nAction & ACB_WRITE) {
 			M6809Open(0);
-			M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, M6809_ROM);
+			M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM);
 			M6809Close();
 		}
 	}
@@ -5151,7 +5154,7 @@ struct BurnDriver BurnDrvShackled = {
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_DATAEAST, GBF_SHOOT, 0,
 	NULL, shackledRomInfo, shackledRomName, NULL, NULL, ShackledInputInfo, ShackledDIPInfo,
 	LastmissInit, LastmissExit, LastmissFrame, ShackledDraw, LastmissScan, &DrvRecalc, 0x400,
-	240, 256, 3, 4
+	256, 240, 4, 3
 };
 
 
@@ -5199,7 +5202,7 @@ struct BurnDriver BurnDrvBreywood = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_SHOOT, 0,
 	NULL, breywoodRomInfo, breywoodRomName, NULL, NULL, ShackledInputInfo, ShackledDIPInfo,
 	LastmissInit, LastmissExit, LastmissFrame, ShackledDraw, LastmissScan, &DrvRecalc, 0x400,
-	240, 256, 3, 4
+	256, 240, 4, 3
 };
 
 
@@ -5220,7 +5223,7 @@ static void csilver_i8751_write(INT32 offset, UINT8 data)
 	{
 	case 0: /* High byte */
 		i8751_value = (i8751_value & 0xff) | (data << 8);
-		M6809SetIRQLine(1, M6809_IRQSTATUS_AUTO); /* Signal main cpu */
+		M6809SetIRQLine(1, CPU_IRQSTATUS_AUTO); /* Signal main cpu */
 		break;
 	case 1: /* Low byte */
 		i8751_value = (i8751_value & 0xff00) | data;
@@ -5247,11 +5250,11 @@ void csilver_main_write(UINT16 address, UINT8 data)
 	{
 		case 0x1803:
 			if (M6809GetActive() == 0) { // main
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 			} else {
 				M6809Close();
 				M6809Open(0);
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 				M6809Close();
 				M6809Open(1);
 			}
@@ -5261,11 +5264,11 @@ void csilver_main_write(UINT16 address, UINT8 data)
 			if (M6809GetActive() == 0) { // main
 				M6809Close();
 				M6809Open(1);
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 				M6809Close();
 				M6809Open(0);
 			} else {
-				M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+				M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 			}
 		return;
 
@@ -5279,7 +5282,7 @@ void csilver_main_write(UINT16 address, UINT8 data)
 
 		case 0x180c:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		case 0x1808:
@@ -5334,7 +5337,7 @@ static void csilver_sound_bank(INT32 data)
 {
 	SndRomBank = (data & 8) >> 3;
 	
-	M6502MapMemory(DrvM6502ROM + 0x10000 + SndRomBank * 0x4000, 0x4000, 0x7fff, M6502_ROM);
+	M6502MapMemory(DrvM6502ROM + 0x10000 + SndRomBank * 0x4000, 0x4000, 0x7fff, MAP_ROM);
 }
 
 void csilver_sound_write(UINT16 address, UINT8 data)
@@ -5368,7 +5371,7 @@ UINT8 csilver_sound_read(UINT16 address)
 		case 0x3000:
 			return *soundlatch;
 
-		case 0x3400:
+		case 0x3400: 
 			MSM5205ResetWrite(0, 0);
 			return 0;
 	}
@@ -5379,7 +5382,7 @@ UINT8 csilver_sound_read(UINT16 address)
 static void CsilverADPCMInt()
 {
 	Toggle ^= 1;
-	if (Toggle)	M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_AUTO);
+	if (Toggle)	M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 
 	MSM5205DataWrite(0, MSM5205Next >> 4);
 	MSM5205Next <<= 4;
@@ -5431,35 +5434,35 @@ static INT32 CsilverInit()
 
 	M6809Init(2);
 	M6809Open(0);
-	M6809MapMemory(DrvMainRAM + 0x00000,		0x0000, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM,			0x1000, 0x17ff, M6809_RAM); // xxxxbbbbggggrrrr
-	M6809MapMemory(DrvVidRAM,			0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,			0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvMainRAM + 0x01000,		0x3000, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvPf0RAM,			0x3800, 0x3fff, M6809_RAM);
-	M6809MapMemory(DrvMainROM + 0x10000,		0x4000, 0x7fff, M6809_RAM);
-	M6809MapMemory(DrvMainROM + 0x08000,		0x8000, 0xffff, M6809_RAM);
+	M6809MapMemory(DrvMainRAM + 0x00000,		0x0000, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM,			0x1000, 0x17ff, MAP_RAM); // xxxxbbbbggggrrrr
+	M6809MapMemory(DrvVidRAM,			0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,			0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvMainRAM + 0x01000,		0x3000, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvPf0RAM,			0x3800, 0x3fff, MAP_RAM);
+	M6809MapMemory(DrvMainROM + 0x10000,		0x4000, 0x7fff, MAP_RAM);
+	M6809MapMemory(DrvMainROM + 0x08000,		0x8000, 0xffff, MAP_RAM);
 	M6809SetWriteHandler(csilver_main_write);
 	M6809SetReadHandler(csilver_main_read);
 	M6809Close();
 
 	M6809Open(1);
-	M6809MapMemory(DrvMainRAM + 0x00000,		0x0000, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM,			0x1000, 0x17ff, M6809_RAM); // xxxxbbbbggggrrrr
-	M6809MapMemory(DrvVidRAM,			0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,			0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvMainRAM + 0x01000,		0x3000, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvPf0RAM,			0x3800, 0x3fff, M6809_RAM);
-	M6809MapMemory(DrvSubROM + 0x04000,		0x4000, 0xffff, M6809_RAM);
+	M6809MapMemory(DrvMainRAM + 0x00000,		0x0000, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM,			0x1000, 0x17ff, MAP_RAM); // xxxxbbbbggggrrrr
+	M6809MapMemory(DrvVidRAM,			0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,			0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvMainRAM + 0x01000,		0x3000, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvPf0RAM,			0x3800, 0x3fff, MAP_RAM);
+	M6809MapMemory(DrvSubROM + 0x04000,		0x4000, 0xffff, MAP_RAM);
 	M6809SetWriteHandler(csilver_main_write);
 	M6809SetReadHandler(csilver_main_read);
 	M6809Close();
 
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502RAM,          0x0000, 0x07ff, M6502_RAM);
-	M6502MapMemory(DrvM6502ROM + 0x4000, 0x4000, 0x7fff, M6502_ROM);
-	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvM6502RAM,          0x0000, 0x07ff, MAP_RAM);
+	M6502MapMemory(DrvM6502ROM + 0x4000, 0x4000, 0x7fff, MAP_ROM);
+	M6502MapMemory(DrvM6502ROM + 0x8000, 0x8000, 0xffff, MAP_ROM);
 	M6502SetReadHandler(csilver_sound_read);
 	M6502SetWriteHandler(csilver_sound_write);
 	M6502Close();
@@ -5527,7 +5530,7 @@ static INT32 CsilverFrame()
 		if (i == DrvVBlankSlices[0]) vblank = 0x80;
 
 		M6809Open(0);
-		BurnTimerUpdate(i * (nCyclesTotal[0] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[0] / nInterleave));
 		M6809Close();
 
 		M6809Open(1);
@@ -5535,12 +5538,12 @@ static INT32 CsilverFrame()
 		nCyclesDone[1] += M6809Run(nSegment - nCyclesDone[1]);
 		if (i == DrvVBlankSlices[1]) {
 			vblank = 0;
-			M6809SetIRQLine(0x20, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
 		}
 		MSM5205Update();
 		M6809Close();
 		
-		BurnTimerUpdateYM3526(i * (nCyclesTotal[2] / nInterleave));
+		BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[2] / nInterleave));
 	}
 
 	M6809Open(0);
@@ -5573,14 +5576,15 @@ static INT32 CsilverScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(MSM5205Next);
 		SCAN_VAR(Toggle);
 		SCAN_VAR(SndRomBank);
+		SCAN_VAR(RomBank);
 		
 		if (nAction & ACB_WRITE) {
 			M6809Open(0);
-			M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, M6809_ROM);
+			M6809MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM);
 			M6809Close();
 			
 			M6502Open(0);
-			M6502MapMemory(DrvM6502ROM + 0x10000 + SndRomBank * 0x4000, 0x4000, 0x7fff, M6502_ROM);
+			M6502MapMemory(DrvM6502ROM + 0x10000 + SndRomBank * 0x4000, 0x4000, 0x7fff, MAP_ROM);
 			M6502Close();
 		}
 	}
@@ -5630,7 +5634,7 @@ static INT32 CsilverExit()
 
 struct BurnDriver BurnDrvCsilver = {
 	"csilver", NULL, NULL, NULL, "1987",
-	"Captain Silver (World)\0", NULL, "Data East Corporation", "DEC8",
+	"Captain Silver (World)\0", "imperfect sound", "Data East Corporation", "DEC8",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_DATAEAST, GBF_SCRFIGHT, 0,
 	NULL, csilverRomInfo, csilverRomName, NULL, NULL, CsilverInputInfo, CsilverDIPInfo,
@@ -5671,7 +5675,7 @@ STD_ROM_FN(csilverj)
 
 struct BurnDriver BurnDrvCsilverj = {
 	"csilverj", "csilver", NULL, NULL, "1987",
-	"Captain Silver (Japan)\0", NULL, "Data East Corporation", "DEC8",
+	"Captain Silver (Japan)\0", "imperfect sound", "Data East Corporation", "DEC8",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_SCRFIGHT, 0,
 	NULL, csilverjRomInfo, csilverjRomName, NULL, NULL, CsilverInputInfo, CsilverDIPInfo,

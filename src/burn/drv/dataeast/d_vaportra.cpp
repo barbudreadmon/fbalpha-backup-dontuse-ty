@@ -143,7 +143,7 @@ void __fastcall vaportra_main_write_word(UINT32 address, UINT16 data)
 
 		case 0x100006:
 			deco16_soundlatch = data & 0xff;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x30c000:
@@ -165,7 +165,7 @@ void __fastcall vaportra_main_write_byte(UINT32 address, UINT8 data)
 
 		case 0x100007:
 			deco16_soundlatch = data;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x30c000:
@@ -251,6 +251,7 @@ static INT32 DrvDoReset()
 	deco16SoundReset();
 
 	deco16Reset();
+	deco16_y_skew = 8; // HACK! the background is skewed by 8, causing sprite:layer misalignment (spider mini-boss/level 2, etc.)
 
 	return 0;
 }
@@ -372,22 +373,22 @@ static INT32 DrvInit(INT32 type)
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(deco16_pf_ram[2],		0x200000, 0x201fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[3],		0x202000, 0x203fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[0],		0x280000, 0x281fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[1],		0x282000, 0x283fff, SM_RAM);
-	SekMapMemory(DrvPalRAM0,		0x300000, 0x3009ff, SM_RAM);
-	SekMapMemory(DrvPalRAM1,		0x304000, 0x3049ff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0xff8000, 0xff87ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,			0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(deco16_pf_ram[2],		0x200000, 0x201fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[3],		0x202000, 0x203fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[0],		0x280000, 0x281fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[1],		0x282000, 0x283fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM0,		0x300000, 0x3009ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM1,		0x304000, 0x3049ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0xff8000, 0xff87ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,			0xffc000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0,		vaportra_main_write_word);
 	SekSetWriteByteHandler(0,		vaportra_main_write_byte);
 	SekSetReadWordHandler(0,		vaportra_main_read_word);
 	SekSetReadByteHandler(0,		vaportra_main_read_byte);
 	SekClose();
 
-	deco16SoundInit(DrvHucROM, DrvHucRAM, 8055000, 1, NULL, 0.60, 1006875, 0.75, 2013750, 0.60);
+	deco16SoundInit(DrvHucROM, DrvHucRAM, 8055000 / 3, 1, NULL, 0.60, 1006875, 0.75, 2013750, 0.60);
 	BurnYM2203SetAllRoutes(0, 0.60, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -401,6 +402,7 @@ static INT32 DrvExit()
 {
 	GenericTilesExit();
 	deco16Exit();
+	deco16_y_skew = 0;
 
 	SekExit();
 	
@@ -539,7 +541,7 @@ static INT32 DrvFrame()
 
 	INT32 nInterleave = 232;
 	INT32 nSoundBufferPos = 0;
-	INT32 nCyclesTotal[2] = { 12000000 / 58, 8055000 / 58 };
+	INT32 nCyclesTotal[2] = { 12000000 / 58, 8055000 / 3 / 58 };
 	INT32 nCyclesDone[2] = { 0, 0 };
 
 	h6280NewFrame();
@@ -554,7 +556,10 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += SekRun(nCyclesTotal[0] / nInterleave);
 		nCyclesDone[1] += h6280Run(nCyclesTotal[1] / nInterleave);
 
-		if (i == 206) deco16_vblank = 0x08;
+		if (i == 206) {
+			deco16_vblank = 0x08;
+			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
+		}
 		
 		INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 		INT16* pSoundBuf = SoundBuffer + (nSoundBufferPos << 1);
@@ -562,8 +567,6 @@ static INT32 DrvFrame()
 		nSoundBufferPos += nSegmentLength;
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
-	
 	BurnTimerEndFrame(nCyclesTotal[1]);
 
 	if (pBurnSoundOut) {

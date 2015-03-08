@@ -112,6 +112,8 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 	if (bType == DAT_SGX_ONLY) fprintf(fDat, "\t\t<name>" APP_TITLE " - SuprGrafx Games</name>\n");
 	if (bType == DAT_SG1000_ONLY) fprintf(fDat, "\t\t<name>" APP_TITLE " - Sega SG-1000 Games</name>\n");
 	if (bType == DAT_COLECO_ONLY) fprintf(fDat, "\t\t<name>" APP_TITLE " - ColecoVision Games</name>\n");
+	if (bType == DAT_MASTERSYSTEM_ONLY) fprintf(fDat, "\t\t<name>" APP_TITLE " - Master System Games</name>\n");
+	if (bType == DAT_GAMEGEAR_ONLY) fprintf(fDat, "\t\t<name>" APP_TITLE " - Game Gear Games</name>\n");
 
 	if (bType == DAT_ARCADE_ONLY) _ftprintf(fDat, _T("\t\t<description>") _T(APP_TITLE) _T(" v%s") _T(" Arcade Games</description>\n"), szAppBurnVer);
 	if (bType == DAT_MEGADRIVE_ONLY) _ftprintf(fDat, _T("\t\t<description>") _T(APP_TITLE) _T(" v%s") _T(" Megadrive Games</description>\n"), szAppBurnVer);
@@ -120,6 +122,8 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 	if (bType == DAT_SGX_ONLY) _ftprintf(fDat, _T("\t\t<description>") _T(APP_TITLE) _T(" v%s") _T(" SuprGrafx Games</description>\n"), szAppBurnVer);
 	if (bType == DAT_SG1000_ONLY) _ftprintf(fDat, _T("\t\t<description>") _T(APP_TITLE) _T(" v%s") _T(" Sega SG-1000 Games</description>\n"), szAppBurnVer);
 	if (bType == DAT_COLECO_ONLY) _ftprintf(fDat, _T("\t\t<description>") _T(APP_TITLE) _T(" v%s") _T(" ColecoVision Games</description>\n"), szAppBurnVer);
+	if (bType == DAT_MASTERSYSTEM_ONLY) _ftprintf(fDat, _T("\t\t<description>") _T(APP_TITLE) _T(" v%s") _T(" Master System Games</description>\n"), szAppBurnVer);
+	if (bType == DAT_GAMEGEAR_ONLY) _ftprintf(fDat, _T("\t\t<description>") _T(APP_TITLE) _T(" v%s") _T(" Game Gear Games</description>\n"), szAppBurnVer);
 	fprintf(fDat, "\t\t<category>Standard DatFile</category>\n");
 	_ftprintf(fDat, _T("\t\t<version>%s</version>\n"), szAppBurnVer);
 	fprintf(fDat, "\t\t<author>" APP_TITLE "</author>\n");
@@ -152,6 +156,8 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_PCENGINE_SGX)
 			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_SG1000)
 			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_COLECO)
+			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_MASTER_SYSTEM)
+			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_GAME_GEAR)
 			) && (bType == DAT_ARCADE_ONLY)) {
 			continue;
 		}
@@ -177,6 +183,14 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 		}
 
 		if (((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) != HARDWARE_COLECO) && (bType == DAT_COLECO_ONLY)) {
+			continue;
+		}
+		
+		if (((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) != HARDWARE_SEGA_MASTER_SYSTEM) && (bType == DAT_MASTERSYSTEM_ONLY)) {
+			continue;
+		}
+		
+		if (((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) != HARDWARE_SEGA_GAME_GEAR) && (bType == DAT_GAMEGEAR_ONLY)) {
 			continue;
 		}
 
@@ -238,6 +252,8 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 		remove_driver_leader(HARDWARE_SEGA_SG1000, 5, 1)
 		remove_driver_leader(HARDWARE_PCENGINE_PCENGINE, 4, 1)
 		remove_driver_leader(HARDWARE_PCENGINE_SGX, 4, 1)
+		remove_driver_leader(HARDWARE_SEGA_MASTER_SYSTEM, 4, 1)
+		remove_driver_leader(HARDWARE_SEGA_GAME_GEAR, 3, 1)
 
 		// Report problems
 		if (nParentSelect==-1U)
@@ -483,6 +499,8 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_PCENGINE_SGX)
 			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_SG1000)
 			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_COLECO)
+			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_MASTER_SYSTEM)
+			|| ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_GAME_GEAR)
 			) && (bType == DAT_ARCADE_ONLY)) {
 			continue;
 		}
@@ -511,6 +529,14 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 			continue;
 		}
 		
+		if (((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) != HARDWARE_SEGA_MASTER_SYSTEM) && (bType == DAT_MASTERSYSTEM_ONLY)) {
+			continue;
+		}
+		
+		if (((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) != HARDWARE_SEGA_GAME_GEAR) && (bType == DAT_GAMEGEAR_ONLY)) {
+			continue;
+		}
+		
 		strcpy(sgName, BurnDrvGetTextA(DRV_NAME));
 		
 		remove_driver_leader(HARDWARE_SEGA_MEGADRIVE, 3, 0)
@@ -519,6 +545,8 @@ INT32 write_datfile(INT32 bType, FILE* fDat)
 		remove_driver_leader(HARDWARE_SEGA_SG1000, 5, 0)
 		remove_driver_leader(HARDWARE_PCENGINE_PCENGINE, 4, 0)
 		remove_driver_leader(HARDWARE_PCENGINE_SGX, 4, 0)
+		remove_driver_leader(HARDWARE_SEGA_MASTER_SYSTEM, 4, 0)
+		remove_driver_leader(HARDWARE_SEGA_GAME_GEAR, 3, 0)
 
 		fprintf(fDat, "\t<game isbios=\"yes\" name=\"%s\">\n", sgName);
 		fprintf(fDat, "\t\t<description>%s</description>\n", DecorateGameName(nBurnDrvActive));

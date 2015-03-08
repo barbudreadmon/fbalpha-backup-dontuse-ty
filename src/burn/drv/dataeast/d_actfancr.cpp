@@ -241,7 +241,7 @@ void actfan_main_write(UINT32 address, UINT8 data)
 
 		case 0x150000:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		case 0x160000:
@@ -291,7 +291,7 @@ void triothep_main_write(UINT32 address, UINT8 data)
 	{
 		case 0x100000:
 			*soundlatch = data;
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		return;
 
 		case 0x110000:
@@ -369,7 +369,7 @@ static UINT8 Dec0_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0x3000:
-			M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_NONE);
+			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0x3800:
@@ -392,9 +392,9 @@ inline static double Dec0YM2203GetTime()
 static void Dec0YM3812IRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_ACK);
+		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_ACK);
 	} else {
-		M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_NONE);
+		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -502,8 +502,8 @@ static void Dec0SoundInit()
 {
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(Drv6502RAM,		0x0000, 0x07ff, M6502_RAM);
-	M6502MapMemory(Drv6502ROM + 0x4000,	0x4000, 0xffff, M6502_ROM);
+	M6502MapMemory(Drv6502RAM,		0x0000, 0x07ff, MAP_RAM);
+	M6502MapMemory(Drv6502ROM + 0x4000,	0x4000, 0xffff, MAP_ROM);
 	M6502SetWriteHandler(Dec0_sound_write);
 	M6502SetReadHandler(Dec0_sound_read);
 	M6502Close();
@@ -563,12 +563,12 @@ static INT32 ActfanInit()
 
 	h6280Init(0);
 	h6280Open(0);
-	h6280MapMemory(Drv6280ROM,		0x000000, 0x03ffff, H6280_ROM);
-	h6280MapMemory(DrvPf1RAM,		0x062000, 0x063fff, H6280_RAM);
-	h6280MapMemory(DrvPf2RAM,		0x072000, 0x073fff, H6280_RAM);
-	h6280MapMemory(DrvSprRAM,		0x100000, 0x1007ff, H6280_RAM);
-	h6280MapMemory(DrvPalRAM,		0x120000, 0x1205ff, H6280_ROM);
-	h6280MapMemory(Drv6280RAM,		0x1f0000, 0x1f3fff, H6280_RAM);
+	h6280MapMemory(Drv6280ROM,		0x000000, 0x03ffff, MAP_ROM);
+	h6280MapMemory(DrvPf1RAM,		0x062000, 0x063fff, MAP_RAM);
+	h6280MapMemory(DrvPf2RAM,		0x072000, 0x073fff, MAP_RAM);
+	h6280MapMemory(DrvSprRAM,		0x100000, 0x1007ff, MAP_RAM);
+	h6280MapMemory(DrvPalRAM,		0x120000, 0x1205ff, MAP_ROM);
+	h6280MapMemory(Drv6280RAM,		0x1f0000, 0x1f3fff, MAP_RAM);
 	h6280SetWriteHandler(actfan_main_write);
 	h6280SetReadHandler(actfan_main_read);
 	h6280Close();
@@ -627,14 +627,14 @@ static INT32 TriothepInit()
 
 	h6280Init(0);
 	h6280Open(0);
-	h6280MapMemory(Drv6280ROM,		0x000000, 0x03ffff, H6280_ROM);
-	h6280MapMemory(DrvPf2RAM,		0x044000, 0x045fff, H6280_RAM);
-	h6280MapMemory(DrvPf2Scr,		0x046000, 0x0467ff, H6280_RAM);
-	h6280MapMemory(DrvPf1RAM,		0x064000, 0x0647ff, H6280_RAM);
-	h6280MapMemory(DrvPf1Scr,		0x066000, 0x0667ff, H6280_RAM);
-	h6280MapMemory(DrvSprRAM,		0x120000, 0x1207ff, H6280_RAM);
-	h6280MapMemory(DrvPalRAM,		0x130000, 0x1305ff, H6280_ROM);
-	h6280MapMemory(Drv6280RAM,		0x1f0000, 0x1f3fff, H6280_RAM);
+	h6280MapMemory(Drv6280ROM,		0x000000, 0x03ffff, MAP_ROM);
+	h6280MapMemory(DrvPf2RAM,		0x044000, 0x045fff, MAP_RAM);
+	h6280MapMemory(DrvPf2Scr,		0x046000, 0x0467ff, MAP_RAM);
+	h6280MapMemory(DrvPf1RAM,		0x064000, 0x0647ff, MAP_RAM);
+	h6280MapMemory(DrvPf1Scr,		0x066000, 0x0667ff, MAP_RAM);
+	h6280MapMemory(DrvSprRAM,		0x120000, 0x1207ff, MAP_RAM);
+	h6280MapMemory(DrvPalRAM,		0x130000, 0x1305ff, MAP_ROM);
+	h6280MapMemory(Drv6280RAM,		0x1f0000, 0x1f3fff, MAP_RAM);
 	h6280SetWriteHandler(triothep_main_write);
 	h6280SetReadHandler(triothep_main_read);
 	h6280Close();
@@ -911,7 +911,7 @@ static INT32 DrvFrame()
 		if (i == 1) vblank = 0;
 		if (i == 30) {
 			vblank = 0x80;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_AUTO);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 
 		BurnTimerUpdateYM3812(i * (nCyclesTotal[1] / nInterleave)); // m6502

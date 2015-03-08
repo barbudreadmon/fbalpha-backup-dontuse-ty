@@ -164,7 +164,7 @@ static inline void palette_update(INT32 offset)
 static void bankswitchA(INT32 data)
 {
 	nBankAData = data;
-	M6809MapMemory(DrvMainROM + ((data & 0x08) ? 0x14000 : 0x10000), 0x4000, 0x7fff, M6809_ROM);
+	M6809MapMemory(DrvMainROM + ((data & 0x08) ? 0x14000 : 0x10000), 0x4000, 0x7fff, MAP_ROM);
 }
 
 static void xain_main_write(UINT16 address, UINT8 data)
@@ -204,30 +204,30 @@ static void xain_main_write(UINT16 address, UINT8 data)
 			M6809Open(2);
 			BurnTimerUpdate(cycles);
 			soundlatch = data;
-		//	M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
-			M6809SetIRQLine(0, M6809_IRQSTATUS_ACK); // hold line until soundlatch is read to ensure commands are read
+		//	M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0, CPU_IRQSTATUS_ACK); // hold line until soundlatch is read to ensure commands are read
 			M6809Close();
 			M6809Open(0);
 		}
 		return;
 
 		case 0x3a09:
-			M6809SetIRQLine(0x20, M6809_IRQSTATUS_NONE);
+			M6809SetIRQLine(0x20, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x3a0a:
-			M6809SetIRQLine(0x01, M6809_IRQSTATUS_NONE);
+			M6809SetIRQLine(0x01, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x3a0b:
-			M6809SetIRQLine(0x00, M6809_IRQSTATUS_NONE);
+			M6809SetIRQLine(0x00, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x3a0c:
 		{
 			M6809Close();
 			M6809Open(1);
-			M6809SetIRQLine(0x00, M6809_IRQSTATUS_ACK); 
+			M6809SetIRQLine(0x00, CPU_IRQSTATUS_ACK); 
 			M6809Close();
 			M6809Open(0);
 		}
@@ -318,7 +318,7 @@ static UINT8 xain_main_read(UINT16 address)
 static void bankswitchB(INT32 data)
 {
 	nBankBData = data;
-	M6809MapMemory(DrvSubROM + ((data & 0x01) ? 0x14000 : 0x10000), 0x4000, 0x7fff, M6809_ROM);
+	M6809MapMemory(DrvSubROM + ((data & 0x01) ? 0x14000 : 0x10000), 0x4000, 0x7fff, MAP_ROM);
 }
 
 static void xain_sub_write(UINT16 address, UINT8 data)
@@ -329,14 +329,14 @@ static void xain_sub_write(UINT16 address, UINT8 data)
 		{
 			M6809Close();
 			M6809Open(0);
-			M6809SetIRQLine(0x00, M6809_IRQSTATUS_ACK); // maincpu irq
+			M6809SetIRQLine(0x00, CPU_IRQSTATUS_ACK); // maincpu irq
 			M6809Close();
 			M6809Open(1);
 		}
 		return;
 
 		case 0x2800:
-			M6809SetIRQLine(0x00, M6809_IRQSTATUS_NONE);
+			M6809SetIRQLine(0x00, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x3000:
@@ -371,7 +371,7 @@ static UINT8 xain_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0x1000:
-			M6809SetIRQLine(0, M6809_IRQSTATUS_NONE);
+			M6809SetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return soundlatch;
 	}
 
@@ -455,7 +455,7 @@ static UINT8 xain_68705_read_ports(UINT16 address)
 
 inline static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 {
-	M6809SetIRQLine(0x01, ((nStatus) ? M6809_IRQSTATUS_ACK : M6809_IRQSTATUS_NONE));
+	M6809SetIRQLine(0x01, ((nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE));
 }
 
 inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
@@ -638,35 +638,35 @@ static INT32 DrvInit()
 
 	M6809Init(3);
 	M6809Open(0);
-	M6809MapMemory(DrvShareRAM,		0x0000, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvCharRAM,		0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvBgRAM1,		0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvBgRAM0,		0x3000, 0x37ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		0x3800, 0x39ff, M6809_RAM);
-	M6809MapMemory(DrvPalRAM,		0x3c00, 0x3fff, M6809_ROM);
-	M6809MapMemory(DrvMainROM + 0x08000,	0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvShareRAM,		0x0000, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvCharRAM,		0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvBgRAM1,		0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvBgRAM0,		0x3000, 0x37ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		0x3800, 0x39ff, MAP_RAM);
+	M6809MapMemory(DrvPalRAM,		0x3c00, 0x3fff, MAP_ROM);
+	M6809MapMemory(DrvMainROM + 0x08000,	0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(xain_main_write);
 	M6809SetReadHandler(xain_main_read);
 	M6809Close();
 
 	M6809Open(1);
-	M6809MapMemory(DrvShareRAM,		0x0000, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvSubROM + 0x08000,	0x8000, 0xffff, M6809_ROM); 
+	M6809MapMemory(DrvShareRAM,		0x0000, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvSubROM + 0x08000,	0x8000, 0xffff, MAP_ROM); 
 	M6809SetWriteHandler(xain_sub_write);
 	M6809SetReadHandler(xain_sub_read);
 	M6809Close();
 
 	M6809Open(2);
-	M6809MapMemory(DrvSoundRAM,		0x0000, 0x07ff, M6809_RAM);
-	M6809MapMemory(DrvSoundROM + 0x4000,	0x4000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvSoundRAM,		0x0000, 0x07ff, MAP_RAM);
+	M6809MapMemory(DrvSoundROM + 0x4000,	0x4000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(xain_sound_write);
 	M6809SetReadHandler(xain_sound_read);
 	M6809Close();
 
 	m6805Init(1, 0x800);
 	m6805Open(0);
-	m6805MapMemory(DrvMcuRAM,		0x0010, 0x007f, M6805_RAM);
-	m6805MapMemory(DrvMcuROM + 0x80,	0x0080, 0x07ff, M6805_ROM);
+	m6805MapMemory(DrvMcuRAM,		0x0010, 0x007f, MAP_RAM);
+	m6805MapMemory(DrvMcuROM + 0x80,	0x0080, 0x07ff, MAP_ROM);
 	m6805SetWriteHandler(xain_68705_write_ports);
 	m6805SetReadHandler(xain_68705_read_ports);
 	m6805Close();
@@ -721,12 +721,12 @@ static void xain_scanline(INT32 scanline) // ripped directly from MAME
 
 	if (!(vcount_old & 8) && (vcount & 8))
 	{
-		M6809SetIRQLine(0x01, M6809_IRQSTATUS_ACK);
+		M6809SetIRQLine(0x01, CPU_IRQSTATUS_ACK);
 	}
 
 	if (vcount == 0xf8)
 	{
-		M6809SetIRQLine(0x20, M6809_IRQSTATUS_ACK);
+		M6809SetIRQLine(0x20, CPU_IRQSTATUS_ACK);
 	}
 
 	vblank = (vcount >= (248 - 1)) ? 1 : 0; // -1 is a hack

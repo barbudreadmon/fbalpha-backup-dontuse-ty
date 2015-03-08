@@ -727,6 +727,16 @@ int ProcessCmdLine()
 			return 1;
 		}
 		
+		if (_tcscmp(szName, _T("-listinfosmsonly")) == 0) {
+			write_datfile(DAT_MASTERSYSTEM_ONLY, stdout);
+			return 1;
+		}
+		
+		if (_tcscmp(szName, _T("-listinfoggonly")) == 0) {
+			write_datfile(DAT_GAMEGEAR_ONLY, stdout);
+			return 1;
+		}
+		
 		if (_tcscmp(szName, _T("-listextrainfo")) == 0) {
 			int nWidth;
 			int nHeight;
@@ -811,7 +821,7 @@ int ProcessCmdLine()
 
 static void CreateSupportFolders()
 {
-	TCHAR szSupportDirs[17][MAX_PATH] = {
+	TCHAR szSupportDirs[31][MAX_PATH] = {
 		{_T("support/")},
 		{_T("support/previews/")},
 		{_T("support/titles/")},
@@ -822,6 +832,18 @@ static void CreateSupportFolders()
 		{_T("support/ips/")},
 		{_T("support/neocdz/")},
 		{_T("support/blend/")},
+		{_T("support/select/")},
+		{_T("support/versus/")},
+		{_T("support/howto/")},
+		{_T("support/scores/")},
+		{_T("support/bosses/")},
+		{_T("support/gameover/")},
+		{_T("support/flyers/")},
+		{_T("support/marquees/")},
+		{_T("support/cpanel/")},
+		{_T("support/cabinets/")},
+		{_T("support/pcbs/")},
+		{_T("support/history/")},
 		{_T("neocdiso/")},
 		// the below are named after the MESS software lists
 		{_T("megadriv/")},
@@ -830,9 +852,11 @@ static void CreateSupportFolders()
 		{_T("tg16/")},
 		{_T("sg1000/")},
 		{_T("coleco/")},
+		{_T("sms/")},
+		{_T("gamegear/")},
 	};
 	
-	for(int x = 0; x < 17; x++) {
+	for(int x = 0; x < 31; x++) {
 		CreateDirectory(szSupportDirs[x], NULL);
 	}
 }

@@ -442,25 +442,25 @@ static void cps3_process_character_dma(UINT32 address)
 		switch ( dat1 & 0x00e00000 ) {
 		case 0x00800000:
 			chardma_table_address = real_source;
-			Sh2SetIRQLine(10, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
 			break;
 		case 0x00400000:
 			cps3_do_char_dma( real_source, real_destination, real_length );
-			Sh2SetIRQLine(10, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
 			break;
 		case 0x00600000:
 			//bprintf(PRINT_NORMAL, _T("Character DMA (alt) start %08x to %08x with %d\n"), real_source, real_destination, real_length);
 			/* 8bpp DMA decompression
 			   - this is used on SFIII NG Sean's Stage ONLY */
 			cps3_do_alt_char_dma( real_source, real_destination, real_length );
-			Sh2SetIRQLine(10, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
 			break;
 		case 0x00000000:
 			// Red Earth need this. 8192 byte trans to 0x00003000 (from 0x007ec000???)
 			// seems some stars(6bit alpha) without compress
 			//bprintf(PRINT_NORMAL, _T("Character DMA (redearth) start %08x to %08x with %d\n"), real_source, real_destination, real_length);
 			memcpy( (UINT8 *)RamCRam + real_destination, RomUser + real_source, real_length );
-			Sh2SetIRQLine(10, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
 			break;
 		default:
 			bprintf(PRINT_NORMAL, _T("Character DMA Unknown DMA List Command Type %08x\n"), dat1);
@@ -631,7 +631,7 @@ void __fastcall cps3WriteWord(UINT32 addr, UINT16 data)
 		if (cram_bank != data) {
 			cram_bank = data & 7;
 			//bprintf(PRINT_NORMAL, _T("CRAM bank set to %d\n"), data);
-			Sh2MapMemory(((UINT8 *)RamCRam) + (cram_bank << 20), 0x04100000, 0x041fffff, SH2_RAM);
+			Sh2MapMemory(((UINT8 *)RamCRam) + (cram_bank << 20), 0x04100000, 0x041fffff, MAP_RAM);
 		}
 		break;
 
@@ -693,7 +693,7 @@ void __fastcall cps3WriteWord(UINT32 addr, UINT16 data)
 #endif
 				Cps3CurPal[(paldma_dest + i) ] = BurnHighCol(r, g, b, 0);
 			}
-			Sh2SetIRQLine(10, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
 		}
 		break;
 	
@@ -713,10 +713,10 @@ void __fastcall cps3WriteWord(UINT32 addr, UINT16 data)
 	case 0x05050026: break;
 			
 	case 0x05100000:
-		Sh2SetIRQLine(12, SH2_IRQSTATUS_NONE);
+		Sh2SetIRQLine(12, CPU_IRQSTATUS_NONE);
 		break;
 	case 0x05110000:
-		Sh2SetIRQLine(10, SH2_IRQSTATUS_NONE);
+		Sh2SetIRQLine(10, CPU_IRQSTATUS_NONE);
 		break;
 
 	case 0x05140000:
@@ -1031,7 +1031,7 @@ static INT32 Cps3Reset()
 {
 	// re-map cram_bank
 	cram_bank = 0;
-	Sh2MapMemory((UINT8 *)RamCRam, 0x04100000, 0x041fffff, SH2_RAM);
+	Sh2MapMemory((UINT8 *)RamCRam, 0x04100000, 0x041fffff, MAP_RAM);
 
 	Cps3PatchRegion();
 	
@@ -1149,12 +1149,12 @@ INT32 cps3Init()
 		Sh2Open(0);
 
 		// Map 68000 memory:
-		Sh2MapMemory(RomBios,		0x00000000, 0x0007ffff, SH2_ROM);	// BIOS
-		Sh2MapMemory(RamMain,		0x02000000, 0x0207ffff, SH2_RAM);	// Main RAM
-		Sh2MapMemory((UINT8 *) RamSpr,	0x04000000, 0x0407ffff, SH2_RAM);
-//		Sh2MapMemory(RamCRam,		0x04100000, 0x041fffff, SH2_RAM);	// map this while reset
-//		Sh2MapMemory(RamGfx,		0x04200000, 0x043fffff, SH2_WRITE);
-		Sh2MapMemory((UINT8 *) RamSS,	0x05040000, 0x0504ffff, SH2_RAM);	// 'SS' RAM (Score Screen) (text tilemap + toles)
+		Sh2MapMemory(RomBios,		0x00000000, 0x0007ffff, MAP_ROM);	// BIOS
+		Sh2MapMemory(RamMain,		0x02000000, 0x0207ffff, MAP_RAM);	// Main RAM
+		Sh2MapMemory((UINT8 *) RamSpr,	0x04000000, 0x0407ffff, MAP_RAM);
+//		Sh2MapMemory(RamCRam,		0x04100000, 0x041fffff, MAP_RAM);	// map this while reset
+//		Sh2MapMemory(RamGfx,		0x04200000, 0x043fffff, MAP_WRITE);
+		Sh2MapMemory((UINT8 *) RamSS,	0x05040000, 0x0504ffff, MAP_RAM);	// 'SS' RAM (Score Screen) (text tilemap + toles)
 		
 		Sh2SetReadByteHandler (0, cps3ReadByte);
 		Sh2SetReadWordHandler (0, cps3ReadWord);
@@ -1163,9 +1163,9 @@ INT32 cps3Init()
 		Sh2SetWriteWordHandler(0, cps3WriteWord);
 		Sh2SetWriteLongHandler(0, cps3WriteLong);
 
-		Sh2MapMemory(RamC000_D,		0xc0000000, 0xc00003ff, SH2_FETCH);	// Executes code from here
-		Sh2MapMemory(RamC000,		0xc0000000, 0xc00003ff, SH2_READ);
-		Sh2MapHandler(1,		0xc0000000, 0xc00003ff, SH2_WRITE);
+		Sh2MapMemory(RamC000_D,		0xc0000000, 0xc00003ff, MAP_FETCH);	// Executes code from here
+		Sh2MapMemory(RamC000,		0xc0000000, 0xc00003ff, MAP_READ);
+		Sh2MapHandler(1,		0xc0000000, 0xc00003ff, MAP_WRITE);
 
 		Sh2SetWriteByteHandler(1, cps3C0WriteByte);
 		Sh2SetWriteWordHandler(1, cps3C0WriteWord);
@@ -1174,14 +1174,14 @@ INT32 cps3Init()
 		if( !BurnDrvGetHardwareCode() & HARDWARE_CAPCOM_CPS3_NO_CD ) 
 		{		
 			if (cps3_isSpecial) {
-				Sh2MapMemory(RomGame,	0x06000000, 0x06ffffff, SH2_READ);	// Decrypted SH2 Code
-				Sh2MapMemory(RomGame_D,	0x06000000, 0x06ffffff, SH2_FETCH);	// Decrypted SH2 Code
+				Sh2MapMemory(RomGame,	0x06000000, 0x06ffffff, MAP_READ);	// Decrypted SH2 Code
+				Sh2MapMemory(RomGame_D,	0x06000000, 0x06ffffff, MAP_FETCH);	// Decrypted SH2 Code
 			} else {
-				Sh2MapMemory(RomGame_D,	0x06000000, 0x06ffffff, SH2_READ | SH2_FETCH);	// Decrypted SH2 Code
+				Sh2MapMemory(RomGame_D,	0x06000000, 0x06ffffff, MAP_READ | MAP_FETCH);	// Decrypted SH2 Code
 			}
 		} else {
-			Sh2MapMemory(RomGame_D,		0x06000000, 0x06ffffff, SH2_FETCH);	// Decrypted SH2 Code
-			Sh2MapHandler(2,		0x06000000, 0x06ffffff, SH2_READ | SH2_WRITE);
+			Sh2MapMemory(RomGame_D,		0x06000000, 0x06ffffff, MAP_FETCH);	// Decrypted SH2 Code
+			Sh2MapHandler(2,		0x06000000, 0x06ffffff, MAP_READ | MAP_WRITE);
 
 			if (cps3_isSpecial) {
 				Sh2SetReadByteHandler (2, cps3RomReadByteSpe);
@@ -1200,7 +1200,7 @@ INT32 cps3Init()
 			}
 		}
 
-		Sh2MapHandler(3,			0x040e0000, 0x040e02ff, SH2_RAM);
+		Sh2MapHandler(3,			0x040e0000, 0x040e02ff, MAP_RAM);
 		Sh2SetReadByteHandler (3, cps3SndReadByte);
 		Sh2SetReadWordHandler (3, cps3SndReadWord);
 		Sh2SetReadLongHandler (3, cps3SndReadLong);
@@ -1208,8 +1208,8 @@ INT32 cps3Init()
 		Sh2SetWriteWordHandler(3, cps3SndWriteWord);
 		Sh2SetWriteLongHandler(3, cps3SndWriteLong);
 		
-		Sh2MapMemory((UINT8 *)RamPal,		0x04080000, 0x040bffff, SH2_READ);	// 16bit BE Colors
-		Sh2MapHandler(4,			0x04080000, 0x040bffff, SH2_WRITE);
+		Sh2MapMemory((UINT8 *)RamPal,		0x04080000, 0x040bffff, MAP_READ);	// 16bit BE Colors
+		Sh2MapHandler(4,			0x04080000, 0x040bffff, MAP_WRITE);
 
 		Sh2SetReadByteHandler (4, cps3VidReadByte);
 		Sh2SetReadWordHandler (4, cps3VidReadWord);
@@ -1221,7 +1221,7 @@ INT32 cps3Init()
 #ifdef SPEED_HACK
 		// install speedup read handler
 		Sh2MapHandler(5,			0x02000000 | (cps3_speedup_ram_address & 0x030000),
-							0x0200ffff | (cps3_speedup_ram_address & 0x030000), SH2_READ);
+							0x0200ffff | (cps3_speedup_ram_address & 0x030000), MAP_READ);
 		Sh2SetReadByteHandler (5, cps3RamReadByte);
 		Sh2SetReadWordHandler (5, cps3RamReadWord);
 		Sh2SetReadLongHandler (5, cps3RamReadLong);
@@ -2015,11 +2015,11 @@ INT32 cps3Frame()
 		
 		if (cps_int10_cnt >= 2) {
 			cps_int10_cnt = 0;
-			Sh2SetIRQLine(10, SH2_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
 		} else cps_int10_cnt++;
 
 	}
-	Sh2SetIRQLine(12, SH2_IRQSTATUS_AUTO);
+	Sh2SetIRQLine(12, CPU_IRQSTATUS_AUTO);
 
 	cps3SndUpdate();
 	
@@ -2134,7 +2134,7 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 			cps3_palette_change = 1;
 			
 			// remap RamCRam
-			Sh2MapMemory(((UINT8 *)RamCRam) + (cram_bank << 20), 0x04100000, 0x041fffff, SH2_RAM);
+			Sh2MapMemory(((UINT8 *)RamCRam) + (cram_bank << 20), 0x04100000, 0x041fffff, MAP_RAM);
 			
 		}
 		

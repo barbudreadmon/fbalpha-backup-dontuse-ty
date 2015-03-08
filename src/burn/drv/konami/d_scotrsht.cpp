@@ -153,7 +153,7 @@ void scotrsht_main_write(UINT16 address, UINT8 data)
 
 		case 0x3100:
 			*soundlatch = data;
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x3300:
@@ -200,7 +200,7 @@ UINT8 scotrsht_main_read(UINT16 address)
 UINT8 __fastcall scotrsht_sound_read(UINT16 address)
 {
 	if (address == 0x8000) {
-		ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return *soundlatch;
 	}
 
@@ -318,11 +318,9 @@ static void DrvPaletteInit()
 
 static INT32 DrvGfxDecode()
 {
-	INT32 Plane[4]  = { 0x000, 0x001, 0x002, 0x003 };
-	INT32 XOffs[16] = { 0x000, 0x004, 0x008, 0x00c, 0x010, 0x014, 0x018, 0x01c,
-			  0x100, 0x104, 0x108, 0x10c, 0x110, 0x114, 0x118, 0x11c };
-	INT32 YOffs[16] = { 0x000, 0x020, 0x040, 0x060, 0x080, 0x0a0, 0x0c0, 0x0e0,
-			  0x200, 0x220, 0x240, 0x260, 0x280, 0x2a0, 0x2c0, 0x2e0 };
+	INT32 Plane[4]  = { STEP4(0,1) };
+	INT32 XOffs[16] = { STEP8(0,4), STEP8(256,4) };
+	INT32 YOffs[16] = { STEP8(0,32), STEP8(512,32) };
 
 	UINT8 *tmp = (UINT8*)BurnMalloc(0x10000);
 	if (tmp == NULL) {
@@ -375,10 +373,10 @@ static INT32 DrvInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvColRAM,		0x0000, 0x07ff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,		0x0800, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,		0x1000, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM + 0x04000,	0x4000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvColRAM,		0x0000, 0x07ff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,		0x0800, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,		0x1000, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM + 0x04000,	0x4000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(scotrsht_main_write);
 	M6809SetReadHandler(scotrsht_main_read);
 	M6809Close();
@@ -520,8 +518,8 @@ static INT32 DrvDraw()
 {
 	if (DrvRecalc) {
 		for (INT32 i = 0; i < 0x1000; i++) {
-			INT32 rgb = Palette[i];
-			DrvPalette[i] = BurnHighCol(rgb >> 16, rgb >> 8, rgb, 0);
+			UINT32 rgb = Palette[i];
+			DrvPalette[i] = BurnHighCol((rgb >> 16)&0xff, (rgb >> 8)&0xff, rgb&0xff, 0);
 		}
 	}
 
@@ -573,7 +571,7 @@ static INT32 DrvFrame()
 
 	BurnTimerEndFrame(nCyclesTotal[1]);
 
-	if (*irq_enable) M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+	if (*irq_enable) M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);

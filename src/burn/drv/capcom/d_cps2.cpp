@@ -1933,6 +1933,35 @@ static struct BurnRomInfo DdsomaRomDesc[] = {
 STD_ROM_PICK(Ddsoma)
 STD_ROM_FN(Ddsoma)
 
+static struct BurnRomInfo Ddsomar1RomDesc[] = {
+	{ "dd2a.03c",      0x080000, 0x17162039, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "dd2a.04c",      0x080000, 0x950bec38, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "dd2a.05c",      0x080000, 0xfa298eba, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "dd2a.06c",      0x080000, 0x28f75b35, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "dd2.07",        0x080000, 0x909a0b8b, CPS2_PRG_68K | BRF_ESS | BRF_PRG }, // dd2a.07 on sticker
+	{ "dd2.08",        0x080000, 0xe53c4d01, CPS2_PRG_68K | BRF_ESS | BRF_PRG }, // dd2a.08 on sticker
+	{ "dd2.09",        0x080000, 0x5f86279f, CPS2_PRG_68K | BRF_ESS | BRF_PRG }, // dd2a.09 on sticker
+	{ "dd2.10",        0x080000, 0xad954c26, CPS2_PRG_68K | BRF_ESS | BRF_PRG }, // dd2a.10 on sticker
+
+	{ "dd2.13m",       0x400000, 0xa46b4e6e, CPS2_GFX | BRF_GRA },
+	{ "dd2.15m",       0x400000, 0xd5fc50fc, CPS2_GFX | BRF_GRA },
+	{ "dd2.17m",       0x400000, 0x837c0867, CPS2_GFX | BRF_GRA },
+	{ "dd2.19m",       0x400000, 0xbb0ec21c, CPS2_GFX | BRF_GRA },
+	{ "dd2.14m",       0x200000, 0x6d824ce2, CPS2_GFX | BRF_GRA },
+	{ "dd2.16m",       0x200000, 0x79682ae5, CPS2_GFX | BRF_GRA },
+	{ "dd2.18m",       0x200000, 0xacddd149, CPS2_GFX | BRF_GRA },
+	{ "dd2.20m",       0x200000, 0x117fb0c0, CPS2_GFX | BRF_GRA },
+
+	{ "dd2.01",       0x020000, 0x99d657e5, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG }, // dd2a.01 on sticker
+	{ "dd2.02",       0x020000, 0x117a3824, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG }, // dd2a.02 on sticker
+
+	{ "dd2.11m",       0x200000, 0x98d0c325, CPS2_QSND | BRF_SND },
+	{ "dd2.12m",       0x200000, 0x5ea2e7fa, CPS2_QSND | BRF_SND },
+};
+
+STD_ROM_PICK(Ddsomar1)
+STD_ROM_FN(Ddsomar1)
+
 static struct BurnRomInfo DdsombRomDesc[] = {
 	{ "dd2b.03a",      0x080000, 0xe8ce7fbb, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "dd2b.04a",      0x080000, 0x6b679664, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
@@ -7969,6 +7998,16 @@ struct BurnDriver BurnDrvCpsDdsoma = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvCpsDdsomar1 = {
+	"ddsomar1", "ddsom", NULL, NULL, "1996",
+	"Dungeons & Dragons - shadow over mystara (960208 Asia)\0", NULL, "Capcom", "CPS2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_CAPCOM_CPS2, GBF_SCRFIGHT, 0,
+	NULL, Ddsomar1RomInfo, Ddsomar1RomName, NULL, NULL, DdsomInputInfo, NULL,
+	Cps2Init, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvCpsDdsomb = {
 	"ddsomb", "ddsom", NULL, NULL, "1996",
 	"Dungeons & Dragons - shadow over mystara (960223 Brazil)\0", NULL, "Capcom", "CPS2",
@@ -11377,10 +11416,10 @@ static INT32 PhoenixInit()
 	nCpsNumScanlines = 262;	// phoenix sets seem to be sensitive to timing??
 	
 	SekOpen(0);
-	SekMapHandler(3, 0xff0000, 0xffffff, SM_WRITE);
+	SekMapHandler(3, 0xff0000, 0xffffff, MAP_WRITE);
 	SekSetWriteByteHandler(3, PhoenixOutputWriteByte);
 	SekSetWriteWordHandler(3, PhoenixOutputWriteWord);
-	SekMapHandler(4, 0x700000, 0x701fff, SM_WRITE);
+	SekMapHandler(4, 0x700000, 0x701fff, MAP_WRITE);
 	SekSetWriteByteHandler(4, PhoenixSpriteWriteByte);
 	SekSetWriteWordHandler(4, PhoenixSpriteWriteWord);
 	SekClose();
@@ -12022,7 +12061,7 @@ static INT32 Gigaman2Init()
 	nRet = CpsRunInit();
 	
 	SekOpen(0);
-	SekMapMemory(Gigaman2DummyQsndRam, 0x618000, 0x619fff, SM_RAM);
+	SekMapMemory(Gigaman2DummyQsndRam, 0x618000, 0x619fff, MAP_RAM);
 	SekClose();
 	
 //	nCpsNumScanlines = 262;	// phoenix sets seem to be sensitive to timing??

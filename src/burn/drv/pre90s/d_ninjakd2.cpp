@@ -568,7 +568,7 @@ static void ninjakd2_bankswitch(INT32 data)
 
 	nZ80RomBank = data;
 
-	ZetMapMemory(DrvZ80ROM0 + nBank, 	0x8000, 0xbfff, ZET_ROM);
+	ZetMapMemory(DrvZ80ROM0 + nBank, 	0x8000, 0xbfff, MAP_ROM);
 }
 
 static void ninjakd2_bgconfig(INT32 sel, INT32 offset, UINT8 data)
@@ -728,7 +728,7 @@ static void robokid_rambank(INT32 sel, UINT8 data)
 
 	nZ80RamBank[sel&3] = data;
 
-	ZetMapMemory(ram[sel&3] + nBank, off[sel>>2][sel&3], off[sel>>2][sel&3] | 0x3ff, ZET_RAM);
+	ZetMapMemory(ram[sel&3] + nBank, off[sel>>2][sel&3], off[sel>>2][sel&3] | 0x3ff, MAP_RAM);
 }
 
 static void __fastcall robokid_main_write(UINT16 address, UINT8 data)
@@ -1053,7 +1053,7 @@ static void __fastcall ninjakd2_sound_write_port(UINT16 port, UINT8 data)
 
 inline static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 {
-	ZetSetIRQLine(0, (nStatus) ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
@@ -1071,12 +1071,12 @@ static void ninjakd2_sound_init()
 	ZetInit(1);
 	ZetOpen(1);
 
-//	ZetMapMemory(DrvZ80ROM1, 0x0000, 0xbfff, ZET_ROM);
+//	ZetMapMemory(DrvZ80ROM1, 0x0000, 0xbfff, MAP_ROM);
 
 	ZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM1);
 	ZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM1 + 0x10000, DrvZ80ROM1);
 
-	ZetMapMemory(DrvZ80RAM1,		0xc000, 0xc7ff, ZET_RAM);
+	ZetMapMemory(DrvZ80RAM1,		0xc000, 0xc7ff, MAP_RAM);
 	ZetSetOutHandler(ninjakd2_sound_write_port);
 	ZetSetWriteHandler(ninjakd2_sound_write);
 	ZetSetReadHandler(ninjakd2_sound_read);
@@ -1084,14 +1084,14 @@ static void ninjakd2_sound_init()
 
 	BurnYM2203Init(2,  1500000, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
 	BurnTimerAttachZet(5000000);
-	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.10, BURN_SND_ROUTE_BOTH);
+	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.10, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_2, 0.10, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_3, 0.50, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(1, BURN_SND_YM2203_YM2203_ROUTE,   0.10, BURN_SND_ROUTE_BOTH);
+	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_3, 0.10, BURN_SND_ROUTE_BOTH);
+	BurnYM2203SetRoute(1, BURN_SND_YM2203_YM2203_ROUTE,   0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_1, 0.10, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_2, 0.10, BURN_SND_ROUTE_BOTH);
-	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.50, BURN_SND_ROUTE_BOTH);
+	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.10, BURN_SND_ROUTE_BOTH);
 }
 
 static INT32 DrvDoReset()
@@ -1265,13 +1265,13 @@ static INT32 Ninjakd2CommonInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, ZET_ROM);
-	ZetMapMemory(DrvPalRAM,			0xc800, 0xcdff, ZET_ROM);
-	ZetMapMemory(DrvFgRAM,			0xd000, 0xd7ff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM,			0xd800, 0xdfff, ZET_RAM);
-	ZetMapMemory(DrvZ80RAM0,		0xe000, 0xf9ff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
+	ZetMapMemory(DrvPalRAM,			0xc800, 0xcdff, MAP_ROM);
+	ZetMapMemory(DrvFgRAM,			0xd000, 0xd7ff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM,			0xd800, 0xdfff, MAP_RAM);
+	ZetMapMemory(DrvZ80RAM0,		0xe000, 0xf9ff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, MAP_RAM);
 	ZetSetWriteHandler(ninjakd2_main_write);
 	ZetSetReadHandler(ninjakd2_main_read);
 	ZetClose();
@@ -1351,13 +1351,13 @@ static INT32 MnightInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM0,		0xc000, 0xd9ff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,			0xda00, 0xdfff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM,			0xe000, 0xe7ff, ZET_RAM);
-	ZetMapMemory(DrvFgRAM,			0xe800, 0xefff, ZET_RAM);
-	ZetMapMemory(DrvPalRAM,			0xf000, 0xf5ff, ZET_ROM);
+	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM0,		0xc000, 0xd9ff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,			0xda00, 0xdfff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM,			0xe000, 0xe7ff, MAP_RAM);
+	ZetMapMemory(DrvFgRAM,			0xe800, 0xefff, MAP_RAM);
+	ZetMapMemory(DrvPalRAM,			0xf000, 0xf5ff, MAP_ROM);
 	ZetSetWriteHandler(mnight_main_write);
 	ZetSetReadHandler(ninjakd2_main_read);
 	ZetClose();
@@ -1432,15 +1432,15 @@ static INT32 RobokidInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, ZET_ROM);
-	ZetMapMemory(DrvPalRAM,			0xc000, 0xc7ff, ZET_ROM);
-	ZetMapMemory(DrvFgRAM,			0xc800, 0xcfff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM2,			0xd000, 0xd3ff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM1,			0xd400, 0xd7ff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM0,			0xd800, 0xdbff, ZET_RAM);
-	ZetMapMemory(DrvZ80RAM0,		0xe000, 0xf9ff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
+	ZetMapMemory(DrvPalRAM,			0xc000, 0xc7ff, MAP_ROM);
+	ZetMapMemory(DrvFgRAM,			0xc800, 0xcfff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM2,			0xd000, 0xd3ff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM1,			0xd400, 0xd7ff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM0,			0xd800, 0xdbff, MAP_RAM);
+	ZetMapMemory(DrvZ80RAM0,		0xe000, 0xf9ff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, MAP_RAM);
 	ZetSetWriteHandler(robokid_main_write);
 	ZetSetReadHandler(ninjakd2_main_read);
 	ZetClose();
@@ -1492,22 +1492,22 @@ static INT32 OmegafInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, ZET_ROM);
-	ZetMapMemory(DrvBgRAM0,			0xc400, 0xc7ff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM1,			0xc800, 0xcbff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM2,			0xcc00, 0xcfff, ZET_RAM);
-	ZetMapMemory(DrvFgRAM,			0xd000, 0xd7ff, ZET_RAM);
-	ZetMapMemory(DrvPalRAM,			0xd800, 0xdfff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM0,		0xe000, 0xf9ff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80ROM0 + 0x10000, 	0x8000, 0xbfff, MAP_ROM);
+	ZetMapMemory(DrvBgRAM0,			0xc400, 0xc7ff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM1,			0xc800, 0xcbff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM2,			0xcc00, 0xcfff, MAP_RAM);
+	ZetMapMemory(DrvFgRAM,			0xd000, 0xd7ff, MAP_RAM);
+	ZetMapMemory(DrvPalRAM,			0xd800, 0xdfff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM0,		0xe000, 0xf9ff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,			0xfa00, 0xffff, MAP_RAM);
 	ZetSetWriteHandler(omegaf_main_write);
 	ZetSetReadHandler(omegaf_main_read);
 	ZetClose();
 
 	ninjakd2_sound_init();
-	BurnYM2203SetPSGVolume(0, 0.03);
-	BurnYM2203SetPSGVolume(1, 0.03);
+	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.80, BURN_SND_ROUTE_BOTH);
+	BurnYM2203SetRoute(1, BURN_SND_YM2203_YM2203_ROUTE,   0.80, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
 
@@ -1938,7 +1938,7 @@ static INT32 DrvFrame()
 		if (i == (nInterleave-1))
 		{
 			ZetSetVector(0xd7);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 
 		ZetClose();
@@ -1947,7 +1947,7 @@ static INT32 DrvFrame()
 
 		ZetOpen(1);
 	//	nCyclesDone[1] += ZetRun(nCycleSegment);
-		BurnTimerUpdate(i * nCycleSegment);
+		BurnTimerUpdate((i + 1) * nCycleSegment);
 		ZetClose();
 	}
 

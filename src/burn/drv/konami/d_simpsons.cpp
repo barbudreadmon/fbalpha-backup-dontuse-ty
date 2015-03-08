@@ -215,7 +215,7 @@ UINT8 simpsons_main_read(UINT16 address)
 
 		case 0x1fc4: 
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			return 0;
 
 		case 0x1fc6:
@@ -302,7 +302,7 @@ UINT8 __fastcall simpsons_sound_read(UINT16 address)
 	}
 
 	if (address >= 0xfc00 && address < 0xfc30) {
-		if ((address & 0x3f) == 0x01) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if ((address & 0x3f) == 0x01) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 
 		return K053260Read(0, address & 0xff);
 	}
@@ -316,7 +316,7 @@ static void simpsons_set_lines(INT32 lines)
 
 	INT32 nBank = (lines & 0x3f) * 0x2000;
 
-	konamiMapMemory(DrvKonROM + 0x10000 + nBank, 0x6000, 0x7fff, KON_ROM); 
+	konamiMapMemory(DrvKonROM + 0x10000 + nBank, 0x6000, 0x7fff, MAP_ROM); 
 }
 
 static void K052109Callback(INT32 layer, INT32 bank, INT32 *code, INT32 *color, INT32 *, INT32 *)
@@ -407,19 +407,6 @@ static INT32 MemIndex()
 	return 0;
 }
 
-static INT32 DrvGfxDecode()
-{
-	INT32 Plane[4] = { 0x018, 0x010, 0x008, 0x000 };
-	INT32 XOffs[8] = { 0x000, 0x001, 0x002, 0x003, 0x004, 0x005, 0x006, 0x007 };
-	INT32 YOffs[8] = { 0x000, 0x020, 0x040, 0x060, 0x080, 0x0a0, 0x0c0, 0x0e0 };
-
-	GfxDecode(0x8000, 4, 8, 8, Plane, XOffs, YOffs, 0x100, DrvGfxROM0, DrvGfxROMExp0);
-
-	K053247GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x400000);
-
-	return 0;
-}
-
 static const eeprom_interface simpsons_eeprom_intf =
 {
 	7,			// address bits
@@ -464,14 +451,15 @@ static INT32 DrvInit()
 		if (BurnLoadRom(DrvSndROM  + 0x000000, 11, 1)) return 1;
 		if (BurnLoadRom(DrvSndROM  + 0x100000, 12, 1)) return 1;
 
-		DrvGfxDecode();
+		K052109GfxDecode(DrvGfxROM0, DrvGfxROMExp0, 0x100000);
+		K053247GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x400000);
 	}
 
 	konamiInit(0);
 	konamiOpen(0);
-	konamiMapMemory(DrvKonRAM,		0x4000, 0x5fff, KON_RAM);
-	konamiMapMemory(DrvKonROM + 0x10000,	0x6000, 0x7fff, KON_ROM);
-	konamiMapMemory(DrvKonROM + 0x08000,	0x8000, 0xffff, KON_ROM);
+	konamiMapMemory(DrvKonRAM,		0x4000, 0x5fff, MAP_RAM);
+	konamiMapMemory(DrvKonROM + 0x10000,	0x6000, 0x7fff, MAP_ROM);
+	konamiMapMemory(DrvKonROM + 0x08000,	0x8000, 0xffff, MAP_ROM);
 	konamiSetWriteHandler(simpsons_main_write);
 	konamiSetReadHandler(simpsons_main_read);
 	konamiSetlinesCallback(simpsons_set_lines);
@@ -640,7 +628,7 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += nCyclesSegment;
 
 		if (i == 1 && K053246Irq && simpsons_firq_enabled) {
-			konamiSetIrqLine(KONAMI_FIRQ_LINE, KONAMI_IRQSTATUS_AUTO);
+			konamiSetIrqLine(KONAMI_FIRQ_LINE, CPU_IRQSTATUS_AUTO);
 		}
 
 		K053246Irq = K053246_is_IRQ_enabled();
@@ -660,7 +648,7 @@ static INT32 DrvFrame()
 	}
 
 	if (K053246Irq) simpsons_objdma();
-	if (K052109_irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, KONAMI_IRQSTATUS_AUTO);
+	if (K052109_irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;

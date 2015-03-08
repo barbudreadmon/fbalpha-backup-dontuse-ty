@@ -70,6 +70,7 @@ static INT32 AFEGA_SYS = 0;
 static INT32 Tharriermode = 0; // use macross1/tharrier text draw & joy inputs
 static INT32 Macrossmode = 0; // use macross1 text draw
 static INT32 Strahlmode = 0;
+static INT32 Tdragon2mode = 0; // use draw_sprites_tdragon2()
 
 static struct BurnInputInfo CommonInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
@@ -2428,7 +2429,7 @@ void __fastcall ssmissin_main_write_byte(UINT32 address, UINT8 data)
 		case 0x0c001e:
 		case 0x0c001f:
 			*soundlatch = data;
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
 }
@@ -2449,7 +2450,7 @@ void __fastcall ssmissin_main_write_word(UINT32 address, UINT16 data)
 
 		case 0x0c001e:
 			*soundlatch = data;
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
 }
@@ -2613,7 +2614,7 @@ void __fastcall afega_main_write_word(UINT32 address, UINT16 data)
 
 		case 0x08001e:
 			*soundlatch = data & 0xff;
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
 }
@@ -2638,7 +2639,7 @@ void __fastcall afega_main_write_byte(UINT32 address, UINT8 data)
 		case 0x08001e:
 		case 0x08001f:
 			*soundlatch = data & 0xff;
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
 }
@@ -3641,7 +3642,7 @@ UINT8 __fastcall tharrier_sound_in(UINT16 port)
 static void ssmissin_okibank(INT32 bank)
 {
 	*okibank = bank & 3;
-	if (strstr(BurnDrvGetTextA(DRV_NAME), "ssmiss")) {
+	if (strstr(BurnDrvGetTextA(DRV_NAME), "ssmiss") || strstr(BurnDrvGetTextA(DRV_NAME), "airatt")) {
 		memcpy(DrvSndROM0 + 0x20000, DrvSndROM0 + 0x40000 + (bank & 3) * 0x20000, 0x20000);
 	} else { // twin action & dolmen weird banking (m_oki1->set_bank_base((data & 3) * 0x40000);)
 		memcpy(DrvSndROM0, DrvSndROM1 + (bank & 3) * 0x40000, 0x40000);
@@ -3670,7 +3671,7 @@ UINT8 __fastcall ssmissin_sound_read(UINT16 address)
 			return MSM6295ReadStatus(0);
 
 		case 0xa000:
-			ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 	}
 
@@ -3700,7 +3701,7 @@ UINT8 __fastcall afega_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0xf800:
-			ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0xf808:
@@ -3745,7 +3746,7 @@ UINT8 __fastcall firehawk_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0xfff0:
-			ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0xfff8:
@@ -3847,18 +3848,18 @@ UINT8 __fastcall macross2_sound_in(UINT16 port)
 static void DrvYM2203IrqHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
 static void DrvYM2151IrqHandler(INT32 nStatus)
 {
 	if (nStatus) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -4228,11 +4229,11 @@ static INT32 BjtwinInit(INT32 (*pLoadCallback)())
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x09c000, 0x09cfff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x09d000, 0x09dfff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x09c000, 0x09cfff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x09d000, 0x09dfff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	bjtwin_main_write_word);
 	SekSetWriteByteHandler(0,	bjtwin_main_write_byte);
 	SekSetReadWordHandler(0,	bjtwin_main_read_word);
@@ -4291,16 +4292,16 @@ static INT32 Macross2Init()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x120000, 0x1207ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x130000, 0x1307ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x140000, 0x143fff, SM_RAM);
-	SekMapMemory(DrvBgRAM1,		0x144000, 0x147fff, SM_RAM);
-	SekMapMemory(DrvBgRAM2,		0x148000, 0x14bfff, SM_RAM);
-	SekMapMemory(DrvBgRAM3,		0x14c000, 0x14ffff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x170000, 0x170fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x171000, 0x171fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x1f0000, 0x1fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x120000, 0x1207ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x130000, 0x1307ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x140000, 0x143fff, MAP_RAM);
+	SekMapMemory(DrvBgRAM1,		0x144000, 0x147fff, MAP_RAM);
+	SekMapMemory(DrvBgRAM2,		0x148000, 0x14bfff, MAP_RAM);
+	SekMapMemory(DrvBgRAM3,		0x14c000, 0x14ffff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x170000, 0x170fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x171000, 0x171fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x1f0000, 0x1fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	macross2_main_write_word);
 	SekSetWriteByteHandler(0,	macross2_main_write_byte);
 	SekSetReadWordHandler(0,	macross2_main_read_word);
@@ -4326,17 +4327,23 @@ static INT32 Macross2Init()
 
 	BurnYM2203Init(1, 1500000, &DrvYM2203IrqHandler, Macross2SynchroniseStream, Macross2GetTime, 0);
 	BurnTimerAttachZet(4000000);
-	BurnYM2203SetAllRoutes(0, 0.90, BURN_SND_ROUTE_BOTH);
+
+	if (Tdragon2mode) {
+		BurnYM2203SetAllRoutes(0, 3.00, BURN_SND_ROUTE_BOTH);
+		BurnYM2203SetPSGVolume(0, 0.50);
+	} else {
+		BurnYM2203SetAllRoutes(0, 0.90, BURN_SND_ROUTE_BOTH);
+	}
 
 	MSM6295Init(0, 4000000 / 165, 1);
 	MSM6295Init(1, 4000000 / 165, 1);
 	MSM6295SetRoute(0, 0.20, BURN_SND_ROUTE_BOTH);
 	MSM6295SetRoute(1, 0.20, BURN_SND_ROUTE_BOTH);
 
-	if (strcmp(BurnDrvGetTextA(DRV_NAME), "macross2") == 0) {
-		NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x240000, 0x140000);
+	if (Tdragon2mode) {
+		NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x200000, 0x200000);
 	} else {
-		NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x240000, 0x240000);
+		NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x240000, 0x140000);
 	}
 
 	GenericTilesInit();
@@ -4399,20 +4406,20 @@ static INT32 SeibuSoundInit(INT32 (*pLoadCallback)(), INT32 type)
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
 
 	if (type) {	// mustangb
-		SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-		SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_WRITE);
-		SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-		SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-		SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_ROM);
+		SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+		SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+		SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+		SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+		SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
 	} else {	// tdragonb
-		SekMapMemory(Drv68KRAM,		0x0b0000, 0x0bffff, SM_RAM);
-		SekMapMemory(DrvScrollRAM,	0x0c4000, 0x0c43ff, SM_WRITE);
-		SekMapMemory(DrvPalRAM,		0x0c8000, 0x0c87ff, SM_RAM);
-		SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, SM_RAM);
-		SekMapMemory(DrvTxRAM,		0x0d0000, 0x0d07ff, SM_RAM);
+		SekMapMemory(Drv68KRAM,		0x0b0000, 0x0bffff, MAP_RAM);
+		SekMapMemory(DrvScrollRAM,	0x0c4000, 0x0c43ff, MAP_WRITE);
+		SekMapMemory(DrvPalRAM,		0x0c8000, 0x0c87ff, MAP_RAM);
+		SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, MAP_RAM);
+		SekMapMemory(DrvTxRAM,		0x0d0000, 0x0d07ff, MAP_RAM);
 	}
 	SekSetWriteWordHandler(0,	mustangb_main_write_word);
 	SekSetWriteByteHandler(0,	mustangb_main_write_byte);
@@ -4448,14 +4455,14 @@ static INT32 AfegaInit(INT32 (*pLoadCallback)(), void (*pZ80Callback)(), INT32 p
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x084000, 0x0843ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0c0000, 0x0cffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x084000, 0x0843ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0c0000, 0x0cffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
 	SekSetWriteWordHandler(0,	afega_main_write_word);
 	SekSetWriteByteHandler(0,	afega_main_write_byte);
 	SekSetReadWordHandler(0,	afega_main_read_word);
@@ -4548,6 +4555,8 @@ static INT32 DrvExit()
 	MSM6295ROM = NULL;
 	Tharriermode = 0;
 	Macrossmode = 0;
+	Strahlmode = 0;
+	Tdragon2mode = 0;
 
 	return CommonExit();
 }
@@ -4660,6 +4669,83 @@ static void draw_sprites(INT32 flip, INT32 coloff, INT32 coland, INT32 priority)
 
 			if (pri != priority)
 				continue;
+
+			if (*flipscreen)
+			{
+				sx = 368 - sx;
+				sy = 240 - sy;
+				delta = -16;
+
+				flipx ^= *flipscreen;
+				flipy ^= *flipscreen;
+			}
+
+			INT32 yy = h;
+			sy += flipy ? (delta * h) : 0;
+
+			do
+			{
+				INT32 x = sx + (flipx ? (delta * w) : 0);
+				INT32 xx = w;
+
+				do
+				{
+					INT32 xxx = ((x + 16) & 0x1ff) - 16;
+					INT32 yyy = (sy & 0x1ff) - global_y_offset;
+
+					if (flipy) {
+						if (flipx) {
+							Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, code, xxx, yyy, color, 0, 15, 0, DrvGfxROM2);
+						} else {
+							Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code, xxx, yyy, color, 0, 15, 0, DrvGfxROM2);
+						}
+					} else {
+						if (flipx) {
+							Render16x16Tile_Mask_FlipX_Clip(pTransDraw, code, xxx, yyy, color, 0, 15, 0, DrvGfxROM2);
+						} else {
+							Render16x16Tile_Mask_Clip(pTransDraw, code, xxx, yyy, color, 0, 15, 0, DrvGfxROM2);
+						}
+					}
+					code = (code + 1) & nGraphicsMask[2];
+					x += delta * (flipx ? -1 : 1);
+
+				} while (--xx >= 0);
+				sy += delta * (flipy ? -1 : 1);
+
+			} while (--yy >= 0);
+		}
+	}
+}
+
+static void draw_sprites_tdragon2(INT32 flip, INT32 coloff, INT32 coland)
+{
+	UINT16 *sprram;
+
+	static INT32 bittbl[8] = {
+		4, 6, 5, 7, 3, 2, 1, 0
+	};
+
+	for (INT32 i = 0; i < 0x100; i++)
+	{
+		INT32 spr = BITSWAP08(i, bittbl[0], bittbl[1], bittbl[2], bittbl[3], bittbl[4], bittbl[5], bittbl[6], bittbl[7]);
+		sprram = (UINT16*)DrvSprBuf2 + ((spr << 4) >> 1);
+
+		if (BURN_ENDIAN_SWAP_INT16(sprram[0]) & 0x0001)
+		{
+			INT32 sx    =  (BURN_ENDIAN_SWAP_INT16(sprram[4]) & 0x01ff) + videoshift;
+			INT32 sy    =  (BURN_ENDIAN_SWAP_INT16(sprram[6]) & 0x01ff);
+			INT32 code  =   BURN_ENDIAN_SWAP_INT16(sprram[3]) & nGraphicsMask[2];
+			INT32 color =   BURN_ENDIAN_SWAP_INT16(sprram[7]) & coland;
+			INT32 w     =  (BURN_ENDIAN_SWAP_INT16(sprram[1]) & 0x000f);
+			INT32 h     = ((BURN_ENDIAN_SWAP_INT16(sprram[1]) & 0x00f0) >> 4);
+			INT32 flipy = ((BURN_ENDIAN_SWAP_INT16(sprram[1]) & 0x0200) >> 9);
+			INT32 flipx = ((BURN_ENDIAN_SWAP_INT16(sprram[1]) & 0x0100) >> 8);
+
+			if (!flip) flipy = flipx = 0;
+
+			color = (color << 4) + coloff;
+
+			INT32 delta = 16;
 
 			if (*flipscreen)
 			{
@@ -5048,7 +5134,7 @@ static INT32 StrahlDraw()
 	return 0;
 }
 
-static INT32 Macross2Draw() 
+static INT32 Macross2Draw()
 {
 	videoshift = 64;
 	DrvPaletteRecalc();
@@ -5066,10 +5152,14 @@ static INT32 Macross2Draw()
 		case 0x30: draw_macross_background(DrvBgRAM3, (scrollx - 64) & 0xfff, scrolly, 0, 0); break;
 	}	
 
-	draw_sprites(0, 0x100, 0x1f, 3);
-	draw_sprites(0, 0x100, 0x1f, 2);
-	draw_sprites(0, 0x100, 0x1f, 1);
-	draw_sprites(0, 0x100, 0x1f, 0);
+	if (Tdragon2mode) {
+		draw_sprites_tdragon2(0, 0x100, 0x1f);
+	} else {
+		draw_sprites(0, 0x100, 0x1f, 3);
+		draw_sprites(0, 0x100, 0x1f, 2);
+		draw_sprites(0, 0x100, 0x1f, 1);
+		draw_sprites(0, 0x100, 0x1f, 0);
+	}
 
 	draw_macross_text_layer(-64, 0, 1, 0x300);
 
@@ -5268,11 +5358,11 @@ static INT32 DrvFrame()
 		nSegment = nTotalCycles[0] / nInterleave;
 		nCyclesDone[0] += SekRun(nSegment);
 		if (i == (nInterleave-1) || i == ((nInterleave / 2) - 1)) {
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 			SekRun(0);
 		}
-		if (i == ((nInterleave/2)-1))	SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
-		if (i == (nInterleave-1)) 	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == ((nInterleave/2)-1))	SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
+		if (i == (nInterleave-1)) 	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 		BurnTimerUpdate(i * (nTotalCycles[1] / nInterleave));
 	}
@@ -5388,23 +5478,23 @@ static INT32 SsmissinFrame()
 		nCyclesDone[0] += SekRun(nSegment);
 
 /*		if (i == (nInterleave-1) || i == ((nInterleave / 2) - 1)) {
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 			SekRun(0);
 		}
 		if (i == ((nInterleave/2)-1) && nNMK004EnableIrq2)
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		if (i == (nInterleave-1))
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 */
 
 		if (i == 25 || i == 148) { // 25, 153 in MAME
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		}
 		if (i == 0) {
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		}
 		if (i == 235) { // 240 in MAME, but causes a missing life-bar in VanDyke.  236 causes a little flicker in the life-bar, 235 = perfect.
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 
 		ZetRun(nTotalCycles[1] / nInterleave);
@@ -5456,10 +5546,10 @@ static INT32 Macross2Frame()
 		nSegment = nTotalCycles[0] / nInterleave;
 		nCyclesDone[0] += SekRun(nSegment);
 		if (i == 1 || i == (nInterleave / 2)) {
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		}
 		if (i == (nInterleave-1)) {
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 
 		if (macross2_sound_enable) {
@@ -5474,8 +5564,8 @@ static INT32 Macross2Frame()
 
 	if (pBurnSoundOut) {
 		BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
-		MSM6295Render(1, pBurnSoundOut, nBurnSoundLen);
 		MSM6295Render(0, pBurnSoundOut, nBurnSoundLen);
+		MSM6295Render(1, pBurnSoundOut, nBurnSoundLen);
 	}
 
 	ZetClose();
@@ -5520,8 +5610,8 @@ static INT32 AfegaFrame()
 
 		nSegment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(nSegment);
-		if (i == (nInterleave / 2) - 1) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
-		if (i == (nInterleave)     - 1) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave / 2) - 1) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
+		if (i == (nInterleave)     - 1) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 		nSegment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(nSegment);
@@ -5586,18 +5676,18 @@ static INT32 BjtwinFrame()
 		nSegment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(nSegment);
 		if (i == (nInterleave-1) || i == ((nInterleave / 2) - 1)) {
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		}
 		if (i == (nInterleave-1)) {
 			SekRun(0);
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 	}
 
 	if (pBurnSoundOut) {
 		memset (pBurnSoundOut, 0, nBurnSoundLen * 2 * sizeof(INT16));
-		MSM6295Render(1, pBurnSoundOut, nBurnSoundLen);
 		MSM6295Render(0, pBurnSoundOut, nBurnSoundLen);
+		MSM6295Render(1, pBurnSoundOut, nBurnSoundLen);
 	}
 
 	SekClose();
@@ -5641,17 +5731,17 @@ static INT32 SeibuSoundFrame()
 		nSegment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(nSegment);
 		if (i == (nInterleave-1) || i == ((nInterleave / 2) - 1)) {
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		}
 
 		if (i == ((nInterleave/2)-1)) {
 			SekRun(0);
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		}
 
 		if (i == (nInterleave-1)) {
 			SekRun(0);
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 
 		BurnTimerUpdateYM3812(i * (nCyclesTotal[1] / nInterleave));
@@ -5716,13 +5806,13 @@ static INT32 NMK004Frame()
 		}
 
 		if (i == 25 || i == 148) { // 25, 153 in MAME
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		}
 		if (i == 0) {
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		}
 		if (i == 235) { // 240 in MAME, but causes a missing life-bar in VanDyke.  236 causes a little flicker in the life-bar, 235 = perfect.
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 
 		nSegment = i * (nTotalCycles[1] / nInterleave);
@@ -5939,12 +6029,12 @@ static INT32 TharrierLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0883ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0883ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
 	SekSetWriteWordHandler(0,	tharrier_main_write_word);
 	SekSetWriteByteHandler(0,	tharrier_main_write_byte);
 	SekSetReadWordHandler(0,	tharrier_main_read_word);
@@ -6071,12 +6161,12 @@ static INT32 ManyblocLoadCallback()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0883ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x09c000, 0x09cfff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0883ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x09c000, 0x09cfff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	manybloc_main_write_word);
 	SekSetWriteByteHandler(0,	manybloc_main_write_byte);
 	SekSetReadWordHandler(0,	manybloc_main_read_word);
@@ -6157,15 +6247,15 @@ static INT32 SsmissinLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x0b0000, 0x0bffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x0c4000, 0x0c43ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x0c8000, 0x0c87ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x0d0000, 0x0d07ff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x0d0800, 0x0d0fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x0d1000, 0x0d17ff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x0d1800, 0x0d1fff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x0b0000, 0x0bffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x0c4000, 0x0c43ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x0c8000, 0x0c87ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x0d0000, 0x0d07ff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x0d0800, 0x0d0fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x0d1000, 0x0d17ff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x0d1800, 0x0d1fff, MAP_RAM);
 	SekSetWriteWordHandler(0,	ssmissin_main_write_word);
 	SekSetWriteByteHandler(0,	ssmissin_main_write_byte);
 	SekSetReadWordHandler(0,	ssmissin_main_read_word);
@@ -6300,6 +6390,46 @@ struct BurnDriver BurnDrvMacross2 = {
 	384, 224, 4, 3
 };
 
+// Super Spacefortress Macross II / Chou-Jikuu Yousai Macross II (GAMEST review build)
+
+static struct BurnRomInfo macross2gRomDesc[] = {
+	{ "3.u11",			0x080000, 0x151f9d39, 1 | BRF_PRG | BRF_ESS }, //  0 68k code
+
+	{ "mcrs2j.2",		0x020000, 0xb4aa8ac7, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 code
+
+	{ "mcrs2j.1",		0x020000, 0xc7417410, 3 | BRF_GRA },           //  2 Characters
+
+	{ "bp932an.a04",	0x200000, 0xc4d77ff0, 4 | BRF_GRA },           //  3 Tiles
+
+	{ "bp932an.a07",	0x200000, 0xaa1b21b9, 5 | BRF_GRA },           //  4 Sprites
+	{ "bp932an.a08",	0x200000, 0x67eb2901, 5 | BRF_GRA },           //  5
+
+	{ "bp932an.a06",	0x200000, 0xef0ffec0, 6 | BRF_SND },           //  6 OKI1 Samples
+
+	{ "bp932an.a05",	0x100000, 0xb5335abb, 7 | BRF_SND },           //  7 OKI2 Samples
+
+	{ "mcrs2bpr.9",		0x000100, 0x435653a2, 0 | BRF_OPT },           //  8 Unused proms
+	{ "mcrs2bpr.10",	0x000100, 0xe6ead349, 0 | BRF_OPT },           //  9
+};
+
+STD_ROM_PICK(macross2g)
+STD_ROM_FN(macross2g)
+
+struct BurnDriver BurnDrvMacross2g = {
+	"macross2g", "macross2", NULL, NULL, "1993",
+	"Super Spacefortress Macross II / Chou-Jikuu Yousai Macross II (GAMEST review build)\0", NULL, "Banpresto", "NMK16",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_HORSHOOT, 0,
+	NULL, macross2gRomInfo, macross2gRomName, NULL, NULL, CommonInputInfo, Macross2DIPInfo,
+	Macross2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
+	384, 224, 4, 3
+};
+
+static INT32 Tdragon2Init()
+{
+	Tdragon2mode = 1;
+	return Macross2Init();
+}
 
 // Thunder Dragon 2 (9th Nov. 1993)
 
@@ -6332,7 +6462,7 @@ struct BurnDriver BurnDrvTdragon2 = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, 0,
 	NULL, tdragon2RomInfo, tdragon2RomName, NULL, NULL, Tdragon2InputInfo, Tdragon2DIPInfo,
-	Macross2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
+	Tdragon2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
 	224, 384, 3, 4
 };
 
@@ -6368,7 +6498,7 @@ struct BurnDriver BurnDrvTdragon2a = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, 0,
 	NULL, tdragon2aRomInfo, tdragon2aRomName, NULL, NULL, Tdragon2InputInfo, Tdragon2DIPInfo,
-	Macross2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
+	Tdragon2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
 	224, 384, 3, 4
 };
 
@@ -6404,7 +6534,7 @@ struct BurnDriver BurnDrvBigbang = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, 0,
 	NULL, bigbangRomInfo, bigbangRomName, NULL, NULL, Tdragon2InputInfo, Tdragon2DIPInfo,
-	Macross2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
+	Tdragon2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
 	224, 384, 3, 4
 };
 
@@ -7444,12 +7574,12 @@ static void Twinactn68kInit()
 {
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
 	SekSetWriteWordHandler(0,	afega_main_write_word);
 	SekSetWriteByteHandler(0,	afega_main_write_byte);
 	SekSetReadWordHandler(0,	afega_main_read_word);
@@ -7942,12 +8072,12 @@ static INT32 MustangLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
 	SekSetWriteWordHandler(0,	mustang_main_write_word);
 	SekSetWriteByteHandler(0,	mustang_main_write_byte);
 	SekSetReadWordHandler(0,	mustang_main_read_word);
@@ -8204,12 +8334,12 @@ static INT32 TdragonLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x0b0000, 0x0bffff, SM_ROM);
-	SekMapMemory(DrvScrollRAM,	0x0c4000, 0x0c43ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x0c8000, 0x0c87ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x0d0000, 0x0d07ff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x0b0000, 0x0bffff, MAP_ROM);
+	SekMapMemory(DrvScrollRAM,	0x0c4000, 0x0c43ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x0c8000, 0x0c87ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x0d0000, 0x0d07ff, MAP_RAM);
 	SekSetWriteWordHandler(0,	tdragon_main_write_word);
 	SekSetWriteByteHandler(0,	tdragon_main_write_byte);
 	SekSetReadWordHandler(0,	tdragon_main_read_word);
@@ -8387,12 +8517,12 @@ static INT32 AcrobatmLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x080000, 0x08ffff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x0c4000, 0x0c47ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x0c8000, 0x0c83ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x0d4000, 0x0d47ff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x080000, 0x08ffff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x0c4000, 0x0c47ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x0c8000, 0x0c83ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x0cc000, 0x0cffff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x0d4000, 0x0d47ff, MAP_RAM);
 	SekSetWriteWordHandler(0,	acrobatm_main_write_word);
 	SekSetWriteByteHandler(0,	acrobatm_main_write_byte);
 	SekSetReadWordHandler(0,	acrobatm_main_read_word);
@@ -8469,12 +8599,12 @@ static INT32 MacrossLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
 	SekSetWriteWordHandler(0,	macross_main_write_word);
 	SekSetWriteByteHandler(0,	macross_main_write_byte);
 	SekSetReadWordHandler(0,	macross_main_read_word);
@@ -8554,13 +8684,13 @@ static INT32 GunnailLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c7ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09cfff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09d000, 0x09dfff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c7ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09cfff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09d000, 0x09dfff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	macross_main_write_word);
 	SekSetWriteByteHandler(0,	macross_main_write_byte);
 	SekSetReadWordHandler(0,	macross_main_read_word);
@@ -8638,12 +8768,12 @@ static INT32 BlkheartLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_ROM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
 	SekSetWriteWordHandler(0,	macross_main_write_word);
 	SekSetWriteByteHandler(0,	macross_main_write_byte);
 	SekSetReadWordHandler(0,	macross_main_read_word);
@@ -8761,13 +8891,13 @@ static INT32 VandykeLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c007, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvBgRAM1,		0x094000, 0x097fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c007, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvBgRAM1,		0x094000, 0x097fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	macross_main_write_word);
 	SekSetWriteByteHandler(0,	macross_main_write_byte);
 	SekSetReadWordHandler(0,	macross_main_read_word);
@@ -8934,12 +9064,12 @@ static INT32 VandykebLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-//	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+//	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09d000, 0x09d7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	vandykeb_main_write_word); // different scroll regs
 	SekSetWriteByteHandler(0,	vandykeb_main_write_byte);
 	SekSetReadWordHandler(0,	macross_main_read_word);
@@ -9020,12 +9150,12 @@ static INT32 HachamfLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	hachamf_main_write_word);
 	SekSetWriteByteHandler(0,	hachamf_main_write_byte);
 	SekSetReadWordHandler(0,	hachamf_main_read_word);
@@ -9099,12 +9229,12 @@ static INT32 HachamfbLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_WRITE);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	hachamf_main_write_word);
 	SekSetWriteByteHandler(0,	hachamf_main_write_byte);
 	SekSetReadWordHandler(0,	hachamf_main_read_word);
@@ -9191,14 +9321,14 @@ static INT32 StrahlLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvScrollRAM,		0x084000, 0x0843ff, SM_WRITE);
-	SekMapMemory(DrvScrollRAM + 0x400,	0x088000, 0x0883ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x08c000, 0x08c7ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,			0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvBgRAM1,			0x094000, 0x097fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,			0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,			0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvScrollRAM,		0x084000, 0x0843ff, MAP_WRITE);
+	SekMapMemory(DrvScrollRAM + 0x400,	0x088000, 0x0883ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x08c000, 0x08c7ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,			0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvBgRAM1,			0x094000, 0x097fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,			0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,			0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,		macross_main_write_word);
 	SekSetWriteByteHandler(0,		macross_main_write_byte);
 	SekSetReadWordHandler(0,		macross_main_read_word);
@@ -9322,12 +9452,12 @@ static INT32 BioshipLoadCallback()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	macross_main_write_word);
 	SekSetWriteByteHandler(0,	macross_main_write_byte);
 	SekSetReadWordHandler(0,	macross_main_read_word);
@@ -9526,7 +9656,7 @@ static void raphero_sound_bankswitch(INT32 data)
 {
 	INT32 nBank = ((data & 0x07) * 0x4000) + 0x10000;
 
-	tlcs90MapMemory(DrvZ80ROM + nBank, 0x8000, 0xbfff, TLCS90_ROM);
+	tlcs90MapMemory(DrvZ80ROM + nBank, 0x8000, 0xbfff, MAP_ROM);
 }
 
 static void raphero_sound_write(UINT32 address, UINT8 data)
@@ -9590,7 +9720,7 @@ static UINT8 raphero_sound_read(UINT32 address)
 
 static void RapheroYM2203IrqHandler(INT32, INT32 nStatus)
 {
-	tlcs90SetIRQLine(0, (nStatus) ? TLCS90_IRQSTATUS_ACK : TLCS90_IRQSTATUS_NONE);
+	tlcs90SetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 inline static double RapheroGetTime()
@@ -9665,16 +9795,16 @@ static INT32 RapheroInit()
 
 	SekInit(0, 0x68000);	
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x120000, 0x1207ff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x130000, 0x1307ff, SM_RAM);
-	SekMapMemory(DrvBgRAM0,		0x140000, 0x143fff, SM_RAM);
-	SekMapMemory(DrvBgRAM1,		0x144000, 0x147fff, SM_RAM);
-	SekMapMemory(DrvBgRAM2,		0x148000, 0x14bfff, SM_RAM);
-	SekMapMemory(DrvBgRAM3,		0x14c000, 0x14ffff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x170000, 0x170fff, SM_RAM);
-	SekMapMemory(DrvTxRAM,		0x171000, 0x171fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0x1f0000, 0x1fffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x120000, 0x1207ff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x130000, 0x1307ff, MAP_RAM);
+	SekMapMemory(DrvBgRAM0,		0x140000, 0x143fff, MAP_RAM);
+	SekMapMemory(DrvBgRAM1,		0x144000, 0x147fff, MAP_RAM);
+	SekMapMemory(DrvBgRAM2,		0x148000, 0x14bfff, MAP_RAM);
+	SekMapMemory(DrvBgRAM3,		0x14c000, 0x14ffff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x170000, 0x170fff, MAP_RAM);
+	SekMapMemory(DrvTxRAM,		0x171000, 0x171fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0x1f0000, 0x1fffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	raphero_main_write_word);
 	SekSetWriteByteHandler(0,	raphero_main_write_byte);
 	SekSetReadWordHandler(0,	raphero_main_read_word);
@@ -9683,8 +9813,8 @@ static INT32 RapheroInit()
 
 	tlcs90Init(0, 8000000);
 	tlcs90Open(0);
-	tlcs90MapMemory(DrvZ80ROM,	0x0000, 0x7fff, TLCS90_ROM);
-	tlcs90MapMemory(DrvZ80RAM,	0xe000, 0xffff, TLCS90_RAM);
+	tlcs90MapMemory(DrvZ80ROM,	0x0000, 0x7fff, MAP_ROM);
+	tlcs90MapMemory(DrvZ80RAM,	0xe000, 0xffff, MAP_RAM);
 	tlcs90SetWriteHandler(raphero_sound_write);
 	tlcs90SetReadHandler(raphero_sound_read);
 	tlcs90Close();
@@ -9756,11 +9886,11 @@ static INT32 RapheroFrame()
 		SekRun(nTotalCycles[0] / nInterleave);
 
 		if (i == (nInterleave-16) || i == (nInterleave/2)-16) { // ??
-			SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		}
 
 		if (i == (nInterleave-1)) {
-			SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 
 		nSegment = (nTotalCycles[1] / nInterleave) * (i + 1);
@@ -9797,7 +9927,7 @@ struct BurnDriver BurnDrvRaphero = {
 	224, 384, 3, 4
 };
 
-// Aracdia
+// Arcadia
 
 static struct BurnRomInfo arcadianRomDesc[] = {
 	{ "arcadia.3",		0x080000, 0x8b46d609, 1 | BRF_PRG | BRF_ESS }, //  0 68k code

@@ -459,9 +459,9 @@ static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 static void DrvYM3812IrqHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -658,12 +658,12 @@ static INT32 DrvInit(INT32 game_select)
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,		0x900000, 0x903fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,	0x908000, 0x90bfff, SM_RAM);
-	SekMapMemory(DrvVidRAM0,	0x90c000, 0x90ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x910000, 0x910fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0xff0000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,		0x900000, 0x903fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,	0x908000, 0x90bfff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,	0x90c000, 0x90ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x910000, 0x910fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0xff0000, 0xffffff, MAP_RAM);
 	SekSetWriteWordHandler(0,	magicbub_main_write_word);
 	SekSetWriteByteHandler(0,	magicbub_main_write_byte);
 	SekSetReadWordHandler(0,	magicbub_main_read_word);
@@ -872,7 +872,7 @@ static INT32 DrvFrame()
 	for (INT32 i = 0; i < nInterleave; i++) {
 		INT32 nSegment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(nSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
 		if (is_magicbub != 1) continue;
 

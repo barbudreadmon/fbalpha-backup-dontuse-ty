@@ -654,9 +654,9 @@ static INT32 MemIndex()
 static void taotaidoFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -700,13 +700,13 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(DrvBgRAM,		0x800000, 0x803fff, SM_RAM);
-	SekMapMemory(DrvSprRAM0,	0xa00000, 0xa01fff, SM_RAM);
-	SekMapMemory(DrvSprRAM1,	0xc00000, 0xc0ffff, SM_RAM);
-	SekMapMemory(Drv68KRAM,		0xfe0000, 0xfeffff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0xffc000, 0xffcfff, SM_ROM);
-	SekMapMemory(DrvScrollRAM,	0xffe000, 0xffe3ff, SM_RAM); 
+	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(DrvBgRAM,		0x800000, 0x803fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM0,	0xa00000, 0xa01fff, MAP_RAM);
+	SekMapMemory(DrvSprRAM1,	0xc00000, 0xc0ffff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,		0xfe0000, 0xfeffff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0xffc000, 0xffcfff, MAP_ROM);
+	SekMapMemory(DrvScrollRAM,	0xffe000, 0xffe3ff, MAP_RAM); 
 	SekSetWriteByteHandler(0,	taotaido_write_byte);
 	SekSetWriteWordHandler(0,	taotaido_write_word);
 	SekSetReadByteHandler(0,	taotaido_read_byte);
@@ -915,7 +915,7 @@ static INT32 DrvFrame()
 	ZetOpen(0);
 
 	SekRun(nCyclesTotal[0]);
-	SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 	
 	BurnTimerEndFrame(nCyclesTotal[1]);
 	BurnYM2610Update(pBurnSoundOut, nBurnSoundLen);

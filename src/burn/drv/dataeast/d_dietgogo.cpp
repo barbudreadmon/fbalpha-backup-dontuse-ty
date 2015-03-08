@@ -124,7 +124,7 @@ void __fastcall dietgogo_main_write_word(UINT32 address, UINT16 data)
 	{
 		case 0x340380:
 			deco16_soundlatch = data;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
 }
@@ -136,7 +136,7 @@ void __fastcall dietgogo_main_write_byte(UINT32 address, UINT8 data)
 		case 0x340380:
 		case 0x340381:
 			deco16_soundlatch = data;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
 }
@@ -275,15 +275,15 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, SM_READ);
-	SekMapMemory(Drv68KCode,		0x000000, 0x07ffff, SM_FETCH);
-	SekMapMemory(deco16_pf_ram[0],		0x210000, 0x211fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[1],		0x212000, 0x213fff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[0],	0x220000, 0x2207ff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[1],	0x222000, 0x2227ff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x280000, 0x2807ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x300000, 0x300bff, SM_RAM);
-	SekMapMemory(Drv68KRAM,			0x380000, 0x38ffff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, MAP_READ);
+	SekMapMemory(Drv68KCode,		0x000000, 0x07ffff, MAP_FETCH);
+	SekMapMemory(deco16_pf_ram[0],		0x210000, 0x211fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[1],		0x212000, 0x213fff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[0],	0x220000, 0x2207ff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[1],	0x222000, 0x2227ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x280000, 0x2807ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x300000, 0x300bff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,			0x380000, 0x38ffff, MAP_RAM);
 	SekSetWriteWordHandler(0,		dietgogo_main_write_word);
 	SekSetWriteByteHandler(0,		dietgogo_main_write_byte);
 	SekSetReadWordHandler(0,		dietgogo_main_read_word);
@@ -450,7 +450,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;

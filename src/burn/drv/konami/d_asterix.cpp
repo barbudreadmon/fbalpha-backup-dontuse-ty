@@ -228,7 +228,7 @@ static void _fastcall asterix_main_write_byte(UINT32 address, UINT8 data)
 		return;
 
 		case 0x380301:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x380601:
@@ -342,7 +342,7 @@ static UINT8 __fastcall asterix_sound_read(UINT16 address)
 	}
 
 	if (address >= 0xfa00 && address <= 0xfa2f) {
-		if ((address & 0x3e) == 0x00) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if ((address & 0x3e) == 0x00) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 
 		return K053260Read(0, address & 0x3f);
 	}
@@ -443,9 +443,9 @@ static INT32 MemIndex()
 
 static INT32 DrvGfxDecode()
 {
-	INT32 Plane1[4] = { 24, 16, 8, 0 };
-	INT32 XOffs1[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8*32+0, 8*32+1, 8*32+2, 8*32+3, 8*32+4, 8*32+5, 8*32+6, 8*32+7 };
-	INT32 YOffs1[16] = { 0*32, 1*32, 2*32, 3*32, 4*32, 5*32, 6*32, 7*32, 16*32, 17*32, 18*32, 19*32, 20*32, 21*32, 22*32, 23*32 };
+	INT32 Plane1[4]  = { STEP4(24, -8) };
+	INT32 XOffs1[16] = { STEP8(0,1), STEP8(256,1) };
+	INT32 YOffs1[16] = { STEP8(0,32), STEP8(512,32) };
 
 	K053247GfxDecode(DrvGfxROM0, DrvGfxROMExp0, 0x100000);
 
@@ -494,11 +494,11 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,	0x100000, 0x107fff, SM_RAM);
-	SekMapMemory(K053245Ram[0],	0x180000, 0x1807ff, SM_RAM);
-	SekMapMemory(Drv68KRAM1,	0x180800, 0x180fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x280000, 0x280fff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,	0x100000, 0x107fff, MAP_RAM);
+	SekMapMemory(K053245Ram[0],	0x180000, 0x1807ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM1,	0x180800, 0x180fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x280000, 0x280fff, MAP_RAM);
 	SekSetWriteWordHandler(0,	asterix_main_write_word);
 	SekSetWriteByteHandler(0,	asterix_main_write_byte);
 	SekSetReadWordHandler(0,	asterix_main_read_word);
@@ -507,8 +507,8 @@ static INT32 DrvInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,		0x0000, 0xefff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,		0xf000, 0xf7ff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,		0x0000, 0xefff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,		0xf000, 0xf7ff, MAP_RAM);
 	ZetSetWriteHandler(asterix_sound_write);
 	ZetSetReadHandler(asterix_sound_read);
 	ZetClose();
@@ -667,7 +667,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	if (K056832IsIrqEnabled()) SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+	if (K056832IsIrqEnabled()) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;

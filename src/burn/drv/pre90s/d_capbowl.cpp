@@ -80,7 +80,7 @@ static void bankswitch(INT32 d)
 
 	int bank = 0x08000 + (((d & 0x0c) >> 1) | (d & 1)) * 0x4000;
 
-	M6809MapMemory(DrvMainROM + bank, 0x0000, 0x3fff, M6809_ROM);
+	M6809MapMemory(DrvMainROM + bank, 0x0000, 0x3fff, MAP_ROM);
 }
 
 static void main_write(UINT16 a, UINT8 d)
@@ -117,7 +117,7 @@ static void main_write(UINT16 a, UINT8 d)
 			*soundlatch = d;
 			M6809Close();
 			M6809Open(1);
-			M6809SetIRQLine(M6809_IRQ_LINE, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(M6809_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 			M6809Close();
 			M6809Open(0);
 		}
@@ -227,12 +227,12 @@ static double DrvGetTime()
 
 static void DrvFMIRQCallback(INT32 , INT32 state)
 {
-	M6809SetIRQLine(M6809_FIRQ_LINE, state ? M6809_IRQSTATUS_ACK : M6809_IRQSTATUS_NONE);
+	M6809SetIRQLine(M6809_FIRQ_LINE, state ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static void tms34061_interrupt(INT32 state)
 {
-	M6809SetIRQLine(M6809_FIRQ_LINE, state ? M6809_IRQSTATUS_ACK : M6809_IRQSTATUS_NONE);
+	M6809SetIRQLine(M6809_FIRQ_LINE, state ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static void draw_layer()
@@ -363,15 +363,15 @@ static INT32 DrvInit(INT32 game)
 
 	M6809Init(2);
 	M6809Open(0);
-	M6809MapMemory(DrvNVRAM,		0x5000, 0x57ff, M6809_RAM);
-	M6809MapMemory(DrvMainROM,		0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvNVRAM,		0x5000, 0x57ff, MAP_RAM);
+	M6809MapMemory(DrvMainROM,		0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(main_write);
 	M6809SetReadHandler(main_read);
 	M6809Close();
 
 	M6809Open(1);
-	M6809MapMemory(DrvSoundRAM,		0x0000, 0x07ff, M6809_RAM);
-	M6809MapMemory(DrvSoundROM,		0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvSoundRAM,		0x0000, 0x07ff, MAP_RAM);
+	M6809MapMemory(DrvSoundROM,		0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(sound_write);
 	M6809SetReadHandler(sound_read);
 	M6809Close();
@@ -488,7 +488,7 @@ static INT32 DrvFrame()
 
 	M6809Open(0);
 	if (DrvDips[1] & 0x01) {
-		M6809SetIRQLine(0x20, M6809_IRQSTATUS_AUTO); // NMI
+		M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO); // NMI
 	}
 	M6809Close();
 

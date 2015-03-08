@@ -337,7 +337,7 @@ void __fastcall rpunch_main_write_byte(UINT32 address, UINT8 data)
 		case 0x0c000f:
 			*soundlatch = data;
 			*sound_busy = 1;
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x0c0029:
@@ -429,7 +429,7 @@ UINT8 __fastcall rpunch_sound_read(UINT16 address)
 
 		case 0xf200:
 			*sound_busy = 0;
-			ZetSetIRQLine(0, (*sound_irq) ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, (*sound_irq) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 	}
 
@@ -440,7 +440,7 @@ static void DrvYM2151IrqHandler(INT32 irq)
 {
 	*sound_irq = irq;
 
-	ZetSetIRQLine(0, (*sound_irq | *sound_busy) ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+	ZetSetIRQLine(0, (*sound_irq | *sound_busy) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvDoReset()
@@ -547,12 +547,12 @@ static INT32 DrvInit(INT32 (*pRomLoadCallback)(), INT32 game)
 	SekOpen(0);
 	// FBA doesn't support memory masks, so use mirroring instead
 	for (INT32 i = 0; i < 1 << 24; i+= 1 << 20) {
-		SekMapMemory(Drv68KROM,			i+0x000000, i+0x03ffff, SM_ROM);
-		SekMapMemory(DrvBMPRAM,			i+0x040000, i+0x04ffff, SM_RAM);
-		SekMapMemory(DrvSprRAM,			i+0x060000, i+0x060fff, SM_RAM);
-		SekMapMemory(DrvVidRAM,			i+0x080000, i+0x083fff, SM_RAM);
-		SekMapMemory(DrvPalRAM,			i+0x0a0000, i+0x0a07ff, SM_ROM);
-		SekMapMemory(Drv68KRAM,			i+0x0fc000, i+0x0fffff, SM_RAM);
+		SekMapMemory(Drv68KROM,			i+0x000000, i+0x03ffff, MAP_ROM);
+		SekMapMemory(DrvBMPRAM,			i+0x040000, i+0x04ffff, MAP_RAM);
+		SekMapMemory(DrvSprRAM,			i+0x060000, i+0x060fff, MAP_RAM);
+		SekMapMemory(DrvVidRAM,			i+0x080000, i+0x083fff, MAP_RAM);
+		SekMapMemory(DrvPalRAM,			i+0x0a0000, i+0x0a07ff, MAP_ROM);
+		SekMapMemory(Drv68KRAM,			i+0x0fc000, i+0x0fffff, MAP_RAM);
 	}
 	SekSetWriteWordHandler(0,	rpunch_main_write_word);
 	SekSetWriteByteHandler(0,	rpunch_main_write_byte);
@@ -765,7 +765,7 @@ static INT32 DrvFrame()
 		nSegment = (nCyclesTotal[0] - nCyclesDone[0]) / (nInterleave - i);
 		nCyclesDone[0] += SekRun(nSegment);
 
-		if (crtc_timer == 2 && i == ((nInterleave / 2) - 1)) SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+		if (crtc_timer == 2 && i == ((nInterleave / 2) - 1)) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		nSegment = (nCyclesTotal[1] - nCyclesDone[1]) / (nInterleave - i);
 		nCyclesDone[1] += ZetRun(nSegment);
@@ -780,7 +780,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	if (crtc_timer) SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+	if (crtc_timer) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		nSegment = nBurnSoundLen - nSoundBufferPos;

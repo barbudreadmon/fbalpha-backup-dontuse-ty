@@ -206,7 +206,7 @@ static void mrdo_palette_init()
 		}
 		else pot[i] = 0;
 
-		weight[i] = 0xff * pot[i] / pot[0x0f];
+		weight[i] = (INT32)(0xff * pot[i] / pot[0x0f]);
 		if (weight[i] < 0) weight[i] = 0;
 	}
 
@@ -481,7 +481,7 @@ static INT32 DrvFrame()
 
 	ZetOpen(0);
 	ZetRun(4000000 / 60);
-	ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+	ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 	ZetClose();
 
 	if (pBurnDraw) {

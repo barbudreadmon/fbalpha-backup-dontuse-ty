@@ -497,7 +497,7 @@ void __fastcall Othunder68KWriteByte(UINT32 a, UINT8 d)
 		case 0x500005:
 		case 0x500007: {
 			nTaitoCyclesDone[0] += SekRun(10);
-			SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 			return;
 		}
 		
@@ -573,7 +573,7 @@ void __fastcall Othunder68KWriteWord(UINT32 a, UINT16 d)
 		case 0x500004:
 		case 0x500006: {
 			nTaitoCyclesDone[0] += SekRun(10);
-			SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 			return;
 		}
 		
@@ -730,9 +730,9 @@ static const UINT8 othunder_default_eeprom[128] = {
 static void OthunderFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xFF, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xFF, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -815,10 +815,10 @@ static INT32 OthunderInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Taito68KRom1            , 0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(Taito68KRam1            , 0x080000, 0x08ffff, SM_RAM);
-	SekMapMemory(TC0100SCNRam[0]         , 0x200000, 0x20ffff, SM_READ);
-	SekMapMemory(TaitoSpriteRam          , 0x400000, 0x4005ff, SM_RAM);
+	SekMapMemory(Taito68KRom1            , 0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(Taito68KRam1            , 0x080000, 0x08ffff, MAP_RAM);
+	SekMapMemory(TC0100SCNRam[0]         , 0x200000, 0x20ffff, MAP_READ);
+	SekMapMemory(TaitoSpriteRam          , 0x400000, 0x4005ff, MAP_RAM);
 	SekSetReadWordHandler(0, Othunder68KReadWord);
 	SekSetWriteWordHandler(0, Othunder68KWriteWord);
 	SekSetReadByteHandler(0, Othunder68KReadByte);
@@ -1087,7 +1087,7 @@ static INT32 OthunderFrame()
 		nNext = (i + 1) * nTaitoCyclesTotal[nCurrentCPU] / nInterleave;
 		nTaitoCyclesSegment = nNext - nTaitoCyclesDone[nCurrentCPU];
 		nTaitoCyclesDone[nCurrentCPU] += SekRun(nTaitoCyclesSegment);
-		if (i == (TaitoFrameInterleave - 1)) SekSetIRQLine(TaitoIrqLine, SEK_IRQSTATUS_AUTO);
+		if (i == (TaitoFrameInterleave - 1)) SekSetIRQLine(TaitoIrqLine, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		ZetOpen(0);

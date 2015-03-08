@@ -299,7 +299,7 @@ static UINT8 __fastcall tail2nose_sound_in(UINT16 port)
 
 static void tail2noseFMIRQHandler(INT32, INT32 status)
 {
-	ZetSetIRQLine(0, (status & 1) ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE );
+	ZetSetIRQLine(0, (status & 1) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE );
 }
 
 static INT32 tail2noseSynchroniseStream(INT32 nSoundRate)
@@ -438,14 +438,14 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KROM + 0x040000,	0x200000, 0x27ffff, SM_ROM);
-	SekMapMemory(Drv68KROM + 0x0c0000,	0x2c0000, 0x2dffff, SM_ROM);
-	SekMapMemory(DrvZoomRAM,		0x400000, 0x41ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,			0xff8000, 0xffbfff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0xffc000, 0xffcfff, SM_RAM);
-	SekMapMemory(DrvVidRAM,			0xffd000, 0xffdfff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0xffe000, 0xffefff, SM_ROM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KROM + 0x040000,	0x200000, 0x27ffff, MAP_ROM);
+	SekMapMemory(Drv68KROM + 0x0c0000,	0x2c0000, 0x2dffff, MAP_ROM);
+	SekMapMemory(DrvZoomRAM,		0x400000, 0x41ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0xff8000, 0xffbfff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0xffc000, 0xffcfff, MAP_RAM);
+	SekMapMemory(DrvVidRAM,			0xffd000, 0xffdfff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0xffe000, 0xffefff, MAP_ROM);
 	SekSetWriteWordHandler(0,		tail2nose_main_write_word);
 	SekSetWriteByteHandler(0,		tail2nose_main_write_byte);
 	SekSetReadWordHandler(0,		tail2nose_main_read_word);
@@ -622,7 +622,7 @@ static INT32 DrvFrame()
 		BurnTimerUpdate(SekTotalCycles() / 2);
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 	BurnTimerEndFrame(nCyclesTotal[1]);
 

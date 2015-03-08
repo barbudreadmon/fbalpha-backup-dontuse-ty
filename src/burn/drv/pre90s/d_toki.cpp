@@ -265,7 +265,7 @@ static void __fastcall toki_write_byte(UINT32 address, UINT8 data)
 		{
 			*soundlatch = data & 0xff;
 			ZetOpen(0);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 		}
 		return;
@@ -442,7 +442,7 @@ static UINT8 __fastcall tokib_sound_read(UINT16 address)
 			return BurnYM3812Read(0, 0);
 
 		case 0xf800:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 	}
 
@@ -694,14 +694,14 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM, 	0x000000, 0x05ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x060000, 0x06d7ff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x06d800, 0x06dfff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x06e000, 0x06e7ff, SM_ROM);
-	SekMapMemory(DrvBg1RAM,		0x06e800, 0x06efff, SM_RAM);
-	SekMapMemory(DrvBg2RAM,		0x06f000, 0x06f7ff, SM_RAM);
-	SekMapMemory(DrvFgRAM,		0x06f800, 0x06ffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x0a0000, 0x0a0057, SM_RAM);
+	SekMapMemory(Drv68KROM, 	0x000000, 0x05ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x060000, 0x06d7ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x06d800, 0x06dfff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x06e000, 0x06e7ff, MAP_ROM);
+	SekMapMemory(DrvBg1RAM,		0x06e800, 0x06efff, MAP_RAM);
+	SekMapMemory(DrvBg2RAM,		0x06f000, 0x06f7ff, MAP_RAM);
+	SekMapMemory(DrvFgRAM,		0x06f800, 0x06ffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x0a0000, 0x0a0057, MAP_RAM);
 	SekSetWriteByteHandler(0,	toki_write_byte);
 	SekSetWriteWordHandler(0,	toki_write_word);
 	SekSetReadByteHandler(0,	toki_read_byte);
@@ -803,14 +803,14 @@ static INT32 JujubaInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM, 	0x000000, 0x05ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x060000, 0x06d7ff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x06d800, 0x06dfff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x06e000, 0x06e7ff, SM_ROM);
-	SekMapMemory(DrvBg1RAM,		0x06e800, 0x06efff, SM_RAM);
-	SekMapMemory(DrvBg2RAM,		0x06f000, 0x06f7ff, SM_RAM);
-	SekMapMemory(DrvFgRAM,		0x06f800, 0x06ffff, SM_RAM);
-	SekMapMemory(DrvScrollRAM,	0x0a0000, 0x0a0057, SM_RAM);
+	SekMapMemory(Drv68KROM, 	0x000000, 0x05ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x060000, 0x06d7ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x06d800, 0x06dfff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x06e000, 0x06e7ff, MAP_ROM);
+	SekMapMemory(DrvBg1RAM,		0x06e800, 0x06efff, MAP_RAM);
+	SekMapMemory(DrvBg2RAM,		0x06f000, 0x06f7ff, MAP_RAM);
+	SekMapMemory(DrvFgRAM,		0x06f800, 0x06ffff, MAP_RAM);
+	SekMapMemory(DrvScrollRAM,	0x0a0000, 0x0a0057, MAP_RAM);
 	SekSetWriteByteHandler(0,	toki_write_byte);
 	SekSetWriteWordHandler(0,	toki_write_word);
 	SekSetReadByteHandler(0,	toki_read_byte);
@@ -865,13 +865,13 @@ static INT32 TokibInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM, 	0x000000, 0x05ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x060000, 0x06dfff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x06e000, 0x06e7ff, SM_ROM);
-	SekMapMemory(DrvBg1RAM,		0x06e800, 0x06efff, SM_RAM);
-	SekMapMemory(DrvBg2RAM,		0x06f000, 0x06f7ff, SM_RAM);
-	SekMapMemory(DrvFgRAM,		0x06f800, 0x06ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x071800, 0x0718ff, SM_RAM);
+	SekMapMemory(Drv68KROM, 	0x000000, 0x05ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x060000, 0x06dfff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x06e000, 0x06e7ff, MAP_ROM);
+	SekMapMemory(DrvBg1RAM,		0x06e800, 0x06efff, MAP_RAM);
+	SekMapMemory(DrvBg2RAM,		0x06f000, 0x06f7ff, MAP_RAM);
+	SekMapMemory(DrvFgRAM,		0x06f800, 0x06ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x071800, 0x0718ff, MAP_RAM);
 	SekSetWriteByteHandler(0,	toki_write_byte);
 	SekSetWriteWordHandler(0,	toki_write_word);
 	SekSetReadByteHandler(0,	toki_read_byte);
@@ -1256,7 +1256,7 @@ static INT32 DrvFrame()
 		}
 
 		// when the line clears, the timer starts counting for the scroll regs to be written!
-		if (i == 250) SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+		if (i == 250) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 	}
 	
 	BurnTimerEndFrameYM3812(nCyclesTotal[1]);
@@ -1303,7 +1303,7 @@ static INT32 TokibFrame()
 		nNext = (i + 1) * nCyclesToDo[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 		SekClose();
 
 		ZetOpen(0);

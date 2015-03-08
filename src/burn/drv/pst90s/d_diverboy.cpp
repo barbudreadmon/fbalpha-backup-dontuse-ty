@@ -102,7 +102,7 @@ void __fastcall diverboy_write_word(UINT32 address, UINT16 data)
 {
 	if (address == 0x100000) {
 		*soundlatch = data;
-		ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+		ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		return;
 	}
 }
@@ -289,10 +289,10 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x040000, 0x04ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x080000, 0x083fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x140000, 0x1407ff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x040000, 0x04ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x080000, 0x083fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x140000, 0x1407ff, MAP_RAM);
 	SekSetWriteByteHandler(0,	diverboy_write_byte);
 	SekSetWriteWordHandler(0,	diverboy_write_word);
 	SekSetReadByteHandler(0,	diverboy_read_byte);
@@ -417,7 +417,7 @@ static INT32 DrvFrame()
 		nCyclesDone[1] += ZetRun(nSegment);
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		MSM6295Render(0, pBurnSoundOut, nBurnSoundLen);

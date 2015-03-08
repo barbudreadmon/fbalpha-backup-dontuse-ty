@@ -128,6 +128,7 @@ bool System16BTileAlt = false;
 bool Shangon = false;
 bool Hangon = false;
 bool AlienSyndrome = false;
+bool HammerAway = false;
 bool System16Z80Enable = true;
 
 INT32 nSystem16CyclesDone[4];
@@ -236,7 +237,7 @@ static INT32 System16DoReset()
 	
 	if (BurnDrvGetHardwareCode() & HARDWARE_SEGA_ISGSM) {
 		SekOpen(0);
-		SekMapMemory(System16Rom, 0x000000, 0x0fffff, SM_ROM);
+		SekMapMemory(System16Rom, 0x000000, 0x0fffff, MAP_ROM);
 		SekClose();
 	}
 	
@@ -388,7 +389,7 @@ UINT8 __fastcall System16Z80PortRead(UINT16 a)
 		
 		case 0x40:
 		case 0xc0: {
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return System16SoundLatch;
 		}
 		
@@ -1454,27 +1455,27 @@ inline static INT32 PdriftSndGetBank(INT32 Reg86)
 inline void System16YM2151IRQHandler(INT32 Irq)
 {
 	if (Irq) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
 inline static void System16YM2203IRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xFF, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xFF, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
 inline static void System18YM3438IRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xFF, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xFF, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -1856,13 +1857,13 @@ INT32 System16Init()
 		} else {
 			SekInit(0, 0x68000);
 			SekOpen(0);
-			SekMapMemory(System16Rom           , 0x000000, 0x0fffff, SM_READ);
-			SekMapMemory(System16Code          , 0x000000, 0x0fffff, SM_FETCH);
-			SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-			SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-			SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, SM_RAM);
-			SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-			SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+			SekMapMemory(System16Rom           , 0x000000, 0x0fffff, MAP_READ);
+			SekMapMemory(System16Code          , 0x000000, 0x0fffff, MAP_FETCH);
+			SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+			SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+			SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, MAP_RAM);
+			SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+			SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 		
 			SekSetReadWordHandler(0, System16AReadWord);
 			SekSetWriteWordHandler(0, System16AWriteWord);
@@ -1929,13 +1930,13 @@ INT32 System16Init()
 		} else {
 			SekInit(0, 0x68000);
 			SekOpen(0);
-			SekMapMemory(System16Rom           , 0x000000, 0x0fffff, SM_READ);
-			SekMapMemory(System16Code          , 0x000000, 0x0fffff, SM_FETCH);
-			SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-			SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-			SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, SM_RAM);
-			SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-			SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+			SekMapMemory(System16Rom           , 0x000000, 0x0fffff, MAP_READ);
+			SekMapMemory(System16Code          , 0x000000, 0x0fffff, MAP_FETCH);
+			SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+			SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+			SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, MAP_RAM);
+			SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+			SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 		
 			SekSetReadByteHandler(0, System16BReadByte);
 			SekSetWriteByteHandler(0, System16BWriteByte);
@@ -2000,13 +2001,13 @@ INT32 System16Init()
 		} else {
 			SekInit(0, 0x68000);
 			SekOpen(0);
-			SekMapMemory(System16Rom           , 0x000000, 0x0fffff, SM_READ);
-			SekMapMemory(System16Code          , 0x000000, 0x0fffff, SM_FETCH);
-			SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, SM_READ);
-			SekMapMemory(System16TextRam       , 0x410000, 0x410fff, SM_RAM);
-			SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, SM_RAM);
-			SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, SM_RAM);
-			SekMapMemory(System16Ram           , 0xffc000, 0xffffff, SM_RAM);
+			SekMapMemory(System16Rom           , 0x000000, 0x0fffff, MAP_READ);
+			SekMapMemory(System16Code          , 0x000000, 0x0fffff, MAP_FETCH);
+			SekMapMemory(System16TileRam       , 0x400000, 0x40ffff, MAP_READ);
+			SekMapMemory(System16TextRam       , 0x410000, 0x410fff, MAP_RAM);
+			SekMapMemory(System16SpriteRam     , 0x440000, 0x4407ff, MAP_RAM);
+			SekMapMemory(System16PaletteRam    , 0x840000, 0x840fff, MAP_RAM);
+			SekMapMemory(System16Ram           , 0xffc000, 0xffffff, MAP_RAM);
 			
 			SekSetReadWordHandler(0, System18ReadWord);
 			SekSetWriteWordHandler(0, System18WriteWord);
@@ -2066,16 +2067,16 @@ INT32 System16Init()
 		} else {
 			SekInit(0, 0x68000);
 			SekOpen(0);
-			SekMapMemory(System16Rom             , 0x000000, 0x03ffff, SM_READ);
-			SekMapMemory(System16Code            , 0x000000, 0x03ffff, SM_FETCH);
-			SekMapMemory(System16Ram             , 0x200000, 0x20ffff, SM_RAM);
-			SekMapMemory(System16TileRam         , 0x400000, 0x403fff, SM_READ);
-			SekMapMemory(System16TextRam         , 0x410000, 0x410fff, SM_RAM);
-			SekMapMemory(System16SpriteRam       , 0x600000, 0x607fff, SM_RAM);
-			SekMapMemory(System16PaletteRam      , 0xa00000, 0xa00fff, SM_RAM);
-			SekMapMemory(System16Rom2            , 0xc00000, 0xc3ffff, SM_READ);
-			SekMapMemory(System16RoadRam         , 0xc68000, 0xc68fff, SM_RAM);
-			SekMapMemory(System16ExtraRam        , 0xc7c000, 0xc7ffff, SM_RAM);
+			SekMapMemory(System16Rom             , 0x000000, 0x03ffff, MAP_READ);
+			SekMapMemory(System16Code            , 0x000000, 0x03ffff, MAP_FETCH);
+			SekMapMemory(System16Ram             , 0x200000, 0x20ffff, MAP_RAM);
+			SekMapMemory(System16TileRam         , 0x400000, 0x403fff, MAP_READ);
+			SekMapMemory(System16TextRam         , 0x410000, 0x410fff, MAP_RAM);
+			SekMapMemory(System16SpriteRam       , 0x600000, 0x607fff, MAP_RAM);
+			SekMapMemory(System16PaletteRam      , 0xa00000, 0xa00fff, MAP_RAM);
+			SekMapMemory(System16Rom2            , 0xc00000, 0xc3ffff, MAP_READ);
+			SekMapMemory(System16RoadRam         , 0xc68000, 0xc68fff, MAP_RAM);
+			SekMapMemory(System16ExtraRam        , 0xc7c000, 0xc7ffff, MAP_RAM);
 			
 			SekSetReadWordHandler(0, HangonReadWord);
 			SekSetReadByteHandler(0, HangonReadByte);
@@ -2086,10 +2087,10 @@ INT32 System16Init()
 		
 		SekInit(1, 0x68000);
 		SekOpen(1);
-		SekMapMemory(System16Rom2            , 0x000000, 0x03ffff, SM_READ);
-		SekMapMemory(System16Rom2            , 0x000000, 0x03ffff, SM_FETCH);
-		SekMapMemory(System16RoadRam         , 0xc68000, 0xc68fff, SM_RAM);
-		SekMapMemory(System16ExtraRam        , 0xc7c000, 0xc7ffff, SM_RAM);
+		SekMapMemory(System16Rom2            , 0x000000, 0x03ffff, MAP_READ);
+		SekMapMemory(System16Rom2            , 0x000000, 0x03ffff, MAP_FETCH);
+		SekMapMemory(System16RoadRam         , 0xc68000, 0xc68fff, MAP_RAM);
+		SekMapMemory(System16ExtraRam        , 0xc7c000, 0xc7ffff, MAP_RAM);
 		SekClose();
 		
 		if (System16MapZ80Do) {
@@ -2168,16 +2169,16 @@ INT32 System16Init()
 	if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_OUTRUN) {
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(System16Rom           , 0x000000, 0x05ffff, SM_READ);
-		SekMapMemory(System16Code          , 0x000000, 0x05ffff, SM_FETCH);
-		SekMapMemory(System16ExtraRam      , 0x060000, 0x067fff, SM_RAM);
-		SekMapMemory(System16TileRam       , 0x100000, 0x10ffff, SM_READ);
-		SekMapMemory(System16TextRam       , 0x110000, 0x110fff, SM_RAM);
-		SekMapMemory(System16PaletteRam    , 0x120000, 0x121fff, SM_RAM);
-		SekMapMemory(System16SpriteRam     , 0x130000, 0x130fff, SM_RAM);
-		SekMapMemory(System16Rom2          , 0x200000, 0x23ffff, SM_READ);
-		SekMapMemory(System16Ram           , 0x260000, 0x267fff, SM_RAM);
-		SekMapMemory(System16RoadRam       , 0x280000, 0x280fff, SM_RAM);
+		SekMapMemory(System16Rom           , 0x000000, 0x05ffff, MAP_READ);
+		SekMapMemory(System16Code          , 0x000000, 0x05ffff, MAP_FETCH);
+		SekMapMemory(System16ExtraRam      , 0x060000, 0x067fff, MAP_RAM);
+		SekMapMemory(System16TileRam       , 0x100000, 0x10ffff, MAP_READ);
+		SekMapMemory(System16TextRam       , 0x110000, 0x110fff, MAP_RAM);
+		SekMapMemory(System16PaletteRam    , 0x120000, 0x121fff, MAP_RAM);
+		SekMapMemory(System16SpriteRam     , 0x130000, 0x130fff, MAP_RAM);
+		SekMapMemory(System16Rom2          , 0x200000, 0x23ffff, MAP_READ);
+		SekMapMemory(System16Ram           , 0x260000, 0x267fff, MAP_RAM);
+		SekMapMemory(System16RoadRam       , 0x280000, 0x280fff, MAP_RAM);
 		SekSetResetCallback(OutrunResetCallback);
 		SekSetReadWordHandler(0, OutrunReadWord);
 		SekSetWriteWordHandler(0, OutrunWriteWord);
@@ -2187,10 +2188,10 @@ INT32 System16Init()
 		
 		SekInit(1, 0x68000);
 		SekOpen(1);
-		SekMapMemory(System16Rom2          , 0x000000, 0x03ffff, SM_READ);
-		SekMapMemory(System16Rom2          , 0x000000, 0x03ffff, SM_FETCH);
-		SekMapMemory(System16Ram           , 0x060000, 0x067fff, SM_RAM);
-		SekMapMemory(System16RoadRam       , 0x080000, 0x080fff, SM_RAM);
+		SekMapMemory(System16Rom2          , 0x000000, 0x03ffff, MAP_READ);
+		SekMapMemory(System16Rom2          , 0x000000, 0x03ffff, MAP_FETCH);
+		SekMapMemory(System16Ram           , 0x060000, 0x067fff, MAP_RAM);
+		SekMapMemory(System16RoadRam       , 0x080000, 0x080fff, MAP_RAM);
 		SekSetWriteWordHandler(0, Outrun2WriteWord);
 		SekSetReadByteHandler(0, Outrun2ReadByte);
 		SekSetWriteByteHandler(0, Outrun2WriteByte);
@@ -2242,34 +2243,34 @@ INT32 System16Init()
 	if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_SYSTEMX) {
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(System16Rom           , 0x000000, 0x07ffff, SM_READ);
-		SekMapMemory(System16Code          , 0x000000, 0x07ffff, SM_FETCH);
-		SekMapMemory(System16TileRam       , 0x0c0000, 0x0cffff, SM_READ);
-		SekMapMemory(System16TextRam       , 0x0d0000, 0x0d0fff, SM_RAM);
-		SekMapMemory(System16SpriteRam     , 0x100000, 0x100fff, SM_RAM);
-		SekMapMemory(System16SpriteRam     , 0x101000, 0x101fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x102000, 0x102fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x103000, 0x103fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x104000, 0x104fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x105000, 0x105fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x106000, 0x106fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x107000, 0x107fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x108000, 0x108fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x109000, 0x109fff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x10a000, 0x10afff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x10b000, 0x10bfff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x10c000, 0x10cfff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x10d000, 0x10dfff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x10e000, 0x10efff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16SpriteRam     , 0x10f000, 0x10ffff, SM_RAM); // Tests past Sprite RAM in mem tests (mirror?)
-		SekMapMemory(System16PaletteRam    , 0x120000, 0x123fff, SM_RAM);
-		SekMapMemory(System16Rom2          , 0x200000, 0x27ffff, SM_READ);
-		SekMapMemory(System16Ram           , 0x29c000, 0x2a3fff, SM_RAM);
-		SekMapMemory(System16RoadRam       , 0x2ec000, 0x2ecfff, SM_RAM);
-		SekMapMemory(System16RoadRam       , 0x2ed000, 0x2edfff, SM_RAM); // Tests past Road RAM in mem tests (mirror?)
-		SekMapMemory(System16BackupRam2    , 0xff4000, 0xff7fff, SM_RAM);
-		SekMapMemory(System16BackupRam     , 0xff8000, 0xffffff, SM_RAM);
-		SekMapMemory(System16BackupRam2    , 0xffc000, 0xffffff, SM_RAM);
+		SekMapMemory(System16Rom           , 0x000000, 0x07ffff, MAP_READ);
+		SekMapMemory(System16Code          , 0x000000, 0x07ffff, MAP_FETCH);
+		SekMapMemory(System16TileRam       , 0x0c0000, 0x0cffff, MAP_READ);
+		SekMapMemory(System16TextRam       , 0x0d0000, 0x0d0fff, MAP_RAM);
+		SekMapMemory(System16SpriteRam     , 0x100000, 0x100fff, MAP_RAM);
+		SekMapMemory(System16SpriteRam     , 0x101000, 0x101fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x102000, 0x102fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x103000, 0x103fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x104000, 0x104fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x105000, 0x105fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x106000, 0x106fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x107000, 0x107fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x108000, 0x108fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x109000, 0x109fff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x10a000, 0x10afff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x10b000, 0x10bfff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x10c000, 0x10cfff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x10d000, 0x10dfff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x10e000, 0x10efff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16SpriteRam     , 0x10f000, 0x10ffff, MAP_RAM); // Tests past Sprite RAM in mem tests (mirror?)
+		SekMapMemory(System16PaletteRam    , 0x120000, 0x123fff, MAP_RAM);
+		SekMapMemory(System16Rom2          , 0x200000, 0x27ffff, MAP_READ);
+		SekMapMemory(System16Ram           , 0x29c000, 0x2a3fff, MAP_RAM);
+		SekMapMemory(System16RoadRam       , 0x2ec000, 0x2ecfff, MAP_RAM);
+		SekMapMemory(System16RoadRam       , 0x2ed000, 0x2edfff, MAP_RAM); // Tests past Road RAM in mem tests (mirror?)
+		SekMapMemory(System16BackupRam2    , 0xff4000, 0xff7fff, MAP_RAM);
+		SekMapMemory(System16BackupRam     , 0xff8000, 0xffffff, MAP_RAM);
+		SekMapMemory(System16BackupRam2    , 0xffc000, 0xffffff, MAP_RAM);
 		SekSetResetCallback(OutrunResetCallback);
 		SekSetReadWordHandler(0, XBoardReadWord);
 		SekSetWriteWordHandler(0, XBoardWriteWord);
@@ -2279,12 +2280,12 @@ INT32 System16Init()
 		
 		SekInit(1, 0x68000);
 		SekOpen(1);
-		SekMapMemory(System16Rom2          , 0x000000, 0x07ffff, SM_ROM);
-		SekMapMemory(System16Ram           , 0x09c000, 0x0a3fff, SM_RAM);
-		SekMapMemory(System16RoadRam       , 0x0ec000, 0x0ecfff, SM_RAM);
-		SekMapMemory(System16Rom2          , 0x200000, 0x27ffff, SM_ROM);
-		SekMapMemory(System16Ram           , 0x29c000, 0x2a3fff, SM_RAM);
-		SekMapMemory(System16RoadRam       , 0x2ec000, 0x2ecfff, SM_RAM);
+		SekMapMemory(System16Rom2          , 0x000000, 0x07ffff, MAP_ROM);
+		SekMapMemory(System16Ram           , 0x09c000, 0x0a3fff, MAP_RAM);
+		SekMapMemory(System16RoadRam       , 0x0ec000, 0x0ecfff, MAP_RAM);
+		SekMapMemory(System16Rom2          , 0x200000, 0x27ffff, MAP_ROM);
+		SekMapMemory(System16Ram           , 0x29c000, 0x2a3fff, MAP_RAM);
+		SekMapMemory(System16RoadRam       , 0x2ec000, 0x2ecfff, MAP_RAM);
 		SekSetReadWordHandler(0, XBoard2ReadWord);
 		SekSetWriteWordHandler(0, XBoard2WriteWord);
 		SekSetReadByteHandler(0, XBoard2ReadByte);
@@ -2360,10 +2361,10 @@ INT32 System16Init()
 	if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SEGA_SYSTEMY) {
 		SekInit(0, 0x68000);
 		SekOpen(0);
-		SekMapMemory(System16Rom           , 0x000000, 0x07ffff, SM_READ);
-		SekMapMemory(System16Code          , 0x000000, 0x07ffff, SM_FETCH);
-		SekMapMemory(System16Ram           , 0x0c0000, 0x0cffff, SM_RAM);
-		SekMapMemory(System16ExtraRam      , 0xff0000, 0xffffff, SM_RAM);
+		SekMapMemory(System16Rom           , 0x000000, 0x07ffff, MAP_READ);
+		SekMapMemory(System16Code          , 0x000000, 0x07ffff, MAP_FETCH);
+		SekMapMemory(System16Ram           , 0x0c0000, 0x0cffff, MAP_RAM);
+		SekMapMemory(System16ExtraRam      , 0xff0000, 0xffffff, MAP_RAM);
 		SekSetReadWordHandler(0, YBoardReadWord);
 		SekSetWriteWordHandler(0, YBoardWriteWord);
 		SekSetReadByteHandler(0, YBoardReadByte);
@@ -2372,24 +2373,24 @@ INT32 System16Init()
 		
 		SekInit(1, 0x68000);
 		SekOpen(1);
-		SekMapMemory(System16Rom2          , 0x000000, 0x03ffff, SM_ROM);
-		SekMapMemory(System16Ram           , 0x0c0000, 0x0cffff, SM_RAM);
-		SekMapMemory(System16SpriteRam2    , 0x180000, 0x18ffff, SM_RAM);
-		SekMapMemory(System16ExtraRam2     , 0xff0000, 0xffbfff, SM_RAM);
-		SekMapMemory(System16BackupRam     , 0xffc000, 0xffffff, SM_RAM);
+		SekMapMemory(System16Rom2          , 0x000000, 0x03ffff, MAP_ROM);
+		SekMapMemory(System16Ram           , 0x0c0000, 0x0cffff, MAP_RAM);
+		SekMapMemory(System16SpriteRam2    , 0x180000, 0x18ffff, MAP_RAM);
+		SekMapMemory(System16ExtraRam2     , 0xff0000, 0xffbfff, MAP_RAM);
+		SekMapMemory(System16BackupRam     , 0xffc000, 0xffffff, MAP_RAM);
 		SekSetReadWordHandler(0, YBoard2ReadWord);
 		SekSetWriteWordHandler(0, YBoard2WriteWord);
 		SekClose();
 		
 		SekInit(2, 0x68000);
 		SekOpen(2);
-		SekMapMemory(System16Rom3          , 0x000000, 0x03ffff, SM_ROM);
-		SekMapMemory(System16Ram           , 0x0c0000, 0x0cffff, SM_RAM);
-		SekMapMemory(System16RotateRam     , 0x180000, 0x1807ff, SM_RAM);
-		SekMapMemory(System16SpriteRam     , 0x188000, 0x188fff, SM_RAM);
-		SekMapMemory(System16PaletteRam    , 0x190000, 0x193fff, SM_RAM);
-		SekMapMemory(System16PaletteRam    , 0x194000, 0x197fff, SM_RAM);
-		SekMapMemory(System16ExtraRam3     , 0xff0000, 0xffffff, SM_RAM);
+		SekMapMemory(System16Rom3          , 0x000000, 0x03ffff, MAP_ROM);
+		SekMapMemory(System16Ram           , 0x0c0000, 0x0cffff, MAP_RAM);
+		SekMapMemory(System16RotateRam     , 0x180000, 0x1807ff, MAP_RAM);
+		SekMapMemory(System16SpriteRam     , 0x188000, 0x188fff, MAP_RAM);
+		SekMapMemory(System16PaletteRam    , 0x190000, 0x193fff, MAP_RAM);
+		SekMapMemory(System16PaletteRam    , 0x194000, 0x197fff, MAP_RAM);
+		SekMapMemory(System16ExtraRam3     , 0xff0000, 0xffffff, MAP_RAM);
 		SekSetReadWordHandler(0, YBoard3ReadWord);
 		SekSetWriteWordHandler(0, YBoard3WriteWord);
 		SekSetReadByteHandler(0, YBoard3ReadByte);
@@ -2684,7 +2685,7 @@ INT32 System16AFrame()
 		}
 	}
 
-	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	if (Simulate8751) Simulate8751();
@@ -2742,7 +2743,7 @@ INT32 System16BFrame()
 		nSystem16CyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
 		
 		if (BurnDrvGetHardwareCode() & HARDWARE_SEGA_YM2413) {
-			SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+			SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		}
 
 		// Run Z80
@@ -2789,7 +2790,7 @@ INT32 System16BFrame()
 		}
 	}
 	
-	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	if (Simulate8751) Simulate8751();
@@ -2812,6 +2813,8 @@ INT32 System16BFrame()
 INT32 System18Frame()
 {
 	INT32 nInterleave = nBurnSoundLen;
+
+	if (HammerAway) nInterleave = 100;
 
 	if (System16Reset) System16DoReset();
 
@@ -2851,7 +2854,7 @@ INT32 System18Frame()
 		}
 	}
 
-	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	ZetOpen(0);
@@ -2951,7 +2954,7 @@ INT32 HangonFrame()
 	}
 
 	SekOpen(0);
-	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	if (Simulate8751) Simulate8751();	
@@ -3005,7 +3008,7 @@ INT32 HangonYM2203Frame()
 	}
 	
 	SekOpen(0);
-	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	SekClose();
 	
 	ZetOpen(0);
@@ -3063,7 +3066,7 @@ INT32 OutrunFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
 		nSystem16CyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == 2 || i == 6 || i == 8) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == 2 || i == 6 || i == 8) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run 68000 #2
@@ -3111,7 +3114,7 @@ INT32 OutrunFrame()
 
 	for (i = 0; i < 2; i++) {
 		SekOpen(i);
-		SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		SekClose();
 	}	
 	
@@ -3156,8 +3159,8 @@ INT32 XBoardFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
 		nSystem16CyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == 20 || i == 40 || i == 60 || i == 80) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
-		if (i == 99) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == 20 || i == 40 || i == 60 || i == 80) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
+		if (i == 99) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run 68000 #2
@@ -3167,7 +3170,106 @@ INT32 XBoardFrame()
 		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
 		nCyclesSegment = SekRun(nCyclesSegment);
 		nSystem16CyclesDone[nCurrentCPU] += nCyclesSegment;
-		if (i == 99) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == 99) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		SekClose();
+
+		// Run Z80
+		nCurrentCPU = 2;
+		ZetOpen(0);
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
+		nCyclesSegment = ZetRun(nCyclesSegment);
+		nSystem16CyclesDone[nCurrentCPU] += nCyclesSegment;
+		ZetClose();
+		
+		// Run Z80 #2
+		if (System16Z80Rom2Num) {
+			nCurrentCPU = 3;
+			ZetOpen(1);
+			nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+			nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
+			nCyclesSegment = ZetRun(nCyclesSegment);
+			nSystem16CyclesDone[nCurrentCPU] += nCyclesSegment;
+			ZetClose();
+		}
+
+		if (pBurnSoundOut) {
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+
+			ZetOpen(0);
+			BurnYM2151Render(pSoundBuf, nSegmentLength);
+			ZetClose();
+			if (System16PCMDataSize) SegaPCMUpdate(pSoundBuf, nSegmentLength);
+			nSoundBufferPos += nSegmentLength;
+		}
+	}
+
+	// Make sure the buffer is entirely filled.
+	if (pBurnSoundOut) {
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+
+		if (nSegmentLength) {
+			ZetOpen(0);
+			BurnYM2151Render(pSoundBuf, nSegmentLength);
+			ZetClose();
+			if (System16PCMDataSize) SegaPCMUpdate(pSoundBuf, nSegmentLength);
+		}
+	}
+
+	if (pBurnDraw) {
+		XBoardRender();
+	}
+
+	return 0;
+}
+
+INT32 XBoardFrameGPRider()
+{
+	INT32 nInterleave = 100, i;
+
+	if (System16Reset) System16DoReset();
+
+	System16MakeInputs();
+	
+	if (nBurnGunNumPlayers) System16GunMakeInputs();
+	
+	nCyclesTotal[0] = (INT32)((INT64)(50000000 / 4) * nBurnCPUSpeedAdjust / (0x0100 * 60));
+	nCyclesTotal[1] = (INT32)((INT64)(50000000 / 4) * nBurnCPUSpeedAdjust / (0x0100 * 60));
+	nCyclesTotal[2] = (16000000 / 4) / 60;
+	nCyclesTotal[3] = (16000000 / 4) / 60;
+	nSystem16CyclesDone[0] = nSystem16CyclesDone[1] = nSystem16CyclesDone[2] = nSystem16CyclesDone[3] = 0;
+
+	INT32 nSoundBufferPos = 0;
+	
+	SekNewFrame();
+	ZetNewFrame();
+	
+	for (i = 0; i < nInterleave; i++) {
+		INT32 nCurrentCPU, nNext;
+
+		// Run 68000 #1
+		nCurrentCPU = 0;
+		SekOpen(nCurrentCPU);
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
+		nSystem16CyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
+		// ACK for 1 interleave cycle to make gprider happy
+		if (i == 20 || i == 40 || i == 60 || i == 80) SekSetIRQLine(2, CPU_IRQSTATUS_ACK);
+		if (i == 21 || i == 41 || i == 61 || i == 81) SekSetIRQLine(2, CPU_IRQSTATUS_NONE);
+		if (i == 98) SekSetIRQLine(4, CPU_IRQSTATUS_ACK);
+		if (i == 99) SekSetIRQLine(4, CPU_IRQSTATUS_NONE);
+		SekClose();
+		
+		// Run 68000 #2
+		nCurrentCPU = 1;
+		SekOpen(nCurrentCPU);
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
+		nCyclesSegment = SekRun(nCyclesSegment);
+		nSystem16CyclesDone[nCurrentCPU] += nCyclesSegment;
+		if (i == 99) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		SekClose();
 
 		// Run Z80
@@ -3256,10 +3358,10 @@ INT32 YBoardFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
 		nSystem16CyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == 170) SekSetIRQLine(2, SEK_IRQSTATUS_ACK);
-		if (i == 171) SekSetIRQLine(2, SEK_IRQSTATUS_NONE);
-		if (i == 223) SekSetIRQLine(4, SEK_IRQSTATUS_ACK);
-		if (i == 224) SekSetIRQLine(4, SEK_IRQSTATUS_NONE);
+		if (i == 170) SekSetIRQLine(2, CPU_IRQSTATUS_ACK);
+		if (i == 171) SekSetIRQLine(2, CPU_IRQSTATUS_NONE);
+		if (i == 223) SekSetIRQLine(4, CPU_IRQSTATUS_ACK);
+		if (i == 224) SekSetIRQLine(4, CPU_IRQSTATUS_NONE);
 		SekClose();
 		
 		// Run 68000 #2
@@ -3269,10 +3371,10 @@ INT32 YBoardFrame()
 		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
 		nCyclesSegment = SekRun(nCyclesSegment);
 		nSystem16CyclesDone[nCurrentCPU] += nCyclesSegment;
-		if (i == 170) SekSetIRQLine(2, SEK_IRQSTATUS_ACK);
-		if (i == 171) SekSetIRQLine(2, SEK_IRQSTATUS_NONE);
-		if (i == 223) SekSetIRQLine(4, SEK_IRQSTATUS_ACK);
-		if (i == 224) SekSetIRQLine(4, SEK_IRQSTATUS_NONE);
+		if (i == 170) SekSetIRQLine(2, CPU_IRQSTATUS_ACK);
+		if (i == 171) SekSetIRQLine(2, CPU_IRQSTATUS_NONE);
+		if (i == 223) SekSetIRQLine(4, CPU_IRQSTATUS_ACK);
+		if (i == 224) SekSetIRQLine(4, CPU_IRQSTATUS_NONE);
 		SekClose();
 		
 		// Run 68000 #3
@@ -3282,10 +3384,10 @@ INT32 YBoardFrame()
 		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
 		nCyclesSegment = SekRun(nCyclesSegment);
 		nSystem16CyclesDone[nCurrentCPU] += nCyclesSegment;
-		if (i == 170) SekSetIRQLine(2, SEK_IRQSTATUS_ACK);
-		if (i == 171) SekSetIRQLine(2, SEK_IRQSTATUS_NONE);
-		if (i == 223) SekSetIRQLine(4, SEK_IRQSTATUS_ACK);
-		if (i == 224) SekSetIRQLine(4, SEK_IRQSTATUS_NONE);
+		if (i == 170) SekSetIRQLine(2, CPU_IRQSTATUS_ACK);
+		if (i == 171) SekSetIRQLine(2, CPU_IRQSTATUS_NONE);
+		if (i == 223) SekSetIRQLine(4, CPU_IRQSTATUS_ACK);
+		if (i == 224) SekSetIRQLine(4, CPU_IRQSTATUS_NONE);
 		SekClose();
 
 		// Run Z80

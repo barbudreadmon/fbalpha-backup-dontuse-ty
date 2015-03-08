@@ -3,6 +3,7 @@
 #include "m6805_intf.h"
 #include "m6809_intf.h"
 #include "burn_ym3526.h"
+#include "msm5205.h"
 
 static UINT8 DrvInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 DrvInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -37,6 +38,9 @@ static UINT8 DrvRomBank;
 static UINT8 DrvVBlank;
 static UINT8 DrvScrollX[2];
 static UINT8 DrvSoundLatch;
+static UINT8 DrvADPCMPlaying = 0;
+static UINT32 DrvADPCMPos = 0;
+static UINT32 DrvADPCMEnd = 0;
 
 static INT32 nCyclesTotal[3];
 
@@ -192,9 +196,9 @@ static struct BurnRomInfo DrvRomDesc[] = {
 	{ "ng-5.bin",      0x08000, 0xa8ee3720, BRF_GRA },	     //  20
 	{ "nm-5.bin",      0x08000, 0xc100258e, BRF_GRA },	     //  21
 	
-	{ "n5-5.ic31",     0x08000, 0x7ee43a3c, BRF_GRA },	     //  22	ADPCM
+	{ "n3-5.ic33",     0x08000, 0x78fd6190, BRF_GRA },	     //  22	ADPCM
 	{ "n4-5.ic32",     0x08000, 0x6557564c, BRF_GRA },	     //  23
-	{ "n3-5.ic33",     0x08000, 0x78fd6190, BRF_GRA },	     //  24
+	{ "n5-5.ic31",     0x08000, 0x7ee43a3c, BRF_GRA },	     //  24
 	
 	{ "nz-5.ic97",     0x00800, 0x32e47560, BRF_ESS | BRF_PRG },	// 25 MCU
 };
@@ -230,9 +234,9 @@ static struct BurnRomInfo DrvjRomDesc[] = {
 	{ "ta18-21.bin",   0x08000, 0xc95e009b, BRF_GRA },	     //  20
 	{ "ta18-15.bin",   0x08000, 0xa5d61d01, BRF_GRA },	     //  21
 	
-	{ "ta18-07.bin",   0x08000, 0x02e3f3ed, BRF_GRA },	     //  22	ADPCM
+	{ "ta18-09.bin",   0x08000, 0x07ed4705, BRF_GRA },	     //  22	ADPCM
 	{ "ta18-08.bin",   0x08000, 0xc9312613, BRF_GRA },	     //  23
-	{ "ta18-09.bin",   0x08000, 0x07ed4705, BRF_GRA },	     //  24
+	{ "ta18-07.bin",   0x08000, 0x02e3f3ed, BRF_GRA },	     //  24
 	
 	{ "mcu",           0x08000, 0x00000000, BRF_PRG | BRF_NODUMP },	// 25 MCU
 };
@@ -268,9 +272,9 @@ static struct BurnRomInfo DrvbRomDesc[] = {
 	{ "ta18-21.bin",   0x08000, 0xc95e009b, BRF_GRA },	     //  20
 	{ "ta18-15.bin",   0x08000, 0xa5d61d01, BRF_GRA },	     //  21
 	
-	{ "ta18-07.bin",   0x08000, 0x02e3f3ed, BRF_GRA },	     //  22	ADPCM
+	{ "ta18-09.bin",   0x08000, 0x07ed4705, BRF_GRA },	     //  22	ADPCM
 	{ "ta18-08.bin",   0x08000, 0xc9312613, BRF_GRA },	     //  23
-	{ "ta18-09.bin",   0x08000, 0x07ed4705, BRF_GRA },	     //  24
+	{ "ta18-07.bin",   0x08000, 0x02e3f3ed, BRF_GRA },	     //  24
 };
 
 STD_ROM_PICK(Drvb)
@@ -283,7 +287,7 @@ static INT32 MemIndex()
 	DrvM6502Rom            = Next; Next += 0x10000;
 	DrvM6809Rom            = Next; Next += 0x08000;
 	DrvM68705Rom           = Next; Next += 0x00800;
-	DrvADPCMRom            = Next; Next += 0x20000;
+	DrvADPCMRom            = Next; Next += 0x18000;
 
 	RamStart               = Next;
 
@@ -545,78 +549,6 @@ struct adpcm_state
 	INT32	step;
 };
 
-static struct renegade_adpcm_state
-{
-	struct adpcm_state adpcm;
-	UINT32 current, end;
-	UINT8 nibble;
-	UINT8 playing;
-	UINT8 *base;
-	double gain;
-	INT32 output_dir;
-} renegade_adpcm;
-
-static INT32 diff_lookup[49*16];
-static INT32 tables_computed = 0;
-
-static UINT32 nUpdateStep;
-
-static void compute_tables(void)
-{
-	static const INT32 nbl2bit[16][4] =
-	{
-		{ 1, 0, 0, 0}, { 1, 0, 0, 1}, { 1, 0, 1, 0}, { 1, 0, 1, 1},
-		{ 1, 1, 0, 0}, { 1, 1, 0, 1}, { 1, 1, 1, 0}, { 1, 1, 1, 1},
-		{-1, 0, 0, 0}, {-1, 0, 0, 1}, {-1, 0, 1, 0}, {-1, 0, 1, 1},
-		{-1, 1, 0, 0}, {-1, 1, 0, 1}, {-1, 1, 1, 0}, {-1, 1, 1, 1}
-	};
-
-	INT32 step, nib;
-
-	for (step = 0; step <= 48; step++)
-	{
-		INT32 stepval = (INT32)floor(16.0 * pow(11.0 / 10.0, (double)step));
-		
-		for (nib = 0; nib < 16; nib++)
-		{
-			diff_lookup[step*16 + nib] = nbl2bit[nib][0] *
-				(stepval   * nbl2bit[nib][1] +
-				 stepval/2 * nbl2bit[nib][2] +
-				 stepval/4 * nbl2bit[nib][3] +
-				 stepval/8);
-		}
-	}
-
-	tables_computed = 1;
-}
-
-static void reset_adpcm(struct adpcm_state *state)
-{
-	if (!tables_computed)
-		compute_tables();
-
-	state->signal = -2;
-	state->step = 0;
-}
-
-static void RenegadeADPCMInit(INT32 clock)
-{
-	struct renegade_adpcm_state *state = &renegade_adpcm;
-	state->playing = 0;
-	state->base = DrvADPCMRom;
-	state->gain = 1.00;
-	state->output_dir = BURN_SND_ROUTE_BOTH;
-	reset_adpcm(&state->adpcm);
-	
-	nUpdateStep = (INT32)(((float)clock / nBurnSoundRate) * 32768);
-}
-
-void RenegadeADMPCMSetRoute(double nVolume, INT32 nRouteDir)
-{
-	renegade_adpcm.gain = nVolume;
-	renegade_adpcm.output_dir = nRouteDir;
-}
-
 static INT32 DrvDoReset()
 {
 	M6502Open(0);
@@ -648,12 +580,15 @@ static INT32 DrvDoReset()
 	}
 	
 	BurnYM3526Reset();
-	reset_adpcm(&renegade_adpcm.adpcm);
+	MSM5205Reset();
 	
 	DrvRomBank = 0;
 	DrvVBlank = 0;
 	memset(DrvScrollX, 0, 2);
 	DrvSoundLatch = 0;
+	DrvADPCMPlaying = 0;
+	DrvADPCMPos = 0;
+	DrvADPCMEnd = 0;
 	
 	return 0;
 }
@@ -716,7 +651,7 @@ void RenegadeWriteByte(UINT16 Address, UINT8 Data)
 		case 0x3802: {
 			DrvSoundLatch = Data;
 			M6809Open(0);
-			M6809SetIRQLine(M6809_IRQ_LINE, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(M6809_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 			M6809Close();
 			return;
 		}
@@ -733,7 +668,7 @@ void RenegadeWriteByte(UINT16 Address, UINT8 Data)
 		
 		case 0x3805: {
 			DrvRomBank = Data & 1;
-			M6502MapMemory(DrvM6502Rom + 0x8000 + (DrvRomBank * 0x4000), 0x4000, 0x7fff, M6502_ROM);
+			M6502MapMemory(DrvM6502Rom + 0x8000 + (DrvRomBank * 0x4000), 0x4000, 0x7fff, MAP_ROM);
 			return;
 		}
 		
@@ -772,24 +707,20 @@ void RenegadeM6809WriteByte(UINT16 Address, UINT8 Data)
 {
 	switch (Address) {
 		case 0x1800: {
-			// nop???
+			MSM5205ResetWrite(0, 0);
+			DrvADPCMPlaying = 1;
 			return;
 		}
 		
 		case 0x2000: {
-			INT32 Offset, Length;
-			
-			Offset = (Data - 0x2c) * 0x2000;
-			Length = 0x2000 * 2;
-			
-			if ((Offset + Length) > 0x20000) Length = 0x1000;
-			
-			if (Offset >= 0 && (Offset + Length) < 0x20000) {
-				renegade_adpcm.current = Offset << 15;
-				renegade_adpcm.end = Offset + (Length / 2);
-				renegade_adpcm.nibble = 4;
-				renegade_adpcm.playing = 1;
+			switch (Data & 0x1c) {
+				case 0x18: DrvADPCMPos = 0 * 0x8000 * 2; break;
+				case 0x14: DrvADPCMPos = 1 * 0x8000 * 2; break;
+				case 0x0c: DrvADPCMPos = 2 * 0x8000 * 2; break;
+				default: DrvADPCMPos = DrvADPCMEnd = 0; return;
 			}
+			DrvADPCMPos |= (Data & 0x03) * 0x2000 * 2;
+			DrvADPCMEnd = DrvADPCMPos + 0x2000 * 2;
 			return;
 		}
 		
@@ -804,7 +735,8 @@ void RenegadeM6809WriteByte(UINT16 Address, UINT8 Data)
 		}
 		
 		case 0x3000: {
-			// nop???
+			MSM5205ResetWrite(0, 1);
+			DrvADPCMPlaying = 0;
 			return;
 		}
 		
@@ -907,15 +839,33 @@ static INT32 TileYOffsets[16]      = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80,
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		M6809SetIRQLine(M6809_FIRQ_LINE, M6809_IRQSTATUS_ACK);
+		M6809SetIRQLine(M6809_FIRQ_LINE, CPU_IRQSTATUS_ACK);
 	} else {
-		M6809SetIRQLine(M6809_FIRQ_LINE, M6809_IRQSTATUS_NONE);
+		M6809SetIRQLine(M6809_FIRQ_LINE, CPU_IRQSTATUS_NONE);
 	}
 }
 
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 {
 	return (INT64)M6809TotalCycles() * nSoundRate / 1500000;
+}
+
+static void DrvMSM5205Int()
+{
+	if (!DrvADPCMPlaying) {
+		MSM5205ResetWrite(0, 1);
+		return;
+	}
+
+	if (DrvADPCMPos >= DrvADPCMEnd) {
+		MSM5205ResetWrite(0, 1);
+		DrvADPCMPlaying = false;
+		M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
+	} else {
+		UINT8 const data = DrvADPCMRom[DrvADPCMPos / 2];
+		MSM5205DataWrite(0, DrvADPCMPos & 1 ? data & 0xf : data >> 4);
+		DrvADPCMPos++;
+	}
 }
 
 static INT32 DrvInit(INT32 nMcuType)
@@ -986,32 +936,35 @@ static INT32 DrvInit(INT32 nMcuType)
 	GfxDecode(0x100, 3, 16, 16, Tile4PlaneOffsets, TileXOffsets, TileYOffsets, 0x200, DrvTempRom + 0x48000, DrvSprites + (0xf00 * 16 * 16));
 	
 	nRet = BurnLoadRom(DrvADPCMRom + 0x00000, 22, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvADPCMRom + 0x10000, 23, 1); if (nRet != 0) return 1;
-	nRet = BurnLoadRom(DrvADPCMRom + 0x18000, 24, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvADPCMRom + 0x08000, 23, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(DrvADPCMRom + 0x10000, 24, 1); if (nRet != 0) return 1;
 		
 	BurnFree(DrvTempRom);
 	
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(DrvM6502Ram            , 0x0000, 0x17ff, M6502_RAM);
-	M6502MapMemory(DrvVideoRam2           , 0x1800, 0x1fff, M6502_RAM);
-	M6502MapMemory(DrvSpriteRam           , 0x2000, 0x27ff, M6502_RAM);
-	M6502MapMemory(DrvVideoRam1           , 0x2800, 0x2fff, M6502_RAM);
-	M6502MapMemory(DrvPaletteRam1         , 0x3000, 0x30ff, M6502_RAM);
-	M6502MapMemory(DrvPaletteRam2         , 0x3100, 0x31ff, M6502_RAM);
-	M6502MapMemory(DrvM6502Rom + 0x8000   , 0x4000, 0x7fff, M6502_ROM);
-	M6502MapMemory(DrvM6502Rom            , 0x8000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvM6502Ram            , 0x0000, 0x17ff, MAP_RAM);
+	M6502MapMemory(DrvVideoRam2           , 0x1800, 0x1fff, MAP_RAM);
+	M6502MapMemory(DrvSpriteRam           , 0x2000, 0x27ff, MAP_RAM);
+	M6502MapMemory(DrvVideoRam1           , 0x2800, 0x2fff, MAP_RAM);
+	M6502MapMemory(DrvPaletteRam1         , 0x3000, 0x30ff, MAP_RAM);
+	M6502MapMemory(DrvPaletteRam2         , 0x3100, 0x31ff, MAP_RAM);
+	M6502MapMemory(DrvM6502Rom + 0x8000   , 0x4000, 0x7fff, MAP_ROM);
+	M6502MapMemory(DrvM6502Rom            , 0x8000, 0xffff, MAP_ROM);
 	M6502SetReadHandler(RenegadeReadByte);
 	M6502SetWriteHandler(RenegadeWriteByte);
 	M6502Close();
 	
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x0fff, M6809_RAM);
-	M6809MapMemory(DrvM6809Rom          , 0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x0fff, MAP_RAM);
+	M6809MapMemory(DrvM6809Rom          , 0x8000, 0xffff, MAP_ROM);
 	M6809SetReadHandler(RenegadeM6809ReadByte);
 	M6809SetWriteHandler(RenegadeM6809WriteByte);
 	M6809Close();
+	
+	MSM5205Init(0, DrvSynchroniseStream, 12000000 / 32, DrvMSM5205Int, MSM5205_S48_4B, 1);
+	MSM5205SetRoute(0, 1.00, BURN_SND_ROUTE_BOTH);
 	
 	if (nMcuType == MCU_TYPE_RENEGADE) {
 		nSimulateMCU = 0;
@@ -1020,8 +973,8 @@ static INT32 DrvInit(INT32 nMcuType)
 		
 		m6805Init(1, 0x800);
 		m6805Open(0);
-		m6805MapMemory(DrvM68705Ram         , 0x0010, 0x007f, M6805_RAM);
-		m6805MapMemory(DrvM68705Rom + 0x0080, 0x0080, 0x07ff, M6805_ROM);
+		m6805MapMemory(DrvM68705Ram         , 0x0010, 0x007f, MAP_RAM);
+		m6805MapMemory(DrvM68705Rom + 0x0080, 0x0080, 0x07ff, MAP_ROM);
 		m6805SetWriteHandler(MCUWriteByte);
 		m6805SetReadHandler(MCUReadByte);
 		m6805Close();
@@ -1041,8 +994,6 @@ static INT32 DrvInit(INT32 nMcuType)
 	BurnYM3526Init(3000000, &DrvFMIRQHandler, &DrvSynchroniseStream, 0);
 	BurnTimerAttachM6809YM3526(1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
-	
-	RenegadeADPCMInit(8000);
 	
 	GenericTilesInit();
 	
@@ -1073,6 +1024,7 @@ static INT32 DrvExit()
 	if (!nSimulateMCU && !DisableMCUEmulation) m6805Exit();
 	
 	BurnYM3526Exit();
+	MSM5205Exit();
 	
 	GenericTilesExit();
 	
@@ -1108,6 +1060,9 @@ static INT32 DrvExit()
 	DrvVBlank = 0;
 	memset(DrvScrollX, 0, 2);
 	DrvSoundLatch = 0;
+	DrvADPCMPlaying = 0;
+	DrvADPCMPos = 0;
+	DrvADPCMEnd = 0;
 
 	return 0;
 }
@@ -1269,68 +1224,15 @@ static void DrvInterrupt()
 	static INT32 Count;
 	Count = !Count;
 	if (Count) {
-		M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+		M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 	} else {
-		M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_AUTO);
-	}
-}
-
-static const INT32 index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
-
-INT16 clock_adpcm(struct adpcm_state *state, UINT8 nibble)
-{
-	state->signal += diff_lookup[(state->step >> 15) * 16 + (nibble & 15)];
-
-	if (state->signal > 2047)
-		state->signal = 2047;
-	else if (state->signal < -2048)
-		state->signal = -2048;
-
-	state->step += index_shift[nibble & 7] * nUpdateStep;
-	if ((state->step >> 15) > 48)
-		state->step = 48 << 15;
-	else if ((state->step >> 15) < 0)
-		state->step = 0;
-
-	return state->signal;
-}
-
-static void RenderADPCMSample(INT16 *pSoundBuf, INT32 nLength)
-{
-	while (renegade_adpcm.playing && nLength > 0) {
-		INT32 val = (renegade_adpcm.base[renegade_adpcm.current >> 15] >> renegade_adpcm.nibble) & 15;
-		
-		renegade_adpcm.nibble ^= 4;
-		if (renegade_adpcm.nibble == 4) {
-			renegade_adpcm.current += nUpdateStep;//++;
-			if ((renegade_adpcm.current >> 15) >= renegade_adpcm.end) renegade_adpcm.playing = 0;
-		}
-		
-		INT16 Sample = clock_adpcm(&renegade_adpcm.adpcm, val) << 2;
-		
-		INT32 nLeftSample = 0, nRightSample = 0;
-		
-		if ((renegade_adpcm.output_dir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
-			nLeftSample += (INT32)(Sample * renegade_adpcm.gain);
-		}
-		if ((renegade_adpcm.output_dir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
-			nRightSample += (INT32)(Sample * renegade_adpcm.gain);
-		}
-		
-		nLeftSample = BURN_SND_CLIP(nLeftSample + pSoundBuf[0]);
-		nRightSample = BURN_SND_CLIP(nRightSample + pSoundBuf[1]);
-		
-		pSoundBuf[0] = nLeftSample;
-		pSoundBuf[1] = nRightSample;
-		
-		pSoundBuf += 2;
-		nLength--;
+		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 	}
 }
 
 static INT32 DrvFrame()
 {
-	INT32 nInterleave = 262;
+	INT32 nInterleave = MSM5205CalcInterleave(0, 12000000 / 8);
 	
 	if (DrvReset) DrvDoReset();
 
@@ -1370,17 +1272,15 @@ static INT32 DrvFrame()
 		}
 		
 		M6809Open(0);
-		BurnTimerUpdateYM3526(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[1] / nInterleave));
+		MSM5205Update();
 		M6809Close();
 	}
 	
 	M6809Open(0);
 	BurnTimerEndFrameYM3526(nCyclesTotal[1]);
-	M6809Close();
-	
-	M6809Open(0);
 	BurnYM3526Update(pBurnSoundOut, nBurnSoundLen);
-	RenderADPCMSample(pBurnSoundOut, nBurnSoundLen);
+	MSM5205Render(0, pBurnSoundOut, nBurnSoundLen);
 	M6809Close();
 	
 	if (pBurnDraw) DrvDraw();

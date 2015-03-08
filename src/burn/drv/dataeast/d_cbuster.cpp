@@ -136,7 +136,24 @@ void __fastcall cbuster_main_write_word(UINT32 address, UINT16 data)
 
 		case 0xbc002:
 			deco16_soundlatch = data & 0xff;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			//h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
+
+			// tempo fluctuation hack
+		    static UINT8 last_latch = 0;
+			static INT32 latch_repeat = 0;
+			if (deco16_soundlatch == 0x1b && last_latch == 0x1b) {
+				latch_repeat++;
+			} else latch_repeat = 0;
+			last_latch = deco16_soundlatch;
+
+			if (latch_repeat) {
+				if (latch_repeat%8 == 0) {
+					h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
+				}
+			} else {
+				h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
+			}
+			// end tempo fluctuation hack
 		return;
 	}
 }
@@ -152,7 +169,7 @@ void __fastcall cbuster_main_write_byte(UINT32 address, UINT8 data)
 
 		case 0xbc003:
 			deco16_soundlatch = data;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0xbc004:
@@ -410,26 +427,26 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,			0x080000, 0x083fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[0],		0x0a0000, 0x0a1fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[1],		0x0a2000, 0x0a2fff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[0],	0x0a4000, 0x0a47ff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[1],	0x0a6000, 0x0a67ff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[2],		0x0a8000, 0x0a8fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[3],		0x0aa000, 0x0abfff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[2],	0x0ac000, 0x0ac7ff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[3],	0x0ae000, 0x0ae7ff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x0b0000, 0x0b07ff, SM_RAM);
-	SekMapMemory(DrvPalRAM0,		0x0b8000, 0x0b8fff, SM_RAM);
-	SekMapMemory(DrvPalRAM1,		0x0b9000, 0x0b9fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0x080000, 0x083fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[0],		0x0a0000, 0x0a1fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[1],		0x0a2000, 0x0a2fff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[0],	0x0a4000, 0x0a47ff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[1],	0x0a6000, 0x0a67ff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[2],		0x0a8000, 0x0a8fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[3],		0x0aa000, 0x0abfff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[2],	0x0ac000, 0x0ac7ff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[3],	0x0ae000, 0x0ae7ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x0b0000, 0x0b07ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM0,		0x0b8000, 0x0b8fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM1,		0x0b9000, 0x0b9fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		cbuster_main_write_word);
 	SekSetWriteByteHandler(0,		cbuster_main_write_byte);
 	SekSetReadWordHandler(0,		cbuster_main_read_word);
 	SekSetReadByteHandler(0,		cbuster_main_read_byte);
 	SekClose();
 
-	deco16SoundInit(DrvHucROM, DrvHucRAM, 8055000, 1, NULL, 0.45, 1006875, 0.75, 2013750, 0.60);
+	deco16SoundInit(DrvHucROM, DrvHucRAM, 8055000 / 3, 1, NULL, 0.45, 1006875, 0.75, 2013750, 0.60);
 	BurnYM2203SetAllRoutes(0, 0.60, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -602,7 +619,7 @@ static INT32 DrvFrame()
 
 	INT32 nInterleave = 232;
 	INT32 nSoundBufferPos = 0;
-	INT32 nCyclesTotal[2] = { 12000000 / 58, 8055000 / 58 };
+	INT32 nCyclesTotal[2] = { 12000000 / 58, 8055000 / 3 / 58 };
 	INT32 nCyclesDone[2] = { 0, 0 };
 
 	h6280NewFrame();
@@ -625,7 +642,7 @@ static INT32 DrvFrame()
 		nSoundBufferPos += nSegmentLength;
 	}
 
-	SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	BurnTimerEndFrame(nCyclesTotal[1]);
 
 	if (pBurnSoundOut) {

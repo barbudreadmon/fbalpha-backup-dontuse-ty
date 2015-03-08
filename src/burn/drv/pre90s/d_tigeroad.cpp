@@ -536,9 +536,9 @@ UINT8 __fastcall tigeroad_sample_in(UINT16 port)
 static void TigeroadIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus & 1) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -692,11 +692,11 @@ static INT32 DrvInit(INT32 (*pInitCallback)())
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvSprRAM,		0xfe0800, 0xfe1bff, SM_RAM);
-	SekMapMemory(DrvVidRAM,		0xfec000, 0xfec7ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0xff8000, 0xff87ff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0xffc000, 0xffffff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvSprRAM,		0xfe0800, 0xfe1bff, MAP_RAM);
+	SekMapMemory(DrvVidRAM,		0xfec000, 0xfec7ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0xff8000, 0xff87ff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0xffc000, 0xffffff, MAP_RAM);
 	SekSetWriteByteHandler(0,	tigeroad_write_byte);
 	SekSetWriteWordHandler(0,	tigeroad_write_word);
 	SekSetReadByteHandler(0,	tigeroad_read_byte);
@@ -731,7 +731,7 @@ static INT32 DrvInit(INT32 (*pInitCallback)())
 	BurnYM2203SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 
-	if (nF1dream) {
+	if (strstr(BurnDrvGetTextA(DRV_NAME), "f1dream")) { // all versions
 		BurnYM2203SetPSGVolume(0, 0.11);
 		BurnYM2203SetPSGVolume(1, 0.11);
 	}
@@ -772,12 +772,12 @@ static void draw_sprites()
 
 	for (INT32 offs = (0x500 - 8) / 2; offs >= 0; offs -=4)
 	{
-		INT32 tile_number = source[offs + 0];
+		INT32 tile_number = BURN_ENDIAN_SWAP_INT16(source[offs + 0]);
 
 		if (tile_number != 0xfff) {
-			INT32 attr = source[offs + 1];
-			INT32 sy = source[offs + 2] & 0x1ff;
-			INT32 sx = source[offs + 3] & 0x1ff;
+			INT32 attr = BURN_ENDIAN_SWAP_INT16(source[offs + 1]);
+			INT32 sy = BURN_ENDIAN_SWAP_INT16(source[offs + 2]) & 0x1ff;
+			INT32 sx = BURN_ENDIAN_SWAP_INT16(source[offs + 3]) & 0x1ff;
 
 			INT32 flipx = attr & 0x02;
 			INT32 flipy = attr & 0x01;
@@ -922,7 +922,7 @@ static void draw_text_layer()
 		INT32 sx = (offs & 0x1f) << 3;
 		INT32 sy = (offs >> 5) << 3;
 
-		INT32 data = vram[offs];
+		INT32 data = BURN_ENDIAN_SWAP_INT16(vram[offs]);
 		INT32 attr = data >> 8;
 		INT32 code = (data & 0xff) + ((attr & 0xc0) << 2) + ((attr & 0x20) << 5);
 		if (code == 0x400) continue;
@@ -1019,7 +1019,7 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		if (toramich) MSM5205Update();
 		SekClose();
 		
@@ -1035,7 +1035,7 @@ static INT32 DrvFrame()
 			nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
 			for (INT32 j = 0; j < 67; j++) {
 				if (i == MSMIRQSlice[j]) {
-					ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+					ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 					nCyclesDone[nCurrentCPU] += ZetRun(1000);
 				}
 			}
@@ -1488,9 +1488,9 @@ static INT32 F1dreamInit()
 
 struct BurnDriver BurnDrvF1dream = {
 	"f1dream", NULL, NULL, NULL, "1988",
-	"F-1 Dream\0", NULL, "Capcom (Romstar license)", "Miscellaneous",
+	"F-1 Dream\0", "Game is bugged, use the bootleg instead.", "Capcom (Romstar license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARWARE_CAPCOM_MISC, GBF_RACING, 0,
+	0, 2, HARWARE_CAPCOM_MISC, GBF_RACING, 0,
 	NULL, f1dreamRomInfo, f1dreamRomName, NULL, NULL, TigeroadInputInfo, F1dreamDIPInfo,
 	F1dreamInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x240,
 	256, 224, 4, 3

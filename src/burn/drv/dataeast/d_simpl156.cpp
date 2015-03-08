@@ -253,8 +253,8 @@ static void common_map(INT32 ram, INT32 sfx, INT32 mus)
 
 	ArmInit(0);
 	ArmOpen(0);	
-	ArmMapMemory(DrvArmROM,		0x000000, 0x07ffff, ARM_ROM);
-	ArmMapMemory(DrvSysRAM,		0x201000, 0x201fff, ARM_RAM); // 32-bit
+	ArmMapMemory(DrvArmROM,		0x000000, 0x07ffff, MAP_ROM);
+	ArmMapMemory(DrvSysRAM,		0x201000, 0x201fff, MAP_RAM); // 32-bit
 	// ram regions and oki addresses set in map offsets
 	ArmSetWriteByteHandler(simpl156_write_byte);
 	ArmSetWriteLongHandler(simpl156_write_long);
@@ -547,7 +547,7 @@ static INT32 DrvFrame()
 	ArmOpen(0);
 	deco16_vblank = 0x00;
 	ArmRun(nTotalCycles - 12240);
-	ArmSetIRQLine(ARM_IRQ_LINE, ARM_IRQSTATUS_AUTO);
+	ArmSetIRQLine(ARM_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 	deco16_vblank = 0xf0;
 	ArmRun(12240);
 	ArmClose();

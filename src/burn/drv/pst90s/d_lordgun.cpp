@@ -669,7 +669,7 @@ static UINT8 aliencha_dip_read()
 
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
-	ZetSetIRQLine(0, nStatus ? ZET_IRQSTATUS_ACK : ZET_IRQSTATUS_NONE);
+	ZetSetIRQLine(0, nStatus ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvSynchroniseStream(INT32 nSoundRate)
@@ -854,16 +854,16 @@ static INT32 DrvInit(INT32 (*pInitCallback)(), INT32 lordgun)
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x1fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(DrvPriRAM,		0x210000, 0x21ffff, SM_RAM);
-	SekMapMemory(DrvVidRAM0,	0x300000, 0x30ffff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,	0x310000, 0x313fff, SM_RAM);
-	SekMapMemory(DrvVidRAM2	,	0x314000, 0x317fff, SM_RAM);
-	SekMapMemory(DrvVidRAM3,	0x318000, 0x319fff, SM_RAM);
-	SekMapMemory(DrvScrRAM,		0x31c000, 0x31c7ff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x400000, 0x4007ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x500000, 0x500fff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x1fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(DrvPriRAM,		0x210000, 0x21ffff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,	0x300000, 0x30ffff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,	0x310000, 0x313fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM2	,	0x314000, 0x317fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM3,	0x318000, 0x319fff, MAP_RAM);
+	SekMapMemory(DrvScrRAM,		0x31c000, 0x31c7ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x400000, 0x4007ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x500000, 0x500fff, MAP_RAM);
 	SekSetWriteWordHandler(0,	lordgun_write_word);
 	SekSetWriteByteHandler(0,	lordgun_write_byte);
 	SekSetReadWordHandler(0,	lordgun_read_word);
@@ -1346,7 +1346,7 @@ static INT32 lordgunFrame()
 		nNext = (i + 1) * nTotalCycles[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		
 		BurnTimerUpdateYM3812(i * (nTotalCycles[1] / nInterleave));
 	}
@@ -1394,7 +1394,7 @@ static INT32 alienchaFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		
 		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
 	}

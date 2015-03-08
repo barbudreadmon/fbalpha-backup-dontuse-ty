@@ -290,8 +290,8 @@ static void graphics_bank()
 		if (bank < 0 || bank >= graphics_min_max[1])
 			bank = graphics_min_max[1] - graphics_min_max[0];
 
-		Sh2MapMemory(pPsikyoshTiles + bank, 0x3060000, 0x307ffff, SH2_ROM);
-		Sh2MapMemory(pPsikyoshTiles + bank, 0x4060000, 0x407ffff, SH2_ROM);
+		Sh2MapMemory(pPsikyoshTiles + bank, 0x3060000, 0x307ffff, MAP_ROM);
+		Sh2MapMemory(pPsikyoshTiles + bank, 0x4060000, 0x407ffff, MAP_ROM);
 	}
 }
 
@@ -343,7 +343,7 @@ void __fastcall ps3v1_write_byte(UINT32 address, UINT8 data)
 	{
 		case 0x305ffdc:
 		case 0x305ffdd:
-			if (!(data & 0xc0)) Sh2SetIRQLine(4, SH2_IRQSTATUS_NONE);
+			if (!(data & 0xc0)) Sh2SetIRQLine(4, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x5000000:
@@ -435,7 +435,7 @@ void __fastcall ps5_write_byte(UINT32 address, UINT8 data)
 	switch (address)
 	{
 		case 0x405ffdd:
-			if (!(data & 0xc0)) Sh2SetIRQLine(4, SH2_IRQSTATUS_NONE);
+			if (!(data & 0xc0)) Sh2SetIRQLine(4, CPU_IRQSTATUS_NONE);
 		return;
 
 		case 0x3100000:
@@ -535,9 +535,9 @@ static INT32 DrvSynchroniseStream(INT32 nSoundRate)
 static void DrvIRQCallback(INT32, INT32 nStatus)
 {
 	if (nStatus)
-		Sh2SetIRQLine(12, SH2_IRQSTATUS_AUTO);
+		Sh2SetIRQLine(12, CPU_IRQSTATUS_AUTO);
 	else
-		Sh2SetIRQLine(12, SH2_IRQSTATUS_NONE);
+		Sh2SetIRQLine(12, CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvDoReset()
@@ -669,12 +669,12 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	{
 		Sh2Init(1);
 		Sh2Open(0);
-		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, SH2_ROM);
-		Sh2MapMemory(DrvSh2ROM + 0x100000,	0x02000000, 0x020fffff, SH2_ROM);
-		Sh2MapMemory(DrvSprRAM,			0x03000000, 0x0300ffff, SH2_RAM);
-		Sh2MapMemory(DrvPalRAM,			0x03040000, 0x0304ffff, SH2_RAM);
-		Sh2MapMemory(DrvZoomRAM,		0x03050000, 0x0305ffff, SH2_ROM);
-		Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, SH2_RAM);
+		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
+		Sh2MapMemory(DrvSh2ROM + 0x100000,	0x02000000, 0x020fffff, MAP_ROM);
+		Sh2MapMemory(DrvSprRAM,			0x03000000, 0x0300ffff, MAP_RAM);
+		Sh2MapMemory(DrvPalRAM,			0x03040000, 0x0304ffff, MAP_RAM);
+		Sh2MapMemory(DrvZoomRAM,		0x03050000, 0x0305ffff, MAP_ROM);
+		Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, MAP_RAM);
 		Sh2SetReadByteHandler (0,		ps3v1_read_byte);
 		Sh2SetWriteByteHandler(0,		ps3v1_write_byte);
 		Sh2SetWriteWordHandler(0,		ps3v1_write_word);
@@ -682,19 +682,19 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	} else {
 		Sh2Init(1);
 		Sh2Open(0);
-		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, SH2_ROM);
-		Sh2MapMemory(DrvSprRAM,			0x04000000, 0x0400ffff, SH2_RAM);
-		Sh2MapMemory(DrvPalRAM,			0x04040000, 0x0404ffff, SH2_RAM);
-		Sh2MapMemory(DrvZoomRAM,		0x04050000, 0x0405ffff, SH2_ROM);
-		Sh2MapMemory(DrvSh2ROM + 0x100000,	0x05000000, 0x0507ffff, SH2_ROM);
-		Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, SH2_RAM);
+		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
+		Sh2MapMemory(DrvSprRAM,			0x04000000, 0x0400ffff, MAP_RAM);
+		Sh2MapMemory(DrvPalRAM,			0x04040000, 0x0404ffff, MAP_RAM);
+		Sh2MapMemory(DrvZoomRAM,		0x04050000, 0x0405ffff, MAP_ROM);
+		Sh2MapMemory(DrvSh2ROM + 0x100000,	0x05000000, 0x0507ffff, MAP_ROM);
+		Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, MAP_RAM);
 		Sh2SetReadByteHandler (0,		ps5_read_byte);
 		Sh2SetWriteByteHandler(0,		ps5_write_byte);
 		Sh2SetWriteWordHandler(0,		ps5_write_word);
 		Sh2SetWriteLongHandler(0,		psx_write_long);
 	}
 
-	Sh2MapHandler(1, 0x06000000 | speedhack_address, 0x0600ffff | speedhack_address, SH2_ROM);
+	Sh2MapHandler(1, 0x06000000 | speedhack_address, 0x0600ffff | speedhack_address, MAP_ROM);
 	Sh2SetReadByteHandler (1,		hack_read_byte);
 	Sh2SetReadWordHandler (1,		hack_read_word);
 	Sh2SetReadLongHandler (1,		hack_read_long);
@@ -746,7 +746,7 @@ static INT32 DrvFrame()
 
 	BurnTimerEndFrame(28636350 / 60);
 
-	Sh2SetIRQLine(4, SH2_IRQSTATUS_AUTO);
+	Sh2SetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		BurnYMF278BUpdate(nBurnSoundLen);

@@ -1,11 +1,15 @@
 // FB Alpha Gyruss driver module
 // Based on MAME driver by Mirko Buffoni, Michael Cuddy, and Nicola Salmoria
+//
+// Massive overhaul by dink on Feb. 9, 2015
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
 #include "m6809_intf.h"
 #include "i8039.h"
 #include "driver.h"
+#include "flt_rc.h"
+#include "dac.h"
 extern "C" {
 #include "ay8910.h"
 }
@@ -50,26 +54,25 @@ static UINT8 *interrupt_enable0;
 static UINT8 *interrupt_enable1;
 
 static INT32 scanline;
-static UINT16 *pTemp;
 
 static struct BurnInputInfo GyrussInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
-	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 start"	},
+	{"P1 Start",	BIT_DIGITAL,	DrvJoy1 + 3,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 up"		},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 down"	},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 left"	},
-	{"P1 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 right"	},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 1"	},
+	{"P1 Right",	BIT_DIGITAL,	DrvJoy2 + 1,	"p1 right"	},
+	{"P1 Button 1",	BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 1"	},
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 coin"	},
-	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p2 start"	},
+	{"P2 Start",	BIT_DIGITAL,	DrvJoy1 + 4,	"p2 start"	},
 	{"P2 Up",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 up"		},
 	{"P2 Down",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 down"	},
 	{"P2 Left",		BIT_DIGITAL,	DrvJoy3 + 0,	"p2 left"	},
-	{"P2 Right",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 right"	},
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"	},
+	{"P2 Right",	BIT_DIGITAL,	DrvJoy3 + 1,	"p2 right"	},
+	{"P2 Button 1",	BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"	},
 
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	    "reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 2,	"service"	},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
@@ -245,7 +248,8 @@ void __fastcall gyruss_main_write(UINT16 address, UINT8 data)
 		case 0xc080:
 			ZetClose();
 			ZetOpen(1);
-			ZetRaiseIrq(0xff);
+			ZetSetVector(0xff);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			ZetOpen(0);
 		return;
@@ -255,7 +259,10 @@ void __fastcall gyruss_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xc180:
-			*interrupt_enable0 = data;
+			*interrupt_enable0 = data & 1;
+			if (!*interrupt_enable0) {
+				ZetSetIRQLine(Z80_INPUT_LINE_NMI, CPU_IRQSTATUS_NONE);
+			}
 		return;
 
 		case 0xc185:
@@ -295,7 +302,10 @@ void gyruss_sub_write(UINT16 address, UINT8 data)
 	switch (address)
 	{
 		case 0x2000:
-			*interrupt_enable1 = data;
+			*interrupt_enable1 = data & 1;
+			if (!*interrupt_enable1) {
+				M6809SetIRQLine(0, CPU_IRQSTATUS_NONE);
+			}
 		return;
 	}
 }
@@ -305,7 +315,7 @@ UINT8 gyruss_sub_read(UINT16 address)
 	switch (address)
 	{
 		case 0x0000:
-			return (scanline & 0x7f);
+			return (scanline/* & 0x7f*/);
 	}
 
 	return 0;
@@ -316,10 +326,48 @@ UINT8 __fastcall gyruss_sound0_read(UINT16 address)
 	switch (address)
 	{
 		case 0x8000:
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 	}
 
 	return 0;
+}
+
+static void filter_write(INT32 num, UINT8 d)
+{
+	INT32 C = 0;
+	if (d & 2) C += 220000;	/* 220000pF = 0.220uF */
+	if (d & 1) C +=  47000;	/*  47000pF = 0.047uF */
+
+	filter_rc_set_RC(num, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(C));
+}
+
+void AY8910_0_portBwrite(UINT32 /*port*/, UINT32 data)
+{
+	if (ZetGetActive() == -1) return;
+
+	for (INT32 i = 0; i < 3; i++)
+	{
+		/* low bit: 47000pF = 0.047uF */
+		/* high bit: 220000pF = 0.22uF */
+
+		filter_write(i, data & 3);
+		data >>= 2;
+	}
+}
+
+void AY8910_1_portBwrite(UINT32 /*port*/, UINT32 data)
+{
+	if (ZetGetActive() == -1) return;
+
+	for (INT32 i = 0; i < 3; i++)
+	{
+		/* low bit: 47000pF = 0.047uF */
+		/* high bit: 220000pF = 0.22uF */
+
+		filter_write(i + 3, data & 3);
+		data >>= 2;
+	}
 }
 
 UINT8 __fastcall gyruss_sound0_in(UINT16 port)
@@ -357,7 +405,7 @@ void __fastcall gyruss_sound0_out(UINT16 port, UINT8 data)
 			AY8910Write(0, 1, data);
 		return;
 
-		case 0x04:
+	    case 0x04:
 			AY8910Write(1, 0, data);
 		return;
 
@@ -389,7 +437,8 @@ void __fastcall gyruss_sound0_out(UINT16 port, UINT8 data)
 			AY8910Write(4, 1, data);
 		return;
 
-		case 0x14: // clear i8039 irq
+		case 0x14:
+			I8039SetIrqState(1);
 		return;
 
 		case 0x18:
@@ -405,8 +454,43 @@ UINT8 AY8910_3_portA(UINT32)
 		0x00, 0x01, 0x02, 0x03, 0x04, 0x09, 0x0a, 0x0b, 0x0a, 0x0d
 	};
 
-	return gyruss_timer[((ZetTotalCycles() * 60) >> 10) % 10];
+	return gyruss_timer[(ZetTotalCycles() / 1024) % 10];
 }
+
+static UINT8 __fastcall gyruss_i8039_read(UINT32 address)
+{
+	return DrvI8039ROM[address & 0x0fff];
+}
+
+static void __fastcall gyruss_i8039_write_port(UINT32 port, UINT8 data)
+{
+	switch (port & 0x1ff)
+	{
+		case I8039_p1:
+			DACWrite(0, data);
+		return;
+
+		case I8039_p2:
+			I8039SetIrqState(0);
+		return;
+	}
+}
+
+static UINT8 __fastcall gyruss_i8039_read_port(UINT32 port)
+{
+	if ((port & 0x1ff) < 0x100) {
+		return *soundlatch2;
+	}
+
+	return 0;
+}
+
+
+static INT32 DrvSyncDAC()
+{
+	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / (3579545.0000 / (nBurnFPS / 100.0000))));
+}
+
 
 static INT32 MemIndex()
 {
@@ -416,7 +500,7 @@ static INT32 MemIndex()
 	DrvZ80ROM1		= Next; Next += 0x010000;
 
 	DrvM6809ROM		= Next; Next += 0x010000;
-	DrvM6809DecROM		= Next; Next += 0x010000;
+	DrvM6809DecROM	= Next; Next += 0x010000;
 
 	DrvI8039ROM		= Next; Next += 0x001000;
 
@@ -444,8 +528,6 @@ static INT32 MemIndex()
 	pAY8910Buffer[12]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 	pAY8910Buffer[13]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 	pAY8910Buffer[14]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
-	pTemp			= (UINT16*)Next; Next += 0x10000 * 2;
 
 	AllRam			= Next;
 
@@ -476,9 +558,8 @@ static INT32 MemIndex()
 static INT32 DrvGfxDecode()
 {
 	INT32 Plane[4] = { 0x20004, 0x20000, 4, 0 };
-	INT32 XOffs[8] = { 0, 1, 2, 3, 64, 65, 66, 67 };
-	INT32 YOffs[16] = { 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
-			32*8, 33*8, 34*8, 35*8, 36*8, 37*8, 38*8, 39*8 };
+	INT32 XOffs[8] = { STEP4(0,1), STEP4(64, 1) };
+	INT32 YOffs[16] = { STEP8(0, 8), STEP8(256, 8) };
 
 	UINT8 *tmp = (UINT8*)BurnMalloc(0x10000);
 	if (tmp == NULL) {
@@ -573,6 +654,10 @@ static INT32 DrvDoReset()
 	ZetReset();
 	ZetClose();
 
+	I8039Reset();
+
+	DACReset();
+
 	AY8910Reset(0);
 	AY8910Reset(1);
 	AY8910Reset(2);
@@ -621,58 +706,82 @@ static INT32 DrvInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM0);
-	ZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM0);
-	ZetMapArea(0x8000, 0x83ff, 0, DrvColRAM);
-	ZetMapArea(0x8000, 0x83ff, 1, DrvColRAM);
-	ZetMapArea(0x8000, 0x83ff, 2, DrvColRAM);
-	ZetMapArea(0x8400, 0x87ff, 0, DrvVidRAM);
-	ZetMapArea(0x8400, 0x87ff, 1, DrvVidRAM);
-	ZetMapArea(0x8400, 0x87ff, 2, DrvVidRAM);
-	ZetMapArea(0x9000, 0x9fff, 0, DrvZ80RAM0);
-	ZetMapArea(0x9000, 0x9fff, 1, DrvZ80RAM0);
-	ZetMapArea(0x9000, 0x9fff, 2, DrvZ80RAM0);
-	ZetMapArea(0xa000, 0xa7ff, 0, DrvShareRAM);
-	ZetMapArea(0xa000, 0xa7ff, 1, DrvShareRAM);
-	ZetMapArea(0xa000, 0xa7ff, 2, DrvShareRAM);
+	ZetMapMemory(DrvZ80ROM0, 0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvColRAM, 0x8000, 0x83ff, MAP_RAM);
+	ZetMapMemory(DrvVidRAM, 0x8400, 0x87ff, MAP_RAM);
+	ZetMapMemory(DrvZ80RAM0, 0x9000, 0x9fff, MAP_RAM);
+	ZetMapMemory(DrvShareRAM, 0xa000, 0xa7ff, MAP_RAM);
+
 	ZetSetReadHandler(gyruss_main_read);
 	ZetSetWriteHandler(gyruss_main_write);
 	ZetClose();
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809RAM,			0x4000, 0x47ff, M6809_RAM);
-	M6809MapMemory(DrvShareRAM,			0x6000, 0x67ff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM + 0xe000, 		0xe000, 0xffff, M6809_READ);
-	M6809MapMemory(DrvM6809DecROM + 0xe000, 	0xe000, 0xffff, M6809_FETCH);
+	M6809MapMemory(DrvM6809RAM, 0x4000, 0x47ff, MAP_RAM);
+	M6809MapMemory(DrvShareRAM,	0x6000, 0x67ff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM + 0xe000, 0xe000, 0xffff, MAP_READ);
+	M6809MapMemory(DrvM6809DecROM + 0xe000,	0xe000, 0xffff, MAP_FETCH);
 	M6809SetReadHandler(gyruss_sub_read);
 	M6809SetWriteHandler(gyruss_sub_write);
 	M6809Close();
 
 	ZetInit(1);
 	ZetOpen(1);
-	ZetMapArea(0x0000, 0x5fff, 0, DrvZ80ROM1);
-	ZetMapArea(0x0000, 0x5fff, 2, DrvZ80ROM1);
-	ZetMapArea(0x6000, 0x63ff, 0, DrvZ80RAM1);
-	ZetMapArea(0x6000, 0x63ff, 1, DrvZ80RAM1);
-	ZetMapArea(0x6000, 0x63ff, 2, DrvZ80RAM1);
+	ZetMapMemory(DrvZ80ROM1, 0x0000, 0x5fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM1, 0x6000, 0x63ff, MAP_RAM);
 	ZetSetReadHandler(gyruss_sound0_read);
 	ZetSetOutHandler(gyruss_sound0_out);
 	ZetSetInHandler(gyruss_sound0_in);
 	ZetClose();
 
-	// don't bother with i8039 right now, descrete sounds not emulated
+	I8039Init(NULL);
+	I8039SetProgramReadHandler(gyruss_i8039_read);
+	I8039SetCPUOpReadHandler(gyruss_i8039_read);
+	I8039SetCPUOpReadArgHandler(gyruss_i8039_read);
+	I8039SetIOReadHandler(gyruss_i8039_read_port);
+	I8039SetIOWriteHandler(gyruss_i8039_write_port);
 
-	AY8910Init(0, 1789773, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 1789773, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(2, 1789773, nBurnSoundRate, AY8910_3_portA, NULL, NULL, NULL);
-	AY8910Init(3, 1789773, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(4, 1789773, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	DACInit(0, 0, 1, DrvSyncDAC);
+	DACSetRoute(0, 0.15, BURN_SND_ROUTE_BOTH);
+
+	AY8910Init(0, 1789750, nBurnSoundRate, NULL, NULL, NULL, &AY8910_0_portBwrite);
+	AY8910Init(1, 1789750, nBurnSoundRate, NULL, NULL, NULL, &AY8910_1_portBwrite);
+	AY8910Init(2, 1789750, nBurnSoundRate, AY8910_3_portA, NULL, NULL, NULL);
+	AY8910Init(3, 1789750, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(4, 1789750, nBurnSoundRate, NULL, NULL, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(2, 0.25, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(3, 0.25, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(4, 0.25, BURN_SND_ROUTE_BOTH);
+
+	filter_rc_init(0, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 0);
+	filter_rc_init(1, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+	filter_rc_init(2, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+	filter_rc_init(3, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+	filter_rc_init(4, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+	filter_rc_init(5, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+	filter_rc_init(6, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1); // master out l
+	filter_rc_init(7, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1); // master out r
+
+	filter_rc_set_src_gain(0, 0.70);
+	filter_rc_set_src_gain(1, 0.60);
+	filter_rc_set_src_gain(2, 0.45);
+	filter_rc_set_src_gain(3, 0.70);
+	filter_rc_set_src_gain(4, 0.60);
+	filter_rc_set_src_gain(5, 0.45);
+	filter_rc_set_src_gain(6, 1.00);
+	filter_rc_set_src_gain(7, 1.00);
+
+	filter_rc_set_route(0, 0.25, FLT_RC_PANNEDLEFT);
+	filter_rc_set_route(1, 0.25, FLT_RC_PANNEDLEFT);
+	filter_rc_set_route(2, 0.25, FLT_RC_PANNEDLEFT);
+	filter_rc_set_route(3, 0.25, FLT_RC_PANNEDRIGHT);
+	filter_rc_set_route(4, 0.25, FLT_RC_PANNEDRIGHT);
+	filter_rc_set_route(5, 0.25, FLT_RC_PANNEDRIGHT);
+	filter_rc_set_route(6, 0.25, BURN_SND_ROUTE_LEFT ); // master out l
+	filter_rc_set_route(7, 0.25, BURN_SND_ROUTE_RIGHT); // master out r
 
 	GenericTilesInit();
 
@@ -687,11 +796,16 @@ static INT32 DrvExit()
 	ZetExit();
 	M6809Exit();
 
+	I8039Exit();
+
+	DACExit();
+
 	AY8910Exit(0);
 	AY8910Exit(1);
 	AY8910Exit(2);
 	AY8910Exit(3);
 	AY8910Exit(4);
+	filter_rc_exit();
 
 	BurnFree (AllMem);
 
@@ -759,7 +873,7 @@ static void draw_8x16_tile_line(INT32 sx, INT32 sy, INT32 color, UINT8 *gfx_base
 	{
 		INT32 pxl = src[x ^ flipx];
 
-		if (sx < 0 || sx >= nScreenWidth || !pxl) continue;
+		if (sx < 8 || sx >= (nScreenWidth - 8) || !pxl) continue;
 
 		pTransDraw[(line * nScreenWidth) + sx] = pxl | color;
 	}
@@ -793,13 +907,12 @@ static INT32 DrvDraw()
 			INT32 rgb = Palette[i];
 			DrvPalette[i] = BurnHighCol(rgb >> 16, rgb >> 8, rgb, 0);
 		}
+		DrvRecalc = 0;
 	}
 
 	BurnTransferClear();
 
 	draw_background(0);
-
-//	draw_background(0x0f);
 
 	return 0;
 }
@@ -820,48 +933,101 @@ static INT32 DrvFrame()
 	}
 
 	ZetNewFrame();
+	I8039NewFrame();
 
 	INT32 nCyclesSegment;
 	INT32 nInterleave = 256;
-	INT32 nCyclesTotal[4] = { 3072000 / 60, 2000000 / 60, 3579545 / 60, 8000000 / 60 };
+	INT32 nCyclesTotal[4] = { 3072000 / 60, 2000000 / 60, 3579545 / 60, 8000000 / 15 / 60 };
 	INT32 nCyclesDone[4] = { 0, 0, 0, 0 };
+	INT32 nSoundBufferPos = 0;
 
 	DrvDraw();
+	memset (pBurnSoundOut,0,nBurnSoundLen*4);
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
 		INT32 nNext;
-		scanline = i;
+		scanline = i + 6;
 
 		ZetOpen(0);
 		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[0];
 		nCyclesDone[0] += ZetRun(nCyclesSegment);
-		if (i == (nInterleave - 1) && *interrupt_enable0) {
-			ZetNmi();
+		if (i == (nInterleave - 248) && *interrupt_enable0) {
+			ZetSetIRQLine(Z80_INPUT_LINE_NMI, CPU_IRQSTATUS_ACK);
 		}
+		ZetClose();
 		
 		M6809Open(0);
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[1];
 		nCyclesDone[1] += M6809Run(nCyclesSegment);
-		if (i == (nInterleave - 1) && *interrupt_enable1) {
-			M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 248) && *interrupt_enable1) {
+			M6809SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		}
 		M6809Close();
-		ZetClose();
 
 		ZetOpen(1);
 		nNext = (i + 1) * nCyclesTotal[2] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[2];
 		nCyclesDone[2] += ZetRun(nCyclesSegment);
-		ZetClose();
 
-		draw_sprites(scanline);
+		nNext = (nCyclesTotal[3] * (i + 1)) / nInterleave;
+		nCyclesDone[3] += I8039Run(nNext - nCyclesDone[3]);
+		ZetClose(); // after I8039Run() for DrvSyncDAC()!
+
+		if (scanline >= 16 && scanline < 240) {
+			draw_sprites(scanline);
+		}
+		// Render Sound Segment
+		if (pBurnSoundOut) {
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			nSoundBufferPos += nSegmentLength;
+
+			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
+			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
+			filter_rc_update(2, pAY8910Buffer[2], pSoundBuf, nSegmentLength);
+			filter_rc_update(3, pAY8910Buffer[3], pSoundBuf, nSegmentLength);
+			filter_rc_update(4, pAY8910Buffer[4], pSoundBuf, nSegmentLength);
+			filter_rc_update(5, pAY8910Buffer[5], pSoundBuf, nSegmentLength);
+		    filter_rc_update(6, pAY8910Buffer[6], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[7], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[8], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[9], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[10], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[11], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[12], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[13], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[14], pSoundBuf, nSegmentLength);
+		}
 	}
 
+	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+		if (nSegmentLength) {
+			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+
+			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
+			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
+			filter_rc_update(2, pAY8910Buffer[2], pSoundBuf, nSegmentLength);
+			filter_rc_update(3, pAY8910Buffer[3], pSoundBuf, nSegmentLength);
+			filter_rc_update(4, pAY8910Buffer[4], pSoundBuf, nSegmentLength);
+			filter_rc_update(5, pAY8910Buffer[5], pSoundBuf, nSegmentLength);
+		    filter_rc_update(6, pAY8910Buffer[6], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[7], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[8], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[9], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[10], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[11], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[12], pSoundBuf, nSegmentLength);
+			filter_rc_update(7, pAY8910Buffer[13], pSoundBuf, nSegmentLength);
+			filter_rc_update(6, pAY8910Buffer[14], pSoundBuf, nSegmentLength);
+		}
+		DACUpdate(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -890,8 +1056,10 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
 		M6809Scan(nAction);
+		I8039Scan(nAction,pnMin);
 
 		AY8910Scan(nAction, pnMin);
+		DACScan(nAction, pnMin);
 	}
 
 	return 0;
@@ -929,7 +1097,7 @@ STD_ROM_FN(gyruss)
 
 struct BurnDriver BurnDrvGyruss = {
 	"gyruss", NULL, NULL, NULL, "1983",
-	"Gyruss (Konami)\0", NULL, "Konami", "Miscellaneous",
+	"Gyruss (Konami)\0", NULL, "Konami", "GX347",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_SHOOT, 0,
 	NULL, gyrussRomInfo, gyrussRomName, NULL, NULL, GyrussInputInfo, GyrussDIPInfo,
@@ -969,7 +1137,7 @@ STD_ROM_FN(gyrussce)
 
 struct BurnDriver BurnDrvGyrussce = {
 	"gyrussce", "gyruss", NULL, NULL, "1983",
-	"Gyruss (Centuri)\0", NULL, "Konami (Centuri license)", "Miscellaneous",
+	"Gyruss (Centuri)\0", NULL, "Konami (Centuri license)", "GX347",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_SHOOT, 0,
 	NULL, gyrussceRomInfo, gyrussceRomName, NULL, NULL, GyrussInputInfo, GyrussceDIPInfo,
@@ -1009,7 +1177,7 @@ STD_ROM_FN(gyrussb)
 
 struct BurnDriver BurnDrvGyrussb = {
 	"gyrussb", "gyruss", NULL, NULL, "1983",
-	"Gyruss (bootleg)\0", NULL, "bootleg", "Miscellaneous",
+	"Gyruss (bootleg)\0", NULL, "bootleg", "GX347",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_SHOOT, 0,
 	NULL, gyrussbRomInfo, gyrussbRomName, NULL, NULL, GyrussInputInfo, GyrussDIPInfo,
@@ -1049,7 +1217,7 @@ STD_ROM_FN(venus)
 
 struct BurnDriver BurnDrvVenus = {
 	"venus", "gyruss", NULL, NULL, "1983",
-	"Venus\0", NULL, "bootleg", "Miscellaneous",
+	"Venus\0", NULL, "bootleg", "GX347",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_SHOOT, 0,
 	NULL, venusRomInfo, venusRomName, NULL, NULL, GyrussInputInfo, GyrussDIPInfo,

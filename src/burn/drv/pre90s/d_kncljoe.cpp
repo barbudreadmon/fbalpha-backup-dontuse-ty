@@ -145,7 +145,7 @@ static void __fastcall kncljoe_main_write(UINT16 address, UINT8 data)
 
 		case 0xd800:
 			if (data & 0x80) {
-				M6803SetIRQLine(0, M6803_IRQSTATUS_ACK);
+				M6803SetIRQLine(0, CPU_IRQSTATUS_ACK);
 			} else {
 				*soundlatch = data;
 			}
@@ -235,7 +235,7 @@ static void kncljoe_sound_write(UINT16 address, UINT8 data)
 	}
 
 	if ((address & 0x7000) == 0x1000) {
-		M6803SetIRQLine(0, M6803_IRQSTATUS_NONE);
+		M6803SetIRQLine(0, CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -451,8 +451,8 @@ static INT32 DrvInit()
 
 	M6803Init(1);
 //	M6803Open(0);
-	M6803MapMemory(DrvM6803ROM,	0x6000, 0x7fff, M6803_ROM);
-	M6803MapMemory(DrvM6803ROM,	0xe000, 0xffff, M6803_ROM);
+	M6803MapMemory(DrvM6803ROM,	0x6000, 0x7fff, MAP_ROM);
+	M6803MapMemory(DrvM6803ROM,	0xe000, 0xffff, MAP_ROM);
 	M6803SetReadHandler(kncljoe_sound_read);
 	M6803SetWriteHandler(kncljoe_sound_write);
 	M6803SetWritePortHandler(kncljoe_sound_write_port);
@@ -635,11 +635,11 @@ static INT32 DrvFrame()
 
 		nSegment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += ZetRun(nSegment);
-		if (i == 60) ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+		if (i == 60) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
 		nSegment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += M6803Run(nSegment);
-		M6803SetIRQLine(M6803_INPUT_LINE_NMI, M6803_IRQSTATUS_AUTO);
+		M6803SetIRQLine(M6803_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 	}
 
 //	M6803Close();

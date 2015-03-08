@@ -10,9 +10,6 @@
 		martial champ
 			why are the sprite positions messed up? protection?
 
-		mystic warriors
-			level 3, sub headlights need to be highlights, not shadows!
-
 	unkown bugs.
 		probably a lot! go ahead and fix it!
 
@@ -20,7 +17,6 @@
 		fix bugs
 		clean up
 		optimize
-		save states - done(dink)
 */
 
 #include "tiles_generic.h"
@@ -561,7 +557,7 @@ static void __fastcall mystwarr_main_write_byte(UINT32 address, UINT8 data)
 
 		case 0x49a000:
 		case 0x49a001:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x49e004:
@@ -838,7 +834,7 @@ static void __fastcall metamrph_main_write_word(UINT32 address, UINT16 data)
 	{
 		case 0x264000:
 		case 0x264001:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x26800c:
@@ -921,7 +917,7 @@ static void __fastcall metamrph_main_write_byte(UINT32 address, UINT8 data)
 	{
 		case 0x264000:
 		case 0x264001:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x26800c:
@@ -1153,7 +1149,7 @@ static void __fastcall martchmp_main_write_word(UINT32 address, UINT16 data)
 	}
 
 	if ((address & 0xfffff0) == 0x402010) {
-		K053247WriteRegsWord(address, data);
+		K053247WriteRegsWord(address&0xf, data);
 		return;
 	}
 
@@ -1211,7 +1207,7 @@ static void __fastcall martchmp_main_write_byte(UINT32 address, UINT8 data)
 	}
 
 	if ((address & 0xfffff0) == 0x402010) {
-		K053247WriteRegsByte(address, data);
+		K053247WriteRegsByte(address&0xf, data);
 		return;
 	}
 
@@ -1286,7 +1282,7 @@ static void __fastcall martchmp_main_write_byte(UINT32 address, UINT8 data)
 
 		case 0x41a000:
 		case 0x41a001:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
 }
@@ -1540,7 +1536,7 @@ static void __fastcall dadandrn_main_write_byte(UINT32 address, UINT8 data)
 		return;
 
 		case 0x6e0000:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0xe00000:
@@ -1620,7 +1616,7 @@ static UINT8 __fastcall dadandrn_main_read_byte(UINT32 address)
 static void bankswitch(INT32 data)
 {
 	z80_bank = data;
-	ZetMapMemory(DrvZ80ROM + ((data & 0x0f) * 0x4000), 0x8000, 0xbfff, ZET_ROM);
+	ZetMapMemory(DrvZ80ROM + ((data & 0x0f) * 0x4000), 0x8000, 0xbfff, MAP_ROM);
 }
 
 static void __fastcall mystwarr_sound_write(UINT16 address, UINT8 data)
@@ -1634,7 +1630,7 @@ static void __fastcall mystwarr_sound_write(UINT16 address, UINT8 data)
 		case 0xf800:
 			sound_control = data & 0x10;
 			bankswitch(data);
-		//	if (!sound_control) ZetSetIRQLine(0x20, ZET_IRQSTATUS_NONE);	// CLEAR NMI LINE!
+		//	if (!sound_control) ZetSetIRQLine(0x20, CPU_IRQSTATUS_NONE);	// CLEAR NMI LINE!
 		return;
 	}
 
@@ -1669,11 +1665,11 @@ static UINT8 __fastcall mystwarr_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0xf002:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch;
 
 		case 0xf003:
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return *soundlatch2;
 	}
 
@@ -1990,10 +1986,10 @@ static INT32 MystwarrInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(DrvSpriteRam,		0x400000, 0x40ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,			0x700000, 0x701fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(DrvSpriteRam,		0x400000, 0x40ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,			0x700000, 0x701fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		mystwarr_main_write_word);
 	SekSetWriteByteHandler(0,		mystwarr_main_write_byte);
 	SekSetReadWordHandler(0,		mystwarr_main_read_word);
@@ -2002,8 +1998,8 @@ static INT32 MystwarrInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, MAP_RAM);
 	ZetSetWriteHandler(mystwarr_sound_write);
 	ZetSetReadHandler(mystwarr_sound_read);
 	ZetClose();
@@ -2100,11 +2096,11 @@ static INT32 MetamrphInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(DrvSpriteRam,		0x211000, 0x21ffff, SM_RAM);
-	SekMapMemory((UINT8*)K053250Ram,	0x24c000, 0x24ffff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x330000, 0x331fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(DrvSpriteRam,		0x211000, 0x21ffff, MAP_RAM);
+	SekMapMemory((UINT8*)K053250Ram,	0x24c000, 0x24ffff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x330000, 0x331fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		metamrph_main_write_word);
 	SekSetWriteByteHandler(0,		metamrph_main_write_byte);
 	SekSetReadWordHandler(0,		metamrph_main_read_word);
@@ -2113,8 +2109,8 @@ static INT32 MetamrphInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, MAP_RAM);
 	ZetSetWriteHandler(mystwarr_sound_write);
 	ZetSetReadHandler(mystwarr_sound_read);
 	ZetClose();
@@ -2206,11 +2202,11 @@ static INT32 ViostormInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(DrvSpriteRam,		0x211000, 0x21ffff, SM_RAM);
-	SekMapMemory((UINT8*)K053250Ram,	0x24c000, 0x24ffff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x330000, 0x331fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(DrvSpriteRam,		0x211000, 0x21ffff, MAP_RAM);
+	SekMapMemory((UINT8*)K053250Ram,	0x24c000, 0x24ffff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x330000, 0x331fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		metamrph_main_write_word);
 	SekSetWriteByteHandler(0,		metamrph_main_write_byte);
 	SekSetReadWordHandler(0,		metamrph_main_read_word);
@@ -2219,8 +2215,8 @@ static INT32 ViostormInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, MAP_RAM);
 	ZetSetWriteHandler(mystwarr_sound_write);
 	ZetSetReadHandler(mystwarr_sound_read);
 	ZetClose();
@@ -2308,11 +2304,11 @@ static INT32 MartchmpInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM + 0x000000,	0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,			0x100000, 0x10ffff, SM_RAM);
-	SekMapMemory(Drv68KROM + 0x100000,	0x300000, 0x3fffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam,		0x480000, 0x483fff, SM_ROM);	// should be written through handler
-	SekMapMemory(DrvPalRAM,			0x600000, 0x601fff, SM_RAM);
+	SekMapMemory(Drv68KROM + 0x000000,	0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0x100000, 0x10ffff, MAP_RAM);
+	SekMapMemory(Drv68KROM + 0x100000,	0x300000, 0x3fffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam,		0x480000, 0x483fff, MAP_ROM);	// should be written through handler
+	SekMapMemory(DrvPalRAM,			0x600000, 0x601fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		martchmp_main_write_word);
 	SekSetWriteByteHandler(0,		martchmp_main_write_byte);
 	SekSetReadWordHandler(0,		martchmp_main_read_word);
@@ -2321,8 +2317,8 @@ static INT32 MartchmpInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, MAP_RAM);
 	ZetSetWriteHandler(mystwarr_sound_write);
 	ZetSetReadHandler(mystwarr_sound_read);
 	ZetClose();
@@ -2462,12 +2458,12 @@ static INT32 GaiapolisInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x2fffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam,		0x400000, 0x40ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,			0x420000, 0x421fff, SM_RAM);
-	SekMapMemory(DrvK053936Ctrl,		0x460000, 0x46001f, SM_RAM);
-	SekMapMemory(DrvK053936RAM,		0x470000, 0x470fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,			0x600000, 0x60ffff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x2fffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam,		0x400000, 0x40ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,			0x420000, 0x421fff, MAP_RAM);
+	SekMapMemory(DrvK053936Ctrl,		0x460000, 0x46001f, MAP_RAM);
+	SekMapMemory(DrvK053936RAM,		0x470000, 0x470fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,			0x600000, 0x60ffff, MAP_RAM);
 	SekSetWriteWordHandler(0,		dadandrn_main_write_word);
 	SekSetWriteByteHandler(0,		dadandrn_main_write_byte);
 	SekSetReadWordHandler(0,		dadandrn_main_read_word);
@@ -2476,8 +2472,8 @@ static INT32 GaiapolisInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, MAP_RAM);
 	ZetSetWriteHandler(mystwarr_sound_write);
 	ZetSetReadHandler(mystwarr_sound_read);
 	ZetClose();
@@ -2620,12 +2616,12 @@ static INT32 DadandrnInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, SM_ROM);
-	SekMapMemory(DrvSpriteRam,		0x400000, 0x40ffff, SM_ROM);
-	SekMapMemory(DrvPalRAM,			0x420000, 0x421fff, SM_RAM);
-	SekMapMemory(DrvK053936Ctrl,		0x460000, 0x46001f, SM_RAM);
-	SekMapMemory(DrvK053936RAM,		0x470000, 0x470fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,			0x600000, 0x60ffff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, MAP_ROM);
+	SekMapMemory(DrvSpriteRam,		0x400000, 0x40ffff, MAP_ROM);
+	SekMapMemory(DrvPalRAM,			0x420000, 0x421fff, MAP_RAM);
+	SekMapMemory(DrvK053936Ctrl,		0x460000, 0x46001f, MAP_RAM);
+	SekMapMemory(DrvK053936RAM,		0x470000, 0x470fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,			0x600000, 0x60ffff, MAP_RAM);
 	SekSetWriteWordHandler(0,		dadandrn_main_write_word);
 	SekSetWriteByteHandler(0,		dadandrn_main_write_byte);
 	SekSetReadWordHandler(0,		dadandrn_main_read_word);
@@ -2634,8 +2630,8 @@ static INT32 DadandrnInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, ZET_RAM);
+	ZetMapMemory(DrvZ80ROM,			0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,			0xc000, 0xdfff, MAP_RAM);
 	ZetSetWriteHandler(mystwarr_sound_write);
 	ZetSetReadHandler(mystwarr_sound_read);
 	ZetClose();
@@ -2815,23 +2811,23 @@ static INT32 DrvFrame()
 			if (mw_irq_control & 1)
 			{
 				if (i == 0)
-					SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+					SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	
 				if (i == ((nInterleave * 240)/256))
-					SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+					SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 			}
 		}
 
 		if (nGame == 2 || nGame == 3)
 		{
 			if (i == 0) // otherwise service mode doesn't work!
-				SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+				SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 			if (i == ((nInterleave *  24) / 256))
-				SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+				SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 			if (i == ((nInterleave * 248) / 256) && K053246_is_IRQ_enabled())
-				SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+				SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		}
 
 		if (nGame == 4) // martchmp
@@ -2839,17 +2835,17 @@ static INT32 DrvFrame()
 			if (mw_irq_control & 2)
 			{
 				if (i == ((nInterleave *  23) / 256))
-					SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+					SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
 				if (i == ((nInterleave * 247) / 256) && K053246_is_IRQ_enabled())
-					SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+					SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 			}
 		}
 
 		if (nGame == 5 || nGame == 6)
 		{
 			if (i == (nInterleave - 1))
-				SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+				SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		}
 
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
@@ -2858,7 +2854,7 @@ static INT32 DrvFrame()
 		nCyclesDone[1] += nCyclesSegment;
 
 		if ((i % (nInterleave / 8)) == ((nInterleave / 8) - 1)) {// && sound_nmi_enable && sound_control) { // iq_132
-			ZetNmi(); //ZetSetIRQLine(0x20, ZET_IRQSTATUS_ACK);
+			ZetNmi(); //ZetSetIRQLine(0x20, CPU_IRQSTATUS_ACK);
 		}
 
 		if (pBurnSoundOut) {

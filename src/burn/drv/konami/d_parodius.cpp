@@ -169,7 +169,7 @@ void parodius_main_write(UINT16 address, UINT8 data)
 
 		case 0x3fc8:
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x3fcc:
@@ -295,7 +295,7 @@ UINT8 __fastcall parodius_sound_read(UINT16 address)
 	}
 
 	if (address >= 0xfc00 && address <= 0xfc2f) {
-		if ((address & 0x3e) == 0x00) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if ((address & 0x3e) == 0x00) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 
 		return K053260Read(0, address & 0x3f);
 	}
@@ -326,7 +326,7 @@ static void parodius_set_lines(INT32 lines)
 {
 	nDrvRomBank[0] = lines;
 
-	konamiMapMemory(DrvKonROM + 0x10000 + ((~lines & 0x0f) * 0x4000), 0x6000, 0x9fff, KON_ROM); 
+	konamiMapMemory(DrvKonROM + 0x10000 + ((~lines & 0x0f) * 0x4000), 0x6000, 0x9fff, MAP_ROM); 
 }
 
 static INT32 DrvDoReset()
@@ -384,19 +384,6 @@ static INT32 MemIndex()
 	return 0;
 }
 
-static INT32 DrvGfxDecode()
-{
-	INT32 Plane[4] = { 0x018, 0x010, 0x008, 0x000 };
-	INT32 XOffs[8] = { 0x000, 0x001, 0x002, 0x003, 0x004, 0x005, 0x006, 0x007 };
-	INT32 YOffs[8] = { 0x000, 0x020, 0x040, 0x060, 0x080, 0x0a0, 0x0c0, 0x0e0 };
-
-	GfxDecode(0x8000, 4, 8, 8, Plane, XOffs, YOffs, 0x100, DrvGfxROM0, DrvGfxROMExp0);
-
-	K053245GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x100000);
-
-	return 0;
-}
-
 static INT32 DrvInit()
 {
 	GenericTilesInit();
@@ -423,14 +410,15 @@ static INT32 DrvInit()
 
 		if (BurnLoadRom(DrvSndROM  + 0x000000,  7, 1)) return 1;
 
-		DrvGfxDecode();
+		K052109GfxDecode(DrvGfxROM0, DrvGfxROMExp0, 0x100000);
+		K053245GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x100000);
 	}
 
 	konamiInit(0);
 	konamiOpen(0);
-	konamiMapMemory(DrvKonRAM,		0x0800, 0x1fff, KON_RAM);
-	konamiMapMemory(DrvKonROM + 0x10000,	0x6000, 0x9fff, KON_ROM);
-	konamiMapMemory(DrvKonROM + 0x0a000,	0xa000, 0xffff, KON_ROM);
+	konamiMapMemory(DrvKonRAM,		0x0800, 0x1fff, MAP_RAM);
+	konamiMapMemory(DrvKonROM + 0x10000,	0x6000, 0x9fff, MAP_ROM);
+	konamiMapMemory(DrvKonROM + 0x0a000,	0xa000, 0xffff, MAP_ROM);
 	konamiSetWriteHandler(parodius_main_write);
 	konamiSetReadHandler(parodius_main_read);
 	konamiSetlinesCallback(parodius_set_lines);
@@ -574,7 +562,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	if (K052109_irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, KONAMI_IRQSTATUS_AUTO);
+	if (K052109_irq_enabled) konamiSetIrqLine(KONAMI_IRQ_LINE, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;

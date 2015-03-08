@@ -805,9 +805,9 @@ void DrvGngM6809WriteByte(UINT16 Address, UINT8 Data)
 			DrvRomBank = Data & 3;
 			if (Data == 4) {
 				DrvRomBank = 4;
-				M6809MapMemory(DrvM6809Rom, 0x4000, 0x5fff, M6809_ROM);
+				M6809MapMemory(DrvM6809Rom, 0x4000, 0x5fff, MAP_ROM);
 			} else {
-				M6809MapMemory(DrvM6809Rom + 0xc000 + (DrvRomBank * 0x2000), 0x4000, 0x5fff, M6809_ROM);
+				M6809MapMemory(DrvM6809Rom + 0xc000 + (DrvRomBank * 0x2000), 0x4000, 0x5fff, MAP_ROM);
 			}
 			return;
 		}
@@ -939,14 +939,14 @@ static INT32 DrvInit()
 	// Setup the M6809 emulation
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x1dff, M6809_RAM);
-	M6809MapMemory(DrvSpriteRam         , 0x1e00, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvFgVideoRam        , 0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvBgVideoRam        , 0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvPaletteRam2       , 0x3800, 0x38ff, M6809_RAM);
-	M6809MapMemory(DrvPaletteRam1       , 0x3900, 0x39ff, M6809_RAM);
-	M6809MapMemory(DrvM6809Rom          , 0x4000, 0x5fff, M6809_ROM);
-	M6809MapMemory(DrvM6809Rom + 0x2000 , 0x6000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x1dff, MAP_RAM);
+	M6809MapMemory(DrvSpriteRam         , 0x1e00, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvFgVideoRam        , 0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvBgVideoRam        , 0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvPaletteRam2       , 0x3800, 0x38ff, MAP_RAM);
+	M6809MapMemory(DrvPaletteRam1       , 0x3900, 0x39ff, MAP_RAM);
+	M6809MapMemory(DrvM6809Rom          , 0x4000, 0x5fff, MAP_ROM);
+	M6809MapMemory(DrvM6809Rom + 0x2000 , 0x6000, 0xffff, MAP_ROM);
 	M6809SetReadHandler(DrvGngM6809ReadByte);
 	M6809SetWriteHandler(DrvGngM6809WriteByte);
 	M6809Close();
@@ -1032,14 +1032,14 @@ static INT32 DiamondInit()
 	// Setup the M6809 emulation
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x1dff, M6809_RAM);
-	M6809MapMemory(DrvSpriteRam         , 0x1e00, 0x1fff, M6809_RAM);
-	M6809MapMemory(DrvFgVideoRam        , 0x2000, 0x27ff, M6809_RAM);
-	M6809MapMemory(DrvBgVideoRam        , 0x2800, 0x2fff, M6809_RAM);
-	M6809MapMemory(DrvPaletteRam2       , 0x3800, 0x38ff, M6809_RAM);
-	M6809MapMemory(DrvPaletteRam1       , 0x3900, 0x39ff, M6809_RAM);
-	M6809MapMemory(DrvM6809Rom          , 0x4000, 0x5fff, M6809_ROM);
-	M6809MapMemory(DrvM6809Rom + 0x2000 , 0x6000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x1dff, MAP_RAM);
+	M6809MapMemory(DrvSpriteRam         , 0x1e00, 0x1fff, MAP_RAM);
+	M6809MapMemory(DrvFgVideoRam        , 0x2000, 0x27ff, MAP_RAM);
+	M6809MapMemory(DrvBgVideoRam        , 0x2800, 0x2fff, MAP_RAM);
+	M6809MapMemory(DrvPaletteRam2       , 0x3800, 0x38ff, MAP_RAM);
+	M6809MapMemory(DrvPaletteRam1       , 0x3900, 0x39ff, MAP_RAM);
+	M6809MapMemory(DrvM6809Rom          , 0x4000, 0x5fff, MAP_ROM);
+	M6809MapMemory(DrvM6809Rom + 0x2000 , 0x6000, 0xffff, MAP_ROM);
 	M6809SetReadHandler(DrvGngM6809ReadByte);
 	M6809SetWriteHandler(DrvGngM6809WriteByte);
 	M6809Close();
@@ -1348,8 +1348,7 @@ static void DrvDraw()
 static INT32 DrvFrame()
 {
 	INT32 nInterleave = 25;
-	INT32 nSoundBufferPos = 0;
-	
+
 	if (DrvReset) DrvDoReset();
 
 	DrvMakeInputs();
@@ -1370,7 +1369,7 @@ static INT32 DrvFrame()
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += M6809Run(nCyclesSegment);
 		if (i == 24) {
-			M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+			M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 		M6809Close();
 		
@@ -1378,36 +1377,19 @@ static INT32 DrvFrame()
 		nCurrentCPU = 1;
 		ZetOpen(0);
 		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
-		if (i == 5 || i == 10 || i == 15 || i == 20) ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
-		if (i == 6 || i == 11 || i == 16 || i == 21) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if (i == 5 || i == 10 || i == 15 || i == 20) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
+		if (i == 6 || i == 11 || i == 16 || i == 21) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		ZetClose();
-		
-		// Render Sound Segment
-		if (pBurnSoundOut) {
-			INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			ZetOpen(0);
-			BurnYM2203Update(pSoundBuf, nSegmentLength);
-			ZetClose();
-			nSoundBufferPos += nSegmentLength;
-		}
 	}
-	
+
 	ZetOpen(0);
 	BurnTimerEndFrame(nCyclesTotal[1]);
-	ZetClose();
-	
-	// Make sure the buffer is entirely filled.
+
 	if (pBurnSoundOut) {
-		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-		if (nSegmentLength) {
-			ZetOpen(0);
-			BurnYM2203Update(pSoundBuf, nSegmentLength);
-			ZetClose();
-		}
+		BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
 	}
-	
+	ZetClose();
+
 	if (pBurnDraw) DrvDraw();
 	
 	memcpy(DrvSpriteRamBuffer, DrvSpriteRam, 0x200);

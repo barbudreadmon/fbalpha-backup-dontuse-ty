@@ -392,9 +392,9 @@ static INT32 DrvDoReset()
 void MugsmashYM2151IrqHandler(INT32 Irq)
 {
 	if (Irq) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -429,12 +429,12 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(DrvVidRAM0,	0x080000, 0x080fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,	0x082000, 0x082fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0x100000, 0x1005ff, SM_ROM);
-	SekMapMemory(Drv68KRAM,		0x1c0000, 0x1cffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,		0x200000, 0x203fff, SM_RAM);
+	SekMapMemory(Drv68KROM,		0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(DrvVidRAM0,	0x080000, 0x080fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,	0x082000, 0x082fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0x100000, 0x1005ff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,		0x1c0000, 0x1cffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,		0x200000, 0x203fff, MAP_RAM);
 	SekSetWriteByteHandler(0,	mugsmash_write_byte);
 	SekSetWriteWordHandler(0,	mugsmash_write_word);
 	SekSetReadByteHandler(0,	mugsmash_read_byte);
@@ -601,7 +601,7 @@ static INT32 DrvFrame()
 
 		nSegment = (nCyclesTotal[0] - nCyclesDone[0]) / (nInterleave - i);
 		nCyclesDone[0] += SekRun(nSegment);
-		if (i == (nInterleave - 1)) SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 		nSegment = (nCyclesTotal[1] - nCyclesDone[1]) / (nInterleave - i);
 		nCyclesDone[1] += ZetRun(nSegment);

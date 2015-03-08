@@ -1170,7 +1170,7 @@ static UINT8 dkong3_sound0_read(UINT16 a)
 	return 0;
 }
 
-static void dkong3_sound1_write(UINT16 a, UINT8 d)
+static void dkong3_sound1_write(UINT16 a, UINT8 /*d*/)
 {
 //bprintf (0, _T("s1: %4.4x, %2.2x, %d\n"), a, d, M6502GetActive());
 	if ((a & 0xffe0) == 0x4000) {
@@ -1537,16 +1537,16 @@ static INT32 Dkong3Init()
 
 	M6502Init(0, TYPE_N2A03);
 	M6502Open(0);
-	M6502MapMemory(DrvSndRAM0, 0x0000, 0x01ff, M6502_RAM);
-	M6502MapMemory(DrvSndROM0, 0xe000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvSndRAM0, 0x0000, 0x01ff, MAP_RAM);
+	M6502MapMemory(DrvSndROM0, 0xe000, 0xffff, MAP_ROM);
 	M6502SetWriteHandler(dkong3_sound0_write);
 	M6502SetReadHandler(dkong3_sound0_read);
 	M6502Close();
 
 	M6502Init(1, TYPE_N2A03);
 	M6502Open(1);
-	M6502MapMemory(DrvSndRAM1, 0x0000, 0x01ff, M6502_RAM);
-	M6502MapMemory(DrvSndROM1, 0xe000, 0xffff, M6502_ROM);
+	M6502MapMemory(DrvSndRAM1, 0x0000, 0x01ff, MAP_RAM);
+	M6502MapMemory(DrvSndROM1, 0xe000, 0xffff, MAP_ROM);
 	M6502SetWriteHandler(dkong3_sound1_write);
 	M6502SetReadHandler(dkong3_sound1_read);
 	M6502Close();
@@ -1645,14 +1645,14 @@ static INT32 s2650DkongInit(INT32 (*pRomLoadCallback)())
 
 	s2650Init(1);
 	s2650Open(0);
-	s2650MapMemory(Drv2650ROM + 0x0000, 0x0000, 0x0fff, S2650_ROM);
-	s2650MapMemory(Drv2650RAM + 0x0000, 0x1000, 0x13ff, S2650_RAM); // sprite ram (after dma)
-	s2650MapMemory(DrvSprRAM  + 0x0000, 0x1600, 0x17ff, S2650_RAM);
-	s2650MapMemory(DrvVidRAM  + 0x0000, 0x1800, 0x1bff, S2650_RAM);
-	s2650MapMemory(DrvSprRAM  + 0x0400, 0x1c00, 0x1eff, S2650_RAM);
-	s2650MapMemory(Drv2650ROM + 0x2000, 0x2000, 0x2fff, S2650_ROM);
-	s2650MapMemory(Drv2650ROM + 0x4000, 0x4000, 0x4fff, S2650_ROM);
-	s2650MapMemory(Drv2650ROM + 0x6000, 0x6000, 0x6fff, S2650_ROM);
+	s2650MapMemory(Drv2650ROM + 0x0000, 0x0000, 0x0fff, MAP_ROM);
+	s2650MapMemory(Drv2650RAM + 0x0000, 0x1000, 0x13ff, MAP_RAM); // sprite ram (after dma)
+	s2650MapMemory(DrvSprRAM  + 0x0000, 0x1600, 0x17ff, MAP_RAM);
+	s2650MapMemory(DrvVidRAM  + 0x0000, 0x1800, 0x1bff, MAP_RAM);
+	s2650MapMemory(DrvSprRAM  + 0x0400, 0x1c00, 0x1eff, MAP_RAM);
+	s2650MapMemory(Drv2650ROM + 0x2000, 0x2000, 0x2fff, MAP_ROM);
+	s2650MapMemory(Drv2650ROM + 0x4000, 0x4000, 0x4fff, MAP_ROM);
+	s2650MapMemory(Drv2650ROM + 0x6000, 0x6000, 0x6fff, MAP_ROM);
 	s2650SetIrqCallback(s2650_irq_callback);
 	s2650SetWriteHandler(s2650_main_write);
 	s2650SetReadHandler(s2650_main_read);
@@ -1920,7 +1920,7 @@ static INT32 Dkong3Frame()
 			M6502Idle(1789773 / 60 / nInterleave);
 		} else {
 			M6502Run(1789773 / 60 / nInterleave);
-			if (i == (nInterleave - 10)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			if (i == (nInterleave - 10)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		}
 		M6502Close();
 
@@ -1930,7 +1930,7 @@ static INT32 Dkong3Frame()
 			M6502Idle(1789773 / 60 / nInterleave);
 		} else {
 			M6502Run(1789773 / 60 / nInterleave);
-			if (i == (nInterleave - 10)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, M6502_IRQSTATUS_AUTO);
+			if (i == (nInterleave - 10)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		}
 		M6502Close();
 	}
@@ -1979,9 +1979,9 @@ static INT32 s2650DkongFrame()
 		if (i == 30) {
 			vblank = 0x80;
 	
-			s2650SetIRQLine(0, S2650_IRQSTATUS_ACK);
+			s2650SetIRQLine(0, CPU_IRQSTATUS_ACK);
 			s2650Run(10);
-			s2650SetIRQLine(0, S2650_IRQSTATUS_NONE);
+			s2650SetIRQLine(0, CPU_IRQSTATUS_NONE);
 		}
 	}
 
@@ -2759,9 +2759,28 @@ static INT32 dkongjrRomLoad()
 	return 0;
 }
 
+static void dkongjrsamplevol(INT32 sam, double vol)
+{
+	BurnSampleSetRoute(sam, BURN_SND_SAMPLE_ROUTE_1, vol, BURN_SND_ROUTE_BOTH);
+	BurnSampleSetRoute(sam, BURN_SND_SAMPLE_ROUTE_2, vol, BURN_SND_ROUTE_BOTH);
+}
+
 static INT32 dkongjrInit()
 {
-	return DrvInit(dkongjrRomLoad, dkongPaletteInit, 0);
+	INT32 rc = DrvInit(dkongjrRomLoad, dkongPaletteInit, 0);
+	if (!rc) {
+		dkongjrsamplevol(1, 0.35); // land
+		dkongjrsamplevol(2, 0.35); // roar
+		dkongjrsamplevol(3, 0.25); // climb
+		dkongjrsamplevol(4, 0.25);
+		dkongjrsamplevol(5, 0.25);
+		dkongjrsamplevol(6, 0.25); // death
+		dkongjrsamplevol(7, 0.35); // fall
+		dkongjrsamplevol(8, 0.20); // walk
+		dkongjrsamplevol(9, 0.20);
+		dkongjrsamplevol(10, 0.20);
+	}
+	return rc;
 }
 
 struct BurnDriver BurnDrvDkongjr = {

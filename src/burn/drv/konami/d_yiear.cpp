@@ -333,9 +333,9 @@ static INT32 DrvInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809RAM,	0x5000, 0x57ff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,	0x5800, 0x5fff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM,	0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809RAM,	0x5000, 0x57ff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,	0x5800, 0x5fff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM,	0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(yiear_write);
 	M6809SetReadHandler(yiear_read);
 	M6809Close();
@@ -473,9 +473,9 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += M6809Run(nCyclesTotal[0] / nInterleave);
 
 		if (*nmi_enable && (i & 0x1f) == 0) // copy shao-lin's road
-			M6809SetIRQLine(0x20, M6809_IRQSTATUS_AUTO); // 480x/second (8x/frame)
+			M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO); // 480x/second (8x/frame)
 
-		if (i == 240 && *irq_enable) M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+		if (i == 240 && *irq_enable) M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
 		// Render Sound Segment
 		if (pBurnSoundOut) {
@@ -557,7 +557,7 @@ STD_ROM_FN(yiear)
 
 struct BurnDriver BurnDrvYiear = {
 	"yiear", NULL, NULL, NULL, "1985",
-	"Yie Ar Kung-Fu (program code I)\0", NULL, "Konami", "Miscellaneous",
+	"Yie Ar Kung-Fu (program code I)\0", NULL, "Konami", "GX407",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, yiearRomInfo, yiearRomName, NULL, NULL, YiearInputInfo, YiearDIPInfo,
@@ -590,7 +590,7 @@ STD_ROM_FN(yiear2)
 
 struct BurnDriver BurnDrvYiear2 = {
 	"yiear2", "yiear", NULL, NULL, "1985",
-	"Yie Ar Kung-Fu (program code G)\0", NULL, "Konami", "Miscellaneous",
+	"Yie Ar Kung-Fu (program code G)\0", NULL, "Konami", "GX407",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, yiear2RomInfo, yiear2RomName, NULL, NULL, YiearInputInfo, YiearDIPInfo,

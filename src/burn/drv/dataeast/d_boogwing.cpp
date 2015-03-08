@@ -159,7 +159,7 @@ void __fastcall boogwing_main_write_byte(UINT32 address, UINT8 data)
 
 		case 0x24e151:
 			deco16_soundlatch = data;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		break;
 
 		case 0x282008:
@@ -195,7 +195,7 @@ void __fastcall boogwing_main_write_word(UINT32 address, UINT16 data)
 
 		case 0x24e150:
 			deco16_soundlatch = data & 0xff;
-			h6280SetIRQLine(0, H6280_IRQSTATUS_ACK);
+			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 		break;
 
 		case 0x282008:
@@ -432,20 +432,20 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x0fffff, SM_READ);
-	SekMapMemory(Drv68KCode,		0x000000, 0x0fffff, SM_FETCH);
-	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM,			0x242000, 0x2427ff, SM_RAM);
-	SekMapMemory(DrvSprRAM1,		0x246000, 0x2467ff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[0],		0x264000, 0x265fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[1],		0x266000, 0x267fff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[0],	0x268000, 0x268fff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[1],	0x26a000, 0x26afff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[2],		0x274000, 0x275fff, SM_RAM);
-	SekMapMemory(deco16_pf_ram[3],		0x276000, 0x277fff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[2],	0x278000, 0x278fff, SM_RAM);
-	SekMapMemory(deco16_pf_rowscroll[3],	0x27a000, 0x27afff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x284000, 0x285fff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x0fffff, MAP_READ);
+	SekMapMemory(Drv68KCode,		0x000000, 0x0fffff, MAP_FETCH);
+	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM,			0x242000, 0x2427ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM1,		0x246000, 0x2467ff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[0],		0x264000, 0x265fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[1],		0x266000, 0x267fff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[0],	0x268000, 0x268fff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[1],	0x26a000, 0x26afff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[2],		0x274000, 0x275fff, MAP_RAM);
+	SekMapMemory(deco16_pf_ram[3],		0x276000, 0x277fff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[2],	0x278000, 0x278fff, MAP_RAM);
+	SekMapMemory(deco16_pf_rowscroll[3],	0x27a000, 0x27afff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x284000, 0x285fff, MAP_RAM);
 	SekSetWriteWordHandler(0,		boogwing_main_write_word);
 	SekSetWriteByteHandler(0,		boogwing_main_write_byte);
 	SekSetReadWordHandler(0,		boogwing_main_read_word);
@@ -733,7 +733,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 	
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;

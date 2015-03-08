@@ -76,7 +76,7 @@ STDDIPINFO(esprade)
 static void UpdateIRQStatus()
 {
 	nIRQPending = (nVideoIRQ == 0 || nSoundIRQ == 0 || nUnknownIRQ == 0);
-	SekSetIRQLine(1, nIRQPending ? SEK_IRQSTATUS_ACK : SEK_IRQSTATUS_NONE);
+	SekSetIRQLine(1, nIRQPending ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 UINT8 __fastcall espradeReadByte(UINT32 sekAddress)
@@ -492,7 +492,7 @@ static INT32 LoadRoms()
 
 	// Load YMZ280B data
 	BurnLoadRom(YMZ280BROM, 11, 1);
-	
+
 	BurnLoadRom(DefaultEEPROM, 12, 1);
 
 	return 0;
@@ -567,15 +567,15 @@ static INT32 DrvInit()
 	    SekOpen(0);
 
 		// Map 68000 memory:
-		SekMapMemory(Rom01,					0x000000, 0x0FFFFF, SM_ROM);	// CPU 0 ROM
-		SekMapMemory(Ram01,					0x100000, 0x10FFFF, SM_RAM);
-		SekMapMemory(CaveSpriteRAM,			0x400000, 0x40FFFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[0],		0x500000, 0x507FFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[1],		0x600000, 0x607FFF, SM_RAM);
-		SekMapMemory(CaveTileRAM[2],		0x700000, 0x707FFF, SM_RAM);
+		SekMapMemory(Rom01,					0x000000, 0x0FFFFF, MAP_ROM);	// CPU 0 ROM
+		SekMapMemory(Ram01,					0x100000, 0x10FFFF, MAP_RAM);
+		SekMapMemory(CaveSpriteRAM,			0x400000, 0x40FFFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[0],		0x500000, 0x507FFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[1],		0x600000, 0x607FFF, MAP_RAM);
+		SekMapMemory(CaveTileRAM[2],		0x700000, 0x707FFF, MAP_RAM);
 
-		SekMapMemory(CavePalSrc,			0xC00000, 0xC0FFFF, SM_ROM);	// Palette RAM (write goes through handler)
-		SekMapHandler(1,					0xC00000, 0xC0FFFF, SM_WRITE);	//
+		SekMapMemory(CavePalSrc,			0xC00000, 0xC0FFFF, MAP_ROM);	// Palette RAM (write goes through handler)
+		SekMapHandler(1,					0xC00000, 0xC0FFFF, MAP_WRITE);	//
 
 		SekSetReadWordHandler(0, espradeReadWord);
 		SekSetReadByteHandler(0, espradeReadByte);
@@ -595,7 +595,7 @@ static INT32 DrvInit()
 	CaveTileInitLayer(1, 0x800000, 8, 0x4000);
 	CaveTileInitLayer(2, 0x400000, 8, 0x4000);
 
-	YMZ280BInit(16934400, &TriggerSoundIRQ);
+	YMZ280BInit(16934400, &TriggerSoundIRQ, 0x400000);
 	YMZ280BSetRoute(BURN_SND_YMZ280B_YMZ280B_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	YMZ280BSetRoute(BURN_SND_YMZ280B_YMZ280B_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
 	bESPRaDeMixerKludge = true;

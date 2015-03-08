@@ -168,7 +168,7 @@ void eggs_write(UINT16 address, UINT8 data)
 		break;
 
 		case 0x2001:
-			M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_NONE);
+			M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
 		break;
 
 		case 0x2004:
@@ -214,7 +214,7 @@ static void dommy_write(UINT16 address, UINT8 data)
 	switch (address)
 	{
 		case 0x4000:
-			M6502SetIRQLine(M6502_IRQ_LINE, M6502_IRQSTATUS_NONE);
+			M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
 		break;
 
 		case 0x4001:
@@ -292,11 +292,11 @@ static void scregg6502Init()
 {
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(Drv6502RAM,          0x0000, 0x07ff, M6502_RAM);
-	M6502MapMemory(DrvVidRAM,           0x1000, 0x13ff, M6502_RAM);
-	M6502MapMemory(DrvColRAM,           0x1400, 0x17ff, M6502_RAM);
-	M6502MapMemory(Drv6502ROM + 0x3000, 0x3000, 0x7fff, M6502_ROM);
-	M6502MapMemory(Drv6502ROM + 0x7000, 0xf000, 0xffff, M6502_ROM);
+	M6502MapMemory(Drv6502RAM,          0x0000, 0x07ff, MAP_RAM);
+	M6502MapMemory(DrvVidRAM,           0x1000, 0x13ff, MAP_RAM);
+	M6502MapMemory(DrvColRAM,           0x1400, 0x17ff, MAP_RAM);
+	M6502MapMemory(Drv6502ROM + 0x3000, 0x3000, 0x7fff, MAP_ROM);
+	M6502MapMemory(Drv6502ROM + 0x7000, 0xf000, 0xffff, MAP_ROM);
 	M6502SetWriteMemIndexHandler(eggs_write);
 	M6502SetReadMemIndexHandler(eggs_read);
 	M6502SetReadOpArgHandler(eggs_read);
@@ -310,10 +310,10 @@ static void dommy6502Init()
 {
 	M6502Init(0, TYPE_M6502);
 	M6502Open(0);
-	M6502MapMemory(Drv6502RAM,          0x0000, 0x07ff, M6502_RAM);
-	M6502MapMemory(DrvVidRAM,           0x2000, 0x23ff, M6502_RAM);
-	M6502MapMemory(DrvColRAM,           0x2400, 0x27ff, M6502_RAM);
-	M6502MapMemory(Drv6502ROM + 0xa000, 0xa000, 0xffff, M6502_ROM);
+	M6502MapMemory(Drv6502RAM,          0x0000, 0x07ff, MAP_RAM);
+	M6502MapMemory(DrvVidRAM,           0x2000, 0x23ff, MAP_RAM);
+	M6502MapMemory(DrvColRAM,           0x2400, 0x27ff, MAP_RAM);
+	M6502MapMemory(Drv6502ROM + 0xa000, 0xa000, 0xffff, MAP_ROM);
 	M6502SetWriteMemIndexHandler(dommy_write);
 	M6502SetReadMemIndexHandler(dommy_read);
 	M6502SetReadOpArgHandler(dommy_read);
@@ -556,7 +556,7 @@ static INT32 DrvFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++) {
 		nCyclesRun += M6502Run(nTotalCycles / nInterleave);
-		M6502SetIRQLine(M6502_IRQ_LINE, (i & 1) ? M6502_IRQSTATUS_ACK : M6502_IRQSTATUS_NONE);
+		M6502SetIRQLine(M6502_IRQ_LINE, (i & 1) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 
 		if (i == 28) vblank = 0x80;
 	}

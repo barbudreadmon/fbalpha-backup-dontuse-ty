@@ -188,7 +188,7 @@ static void __fastcall lemmings_main_write_word(UINT32 address, UINT16 data)
 	{
 		case 0x1a0064:
 			*soundlatch = data & 0xff;
-			M6809SetIRQLine(1, M6809_IRQSTATUS_ACK);
+			M6809SetIRQLine(1, CPU_IRQSTATUS_ACK);
 		return;
 
 		case 0x1c0000:
@@ -278,7 +278,7 @@ static void lemmings_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x1800:
-			M6809SetIRQLine(1, M6809_IRQSTATUS_NONE);
+			M6809SetIRQLine(1, CPU_IRQSTATUS_NONE);
 		return;
 	}
 }
@@ -303,7 +303,7 @@ static UINT8 lemmings_sound_read(UINT16 address)
 
 static void lemmingsYM2151IrqHandler(INT32 irq)
 {
-	M6809SetIRQLine(0, irq ? M6809_IRQSTATUS_ACK : M6809_IRQSTATUS_NONE);
+	M6809SetIRQLine(0, irq ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 	M6809Run(1000); // fix music tempo
 }
 
@@ -433,14 +433,14 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(Drv68KRAM,			0x100000, 0x10ffff, SM_RAM);
-	SekMapMemory(DrvSprRAM0,		0x120000, 0x1207ff, SM_RAM);
-	SekMapMemory(DrvSprRAM1,		0x140000, 0x1407ff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0x160000, 0x160fff, SM_ROM);
-	SekMapMemory(DrvVidRAM,			0x200000, 0x202fff, SM_RAM);
-	SekMapMemory(DrvPxlRAM0,		0x300000, 0x37ffff, SM_ROM);
-	SekMapMemory(DrvPxlRAM1,		0x380000, 0x39ffff, SM_ROM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0x100000, 0x10ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM0,		0x120000, 0x1207ff, MAP_RAM);
+	SekMapMemory(DrvSprRAM1,		0x140000, 0x1407ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x160000, 0x160fff, MAP_ROM);
+	SekMapMemory(DrvVidRAM,			0x200000, 0x202fff, MAP_RAM);
+	SekMapMemory(DrvPxlRAM0,		0x300000, 0x37ffff, MAP_ROM);
+	SekMapMemory(DrvPxlRAM1,		0x380000, 0x39ffff, MAP_ROM);
 	SekSetWriteWordHandler(0,		lemmings_main_write_word);
 	SekSetWriteByteHandler(0,		lemmings_main_write_byte);
 	SekSetReadWordHandler(0,		lemmings_main_read_word);
@@ -449,8 +449,8 @@ static INT32 DrvInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, M6809_RAM);
-	M6809MapMemory(DrvM6809ROM + 0x8000,	0x8000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, MAP_RAM);
+	M6809MapMemory(DrvM6809ROM + 0x8000,	0x8000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(lemmings_sound_write);
 	M6809SetReadHandler(lemmings_sound_read);
 	M6809Close();
@@ -686,7 +686,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		nSegment = nBurnSoundLen - nSoundBufferPos;

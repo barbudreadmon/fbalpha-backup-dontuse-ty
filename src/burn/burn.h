@@ -169,6 +169,37 @@ struct BurnDIPInfo {
 	char* szText;
 };
 
+
+// ---------------------------------------------------------------------------
+// Common CPU definitions 
+
+#define CPU_IRQSTATUS_NONE	0
+#define CPU_IRQSTATUS_ACK	1
+#define CPU_IRQSTATUS_AUTO	2
+#define CPU_IRQSTATUS_HOLD	4
+
+#define CPU_IRQLINE0		0
+#define CPU_IRQLINE1		1
+#define CPU_IRQLINE2		2
+#define CPU_IRQLINE3		3
+#define CPU_IRQLINE4		4
+#define CPU_IRQLINE5		5
+#define CPU_IRQLINE6		6
+#define CPU_IRQLINE7		7
+
+#define CPU_IRQLINE_IRQ		CPU_IRQLINE0
+#define CPU_IRQLINE_FIRQ	CPU_IRQLINE1
+#define CPU_IRQLINE_NMI		0x20
+
+#define MAP_READ		1
+#define MAP_WRITE		2
+#define MAP_FETCHOP		4
+#define MAP_FETCHARG		8
+#define MAP_FETCH		(MAP_FETCHOP|MAP_FETCHARG)
+#define MAP_ROM			(MAP_READ|MAP_FETCH)
+#define MAP_RAM			(MAP_ROM|MAP_WRITE)
+
+
 // ---------------------------------------------------------------------------
 
 extern bool bBurnUseMMX;
@@ -321,7 +352,7 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 #define HARDWARE_PREFIX_PACMAN							(0x0f000000)
 #define HARDWARE_PREFIX_GALAXIAN						(0x10000000)
 #define HARDWARE_PREFIX_IREM							(0x11000000)
-#define HARDWARE_PREFIX_NINTENDO_SNES					(0x12000000)
+//#define HARDWARE_PREFIX_NINTENDO_SNES					(0x12000000)
 #define HARDWARE_PREFIX_DATAEAST						(0x13000000)
 #define HARDWARE_PREFIX_CAPCOM_MISC						(0x14000000)
 #define HARDWARE_PREFIX_SETA							(0x15000000)
@@ -330,6 +361,8 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 #define HARDWARE_PREFIX_SEGA_MASTER_SYSTEM				(0x18000000)
 #define HARDWARE_PREFIX_SEGA_SG1000						(0x19000000)
 #define HARDWARE_PREFIX_COLECO							(0x1A000000)
+#define HARDWARE_PREFIX_MIDWAY							(0x1B000000)
+#define HARDWARE_PREFIX_SEGA_GAME_GEAR					(0x12000000)
 
 #define HARDWARE_MISC_PRE90S							(HARDWARE_PREFIX_MISC_PRE90S)
 #define HARDWARE_MISC_POST90S							(HARDWARE_PREFIX_MISC_POST90S)
@@ -428,6 +461,8 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 
 #define HARDWARE_SEGA_MASTER_SYSTEM						(HARDWARE_PREFIX_SEGA_MASTER_SYSTEM)
 
+#define HARDWARE_SEGA_GAME_GEAR							(HARDWARE_PREFIX_SEGA_GAME_GEAR)
+
 #define HARDWARE_SEGA_MEGADRIVE							(HARDWARE_PREFIX_SEGA_MEGADRIVE)
 
 #define HARDWARE_SEGA_SG1000                            (HARDWARE_PREFIX_SEGA_SG1000)
@@ -493,7 +528,7 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 
 #define HARDWARE_GALAXIAN								(HARDWARE_PREFIX_GALAXIAN)
 
-#define HARDWARE_NINTENDO_SNES							(HARDWARE_PREFIX_NINTENDO_SNES)
+//#define HARDWARE_NINTENDO_SNES							(HARDWARE_PREFIX_NINTENDO_SNES)
 
 #define HARWARE_CAPCOM_MISC								(HARDWARE_PREFIX_CAPCOM_MISC)
 

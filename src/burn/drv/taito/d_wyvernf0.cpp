@@ -184,7 +184,7 @@ static void rambankswitch(INT32 data)
 
 	*flipscreen = data & 0x03;
 
-	ZetMapMemory(DrvObjRAM + bank, 0x9000, 0x9fff, ZET_RAM);
+	ZetMapMemory(DrvObjRAM + bank, 0x9000, 0x9fff, MAP_RAM);
 }
 
 static void rombankswitch(INT32 data)
@@ -193,7 +193,7 @@ static void rombankswitch(INT32 data)
 
 	*DrvZ80ROMBank = data;
 
-	ZetMapMemory(DrvZ80ROM0 + bank,	0xa000, 0xbfff, ZET_ROM);
+	ZetMapMemory(DrvZ80ROM0 + bank,	0xa000, 0xbfff, MAP_ROM);
 }
 
 static void __fastcall wyvernf0_main_write(UINT16 address, UINT8 data)
@@ -291,6 +291,14 @@ static void __fastcall wyvernf0_sound_write(UINT16 address, UINT8 data)
 		case 0xc802:
 		case 0xc803:
 			AY8910Write((address/2) & 1, address & 1, data);
+			if (data==0x88) { // end of sound command, turn off all channels to get rid of unwanted high pitched noises
+				AY8910Write((address/2) & 1, 0, 0x08);
+				AY8910Write((address/2) & 1, 1, 0x00);
+				AY8910Write((address/2) & 1, 0, 0x09);
+				AY8910Write((address/2) & 1, 1, 0x00);
+				AY8910Write((address/2) & 1, 0, 0x0A);
+				AY8910Write((address/2) & 1, 1, 0x00);
+			}
 		return;
 
 		case 0xd000:
@@ -452,41 +460,41 @@ static INT32 DrvInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM0,		0x8000, 0x8fff, ZET_RAM);
-	ZetMapMemory(DrvFgRAM,			0xc000, 0xc7ff, ZET_RAM);
-	ZetMapMemory(DrvBgRAM,			0xc800, 0xcfff, ZET_RAM);
-	ZetMapMemory(DrvSprRAM,			0xd500, 0xd5ff, ZET_RAM);
-	ZetMapMemory(DrvPalRAM,			0xd800, 0xdbff, ZET_ROM);
+	ZetMapMemory(DrvZ80ROM0,		0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM0,		0x8000, 0x8fff, MAP_RAM);
+	ZetMapMemory(DrvFgRAM,			0xc000, 0xc7ff, MAP_RAM);
+	ZetMapMemory(DrvBgRAM,			0xc800, 0xcfff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,			0xd500, 0xd5ff, MAP_RAM);
+	ZetMapMemory(DrvPalRAM,			0xd800, 0xdbff, MAP_ROM);
 	ZetSetWriteHandler(wyvernf0_main_write);
 	ZetSetReadHandler(wyvernf0_main_read);
 	ZetClose();
 
 	ZetInit(1);
 	ZetOpen(1);
-	ZetMapMemory(DrvZ80ROM1,		0x0000, 0x3fff, ZET_ROM);
-	ZetMapMemory(DrvZ80RAM1,		0xc000, 0xc7ff, ZET_RAM);
-	ZetMapMemory(DrvZ80ROM1 + 0xe000,	0xe000, 0xefff, ZET_ROM);
+	ZetMapMemory(DrvZ80ROM1,		0x0000, 0x3fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM1,		0xc000, 0xc7ff, MAP_RAM);
+	ZetMapMemory(DrvZ80ROM1 + 0xe000,	0xe000, 0xefff, MAP_ROM);
 	ZetSetWriteHandler(wyvernf0_sound_write);
 	ZetSetReadHandler(wyvernf0_sound_read);
 	ZetClose();
 
 	AY8910Init(0, 3000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910SetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH);
+	AY8910SetAllRoutes(0, 0.14, BURN_SND_ROUTE_BOTH);
 
 	AY8910Init(1, 3000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910SetAllRoutes(1, 0.50, BURN_SND_ROUTE_BOTH);
+	AY8910SetAllRoutes(1, 0.14, BURN_SND_ROUTE_BOTH);
 
 	MSM5232Init(2000000, 1);
 	MSM5232SetCapacitors(0.39e-6, 0.39e-6, 0.39e-6, 0.39e-6, 0.39e-6, 0.39e-6, 0.39e-6, 0.39e-6);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_0);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_1);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_2);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_3);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_4);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_5);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_6);
-	MSM5232SetRoute(1.00, BURN_SND_MSM5232_ROUTE_7);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_0);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_1);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_2);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_3);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_4);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_5);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_6);
+	MSM5232SetRoute(0.50, BURN_SND_MSM5232_ROUTE_7);
 
 	GenericTilesInit();
 
@@ -652,13 +660,13 @@ static INT32 DrvFrame()
 		ZetOpen(0);
 		INT32 nSegment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += ZetRun(nSegment);
-		if (i == (nInterleave - 1)) ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1)) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		ZetClose();
 
 		ZetOpen(1);
 		nSegment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(nSegment);
-		if (i == (nInterleave - 1) || i == (nInterleave / 2) - 1) ZetSetIRQLine(0, ZET_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1) || i == (nInterleave / 2) - 1) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		ZetClose();
 	}
 
@@ -682,7 +690,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		*pnMin = 0x029702;
 	}
 
-	if (nAction & ACB_VOLATILE) {		
+	if (nAction & ACB_VOLATILE) {
 		memset(&ba, 0, sizeof(ba));
 
 		ba.Data	  = AllRam;

@@ -352,9 +352,9 @@ UINT8 __fastcall crshrace_sound_in(UINT16 port)
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
-		ZetSetIRQLine(0xff, ZET_IRQSTATUS_ACK);
+		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
 	} else {
-		ZetSetIRQLine(0,    ZET_IRQSTATUS_NONE);
+		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
 }
 
@@ -498,16 +498,16 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(Drv68KROM + 0x100000,	0x300000, 0x3fffff, SM_ROM);
-	SekMapMemory(Drv68KROM + 0x200000,	0x400000, 0x4fffff, SM_ROM);
-	SekMapMemory(Drv68KROM + 0x200000,	0x500000, 0x5fffff, SM_ROM);
-	SekMapMemory(DrvSprRAM2,		0xa00000, 0xa0ffff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,		0xd00000, 0xd01fff, SM_ROM);
-	SekMapMemory(DrvSprRAM1,		0xe00000, 0xe01fff, SM_RAM);
-	SekMapMemory(Drv68KRAM,			0xfe0000, 0xfeffff, SM_RAM);
-	SekMapMemory(DrvVidRAM2,		0xffd000, 0xffdfff, SM_RAM);
-	SekMapMemory(DrvPalRAM,			0xffe000, 0xffefff, SM_RAM);
+	SekMapMemory(Drv68KROM,			0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(Drv68KROM + 0x100000,	0x300000, 0x3fffff, MAP_ROM);
+	SekMapMemory(Drv68KROM + 0x200000,	0x400000, 0x4fffff, MAP_ROM);
+	SekMapMemory(Drv68KROM + 0x200000,	0x500000, 0x5fffff, MAP_ROM);
+	SekMapMemory(DrvSprRAM2,		0xa00000, 0xa0ffff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0xd00000, 0xd01fff, MAP_ROM);
+	SekMapMemory(DrvSprRAM1,		0xe00000, 0xe01fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM,			0xfe0000, 0xfeffff, MAP_RAM);
+	SekMapMemory(DrvVidRAM2,		0xffd000, 0xffdfff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0xffe000, 0xffefff, MAP_RAM);
 	SekSetWriteWordHandler(0,		crshrace_write_word);
 	SekSetWriteByteHandler(0,		crshrace_write_byte);
 	SekSetReadWordHandler(0,		crshrace_read_word);
@@ -757,7 +757,7 @@ static INT32 DrvFrame()
 	ZetOpen(0);
 
 	SekRun(nCyclesTotal[0]);
-	SekSetIRQLine(1, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 	BurnTimerEndFrame(nCyclesTotal[1]);
 

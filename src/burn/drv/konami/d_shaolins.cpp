@@ -350,12 +350,12 @@ static INT32 DrvInit()
 
 	M6809Init(1);
 	M6809Open(0);
-	M6809MapMemory(DrvM6809RAM,	0x2800, 0x30ff, M6809_RAM);
-	M6809MapMemory(DrvSprRAM,	0x3100, 0x33ff, M6809_RAM);
-	M6809MapMemory(DrvColRAM,	0x3800, 0x3bff, M6809_RAM);
-	M6809MapMemory(DrvVidRAM,	0x3c00, 0x3fff, M6809_RAM);
+	M6809MapMemory(DrvM6809RAM,	0x2800, 0x30ff, MAP_RAM);
+	M6809MapMemory(DrvSprRAM,	0x3100, 0x33ff, MAP_RAM);
+	M6809MapMemory(DrvColRAM,	0x3800, 0x3bff, MAP_RAM);
+	M6809MapMemory(DrvVidRAM,	0x3c00, 0x3fff, MAP_RAM);
 
-	M6809MapMemory(DrvM6809ROM,	0x4000, 0xffff, M6809_ROM);
+	M6809MapMemory(DrvM6809ROM,	0x4000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(shaolins_write);
 	M6809SetReadHandler(shaolins_read);
 	M6809Close();
@@ -496,9 +496,9 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += M6809Run(nCyclesTotal[0] / nInterleave);
 
 		if (*nmi_enable && (i & 0x1f) == 0)
-			M6809SetIRQLine(0x20, M6809_IRQSTATUS_AUTO); // 480x/second (8x/frame)
+			M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO); // 480x/second (8x/frame)
 
-		if (i == 240) M6809SetIRQLine(0, M6809_IRQSTATUS_AUTO);
+		if (i == 240) M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 
 		// Render Sound Segment
 		if (pBurnSoundOut) {
@@ -578,7 +578,7 @@ STD_ROM_FN(kicker)
 
 struct BurnDriver BurnDrvKicker = {
 	"kicker", NULL, NULL, NULL, "1985",
-	"Kicker\0", NULL, "Konami", "Miscellaneous",
+	"Kicker\0", NULL, "Konami", "GX477",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT, 0,
 	NULL, kickerRomInfo, kickerRomName, NULL, NULL, ShaolinsInputInfo, ShaolinsDIPInfo,
@@ -612,7 +612,7 @@ STD_ROM_FN(shaolins)
 
 struct BurnDriver BurnDrvShaolins = {
 	"shaolins", "kicker", NULL, NULL, "1985",
-	"Shao-lin's Road (set 1)\0", NULL, "Konami", "Miscellaneous",
+	"Shao-lin's Road (set 1)\0", NULL, "Konami", "GX477",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT, 0,
 	NULL, shaolinsRomInfo, shaolinsRomName, NULL, NULL, ShaolinsInputInfo, ShaolinsDIPInfo,
@@ -646,7 +646,7 @@ STD_ROM_FN(shaolinb)
 
 struct BurnDriver BurnDrvShaolinb = {
 	"shaolinb", "kicker", NULL, NULL, "1985",
-	"Shao-lin's Road (set 2)\0", NULL, "Konami", "Miscellaneous",
+	"Shao-lin's Road (set 2)\0", NULL, "Konami", "GX477",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT, 0,
 	NULL, shaolinbRomInfo, shaolinbRomName, NULL, NULL, ShaolinsInputInfo, ShaolinsDIPInfo,

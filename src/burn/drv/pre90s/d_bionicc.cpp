@@ -417,13 +417,13 @@ static INT32 DrvInit()
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRAM0,	0xfe0000, 0xfe3fff, SM_RAM);
-	SekMapMemory(DrvTextRAM,	0xfec000, 0xfecfff, SM_RAM);
-	SekMapMemory(DrvVidRAM0,	0xff0000, 0xff3fff, SM_RAM);
-	SekMapMemory(DrvVidRAM1,	0xff4000, 0xff7fff, SM_RAM);
-	SekMapMemory(DrvPalRAM,		0xff8000, 0xff87ff, SM_ROM);
-	SekMapMemory(Drv68KRAM1,	0xffc000, 0xffffff, SM_RAM); 
+	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM0,	0xfe0000, 0xfe3fff, MAP_RAM);
+	SekMapMemory(DrvTextRAM,	0xfec000, 0xfecfff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,	0xff0000, 0xff3fff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,	0xff4000, 0xff7fff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,		0xff8000, 0xff87ff, MAP_ROM);
+	SekMapMemory(Drv68KRAM1,	0xffc000, 0xffffff, MAP_RAM); 
 	SekSetReadByteHandler(0,	bionicc_read_byte);
 	SekSetReadWordHandler(0,	bionicc_read_word);
 	SekSetWriteByteHandler(0,	bionicc_write_byte);
@@ -663,7 +663,7 @@ static INT32 DrvFrame()
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
 		nTotalCycles[0] -= SekRun(nTotalCycles[0] / (nInterleave - i));
-		if (i != (nInterleave - 1)) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i != (nInterleave - 1)) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 		nTotalCycles[1] -= ZetRun(nTotalCycles[1] / (nInterleave - i));
 		if ((i & 1) == 1) ZetNmi();
@@ -676,7 +676,7 @@ static INT32 DrvFrame()
 		}
 	}
 
-	SekSetIRQLine(2, SEK_IRQSTATUS_AUTO);
+	SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;

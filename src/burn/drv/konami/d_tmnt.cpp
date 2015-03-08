@@ -2510,7 +2510,7 @@ void __fastcall Tmnt68KWriteByte(UINT32 a, UINT8 d)
 			static INT32 Last;
 			if (Last == 0x08 && (d & 0x08) == 0) {
 				ZetOpen(0);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 				ZetClose();
 			}
 			Last = d & 0x08;
@@ -2619,7 +2619,7 @@ void __fastcall Mia68KWriteByte(UINT32 a, UINT8 d)
 			static INT32 Last;
 			if (Last == 0x08 && (d & 0x08) == 0) {
 				ZetOpen(0);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 				ZetClose();
 			}
 			Last = d & 0x08;
@@ -2969,7 +2969,7 @@ void __fastcall Blswhstl68KWriteByte(UINT32 a, UINT8 d)
 		case 0x780605: {
 			ZetOpen(0);
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}
@@ -3397,7 +3397,7 @@ void __fastcall Ssriders68KWriteByte(UINT32 a, UINT8 d)
 		case 0x5c0605: {
 			ZetOpen(0);
 			ZetSetVector(0xff);
-			ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			ZetClose();
 			return;
 		}	
@@ -3591,7 +3591,7 @@ void __fastcall Thndrx268KWriteByte(UINT32 a, UINT8 d)
 			static INT32 last;
 			if (last == 0 && (d & 0x20) != 0) {
 				ZetSetVector(0xff);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			}
 			last = d & 0x20;
 
@@ -3734,7 +3734,7 @@ void __fastcall Lgtnfght68KWriteByte(UINT32 a, UINT8 d)
 			static INT32 last;
 			if (last == 0 && (d & 0x4) != 0) {
 				ZetSetVector(0xff);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			}
 			last = d & 0x4;
 
@@ -3842,7 +3842,7 @@ void __fastcall Punkshot68KWriteByte(UINT32 a, UINT8 d)
 
 			if (last == 0x04 && (d & 0x04) == 0x00) {
 				ZetSetVector(0xff);
-				ZetSetIRQLine(0, ZET_IRQSTATUS_ACK);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 			}
 
 			last = d & 0x04; 
@@ -3871,7 +3871,7 @@ UINT8 __fastcall TmntZ80Read(UINT16 a)
 		}
 		
 		case 0xa000: {
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return DrvSoundLatch;
 		}
 		
@@ -3946,7 +3946,7 @@ UINT8 __fastcall MiaZ80Read(UINT16 a)
 	
 	switch (a) {
 		case 0xa000: {
-			ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 			return DrvSoundLatch;
 		}
 		
@@ -3989,7 +3989,7 @@ void __fastcall MiaZ80Write(UINT16 a, UINT8 d)
 UINT8 __fastcall BlswhstlZ80Read(UINT16 a)
 {
 	if (a >= 0xfa00 && a <= 0xfa2f) {
-		if (a == 0xfa00) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if (a == 0xfa00) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return K053260Read(0, a - 0xfa00);
 	}
 	
@@ -4065,7 +4065,7 @@ void __fastcall Thndrx2Z80Write(UINT16 a, UINT8 d)
 UINT8 __fastcall Thndrx2Z80Read(UINT16 a)
 {
 	if (a >= 0xfc00 && a <= 0xfc2f) {
-		if (a == 0xfc00) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if (a == 0xfc00) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return K053260Read(0, a - 0xfc00);
 	}
 
@@ -4101,7 +4101,7 @@ void __fastcall LgtnfghtZ80Write(UINT16 a, UINT8 d)
 UINT8 __fastcall LgtnfghtZ80Read(UINT16 a)
 {
 	if (a >= 0xc000 && a <= 0xc02f) {
-		if (a == 0xc000) ZetSetIRQLine(0, ZET_IRQSTATUS_NONE);
+		if (a == 0xc000) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		return K053260Read(0, a - 0xc000);
 	}
 
@@ -4471,9 +4471,9 @@ static INT32 TmntInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x05ffff, SM_ROM);
-	SekMapMemory(Drv68KRam           , 0x060000, 0x063fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x05ffff, MAP_ROM);
+	SekMapMemory(Drv68KRam           , 0x060000, 0x063fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, MAP_RAM);
 	SekSetReadWordHandler(0, Tmnt68KReadWord);
 	SekSetWriteWordHandler(0, Tmnt68KWriteWord);
 	SekSetReadByteHandler(0, Tmnt68KReadByte);
@@ -4570,10 +4570,10 @@ static INT32 MiaInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRam + 0x0000  , 0x040000, 0x043fff, SM_RAM);
-	SekMapMemory(Drv68KRam + 0x4000  , 0x060000, 0x063fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRam + 0x0000  , 0x040000, 0x043fff, MAP_RAM);
+	SekMapMemory(Drv68KRam + 0x4000  , 0x060000, 0x063fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, MAP_RAM);
 	SekSetReadWordHandler(0, Mia68KReadWord);
 	SekSetWriteWordHandler(0, Mia68KWriteWord);
 	SekSetReadByteHandler(0, Mia68KReadByte);
@@ -4654,9 +4654,9 @@ static INT32 CuebrickInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x01ffff, SM_ROM);
-	SekMapMemory(Drv68KRam + 0x0000  , 0x040000, 0x043fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x01ffff, MAP_ROM);
+	SekMapMemory(Drv68KRam + 0x0000  , 0x040000, 0x043fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, MAP_RAM);
 	SekSetReadWordHandler(0, Cuebrick68KReadWord);
 	SekSetWriteWordHandler(0, Cuebrick68KWriteWord);
 	SekSetReadByteHandler(0, Cuebrick68KReadByte);
@@ -4729,9 +4729,9 @@ static INT32 BlswhstlInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, SM_ROM);
-	SekMapMemory(Drv68KRam           , 0x204000, 0x207fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x400000, 0x400fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x07ffff, MAP_ROM);
+	SekMapMemory(Drv68KRam           , 0x204000, 0x207fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x400000, 0x400fff, MAP_RAM);
 	SekSetReadWordHandler(0, Blswhstl68KReadWord);
 	SekSetWriteWordHandler(0, Blswhstl68KWriteWord);
 	SekSetReadByteHandler(0, Blswhstl68KReadByte);
@@ -4816,9 +4816,9 @@ static INT32 SsridersInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x0bffff, SM_ROM);
-	SekMapMemory(Drv68KRam           , 0x104000, 0x107fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x140000, 0x140fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x0bffff, MAP_ROM);
+	SekMapMemory(Drv68KRam           , 0x104000, 0x107fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x140000, 0x140fff, MAP_RAM);
 	SekSetReadWordHandler(0, Ssriders68KReadWord);
 	SekSetWriteWordHandler(0, Ssriders68KWriteWord);
 	SekSetReadByteHandler(0, Ssriders68KReadByte);
@@ -4901,9 +4901,9 @@ static INT32 Thndrx2Init()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRam           , 0x100000, 0x103fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x200000, 0x200fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRam           , 0x100000, 0x103fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x200000, 0x200fff, MAP_RAM);
 	SekSetWriteWordHandler(0, Thndrx268KWriteWord);
 	SekSetReadByteHandler(0, Thndrx268KReadByte);
 	SekSetWriteByteHandler(0, Thndrx268KWriteByte);
@@ -4985,9 +4985,9 @@ static INT32 LgtnfghtInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, SM_RAM);
-	SekMapMemory(Drv68KRam           , 0x090000, 0x093fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(DrvPaletteRam       , 0x080000, 0x080fff, MAP_RAM);
+	SekMapMemory(Drv68KRam           , 0x090000, 0x093fff, MAP_RAM);
 	SekSetReadWordHandler(0, Lgtnfght68KReadWord);
 	SekSetWriteWordHandler(0, Lgtnfght68KWriteWord);
 	SekSetReadByteHandler(0, Lgtnfght68KReadByte);
@@ -5074,15 +5074,15 @@ static INT32 Tmnt2Init()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(Drv68KRam           , 0x104000, 0x107fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x140000, 0x140fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Drv68KRam           , 0x104000, 0x107fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x140000, 0x140fff, MAP_RAM);
 	SekSetReadWordHandler(0, Ssriders68KReadWord);
 	SekSetWriteWordHandler(0, Ssriders68KWriteWord);
 	SekSetReadByteHandler(0, Ssriders68KReadByte);
 	SekSetWriteByteHandler(0, Ssriders68KWriteByte);
 
-	SekMapHandler(1,		  0x1c0800, 0x1c081f, SM_WRITE);
+	SekMapHandler(1,		  0x1c0800, 0x1c081f, MAP_WRITE);
 	SekSetWriteWordHandler(1, 	Tmnt268KProtWord);
 	SekSetWriteByteHandler(1, 	Tmnt268KProtByte);
 	SekClose();
@@ -5165,15 +5165,15 @@ static INT32 QgakumonInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x0fffff, SM_ROM);
-	SekMapMemory(Drv68KRam           , 0x104000, 0x107fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x140000, 0x140fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Drv68KRam           , 0x104000, 0x107fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x140000, 0x140fff, MAP_RAM);
 	SekSetReadWordHandler(0, Ssriders68KReadWord);
 	SekSetWriteWordHandler(0, Ssriders68KWriteWord);
 	SekSetReadByteHandler(0, Ssriders68KReadByte);
 	SekSetWriteByteHandler(0, Ssriders68KWriteByte);
 
-	SekMapHandler(1,		  0x1c0800, 0x1c081f, SM_WRITE);
+	SekMapHandler(1,		  0x1c0800, 0x1c081f, MAP_WRITE);
 	SekSetWriteWordHandler(1, 	Tmnt268KProtWord);
 	SekSetWriteByteHandler(1, 	Tmnt268KProtByte);
 	SekClose();
@@ -5254,9 +5254,9 @@ static INT32 PunkshotInit()
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
-	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, SM_ROM);
-	SekMapMemory(Drv68KRam  	 , 0x080000, 0x083fff, SM_RAM);
-	SekMapMemory(DrvPaletteRam       , 0x090000, 0x090fff, SM_RAM);
+	SekMapMemory(Drv68KRom           , 0x000000, 0x03ffff, MAP_ROM);
+	SekMapMemory(Drv68KRam  	 , 0x080000, 0x083fff, MAP_RAM);
+	SekMapMemory(DrvPaletteRam       , 0x090000, 0x090fff, MAP_RAM);
 	SekSetReadWordHandler(0, 	Punkshot68KReadWord);
 	SekSetWriteWordHandler(0, 	Punkshot68KWriteWord);
 	SekSetReadByteHandler(0, 	Punkshot68KReadByte);
@@ -5614,7 +5614,7 @@ static INT32 TmntFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1) && bIrqEnable) SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1) && bIrqEnable) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run Z80
@@ -5680,7 +5680,7 @@ static INT32 MiaFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1) && bIrqEnable) SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1) && bIrqEnable) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run Z80
@@ -5740,8 +5740,8 @@ static INT32 CuebrickFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1) && bIrqEnable) SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
-		if (CuebrickSndIrqFire) SekSetIRQLine(6, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1) && bIrqEnable) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
+		if (CuebrickSndIrqFire) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 				
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
@@ -5793,7 +5793,7 @@ static INT32 BlswhstlFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == (nInterleave - 1) && K052109_irq_enabled) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1) && K052109_irq_enabled) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run Z80
@@ -5880,7 +5880,7 @@ static INT32 SsridersFrame()
 	}
 
 	SekOpen(0);
-	if (K052109_irq_enabled) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	if (K052109_irq_enabled) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 	SekClose();
 
 	// Make sure the buffer is entirely filled.
@@ -5943,7 +5943,7 @@ static INT32 Thndrx2Frame()
 		}
 	}
 	
-	if (K052109_irq_enabled) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	if (K052109_irq_enabled) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
@@ -6008,7 +6008,7 @@ static INT32 LgtnfghtFrame()
 		}
 	}
 	
-	if (K052109_irq_enabled) SekSetIRQLine(5, SEK_IRQSTATUS_AUTO);
+	if (K052109_irq_enabled) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 
 	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
@@ -6056,7 +6056,7 @@ static INT32 Tmnt2Frame()
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
 		if (i == 19) DrvVBlank = 0;
 		if (i == 243) DrvVBlank = 1;
-		if (i == 243 && K052109_irq_enabled) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+		if (i == 243 && K052109_irq_enabled) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run Z80
@@ -6137,7 +6137,7 @@ static INT32 PunkshotFrame()
 		}
 	}
 	
-	if (K052109_irq_enabled) SekSetIRQLine(4, SEK_IRQSTATUS_AUTO);
+	if (K052109_irq_enabled) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
