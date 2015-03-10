@@ -4,6 +4,7 @@
 */
 
 #include "smsshared.h"
+#define ALIGN_DWORD 1
 
 uint8 sms_cram_expand_table[4];
 uint8 gg_cram_expand_table[16];
