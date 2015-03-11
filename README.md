@@ -1,3 +1,3 @@
 # fba-libretro
 
-MIDWAY and SMS support disabled at the moment.
+MIDWAY support is still a WIP on stand-alone, so i disabled it by default.
