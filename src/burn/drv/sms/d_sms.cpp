@@ -171,16 +171,16 @@ INT32 SMSFrame()
 	return 0;
 }
 
-void system_manage_sram(uint8 */*sram*/, int /*slot*/, int /*mode*/)
+void system_manage_sram(UINT8 */*sram*/, INT32 /*slot*/, INT32 /*mode*/)
 {
 
 }
 
 typedef struct {
-    uint32 crc;
-    int mapper;
-    int display;
-    int territory;
+    UINT32 crc;
+    INT16 mapper;
+    INT16 display;
+    INT16 territory;
     char *name;
 } rominfo_t;
 
@@ -227,6 +227,7 @@ static rominfo_t game_list[] = {
 	{0x71DEBA5A, MAPPER_SEGA,   DISPLAY_NTSC,TERRITORY_DOMESTIC, "Pop Breaker"},
 	// PAL-mode
 	{0x72420f38, MAPPER_SEGA,   DISPLAY_PAL, TERRITORY_EXPORT, "Addams Family"},
+	{0xc660ff34, MAPPER_SEGA,   DISPLAY_PAL, TERRITORY_EXPORT, "The New Zealand Story"},
 	//{0x887d9f6b, MAPPER_SEGA,   DISPLAY_PAL, TERRITORY_EXPORT, "XXAce of Aces"},
 	//{0x3793c01a, MAPPER_SEGA,   DISPLAY_PAL, TERRITORY_EXPORT, "XXShadow Dancer (KR)"},
 	{0x5c205ee1, MAPPER_SEGA,   DISPLAY_PAL, TERRITORY_EXPORT, "Xenon 2"},
@@ -316,7 +317,7 @@ static INT32 load_rom()
 	/* Don't load games smaller than 16K */
     if(size < 0x4000) return 0;
 
-	cart.rom = (uint8 *)malloc(0x100000);
+	cart.rom = (UINT8 *)malloc(0x100000);
 	if (BurnLoadRom(cart.rom + 0x0000, 0, 1)) return 0;
 
     /* Take care of image header, if present */
@@ -390,7 +391,7 @@ INT32 SMSInit()
     bitmap.depth  = 16;
     bitmap.granularity = 2;
     bitmap.pitch  = bitmap.width * bitmap.granularity;
-    bitmap.data   = (uint8 *)pTransDraw;
+    bitmap.data   = (UINT8 *)pTransDraw;
     bitmap.viewport.x = 0;
     bitmap.viewport.y = 0;
     bitmap.viewport.w = 256;
@@ -12562,7 +12563,7 @@ STD_ROM_FN(gg_alien3)
 
 struct BurnDriver BurnDrvgg_alien3 = {
 	"gg_alien3", NULL, NULL, NULL, "1992",
-	"Alien³ (Euro, USA)\0", NULL, "Arena", "Sega Game Gear",
+	"Alien 3 (Euro, USA)\0", NULL, "Arena", "Sega Game Gear",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_GAME_GEAR, GBF_MISC, 0,
 	GGGetZipName, gg_alien3RomInfo, gg_alien3RomName, NULL, NULL, SMSInputInfo, GGDIPInfo,
@@ -12582,7 +12583,7 @@ STD_ROM_FN(gg_alien3j)
 
 struct BurnDriver BurnDrvgg_alien3j = {
 	"gg_alien3j", "gg_alien3", NULL, NULL, "1992",
-	"Alien³ (Jpn)\0", NULL, "Acclaim Entertainment", "Sega Game Gear",
+	"Alien 3 (Jpn)\0", NULL, "Acclaim Entertainment", "Sega Game Gear",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_GAME_GEAR, GBF_MISC, 0,
 	GGGetZipName, gg_alien3jRomInfo, gg_alien3jRomName, NULL, NULL, SMSInputInfo, GGDIPInfo,
