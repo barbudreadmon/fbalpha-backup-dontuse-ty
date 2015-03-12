@@ -1897,7 +1897,7 @@ static bool init_input(void)
    
    /* Killer Instinct */
    
-   bind_map[PTR_INCR].bii_name = "P1 Button A";
+/* bind_map[PTR_INCR].bii_name = "P1 Button A";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
    bind_map[PTR_INCR].nCode[1] = 0;
 
@@ -1943,7 +1943,7 @@ static bool init_input(void)
 
    bind_map[PTR_INCR].bii_name = "P2 Button Z";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R;
-   bind_map[PTR_INCR].nCode[1] = 1;
+   bind_map[PTR_INCR].nCode[1] = 1; */
 
    /* Final Fight, Captain Commando, etc. */
 
@@ -2778,7 +2778,7 @@ static bool init_input(void)
    
       /* Killer Instinct */
    
-   bind_map[PTR_INCR].bii_name = "P1 Button A";
+/* bind_map[PTR_INCR].bii_name = "P1 Button A";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
    bind_map[PTR_INCR].nCode[1] = 0;
 
@@ -2824,7 +2824,7 @@ static bool init_input(void)
 
    bind_map[PTR_INCR].bii_name = "P2 Button Z";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R;
-   bind_map[PTR_INCR].nCode[1] = 1;
+   bind_map[PTR_INCR].nCode[1] = 1; */
 
    /* Final Fight, Captain Commando, etc. */
 
