@@ -243,7 +243,7 @@ endif
 
 CC_SYSTEM = gcc
 CXX_SYSTEM = g++
-C++11FLAGS = -std=c++11
+#C++11FLAGS = -std=c++11
 
 BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_CPU_DIR)/arm7/arm7exec.c \
@@ -484,7 +484,7 @@ else
 endif
 
 CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
-CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS) $(C++11FLAGS)
+CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
 LDFLAGS += $(fpic)
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)
