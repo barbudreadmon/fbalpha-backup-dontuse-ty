@@ -5,6 +5,10 @@
 #define NO_64BIT_BYTESWAP
 #endif
 
+#ifndef M_PI
+ #define M_PI 3.1415926536
+#endif
+
 typedef union {
   struct { UINT8 h3,h2,h,l; } b;
   struct { UINT16 h,l; } w;

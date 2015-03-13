@@ -32,10 +32,6 @@
  #include <cmath>
 #endif
 
-#ifndef M_PI
- #define M_PI 3.1415926536
-#endif
-
 static UINT8 *AllMem;
 static UINT8 *Drv68KROM;
 static UINT8 *DrvZ80ROM;

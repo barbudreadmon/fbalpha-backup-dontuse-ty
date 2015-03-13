@@ -12,10 +12,6 @@
  #include <cmath>
 #endif
 
-#ifndef M_PI
- #define M_PI 3.1415926536
-#endif
-
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
 static UINT8 *AllRam;
