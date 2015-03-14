@@ -243,7 +243,6 @@ endif
 
 CC_SYSTEM = gcc
 CXX_SYSTEM = g++
-#C++11FLAGS = -std=c++11
 
 BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_CPU_DIR)/arm7/arm7exec.c \
@@ -316,6 +315,9 @@ ifeq ($(NO_MIDWAY), 1)
 	MIDWAY_DIR :=
 	MIPS3_DIR :=
 	BURN_BLACKLIST += $(FBA_CPU_DIR)/mips3_intf.cpp
+else
+	CFLAGS += -std=gnu++0x
+	CXXFLAGS += -std=gnu++0x
 endif
 
 ifeq ($(NO_MD), 1)
