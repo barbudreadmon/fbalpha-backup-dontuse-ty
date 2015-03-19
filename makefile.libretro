@@ -570,13 +570,11 @@ generate-files:
 	@echo ""
 	$(EXE_PREFIX)$(CTVMAKE_EXE) > $(FBA_GENERATED_DIR)/ctv.h
 
-%.o: %.cpp
-	@echo "CXX $<"
-	@$(CXX) -c -o $@ $< $(CXXFLAGS) $(INCFLAGS)
-
 %.o: %.c
-	@echo "CC $<"
-	@$(CC) -c -o $@ $< $(CFLAGS) $(INCFLAGS)
+	$(CC) $(CFLAGS) $(INCFLAGS) -c $^ -o $@
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c $^ -o $@
 
 $(TARGET): $(OBJS)
 	@echo "LD $@"
