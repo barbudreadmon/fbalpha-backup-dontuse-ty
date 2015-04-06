@@ -454,6 +454,7 @@ INCFLAGS := -I$(FBA_BURNER_DIR)/win32 \
 	-I$(FBA_CPU_DIR)/i8039 \
 	-I$(FBA_LIB_DIR)/zlib \
 	-I$(FBA_BURN_DIR)/drv/capcom \
+	-I$(FBA_BURN_DIR)/drv/konami \
 	-I$(FBA_BURN_DIR)/drv/dataeast \
 	-I$(FBA_BURN_DIR)/drv/cave \
 	-I$(FBA_BURN_DIR)/drv/neogeo \
