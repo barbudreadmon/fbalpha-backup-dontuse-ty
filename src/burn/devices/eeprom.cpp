@@ -120,7 +120,16 @@ void EEPROMExit()
 #endif
 
 	char output[128];
+#ifdef __LIBRETRO__
+#ifdef _WIN32
+	char slash = '\\';
+#else
+	char slash = '/';
+#endif
+	sprintf (output, "%s%c%s.nv", g_rom_dir, slash, BurnDrvGetTextA(DRV_NAME));
+#else
 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
+#endif
 
 	neeprom_available = 0;
 
