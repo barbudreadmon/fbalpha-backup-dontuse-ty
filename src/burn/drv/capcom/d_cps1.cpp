@@ -4700,6 +4700,7 @@ STD_ROM_PICK(Cworld2j)
 STD_ROM_FN(Cworld2j)
 
 static struct BurnRomInfo Cworld2jaRomDesc[] = {
+/* B-Board 90629B-3  - all roms have 90629B on the labels, no battery, possibly unofficial / desuicided with reproduction stickers */
 	{ "q5 - 34_90629b.8f",      0x080000, 0xde54487f, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
 	{ "q5 - 33_90629b.6f",      0x080000, 0x93248458, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
 
@@ -4722,6 +4723,33 @@ static struct BurnRomInfo Cworld2jaRomDesc[] = {
 
 STD_ROM_PICK(Cworld2ja)
 STD_ROM_FN(Cworld2ja)
+
+static struct BurnRomInfo Cworld2jbRomDesc[] = {
+/* B-Board 91634B-2  - all roms have 91634B on the labels */
+	{ "q5 - 23_91634b.8f",      0x080000, 0x709f577f, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
+	{ "q5 - 22_91634b.7f",      0x080000, 0x93248458, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
+
+	{ "q5 - 01_91634b.3a",      0x080000, 0x09d0e7ce, BRF_GRA | CPS1_TILES },
+	{ "q5 - 02_91634b.4a",      0x080000, 0x22e4ce9a, BRF_GRA | CPS1_TILES },
+	{ "q5 - 03_91634b.5a",      0x080000, 0xf7b3aed6, BRF_GRA | CPS1_TILES },
+	{ "q5 - 04_91634b.6a",      0x080000, 0x520c6c88, BRF_GRA | CPS1_TILES },
+
+	{ "q5 - 09_91634b.12a",     0x010000, 0xe14dc524, BRF_PRG | CPS1_Z80_PROGRAM }, // == q5_23.13b
+
+	{ "q5 - 18_91634b.11c",     0x020000, 0xd10c1b68, BRF_SND | CPS1_OKIM6295_SAMPLES }, // == q5_30.12c
+	{ "q5 - 19_91634b.12c",     0x020000, 0x7d17e496, BRF_SND | CPS1_OKIM6295_SAMPLES }, // == q5_31.13c
+	
+	A_BOARD_PLDS
+	
+	{ "q563b.1a",      0x000117, 0x00000000, BRF_OPT | BRF_NODUMP},	// b-board PLDs
+	{ "iob1.12d",      0x000117, 0x3abc0700, BRF_OPT },
+	{ "bprg1.11d",     0x000117, 0x31793da7, BRF_OPT },
+	{ "ioc1.ic7",      0x000117, 0x0d182081, BRF_OPT },	// c-board PLDs
+	{ "c632.ic1",      0x000117, 0x0fbd9270, BRF_OPT },
+};
+
+STD_ROM_PICK(Cworld2jb)
+STD_ROM_FN(Cworld2jb)
 
 static struct BurnRomInfo DinoRomDesc[] = {
 	{ "cde_23a.8f",    0x080000, 0x8f4e585e, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
@@ -7115,7 +7143,7 @@ static struct BurnRomInfo MtwinsRomDesc[] = {
 	
 	A_BOARD_PLDS
 	
-	{ "ck24b.1a",      0x000117, 0x00000000, BRF_OPT | BRF_NODUMP }, // b-board PLDs
+	{ "ck24b.1a",      0x000117, 0xbd99c448, BRF_OPT }, // b-board PLDs
 	{ "iob1.11e",      0x000117, 0x3abc0700, BRF_OPT },
 };
 
@@ -11673,8 +11701,9 @@ STD_ROM_PICK(Varthb)
 STD_ROM_FN(Varthb)
 
 static struct BurnRomInfo WillowRomDesc[] = {
-	{ "wlu_30.11f",    0x020000, 0xd604dbb1, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
-	{ "35.11h",        0x020000, 0x7a791e77, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
+	// No "Warning" (c) Capcom U.S.A., genuine export ROM labels
+	{ "wle_30.11f",    0x020000, 0x15372aa2, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
+	{ "wle_35.11h",    0x020000, 0x2e64623b, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "wlu_31.12f",    0x020000, 0x0eb48a83, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "wlu_36.12h",    0x020000, 0x36100209, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "wlm-32.8h",     0x080000, 0xdfd9f643, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
@@ -11706,7 +11735,41 @@ static struct BurnRomInfo WillowRomDesc[] = {
 STD_ROM_PICK(Willow)
 STD_ROM_FN(Willow)
 
-static struct BurnRomInfo WillowoRomDesc[] = {
+static struct BurnRomInfo WillowuRomDesc[] = {
+	{ "wlu_30.11f",    0x020000, 0xd604dbb1, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
+	{ "35.11h",        0x020000, 0x7a791e77, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
+	{ "wlu_31.12f",    0x020000, 0x0eb48a83, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
+	{ "wlu_36.12h",    0x020000, 0x36100209, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
+	{ "wlm-32.8h",     0x080000, 0xdfd9f643, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
+
+	{ "wlm-7.7a",      0x080000, 0xafa74b73, BRF_GRA | CPS1_TILES },
+	{ "wlm-5.9a",      0x080000, 0x12a0dc0b, BRF_GRA | CPS1_TILES },
+	{ "wlm-3.3a",      0x080000, 0xc6f2abce, BRF_GRA | CPS1_TILES },
+	{ "wlm-1.5a",      0x080000, 0x4aa4c6d3, BRF_GRA | CPS1_TILES },
+	{ "wl_24.7d",      0x020000, 0x6f0adee5, BRF_GRA | CPS1_TILES },
+	{ "wl_14.7c",      0x020000, 0x9cf3027d, BRF_GRA | CPS1_TILES },
+	{ "wl_26.9d",      0x020000, 0xf09c8ecf, BRF_GRA | CPS1_TILES },
+	{ "wl_16.9c",      0x020000, 0xe35407aa, BRF_GRA | CPS1_TILES },
+	{ "wl_20.3d",      0x020000, 0x84992350, BRF_GRA | CPS1_TILES },
+	{ "wl_10.3c",      0x020000, 0xb87b5a36, BRF_GRA | CPS1_TILES },
+	{ "wl_22.5d",      0x020000, 0xfd3f89f0, BRF_GRA | CPS1_TILES },
+	{ "wl_12.5c",      0x020000, 0x7da49d69, BRF_GRA | CPS1_TILES },
+
+	{ "wl_09.12b",     0x010000, 0xf6b3d060, BRF_PRG | CPS1_Z80_PROGRAM },
+
+	{ "wl_18.11c",     0x020000, 0xbde23d4d, BRF_SND | CPS1_OKIM6295_SAMPLES },
+	{ "wl_19.12c",     0x020000, 0x683898f5, BRF_SND | CPS1_OKIM6295_SAMPLES },
+	
+	A_BOARD_PLDS
+	
+	{ "wl24b.1a",      0x000117, 0x7101cdf1, BRF_OPT },	// b-board PLDs
+	{ "lwio.11e",      0x000117, 0xad52b90c, BRF_OPT },
+};
+
+STD_ROM_PICK(Willowu)
+STD_ROM_FN(Willowu)
+
+static struct BurnRomInfo WillowuoRomDesc[] = {
 	{ "wlu_30.11f",    0x020000, 0xd604dbb1, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "wlu_35.11h",    0x020000, 0xdaee72fe, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "wlu_31.12f",    0x020000, 0x0eb48a83, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
@@ -11737,10 +11800,11 @@ static struct BurnRomInfo WillowoRomDesc[] = {
 	{ "lwio.11e",      0x000117, 0xad52b90c, BRF_OPT },
 };
 
-STD_ROM_PICK(Willowo)
-STD_ROM_FN(Willowo)
+STD_ROM_PICK(Willowuo)
+STD_ROM_FN(Willowuo)
 
 static struct BurnRomInfo WillowjRomDesc[] = {
+	// Japan "warning" but (c) Capcom U.S.A.
 	{ "wl_36.12f",     0x020000, 0x2b0d7cbc, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "wl_42.12h",     0x020000, 0x1ac39615, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "wl_37.13f",     0x020000, 0x30a717fa, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
@@ -12405,7 +12469,8 @@ static const struct GameConfig ConfigTable[] =
 	{ "cawingbl"    , CPS_B_16    , mapper_CA24B , 0, NULL                },
 	{ "cawingb2"    , CPS_B_16    , mapper_CA24B , 0, NULL                },
 	{ "cworld2j"    , CPS_B_21_BT6, mapper_Q522B , 0, NULL                },
-	{ "cworld2ja"   , CPS_B_21_DEF, mapper_Q522B , 0, NULL                },
+	{ "cworld2ja"   , CPS_B_21_DEF, mapper_Q522B , 0, NULL                }, // patched set, no battery, could be desuicided
+	{ "cworld2jb"   , CPS_B_21_BT6, mapper_Q522B , 0, NULL                }, // actually Q563B
 	{ "dino"        , CPS_B_21_QS2, mapper_CD63B , 0, dino_decode         },
 	{ "dinou"       , CPS_B_21_QS2, mapper_CD63B , 0, dino_decode         },
 	{ "dinoj"       , CPS_B_21_QS2, mapper_CD63B , 0, dino_decode         },
@@ -12616,8 +12681,9 @@ static const struct GameConfig ConfigTable[] =
 	{ "varthj"      , CPS_B_21_BT5, mapper_VA22B , 0, NULL                },
 	{ "varthb"      , CPS_B_04    , mapper_VA63B , 0, NULL                },
 	{ "willow"      , CPS_B_03    , mapper_WL24B , 0, NULL                },
+	{ "willowu"     , CPS_B_03    , mapper_WL24B , 0, NULL                },
+	{ "willowuo"    , CPS_B_03    , mapper_WL24B , 0, NULL                },
 	{ "willowj"     , CPS_B_03    , mapper_WL24B , 0, NULL                },
-	{ "willowo"     , CPS_B_03    , mapper_WL24B , 0, NULL                },
 	{ "wof"         , CPS_B_21_QS1, mapper_TK263B, 0, wof_decode          },
 	{ "wofr1"       , CPS_B_21_DEF, mapper_TK263B, 0, wof_decode          },
 	{ "wofu"        , CPS_B_21_QS1, mapper_TK263B, 0, wof_decode          },
@@ -16937,6 +17003,16 @@ struct BurnDriver BurnDrvCpsCworld2ja = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvCpsCworld2jb = {
+	"cworld2jb", "cworld2j", NULL, NULL, "1992",
+	"Adventure Quiz Capcom World 2 (Japan 920611, B-Board 91634B-2)\0", NULL, "Capcom", "CPS1",
+	L"Adevnture Quiz Capcom World 2 (\u30AF\u30A4\u30BA\uFF15 \u3042\u3069\u3079\u3093\u3061\u3083\u30FC\u304F\u3044\u305A \u304B\u3077\u3053\u3093\u308F\u30FC\u308B\u3069\uFF12 Japan 920611, B-Board 91634B-2)\0", NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS1, GBF_PUZZLE, 0,
+	NULL, Cworld2jbRomInfo, Cworld2jbRomName, NULL, NULL, Cworld2jInputInfo, Cworld2jDIPInfo,
+	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvCpsDino = {
 	"dino", NULL, NULL, NULL, "1993",
 	"Cadillacs & Dinosaurs (930201 etc)\0", NULL, "Capcom", "CPS1 / QSound",
@@ -19039,7 +19115,7 @@ struct BurnDriver BurnDrvCpsVarthb = {
 
 struct BurnDriver BurnDrvCpsWillow = {
 	"willow", NULL, NULL, NULL, "1989",
-	"Willow (US)\0", NULL, "Capcom", "CPS1",
+	"Willow (World)\0", NULL, "Capcom", "CPS1",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_CAPCOM_CPS1, GBF_PLATFORM, 0,
 	NULL, WillowRomInfo, WillowRomName, NULL, NULL, WillowInputInfo, WillowDIPInfo,
@@ -19047,12 +19123,22 @@ struct BurnDriver BurnDrvCpsWillow = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
-struct BurnDriver BurnDrvCpsWillowo = {
-	"willowo", "willow", NULL, NULL, "1989",
-	"Willow (US old ver.)\0", NULL, "Capcom", "CPS1",
+struct BurnDriver BurnDrvCpsWillowu = {
+	"willowu", "willow", NULL, NULL, "1989",
+	"Willow (USA)\0", NULL, "Capcom", "CPS1",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS1, GBF_PLATFORM, 0,
-	NULL, WillowoRomInfo, WillowoRomName, NULL, NULL, WillowInputInfo, WillowDIPInfo,
+	NULL, WillowuRomInfo, WillowuRomName, NULL, NULL, WillowInputInfo, WillowDIPInfo,
+	DrvInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvCpsWillowuo = {
+	"willowuo", "willow", NULL, NULL, "1989",
+	"Willow (USA Old Ver.)\0", NULL, "Capcom", "CPS1",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS1, GBF_PLATFORM, 0,
+	NULL, WillowuoRomInfo, WillowuoRomName, NULL, NULL, WillowInputInfo, WillowDIPInfo,
 	DrvInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };

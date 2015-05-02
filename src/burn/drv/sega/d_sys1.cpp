@@ -2695,9 +2695,9 @@ STD_ROM_PICK(Wboy)
 STD_ROM_FN(Wboy)
 
 static struct BurnRomInfo WboyoRomDesc[] = {
-	{ "epr-.116",          0x004000, 0x51d27534, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
-	{ "epr-.109",          0x004000, 0xe29d1cd1, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
-	{ "epr-7491.96",       0x004000, 0x1f7d0efe, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
+	{ "epr-7532.116",      0x004000, 0x51d27534, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "epr-7533.109",      0x004000, 0xe29d1cd1, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
+	{ "epr-7534.96",       0x004000, 0x1f7d0efe, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code 
 	
 	{ "epr-7498.120",      0x002000, 0x78ae1e7b, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
 	
@@ -4036,6 +4036,7 @@ void __fastcall System1Z801PortWrite(UINT16 a, UINT8 d)
 			System1FlipScreen = d & 0x80;
 			return;
 		}
+		case 0x1c: return; // NOP
 	}
 	
 	bprintf(PRINT_NORMAL, _T("IO Write %x, %x\n"), a, d);

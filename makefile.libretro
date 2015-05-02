@@ -247,6 +247,7 @@ CXX_SYSTEM = g++
 BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_CPU_DIR)/arm7/arm7exec.c \
 	$(FBA_CPU_DIR)/arm7/arm7core.c \
+	$(FBA_CPU_DIR)/adsp2100/2100ops.c \
 	$(FBA_CPU_DIR)/hd6309/6309tbl.c \
 	$(FBA_CPU_DIR)/hd6309/6309ops.c \
 	$(FBA_CPU_DIR)/konami/konamtbl.c \
@@ -309,15 +310,6 @@ MIPS3_DIR := $(FBA_CPU_DIR)/mips3
 MD_DIR := $(FBA_BURN_DRIVERS_DIR)/megadrive
 MIDWAY_DIR := $(FBA_BURN_DRIVERS_DIR)/midway
 PCE_DIR := $(FBA_BURN_DRIVERS_DIR)/pce
-endif
-
-ifeq ($(NO_MIDWAY), 1)
-	MIDWAY_DIR :=
-	MIPS3_DIR :=
-	BURN_BLACKLIST += $(FBA_CPU_DIR)/mips3_intf.cpp
-else
-	CFLAGS += -std=gnu++0x
-	CXXFLAGS += -std=gnu++0x
 endif
 
 ifeq ($(NO_MD), 1)
@@ -391,6 +383,7 @@ FBA_BURN_DIRS := $(FBA_BURN_DIR) \
 	$(FBA_BURN_DRIVERS_DIR)
 
 FBA_CPU_DIRS := $(FBA_CPU_DIR) \
+	$(FBA_CPU_DIR)/adsp2100 \
 	$(FBA_CPU_DIR)/arm \
 	$(FBA_CPU_DIR)/arm7 \
 	$(FBA_CPU_DIR)/h6280 \
@@ -486,8 +479,8 @@ else
 	WARNINGS_DEFINES = -Wno-write-strings
 endif
 
-CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
-CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
+CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS) -std=gnu++0x
+CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS) -std=gnu++0x
 LDFLAGS += $(fpic)
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)

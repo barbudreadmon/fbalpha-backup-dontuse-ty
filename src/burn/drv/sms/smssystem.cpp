@@ -19,7 +19,7 @@
 #include "smsshared.h"
 #include "z80_intf.h"
 #include "sn76496.h"
-
+#include "burn_ym2413.h"
 
 bitmap_t bitmap;
 cart_t cart;
@@ -76,10 +76,11 @@ void system_frame(INT32 skip_render)
 
                 if(vdp.reg[0x00] & 0x10)
 				{
-					if (!(ZetTotalCycles() % CYCLES_PER_LINE)) {
+					/*if (!(ZetTotalCycles() % CYCLES_PER_LINE)) {
 						ZetRun(1);
 						z80cnt++;
-					}
+						}*/
+					ZetRun(16);
 					ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
                 }
             }
@@ -98,6 +99,7 @@ void system_frame(INT32 skip_render)
 
             if(vdp.reg[0x01] & 0x20)
             {
+				ZetRun(16); // Fixes Zool, Monster Truck Wars, Chicago Syndacite, Terminator 2 (SMS)
                 ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
             }
         }
@@ -106,7 +108,13 @@ void system_frame(INT32 skip_render)
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / lpf;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			if (sms.use_fm)	{
+				BurnYM2413Render(pSoundBuf, nSegmentLength);
+			} else {
+				memset(pSoundBuf, 0, nSegmentLength * 2 * sizeof(INT16));
+			}
 			SN76496Update(0, pSoundBuf, nSegmentLength);
+			
 			nSoundBufferPos += nSegmentLength;
 		}
 
@@ -121,6 +129,11 @@ void system_frame(INT32 skip_render)
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
+			if (sms.use_fm)	{
+				BurnYM2413Render(pSoundBuf, nSegmentLength);
+			} else {
+				memset(pSoundBuf, 0, nSegmentLength * 2 * sizeof(INT16));
+			}
 			SN76496Update(0, pSoundBuf, nSegmentLength);
 		}
 	}

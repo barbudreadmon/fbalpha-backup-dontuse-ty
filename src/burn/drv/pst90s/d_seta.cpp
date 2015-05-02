@@ -70,6 +70,7 @@ static INT32 VideoOffsets[3][2] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
 static INT32 ColorOffsets[3] = { 0, 0, 0 };
 static INT32 ColorDepths[3];
 static INT32 twineagle = 0;
+static INT32 daiohc = 0; // lazy fix - disable writes to alternate scroll write offsets
 static INT32 oisipuzl_hack = 0;
 static INT32 refresh_rate = 6000;
 
@@ -4183,12 +4184,16 @@ void __fastcall daioh_write_word(UINT32 address, UINT16 data)
 	SetVidRAMRegsWriteWord(0x500000)
 
 	SetaVidRAMCtrlWriteWord(0, 0x900000) // blandiap
-	SetaVidRAMCtrlWriteWord(0, 0x908000) // jjsquawkb
-	SetaVidRAMCtrlWriteWord(0, 0xa00000) // blandia
+	if (!daiohc) {
+		SetaVidRAMCtrlWriteWord(0, 0x908000) // jjsquawkb
+		SetaVidRAMCtrlWriteWord(0, 0xa00000) // blandia
+	}
 
 	SetaVidRAMCtrlWriteWord(1, 0x980000) // blandiap
-	SetaVidRAMCtrlWriteWord(1, 0x909000) // jjsquawkb
-	SetaVidRAMCtrlWriteWord(1, 0xa80000) // blandia
+	if (!daiohc) {
+		SetaVidRAMCtrlWriteWord(1, 0x909000) // jjsquawkb
+		SetaVidRAMCtrlWriteWord(1, 0xa80000) // blandia
+	}
 
 	switch (address)
 	{
@@ -4204,12 +4209,16 @@ void __fastcall daioh_write_byte(UINT32 address, UINT8 data)
 	SetVidRAMRegsWriteByte(0x500000)
 
 	SetaVidRAMCtrlWriteByte(0, 0x900000) // blandiap
-	SetaVidRAMCtrlWriteByte(0, 0x908000) // jjsquawkb
-	SetaVidRAMCtrlWriteByte(0, 0xa00000) // blandia
+	if (!daiohc) {
+		SetaVidRAMCtrlWriteByte(0, 0x908000) // jjsquawkb
+		SetaVidRAMCtrlWriteByte(0, 0xa00000) // blandia
+	}
 
 	SetaVidRAMCtrlWriteByte(1, 0x980000) // blandiap
-	SetaVidRAMCtrlWriteByte(1, 0x909000) // jjsquawkb
-	SetaVidRAMCtrlWriteByte(1, 0xa80000) // blandia
+	if (!daiohc) {
+		SetaVidRAMCtrlWriteByte(1, 0x909000) // jjsquawkb
+		SetaVidRAMCtrlWriteByte(1, 0xa80000) // blandia
+	}
 
 	switch (address)
 	{
@@ -5594,6 +5603,33 @@ static void daioh68kInit()
 	SekClose();
 }
 
+static void daiohp68kInit()
+{
+	SekInit(0, 0x68000);
+	SekOpen(0);
+	SekMapMemory(Drv68KROM, 		0x000000, 0x1fffff, MAP_ROM);
+	SekMapMemory(Drv68KRAM,			0x200000, 0x20ffff, MAP_RAM);
+	SekMapMemory(Drv68KRAM + 0x0010000,	0x700000, 0x7003ff, MAP_RAM);
+	SekMapMemory(DrvPalRAM,			0x700400, 0x700fff, MAP_RAM);
+	SekMapMemory(Drv68KRAM2,		0x701000, 0x70ffff, MAP_RAM);
+	SekMapMemory(DrvVidRAM0,		0x800000, 0x80ffff, MAP_RAM);
+	SekMapMemory(DrvVidRAM1,		0x880000, 0x88ffff, MAP_RAM);
+	SekMapMemory(DrvSprRAM0,		0xa00000, 0xa00607 | 0x7ff, MAP_RAM);
+	SekMapMemory(Drv68KRAM + 0x0020000,	0xa80000, 0xa803ff, MAP_WRITE); // nop out
+	SekMapMemory(DrvSprRAM1,		0xb00000, 0xb13fff, MAP_RAM);
+	SekSetWriteWordHandler(0,		daioh_write_word);
+	SekSetWriteByteHandler(0,		daioh_write_byte);
+	SekSetReadWordHandler(0,		daioh_read_word);
+	SekSetReadByteHandler(0,		daioh_read_byte);
+
+	SekMapHandler(1,			0xc00000, 0xc03fff, MAP_READ | MAP_WRITE);
+	SekSetReadWordHandler (1,		setaSoundRegReadWord);
+	SekSetReadByteHandler (1,		setaSoundRegReadByte);
+	SekSetWriteWordHandler(1,		setaSoundRegWriteWord);
+	SekSetWriteByteHandler(1,		setaSoundRegWriteByte);
+	SekClose();
+}
+
 static void wrofaero68kInit()
 {
 	SekInit(0, 0x68000);
@@ -6810,6 +6846,7 @@ static INT32 DrvExit()
 
 	oisipuzl_hack = 0;
 	twineagle = 0;
+	daiohc = 0;
 	watchdog_enable = 0;
 	refresh_rate = 6000;
 
@@ -8008,6 +8045,138 @@ struct BurnDriver BurnDrvDaioha = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SETA1, GBF_VERSHOOT, 0,
 	NULL, daiohaRomInfo, daiohaRomName, NULL, NULL, DaiohInputInfo, DaiohDIPInfo,
 	daiohInit, DrvExit, DrvFrame, seta2layerDraw, DrvScan, &DrvRecalc, 0x600,
+	240, 384, 3, 4
+};
+
+
+// Daioh (prototype)
+
+static struct BurnRomInfo daiohpRomDesc[] = {
+	{ "prg_even.u3",	0x040000, 0x3c97b976, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "prg_odd.u4",		0x040000, 0xaed2b87e, 0x01 | BRF_PRG | BRF_ESS }, //  1
+	{ "data_even.u103",	0x040000, 0xe07776ef, 0x01 | BRF_PRG | BRF_ESS }, //  2
+	{ "data_odd.u102",	0x040000, 0xb75b9a5c, 0x01 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "obj_2.u146",		0x040000, 0x77560a03, 0x03 | BRF_GRA },           //  4 Sprites
+	{ "obj_6.u147",		0x040000, 0x081f5fb1, 0x03 | BRF_GRA },           //  5
+	{ "obj_3.u144",		0x040000, 0xd33ca640, 0x03 | BRF_GRA },           //  6
+	{ "obj_7.u145",		0x040000, 0xe878ac92, 0x03 | BRF_GRA },           //  7
+	{ "obj_0.u142",		0x040000, 0x78f45582, 0x03 | BRF_GRA },           //  8
+	{ "obj_4.u143",		0x040000, 0xd387de72, 0x03 | BRF_GRA },           //  9
+	{ "obj_1.u140",		0x040000, 0x8ff6c5a9, 0x03 | BRF_GRA },           // 10
+	{ "obj_5.u141",		0x040000, 0x6a671757, 0x03 | BRF_GRA },           // 11
+
+	{ "bg1_1.u150",		0x080000, 0xd5793a2f, 0x04 | BRF_GRA },           // 12 Layer 1 tiles
+	{ "bg1_3.u151",		0x080000, 0x6456fae1, 0x04 | BRF_GRA },           // 13
+	{ "bg1_0.u148",		0x080000, 0xbec48d7a, 0x04 | BRF_GRA },           // 14
+	{ "bg1_2.u149",		0x080000, 0x5e674c30, 0x04 | BRF_GRA },           // 15
+
+	{ "bg2_1.u166",		0x080000, 0x9274123b, 0x05 | BRF_GRA },           // 16 Layer 2 tiles
+	{ "bg2_3.u167",		0x080000, 0xd3d68aa1, 0x05 | BRF_GRA },           // 17
+	{ "bg2_0.u164",		0x080000, 0x7e46a10e, 0x05 | BRF_GRA },           // 18
+	{ "bg2_2.u165",		0x080000, 0x3119189b, 0x05 | BRF_GRA },           // 19
+
+	{ "snd0.u156",		0x020000, 0x4d253547, 0x06 | BRF_SND },           // 20 x1-010 Samples
+	{ "snd1.u157",		0x020000, 0x79b56e22, 0x06 | BRF_SND },           // 21
+	{ "snd2.u158",		0x020000, 0xbc8de02a, 0x06 | BRF_SND },           // 22
+	{ "snd3.u159",		0x020000, 0x939777fd, 0x06 | BRF_SND },           // 23
+	{ "snd4.u160",		0x020000, 0x7b97716d, 0x06 | BRF_SND },           // 24
+	{ "snd5.u161",		0x020000, 0x294e1cc9, 0x06 | BRF_SND },           // 25
+	{ "snd6.u162",		0x020000, 0xecab073b, 0x06 | BRF_SND },           // 26
+	{ "snd7.u163",		0x020000, 0x1b7ea768, 0x06 | BRF_SND },           // 27
+
+	{ "con1x.u35",		0x000104, 0xce8b57d9, 0x00 | BRF_OPT },           // 28 Pals
+	{ "con2x.u36",		0x000104, 0x0b18db9e, 0x00 | BRF_OPT },           // 29
+	{ "dec1x.u14",		0x000104, 0xd197abfe, 0x00 | BRF_OPT },           // 30
+	{ "dec2x.u206",		0x000104, 0x35afbba8, 0x00 | BRF_OPT },           // 31
+	{ "pcon2.u110",		0x000104, 0x082882c2, 0x00 | BRF_OPT },           // 32
+	{ "sc.u116",		0x000104, 0xe57bfde9, 0x00 | BRF_OPT },           // 33
+};
+
+STD_ROM_PICK(daiohp)
+STD_ROM_FN(daiohp)
+
+static INT32 daiohpInit()
+{
+	DrvSetVideoOffsets(1, 1, -1, -1);
+	DrvSetColorOffsets(0, 0x400, 0x200);
+
+	INT32 nRet = DrvInit(daiohp68kInit, 16000000, SET_IRQLINES(1, 2), NO_SPRITE_BUFFER, SET_GFX_DECODE(5, 1, 1));
+
+	if (nRet == 0) {
+		memcpy (Drv68KROM + 0x100000, Drv68KROM + 0x080000, 0x080000);
+		memcpy (Drv68KROM + 0x180000, Drv68KROM + 0x080000, 0x080000);
+		memcpy (Drv68KROM + 0x080000, Drv68KROM + 0x000000, 0x080000);
+	}
+
+	return nRet;
+}
+
+struct BurnDriver BurnDrvDaiohp = {
+	"daiohp", "daioh", NULL, NULL, "1993",
+	"Daioh (prototype)\0", NULL, "Athena", "Seta",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_PROTOTYPE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SETA1, GBF_VERSHOOT, 0,
+	NULL, daiohpRomInfo, daiohpRomName, NULL, NULL, DaiohInputInfo, DaiohDIPInfo,
+	daiohpInit, DrvExit, DrvFrame, seta2layerDraw, DrvScan, &DrvRecalc, 0x600,
+	240, 384, 3, 4
+};
+
+
+// Daioh (93111A PCB conversion)
+/* Found on a 93111A PCB - same PCB as War of Areo & J. J. Squawkers */
+
+static struct BurnRomInfo daiohcRomDesc[] = {
+	{ "15.u3",		0x080000, 0x14616abb, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "14.u4",		0x080000, 0xa029f991, 0x01 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "9.u9",		0x080000, 0x4444cbd4, 0x03 | BRF_GRA },           //  2 Sprites
+	{ "10.u10",		0x080000, 0x1d88d20b, 0x03 | BRF_GRA },           //  3
+	{ "11.u11",		0x080000, 0x3e41de61, 0x03 | BRF_GRA },           //  4
+	{ "12.u12",		0x080000, 0xf35e3341, 0x03 | BRF_GRA },           //  5
+
+	{ "5.u5",		0x080000, 0xaaa5e41e, 0x04 | BRF_GRA },           //  6 Layer 1 tiles
+	{ "6.u6",		0x080000, 0x9ad8b4b4, 0x04 | BRF_GRA },           //  7 
+	{ "7.u7",		0x080000, 0xbabf194a, 0x04 | BRF_GRA },           //  8 
+	{ "8.u8",		0x080000, 0x2db65290, 0x04 | BRF_GRA },           //  9 
+
+	{ "1.u1",		0x080000, 0x30f81f99, 0x05 | BRF_GRA },           // 10 Layer 2 tiles
+	{ "2.u2",		0x080000, 0x3b3e0f4e, 0x05 | BRF_GRA },           // 11 
+	{ "3.u3",		0x080000, 0xc5eef1c1, 0x05 | BRF_GRA },           // 12 
+	{ "4.u4",		0x080000, 0x851115b6, 0x05 | BRF_GRA },           // 13 
+
+	{ "data.u69",		0x080000, 0x21e4f093, 0x06 | BRF_SND },           // 14 x1-010 Samples
+	{ "data.u70",		0x080000, 0x593c3c58, 0x06 | BRF_SND },           // 15 
+	
+	{ "gal.u14",		0x000117, 0xb972b479, 0x00 | BRF_OPT },           // 16 Gals
+};
+
+STD_ROM_PICK(daiohc)
+STD_ROM_FN(daiohc)
+
+static INT32 daiohcInit()
+{
+	daiohc = 1;
+	DrvSetVideoOffsets(0, 0, 0, 0);
+	DrvSetColorOffsets(0, 0x400, 0x200);
+
+	INT32 nRet = DrvInit(wrofaero68kInit, 16000000, SET_IRQLINES(1, 2), NO_SPRITE_BUFFER, SET_GFX_DECODE(0, 2, 2));
+
+	if (nRet == 0) {
+		memcpy (Drv68KROM + 0x100000, Drv68KROM + 0x080000, 0x080000);
+		memset (Drv68KROM + 0x080000, 0, 0x080000);
+	}
+
+	return nRet;
+}
+
+struct BurnDriver BurnDrvDaiohc = {
+	"daiohc", "daioh", NULL, NULL, "1993",
+	"Daioh (93111A PCB conversion)\0", NULL, "Athena", "Seta",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SETA1, GBF_VERSHOOT, 0,
+	NULL, daiohcRomInfo, daiohcRomName, NULL, NULL, DaiohInputInfo, DaiohDIPInfo,
+	daiohcInit, DrvExit, DrvFrame, seta2layerDraw, DrvScan, &DrvRecalc, 0x600,
 	240, 384, 3, 4
 };
 
@@ -9595,10 +9764,10 @@ struct BurnDriver BurnDrvUtoukond = {
 // DownTown / Mokugeki (Set 1)
 
 static struct BurnRomInfo downtownRomDesc[] = {
-	{ "ud2-001-000.3c",			0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "ud2-001-000.3c",		0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
 	{ "ud2-001-003.11c",		0x40000, 0xe7d5fa5f, 0x01 | BRF_PRG | BRF_ESS }, //  1
-	{ "ud2001002.9b",			0x10000, 0xa300e3ac, 0x01 | BRF_PRG | BRF_ESS }, //  2
-	{ "ud2001001.8b",			0x10000, 0xd2918094, 0x01 | BRF_PRG | BRF_ESS }, //  3
+	{ "ud2001002.9b",		0x10000, 0xa300e3ac, 0x01 | BRF_PRG | BRF_ESS }, //  2
+	{ "ud2001001.8b",		0x10000, 0xd2918094, 0x01 | BRF_PRG | BRF_ESS }, //  3
 
 	{ "ud2-002-004.17c",		0x40000, 0xbbd538b1, 0x02 | BRF_PRG | BRF_ESS }, //  4 M65c02 Code
 
@@ -9643,10 +9812,10 @@ struct BurnDriver BurnDrvDowntown = {
 // DownTown / Mokugeki (Set 2)
 
 static struct BurnRomInfo downtown2RomDesc[] = {
-	{ "ud2-001-000.3c",			0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "ud2-001-000.3c",		0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
 	{ "ud2-001-003.11c",		0x40000, 0xe7d5fa5f, 0x01 | BRF_PRG | BRF_ESS }, //  1
-	{ "ud2000002.9b",			0x10000, 0xca976b24, 0x01 | BRF_PRG | BRF_ESS }, //  2
-	{ "ud2000001.8b",			0x10000, 0x1708aebd, 0x01 | BRF_PRG | BRF_ESS }, //  3
+	{ "ud2000002.9b",		0x10000, 0xca976b24, 0x01 | BRF_PRG | BRF_ESS }, //  2
+	{ "ud2000001.8b",		0x10000, 0x1708aebd, 0x01 | BRF_PRG | BRF_ESS }, //  3
 
 	{ "ud2-002-004.17c",		0x40000, 0xbbd538b1, 0x02 | BRF_PRG | BRF_ESS }, //  4 M65c02 Code
 
@@ -9678,10 +9847,10 @@ struct BurnDriverD BurnDrvDowntown2 = {
 // DownTown / Mokugeki (Joystick Hack)
 
 static struct BurnRomInfo downtownjRomDesc[] = {
-	{ "ud2-001-000.3c",			0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "ud2-001-000.3c",		0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
 	{ "ud2-001-003.11c",		0x40000, 0xe7d5fa5f, 0x01 | BRF_PRG | BRF_ESS }, //  1
-	{ "u37.9b",					0x10000, 0x73047657, 0x01 | BRF_PRG | BRF_ESS }, //  2
-	{ "u31.8b",					0x10000, 0x6a050240, 0x01 | BRF_PRG | BRF_ESS }, //  3
+	{ "u37.9b",			0x10000, 0x73047657, 0x01 | BRF_PRG | BRF_ESS }, //  2
+	{ "u31.8b",			0x10000, 0x6a050240, 0x01 | BRF_PRG | BRF_ESS }, //  3
 
 	{ "ud2-002-004.17c",		0x40000, 0xbbd538b1, 0x02 | BRF_PRG | BRF_ESS }, //  4 M65c02 Code
 
@@ -9713,7 +9882,7 @@ struct BurnDriver BurnDrvDowntownj = {
 // DownTown / Mokugeki (prototype)
 
 static struct BurnRomInfo downtownpRomDesc[] = {
-	{ "ud2-001-000.3c",			0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "ud2-001-000.3c",		0x40000, 0xf1965260, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
 	{ "ud2-001-003.11c",		0x40000, 0xe7d5fa5f, 0x01 | BRF_PRG | BRF_ESS }, //  1
 	{ "ud2_even_v061.9b",		0x10000, 0x251d6552, 0x01 | BRF_PRG | BRF_ESS }, //  2
 	{ "ud2_odd_v061.8b",		0x10000, 0x6394a7c0, 0x01 | BRF_PRG | BRF_ESS }, //  3

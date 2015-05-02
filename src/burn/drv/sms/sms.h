@@ -10,11 +10,15 @@ enum {
 };
 
 enum {
-    MAPPER_NONE         = 0,
-    MAPPER_SEGA         = 1,
-    MAPPER_CODIES       = 2,
+	MAPPER_NONE         = 0,
+	MAPPER_SEGA         = 1,
+	MAPPER_CODIES       = 2,
 	MAPPER_MSX          = 3,
-	MAPPER_MSX_NEMESIS  = 4
+	MAPPER_MSX_NEMESIS  = 4,
+	MAPPER_KOREA        = 5,
+	MAPPER_KOREA8K      = 6,
+	MAPPER_4PAK         = 7,
+	MAPPER_XIN1         = 8
 };
 
 enum {
@@ -93,6 +97,7 @@ void sms_reset(void);
 void sms_shutdown(void);
 void sms_mapper_w(INT32 address, UINT8 data);
 void sms_mapper8k_w(INT32 address, UINT8 data);
+void sms_mapper8kvirt_w(INT32 address, UINT8 data);
 
 /* port-map Function prototypes */
 UINT8 z80_read_unmapped(void);
@@ -102,8 +107,4 @@ void __fastcall ggms_port_w(UINT16 port, UINT8 data);
 UINT8 __fastcall ggms_port_r(UINT16 port);
 void __fastcall sms_port_w(UINT16 port, UINT8 data);
 UINT8 __fastcall sms_port_r(UINT16 port);
-void __fastcall smsj_port_w(UINT16 port, UINT8 data);
-UINT8 __fastcall smsj_port_r(UINT16 port);
-void __fastcall md_port_w(UINT16 port, UINT8 data);
-UINT8 __fastcall md_port_r(UINT16 port);
 #endif /* _SMS_H_ */

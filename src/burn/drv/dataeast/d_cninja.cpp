@@ -2892,13 +2892,13 @@ struct BurnDriver BurnDrvStoneage = {
 // Caveman Ninja (bootleg)
 
 static struct BurnRomInfo cninjablRomDesc[] = {
-	{ "joe mac 3.68k",	0x080000, 0xdc931d80, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "joe mac 4.68k",	0x080000, 0xe8dfe0b5, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "joe mac 3.68k",		0x080000, 0xdc931d80, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "joe mac 4.68k",		0x080000, 0xe8dfe0b5, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "joe mac 5.z80",	0x010000, 0xd791b9d7, 2 | BRF_PRG | BRF_ESS }, //  2 Huc6280 Code
+	{ "joe mac 5.z80",		0x010000, 0xd791b9d7, 2 | BRF_PRG | BRF_ESS }, //  2 Huc6280 Code
 
-	{ "joe mac 1.gfx",	0x200000, 0x17ea5931, 3 | BRF_GRA }, 	       //  3 Graphics (Expanded on init)
-	{ "joe mac 2.gfx",	0x200000, 0xcc95317b, 3 | BRF_GRA }, 	       //  4
+	{ "joe mac 1.gfx",		0x200000, 0x17ea5931, 3 | BRF_GRA }, 	       //  3 Graphics (Expanded on init)
+	{ "joe mac 2.gfx",		0x200000, 0xcc95317b, 3 | BRF_GRA }, 	       //  4
 
 	{ "joe mac 6.samples",	0x080000, 0xdbecad83, 4 | BRF_SND }, 	       //  5 OKI M6295 Samples
 };
@@ -3064,6 +3064,55 @@ struct BurnDriver BurnDrvMutantf3 = {
 };
 
 
+// Mutant Fighter (World ver EM-2)
+
+static struct BurnRomInfo mutantf2RomDesc[] = {
+	{ "hd-03-1.2c",		0x020000, 0x7110cefc, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "hd-00-1.2a",		0x020000, 0xb279875b, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "hd-04-1.4c",		0x020000, 0xfd2ea8d7, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "hd-01-1.4a",		0x020000, 0x48a247ac, 1 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "hd-12.21j",		0x010000, 0x13d55f11, 2 | BRF_PRG | BRF_ESS }, //  4 Huc6280 Code
+
+	{ "hd-06-1.8d",		0x010000, 0x8b7a558b, 3 | BRF_GRA }, 	       //  5 Characters
+	{ "hd-07-1.9d",		0x010000, 0xd2a3d449, 3 | BRF_GRA }, 	       //  6
+
+	{ "maf-00.8a",		0x080000, 0xe56f528d, 4 | BRF_GRA }, 	       //  7 Foreground Tiles
+
+	{ "maf-01.9a",		0x080000, 0xc3d5173d, 5 | BRF_GRA }, 	       //  8 Background Tiles
+	{ "maf-02.11a",		0x080000, 0x0b37d849, 5 | BRF_GRA }, 	       //  9
+
+	{ "maf-03.18a",		0x100000, 0xf4366d2c, 6 | BRF_GRA }, 	       // 10 Sprite Bank A
+	{ "maf-04.20a",		0x100000, 0x0c8f654e, 6 | BRF_GRA }, 	       // 11
+	{ "maf-05.21a",		0x080000, 0xb0cfeb80, 6 | BRF_GRA }, 	       // 12
+	{ "maf-06.18d",		0x100000, 0xf5c7a9b5, 6 | BRF_GRA }, 	       // 13
+	{ "maf-07.20d",		0x100000, 0xfd6008a3, 6 | BRF_GRA }, 	       // 14
+	{ "maf-08.21d",		0x080000, 0xe41cf1e7, 6 | BRF_GRA }, 	       // 15
+
+	{ "hf-08.15a",		0x010000, 0x93b7279f, 7 | BRF_GRA }, 	       // 16 Sprite Bank B
+	{ "hf-09.17a",		0x010000, 0x05e2c074, 7 | BRF_GRA }, 	       // 17
+	{ "hf-10.15c",		0x010000, 0x9b06f418, 7 | BRF_GRA }, 	       // 18
+	{ "hf-11.17c",		0x010000, 0x3859a531, 7 | BRF_GRA }, 	       // 19
+
+	{ "maf-10.20l",		0x040000, 0x7c57f48b, 8 | BRF_SND }, 	       // 20 OKI M6295 Samples 0
+
+	{ "maf-09.18l",		0x080000, 0x28e7ed81, 9 | BRF_SND }, 	       // 21 OKI M6295 Samples 1
+};
+
+STD_ROM_PICK(mutantf2)
+STD_ROM_FN(mutantf2)
+
+struct BurnDriver BurnDrvMutantf2 = {
+	"mutantf2", "mutantf", NULL, NULL, "1992",
+	"Mutant Fighter (World ver EM-2)\0", NULL, "Data East Corporation", "DECO IC16",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_VSFIGHT, 0,
+	NULL, mutantf2RomInfo, mutantf2RomName, NULL, NULL, DrvInputInfo, MutantfDIPInfo,
+	MutantfInit, DrvExit, MutantfFrame, MutantfDraw, DrvScan, &DrvRecalc, 0x800,
+	320, 240, 4, 3
+};
+
+
 // Death Brade (Japan ver JM-3)
 
 static struct BurnRomInfo deathbrdRomDesc[] = {
@@ -3130,25 +3179,25 @@ static struct BurnRomInfo edrandyRomDesc[] = {
 	{ "gg-10.y6",		0x010000, 0xb96c6cbe, 3 | BRF_GRA }, 	       //  9 Characters
 	{ "gg-11.z6",		0x010000, 0xee567448, 3 | BRF_GRA }, 	       // 10
 
-	{ "mad-02",		0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
+	{ "mad-02",			0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
 
-	{ "mad-00",		0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
-	{ "mad-01",		0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
+	{ "mad-00",			0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
+	{ "mad-01",			0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
 
-	{ "mad-03",		0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
-	{ "mad-05",		0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
-	{ "mad-04",		0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
-	{ "mad-06",		0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
-	{ "mad-07",		0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
-	{ "mad-08",		0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
-	{ "mad-10",		0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
-	{ "mad-11",		0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
-	{ "mad-09",		0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
-	{ "mad-12",		0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
+	{ "mad-03",			0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
+	{ "mad-05",			0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
+	{ "mad-04",			0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
+	{ "mad-06",			0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
+	{ "mad-07",			0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
+	{ "mad-08",			0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
+	{ "mad-10",			0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
+	{ "mad-11",			0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
+	{ "mad-09",			0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
+	{ "mad-12",			0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
 
 	{ "ge-08.j13",		0x020000, 0xdfe28c7b, 7 | BRF_SND }, 	       // 24 OKI M6295 Samples 0
 
-	{ "mad-13",		0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
+	{ "mad-13",			0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
 
 	{ "ge-12.v7",		0x000400, 0x278f674f, 0 | BRF_OPT }, 	       // 26 Unused PROMs
 };
@@ -3184,25 +3233,25 @@ static struct BurnRomInfo edrandy2RomDesc[] = {
 	{ "gg-10.y6",		0x010000, 0xb96c6cbe, 3 | BRF_GRA }, 	       //  9 Characters
 	{ "gg-11.z6",		0x010000, 0xee567448, 3 | BRF_GRA }, 	       // 10
 
-	{ "mad-02",		0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
+	{ "mad-02",			0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
 
-	{ "mad-00",		0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
-	{ "mad-01",		0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
+	{ "mad-00",			0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
+	{ "mad-01",			0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
 
-	{ "mad-03",		0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
-	{ "mad-05",		0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
-	{ "mad-04",		0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
-	{ "mad-06",		0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
-	{ "mad-07",		0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
-	{ "mad-08",		0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
-	{ "mad-10",		0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
-	{ "mad-11",		0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
-	{ "mad-09",		0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
-	{ "mad-12",		0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
+	{ "mad-03",			0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
+	{ "mad-05",			0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
+	{ "mad-04",			0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
+	{ "mad-06",			0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
+	{ "mad-07",			0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
+	{ "mad-08",			0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
+	{ "mad-10",			0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
+	{ "mad-11",			0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
+	{ "mad-09",			0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
+	{ "mad-12",			0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
 
 	{ "ge-08.j13",		0x020000, 0xdfe28c7b, 7 | BRF_SND }, 	       // 24 OKI M6295 Samples 0
 
-	{ "mad-13",		0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
+	{ "mad-13",			0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
 
 	{ "ge-12.v7",		0x000400, 0x278f674f, 0 | BRF_OPT }, 	       // 26 Unused PROMs
 };
@@ -3224,10 +3273,10 @@ struct BurnDriver BurnDrvEdrandy2 = {
 // The Cliffhanger - Edward Randy (World ver 1)
 
 static struct BurnRomInfo edrandy1RomDesc[] = {
-	{ "1.k1",		0x020000, 0xf184cdaa, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "5.k3",		0x020000, 0x7e3a4b81, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "2.j1",		0x020000, 0x212cd593, 1 | BRF_PRG | BRF_ESS }, //  2
-	{ "6.j3",		0x020000, 0x4a96fb07, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "1.k1",			0x020000, 0xf184cdaa, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "5.k3",			0x020000, 0x7e3a4b81, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "2.j1",			0x020000, 0x212cd593, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "6.j3",			0x020000, 0x4a96fb07, 1 | BRF_PRG | BRF_ESS }, //  3
 	{ "ge-02.h1",		0x020000, 0xc2969fbb, 1 | BRF_PRG | BRF_ESS }, //  4
 	{ "ge-06.h3",		0x020000, 0x5c2e6418, 1 | BRF_PRG | BRF_ESS }, //  5
 	{ "ge-03.f1",		0x020000, 0x5e7b19a8, 1 | BRF_PRG | BRF_ESS }, //  6
@@ -3238,25 +3287,25 @@ static struct BurnRomInfo edrandy1RomDesc[] = {
 	{ "ge-10.y6",		0x010000, 0x2528d795, 3 | BRF_GRA }, 	       //  9 Characters
 	{ "ge-11.z6",		0x010000, 0xe34a931e, 3 | BRF_GRA }, 	       // 10
 
-	{ "mad-02",		0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
+	{ "mad-02",			0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
 
-	{ "mad-00",		0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
-	{ "mad-01",		0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
+	{ "mad-00",			0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
+	{ "mad-01",			0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
 
-	{ "mad-03",		0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
-	{ "mad-05",		0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
-	{ "mad-04",		0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
-	{ "mad-06",		0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
-	{ "mad-07",		0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
-	{ "mad-08",		0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
-	{ "mad-10",		0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
-	{ "mad-11",		0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
-	{ "mad-09",		0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
-	{ "mad-12",		0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
+	{ "mad-03",			0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
+	{ "mad-05",			0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
+	{ "mad-04",			0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
+	{ "mad-06",			0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
+	{ "mad-07",			0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
+	{ "mad-08",			0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
+	{ "mad-10",			0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
+	{ "mad-11",			0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
+	{ "mad-09",			0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
+	{ "mad-12",			0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
 
 	{ "ge-08.j13",		0x020000, 0xdfe28c7b, 7 | BRF_SND }, 	       // 24 OKI M6295 Samples 0
 
-	{ "mad-13",		0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
+	{ "mad-13",			0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
 
 	{ "ge-12.v7",		0x000400, 0x278f674f, 0 | BRF_OPT }, 	       // 26 Unused PROMs
 };
@@ -3292,25 +3341,25 @@ static struct BurnRomInfo edrandyjRomDesc[] = {
 	{ "ge-10.y6",		0x010000, 0x2528d795, 3 | BRF_GRA }, 	       //  9 Characters
 	{ "ge-11.z6",		0x010000, 0xe34a931e, 3 | BRF_GRA }, 	       // 10
 
-	{ "mad-02",		0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
+	{ "mad-02",			0x080000, 0x6c76face, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
 
-	{ "mad-00",		0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
-	{ "mad-01",		0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
+	{ "mad-00",			0x080000, 0x3735b22d, 5 | BRF_GRA }, 	       // 12 Background Tiles
+	{ "mad-01",			0x080000, 0x7bb13e1c, 5 | BRF_GRA }, 	       // 13
 
-	{ "mad-03",		0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
-	{ "mad-05",		0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
-	{ "mad-04",		0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
-	{ "mad-06",		0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
-	{ "mad-07",		0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
-	{ "mad-08",		0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
-	{ "mad-10",		0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
-	{ "mad-11",		0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
-	{ "mad-09",		0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
-	{ "mad-12",		0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
+	{ "mad-03",			0x080000, 0xc0bff892, 6 | BRF_GRA }, 	       // 14 Sprites
+	{ "mad-05",			0x080000, 0x3f2ccf95, 6 | BRF_GRA }, 	       // 15
+	{ "mad-04",			0x080000, 0x464f3eb9, 6 | BRF_GRA }, 	       // 16
+	{ "mad-06",			0x080000, 0x60871f77, 6 | BRF_GRA }, 	       // 17
+	{ "mad-07",			0x080000, 0xac03466e, 6 | BRF_GRA }, 	       // 18
+	{ "mad-08",			0x080000, 0x1b420ec8, 6 | BRF_GRA }, 	       // 19
+	{ "mad-10",			0x080000, 0x42da8ef0, 6 | BRF_GRA }, 	       // 20
+	{ "mad-11",			0x080000, 0x03c1f982, 6 | BRF_GRA }, 	       // 21
+	{ "mad-09",			0x080000, 0x930f4900, 6 | BRF_GRA }, 	       // 22
+	{ "mad-12",			0x080000, 0xa0bd62b6, 6 | BRF_GRA }, 	       // 23
 
 	{ "ge-08.j13",		0x020000, 0xdfe28c7b, 7 | BRF_SND }, 	       // 24 OKI M6295 Samples 0
 
-	{ "mad-13",		0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
+	{ "mad-13",			0x080000, 0x6ab28eba, 8 | BRF_SND }, 	       // 25 OKI M6295 Samples 1
 
 	{ "ge-12.v7",		0x000400, 0x278f674f, 0 | BRF_OPT }, 	       // 26 Unused PROMs
 };
@@ -3381,9 +3430,61 @@ struct BurnDriver BurnDrvRobocop2 = {
 };
 
 
-// Robocop 2 (US v0.05)
+// Robocop 2 (US v0.10)
 
 static struct BurnRomInfo robocop2uRomDesc[] = {
+	{ "gp03-3.k1",		0x020000, 0xc016a84b, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "gp07-3.k3",		0x020000, 0x54c541ae, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "gp02-3.j1",		0x020000, 0x6777b8a0, 1 | BRF_PRG | BRF_ESS }, //  2 // == gq-02.j1 in 'robocop2'
+	{ "gp06-3.j3",		0x020000, 0x73b8cf96, 1 | BRF_PRG | BRF_ESS }, //  3 
+	{ "gp01-.h1",		0x020000, 0xab5356c0, 1 | BRF_PRG | BRF_ESS }, //  4 // no '-1' but matches other '-1' roms we have
+	{ "gp05-.h3",		0x020000, 0xce21bda5, 1 | BRF_PRG | BRF_ESS }, //  5
+	{ "gp00-.f1",		0x020000, 0xa93369ea, 1 | BRF_PRG | BRF_ESS }, //  6
+	{ "gp04-.f3",		0x020000, 0xee2f6ad9, 1 | BRF_PRG | BRF_ESS }, //  7
+
+	{ "gp-09.k13",		0x010000, 0x4a4e0f8d, 2 | BRF_PRG | BRF_ESS }, //  8 Huc6280 Code
+
+	{ "gp10-1.y6",		0x010000, 0xd25d719c, 3 | BRF_GRA }, 	       //  9 Characters
+	{ "gp11-1.z6",		0x010000, 0x030ded47, 3 | BRF_GRA }, 	       // 10
+
+	{ "mah-04.z4",		0x080000, 0x9b6ca18c, 4 | BRF_GRA }, 	       // 11 Foreground Tiles
+	{ "mah-03.y4",		0x080000, 0x37894ddc, 4 | BRF_GRA }, 	       // 12
+
+	{ "mah-01.z1",		0x080000, 0x26e0dfff, 5 | BRF_GRA }, 	       // 13 Background Tiles
+	{ "mah-00.y1",		0x080000, 0x7bd69e41, 5 | BRF_GRA }, 	       // 14
+	{ "mah-02.a1",		0x080000, 0x328a247d, 5 | BRF_GRA }, 	       // 15
+
+	{ "mah-05.y9",		0x080000, 0x6773e613, 6 | BRF_GRA }, 	       // 16 Sprites
+	{ "mah-08.y12",		0x080000, 0x88d310a5, 6 | BRF_GRA }, 	       // 17
+	{ "mah-06.z9",		0x080000, 0x27a8808a, 6 | BRF_GRA }, 	       // 18
+	{ "mah-09.z12",		0x080000, 0xa58c43a7, 6 | BRF_GRA }, 	       // 19
+	{ "mah-07.a9",		0x080000, 0x526f4190, 6 | BRF_GRA }, 	       // 20
+	{ "mah-10.a12",		0x080000, 0x14b770da, 6 | BRF_GRA }, 	       // 21
+
+	{ "gp-08.j13",		0x020000, 0x365183b1, 7 | BRF_SND }, 	       // 22 OKI M6295 Samples 0
+
+	{ "mah-11.f13",		0x080000, 0x642bc692, 8 | BRF_SND }, 	       // 23 OKI M6295 Samples 1
+
+	{ "go-12.v7",		0x000400, 0x278f674f, 0 | BRF_OPT }, 	       // 24 Unused PROMs
+};
+
+STD_ROM_PICK(robocop2u)
+STD_ROM_FN(robocop2u)
+
+struct BurnDriver BurnDrvRobocop2u = {
+	"robocop2u", "robocop2", NULL, NULL, "1991",
+	"Robocop 2 (US v0.10)\0", NULL, "Data East Corporation", "DECO IC16",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_SCRFIGHT, 0,
+	NULL, robocop2uRomInfo, robocop2uRomName, NULL, NULL, Robocop2InputInfo, Robocop2DIPInfo,
+	Robocop2Init, DrvExit, Robocop2Frame, Robocop2Draw, DrvScan, &DrvRecalc, 0x800,
+	320, 240, 4, 3
+};
+
+
+// Robocop 2 (US v0.05)
+
+static struct BurnRomInfo robocop2uaRomDesc[] = {
 	{ "robo03.k1",		0x020000, 0xf4c96cc9, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
 	{ "robo07.k3",		0x020000, 0x11e53a7c, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "robo02.j1",		0x020000, 0xfa086a0d, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -3419,15 +3520,15 @@ static struct BurnRomInfo robocop2uRomDesc[] = {
 	{ "go-12.v7",		0x000400, 0x278f674f, 0 | BRF_OPT }, 	       // 24 Unused PROMs
 };
 
-STD_ROM_PICK(robocop2u)
-STD_ROM_FN(robocop2u)
+STD_ROM_PICK(robocop2ua)
+STD_ROM_FN(robocop2ua)
 
-struct BurnDriver BurnDrvRobocop2u = {
-	"robocop2u", "robocop2", NULL, NULL, "1991",
+struct BurnDriver BurnDrvRobocop2ua = {
+	"robocop2ua", "robocop2", NULL, NULL, "1991",
 	"Robocop 2 (US v0.05)\0", NULL, "Data East Corporation", "DECO IC16",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_SCRFIGHT, 0,
-	NULL, robocop2uRomInfo, robocop2uRomName, NULL, NULL, Robocop2InputInfo, Robocop2DIPInfo,
+	NULL, robocop2uaRomInfo, robocop2uaRomName, NULL, NULL, Robocop2InputInfo, Robocop2DIPInfo,
 	Robocop2Init, DrvExit, Robocop2Frame, Robocop2Draw, DrvScan, &DrvRecalc, 0x800,
 	320, 240, 4, 3
 };

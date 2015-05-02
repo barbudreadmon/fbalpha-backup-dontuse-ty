@@ -3,10 +3,14 @@
 #include "burnint.h"
 #include "mips3_intf.h"
 #include "ide.h"
+#include "dcs2k.h"
 #include <stdio.h>
 
 #define IDE_IRQ     1
 #define VBLANK_IRQ  0
+
+#define KINST   0x100000
+#define KINST2  0x200000
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -15,11 +19,15 @@ static UINT8 *RamEnd;
 static UINT8 *DrvBootROM;
 static UINT8 *DrvRAM0;
 static UINT8 *DrvRAM1;
+static UINT8 *DrvSoundROM;
 static UINT8 DrvRecalc;
 static UINT8 DrvJoy1[32];
 static UINT8 DrvJoy2[32];
+static UINT8 DrvDSW[8];
 static UINT32 DrvVRAMBase;
 static UINT32 DrvInputs[3];
+static UINT32 nSoundData;
+static UINT32 nSoundCtrl;
 static ide::ide_disk *DrvDisk;
 
 // Fast conversion from BGR555 to RGB565
@@ -50,6 +58,7 @@ static struct BurnInputInfo kinstInputList[] = {
     {"P2 Button X",	BIT_DIGITAL,	DrvJoy2 + 3,	"p2 fire 4"	},
     {"P2 Button Y",	BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 5"	},
     {"P2 Button Z",	BIT_DIGITAL,	DrvJoy2 + 5,	"p2 fire 6"	},
+    {"Test",        BIT_DIGITAL,    DrvDSW + 0,     "diag"      },
 };
 
 STDINPUTINFO(kinst)
@@ -68,6 +77,7 @@ static INT32 MemIndex()
     AllRam      = Next;
     DrvRAM0     = Next;             Next += 0x80000;
     DrvRAM1     = Next;             Next += 0x800000;
+    DrvSoundROM = Next;             Next += 0x1000000;
     DrvColorLUT = (UINT16*) Next;   Next += 0x8000 * 2;
 
     RamEnd		= Next;
@@ -129,16 +139,23 @@ static void ideWrite(UINT32 address, UINT32 value)
 
 static UINT32 kinstRead(UINT32 address)
 {
+    UINT32 tmp;
     if (address >= 0x10000080 && address <= 0x100000ff) {
         switch (address & 0xFF) {
         case 0x90:
-            return 2;
+            tmp = ~2;
+            if (Dcs2kDataRead() & 0x800)
+                tmp |= 2;
+            return tmp;
+        case 0x98:
+            return nSoundData;
+
         case 0x80:
             return ~DrvInputs[0];
         case 0x88:
             return ~DrvInputs[1];
         case 0xA0:
-            return (~0) & ~0x00003e00;
+            return ~DrvInputs[2] & ~0x00003e00;
         }
         return ~0;
     }
@@ -152,12 +169,92 @@ static UINT32 kinstRead(UINT32 address)
     return ~0;
 }
 
+static UINT32 kinst2Read(UINT32 address)
+{
+    UINT32 tmp;
+    if (address >= 0x10000080 && address <= 0x100000ff) {
+        switch (address & 0xFF) {
+        case 0x80:
+            tmp = ~2;
+            if (Dcs2kDataRead() & 0x800)
+                tmp |= 2;
+            return tmp;
+        case 0xA0:
+            return nSoundData;
+
+        case 0x98:
+            return ~DrvInputs[0];
+        case 0x90:
+            return ~DrvInputs[1];
+        case 0x88:
+            return ~DrvInputs[2] & ~0x00003e00;
+        }
+        return ~0;
+    }
+
+    if (address >= 0x10000100 && address <= 0x10000173) {
+        return ideRead(address);
+    }
+
+
+    printf("Invalid read %08X\n", address);
+    return ~0;
+}
+
+
 static void kinstWrite(UINT32 address, UINT64 value)
 {
     if (address >= 0x10000080 && address <= 0x100000ff) {
         switch (address & 0xFF) {
         case 0x80:
             DrvVRAMBase = (value & 4) ? 0x58000 : 0x30000;
+            break;
+        case 0x88:
+            Dcs2kResetWrite(~value & 1);
+            break;
+        case 0x90: {
+            UINT32 old = nSoundCtrl;
+            nSoundCtrl = value;
+            if (!(old & 2) && (nSoundCtrl & 2)) {
+                Dcs2kDataWrite(nSoundData);
+            }
+            break;
+        }
+        case 0x98:
+            nSoundData = value;
+            break;
+        }
+        return;
+    }
+
+    if (address >= 0x10000100 && address <= 0x10000173) {
+        ideWrite(address, value);
+        return;
+    }
+
+}
+
+
+static void kinst2Write(UINT32 address, UINT64 value)
+{
+    if (address >= 0x10000080 && address <= 0x100000ff) {
+        switch (address & 0xFF) {
+        case 0x98:
+            DrvVRAMBase = (value & 4) ? 0x58000 : 0x30000;
+            break;
+        case 0x90:
+            Dcs2kResetWrite(~value & 1);
+            break;
+        case 0x80: {
+            UINT32 old = nSoundCtrl;
+            nSoundCtrl = value;
+            if (!(old & 2) && (nSoundCtrl & 2)) {
+                Dcs2kDataWrite(nSoundData);
+            }
+            break;
+        }
+        case 0xA0:
+            nSoundData = value;
             break;
         }
         return;
@@ -180,6 +277,15 @@ static UINT16 kinstReadHalf(UINT32 address) { return kinstRead(address); }
 static UINT32 kinstReadWord(UINT32 address) { return kinstRead(address); }
 static UINT64 kinstReadDouble(UINT32 address) { return kinstRead(address); }
 
+static void kinst2WriteByte(UINT32 address, UINT8 value) { kinst2Write(address, value); }
+static void kinst2WriteHalf(UINT32 address, UINT16 value) { kinst2Write(address, value); }
+static void kinst2WriteWord(UINT32 address, UINT32 value) { kinst2Write(address, value); }
+static void kinst2WriteDouble(UINT32 address, UINT64 value) { kinst2Write(address, value); }
+
+static UINT8 kinst2ReadByte(UINT32 address) { return kinst2Read(address); }
+static UINT16 kinst2ReadHalf(UINT32 address) { return kinst2Read(address); }
+static UINT32 kinst2ReadWord(UINT32 address) { return kinst2Read(address); }
+static UINT64 kinst2ReadDouble(UINT32 address) { return kinst2Read(address); }
 
 static void MakeInputs()
 {
@@ -192,9 +298,74 @@ static void MakeInputs()
         if (DrvJoy2[i] & 1)
             DrvInputs[1] |= (1 << i);
     }
+
+    if (DrvDSW[0] & 1)
+        DrvInputs[2] ^= 0x08000;
 }
 
-static INT32 DrvInit()
+static INT32 LoadSoundBanks()
+{
+    memset(DrvSoundROM, 0xFF, 0x1000000);
+    if (BurnLoadRom(DrvSoundROM + 0x000000, 1, 2)) return 1;
+    if (BurnLoadRom(DrvSoundROM + 0x200000, 2, 2)) return 1;
+    if (BurnLoadRom(DrvSoundROM + 0x400000, 3, 2)) return 1;
+    if (BurnLoadRom(DrvSoundROM + 0x600000, 4, 2)) return 1;
+    if (BurnLoadRom(DrvSoundROM + 0x800000, 5, 2)) return 1;
+    if (BurnLoadRom(DrvSoundROM + 0xA00000, 6, 2)) return 1;
+    if (BurnLoadRom(DrvSoundROM + 0xC00000, 7, 2)) return 1;
+    if (BurnLoadRom(DrvSoundROM + 0xE00000, 8, 2)) return 1;
+    return 0;
+}
+
+static INT32 kinstSetup()
+{
+    printf("kinst: loading image at kinst.img\n");
+    // FIXME:
+    if (!DrvDisk->load_disk_image("hdd/kinst.img")) {
+        printf("kinst: harddisk image not found!");
+        return 1;
+    }
+
+    Mips3SetReadByteHandler(1, kinstReadByte);
+    Mips3SetReadHalfHandler(1, kinstReadHalf);
+    Mips3SetReadWordHandler(1, kinstReadWord);
+    Mips3SetReadDoubleHandler(1, kinstReadDouble);
+
+    Mips3SetWriteByteHandler(1, kinstWriteByte);
+    Mips3SetWriteHalfHandler(1, kinstWriteHalf);
+    Mips3SetWriteWordHandler(1, kinstWriteWord);
+    Mips3SetWriteDoubleHandler(1, kinstWriteDouble);
+
+    Mips3MapHandler(1, 0x10000000, 0x100001FF, MAP_READ | MAP_WRITE);
+
+    return 0;
+}
+
+static INT32 kinst2Setup()
+{
+    printf("kinst: loading image at kinst2.img\n");
+    // FIXME:
+    if (!DrvDisk->load_disk_image("hdd/kinst2.img")) {
+        printf("kinst: harddisk image not found!");
+        return 1;
+    }
+
+    Mips3SetReadByteHandler(1, kinst2ReadByte);
+    Mips3SetReadHalfHandler(1, kinst2ReadHalf);
+    Mips3SetReadWordHandler(1, kinst2ReadWord);
+    Mips3SetReadDoubleHandler(1, kinst2ReadDouble);
+
+    Mips3SetWriteByteHandler(1, kinst2WriteByte);
+    Mips3SetWriteHalfHandler(1, kinst2WriteHalf);
+    Mips3SetWriteWordHandler(1, kinst2WriteWord);
+    Mips3SetWriteDoubleHandler(1, kinst2WriteDouble);
+
+    Mips3MapHandler(1, 0x10000000, 0x100001FF, MAP_READ | MAP_WRITE);
+
+    return 0;
+}
+
+static INT32 DrvInit(int version)
 {
     printf("kinst: DrvInit\n");
     MemIndex();
@@ -206,13 +377,6 @@ static INT32 DrvInit()
     DrvDisk = new ide::ide_disk();
     DrvDisk->set_irq_callback(IDESetIRQState);
 
-    printf("kinst: loading image at kinst.img\n");
-    // FIXME:
-    if (!DrvDisk->load_disk_image("kinst.img")) {
-        printf("kinst: harddisk image not found!");
-        return 1;
-    }
-
     MemIndex();
 
     GenerateColorLUT();
@@ -220,6 +384,12 @@ static INT32 DrvInit()
     UINT32 nRet = BurnLoadRom(DrvBootROM, 0, 0);
     if (nRet != 0)
         return 1;
+
+    nRet = LoadSoundBanks();
+    if (nRet != 0)
+        return 1;
+
+    Dcs2kInit();
 
 #ifdef MIPS3_X64_DRC
     Mips3UseRecompiler(true);
@@ -233,22 +403,33 @@ static INT32 DrvInit()
     Mips3MapMemory(DrvRAM0,     0x00000000, 0x0007FFFF, MAP_RAM);
     Mips3MapMemory(DrvRAM1,     0x08000000, 0x087FFFFF, MAP_RAM);
 
-    Mips3SetReadByteHandler(1, kinstReadByte);
-    Mips3SetReadHalfHandler(1, kinstReadHalf);
-    Mips3SetReadWordHandler(1, kinstReadWord);
-    Mips3SetReadDoubleHandler(1, kinstReadDouble);
+    switch (version) {
+    case KINST:
+        kinstSetup();
+        break;
+    case KINST2:
+        kinst2Setup();
+        break;
+    }
 
-    Mips3SetWriteByteHandler(1, kinstWriteByte);
-    Mips3SetWriteHalfHandler(1, kinstWriteHalf);
-    Mips3SetWriteWordHandler(1, kinstWriteWord);
-    Mips3SetWriteDoubleHandler(1, kinstWriteDouble);
 
-    Mips3MapHandler(1, 0x10000000, 0x100001FF, MAP_READ | MAP_WRITE);
+    Dcs2kMapSoundROM(DrvSoundROM, 0x1000000);
+    Dcs2kBoot();
+
+    DrvInputs[2] = 0;
+
+    nSoundData = 0;
+    nSoundCtrl = 0;
+
     return 0;
 }
 
+static INT32 kinstDrvInit() { return DrvInit(KINST); }
+static INT32 kinst2DrvInit() { return DrvInit(KINST2); }
+
 static INT32 DrvExit()
 {
+    Dcs2kExit();
     delete DrvDisk;
     printf("kinst: DrvExit\n");
     Mips3Exit();
@@ -295,8 +476,15 @@ static INT32 DrvFrame()
         DrvDraw();
     }
 
+
+    Dcs2kRun(MHz(10) / 60);
+    if (pBurnSoundOut) {
+        Dcs2kRender(pBurnSoundOut, nBurnSoundLen);
+    }
+
     Mips3SetIRQLine(VBLANK_IRQ, 1);
     Mips3Run(kHz(20));
+
 
     return 0;
 }
@@ -305,9 +493,17 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 {
     return 0;
 }
-
 static struct BurnRomInfo kinstRomDesc[] = {
     { "ki-l15d.u98",		0x80000, 0x7b65ca3d, 1 | BRF_PRG | BRF_ESS }, //  0 MIPS R4600 Code
+
+    { "u10-l1",             0x80000, 0xb6cc155f, 2 | BRF_SND | BRF_ESS }, //  1 DCS sound banks
+    { "u11-l1",             0x80000, 0x0b5e05df, 2 | BRF_SND | BRF_ESS }, //  2
+    { "u12-l1",             0x80000, 0xd05ce6ad, 2 | BRF_SND | BRF_ESS }, //  3
+    { "u13-l1",             0x80000, 0x7d0954ea, 2 | BRF_SND | BRF_ESS }, //  4
+    { "u33-l1",             0x80000, 0x8bbe4f0c, 2 | BRF_SND | BRF_ESS }, //  5
+    { "u34-l1",             0x80000, 0xb2e73603, 2 | BRF_SND | BRF_ESS }, //  6
+    { "u35-l1",             0x80000, 0x0aaef4fc, 2 | BRF_SND | BRF_ESS }, //  7
+    { "u36-l1",             0x80000, 0x0577bb60, 2 | BRF_SND | BRF_ESS }, //  8
 };
 
 STD_ROM_PICK(kinst)
@@ -319,6 +515,32 @@ struct BurnDriver BurnDrvKinst = {
     NULL, NULL, NULL, NULL,
     BDF_GAME_WORKING, 2, HARDWARE_PREFIX_MIDWAY, GBF_VSFIGHT, 0,
     NULL, kinstRomInfo, kinstRomName, NULL, NULL, kinstInputInfo, kinstDIPInfo,
-    DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x8000,
+    kinstDrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x8000,
     320, 240, 4, 3
 };
+
+static struct BurnRomInfo kinst2RomDesc[] = {
+    { "ki2-l14.u98",		0x80000, 0x27d0285e, 1 | BRF_PRG | BRF_ESS }, //  0 MIPS R4600 Code
+    { "ki2_l1.u10",			0x80000, 0xfdf6ed51, 2 | BRF_SND | BRF_ESS }, //  1 DCS sound banks
+    { "ki2_l1.u11",			0x80000, 0xf9e70024, 2 | BRF_SND | BRF_ESS }, //  2
+    { "ki2_l1.u12",			0x80000, 0x2994c199, 2 | BRF_SND | BRF_ESS }, //  3
+    { "ki2_l1.u13",			0x80000, 0x3fe6327b, 2 | BRF_SND | BRF_ESS }, //  4
+    { "ki2_l1.u33",			0x80000, 0x6f4dcdcf, 2 | BRF_SND | BRF_ESS }, //  5
+    { "ki2_l1.u34",			0x80000, 0x5db48206, 2 | BRF_SND | BRF_ESS }, //  6
+    { "ki2_l1.u35",			0x80000, 0x7245ce69, 2 | BRF_SND | BRF_ESS }, //  7
+    { "ki2_l1.u36",			0x80000, 0x8920acbb, 2 | BRF_SND | BRF_ESS }, //  8
+};
+
+STD_ROM_PICK(kinst2)
+STD_ROM_FN(kinst2)
+
+struct BurnDriver BurnDrvKinst2 = {
+    "kinst2", "kinst2", NULL, NULL, "1994/1995",
+    "Killer Instinct II (ver. 1.4)\0", NULL, "Rare/Nintendo", "MIDWAY",
+    NULL, NULL, NULL, NULL,
+    BDF_GAME_WORKING, 2, HARDWARE_PREFIX_MIDWAY, GBF_VSFIGHT, 0,
+    NULL, kinst2RomInfo, kinst2RomName, NULL, NULL, kinstInputInfo, kinstDIPInfo,
+    kinst2DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x8000,
+    320, 240, 4, 3
+};
+
