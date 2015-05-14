@@ -67,7 +67,7 @@ endif
 
 EXTERNAL_ZLIB = 0
 
-TARGET_NAME := fb_alpha
+TARGET_NAME := fba
 
 ifeq ($(platform), unix)
 	TARGET := $(TARGET_NAME)_libretro.so
