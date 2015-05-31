@@ -21,6 +21,7 @@ static unsigned int BurnDrvGetIndexByName(const char* name);
 
 static bool g_opt_bUseUNIBIOS = false;
 static bool gamepad_controls = true;
+static bool newgen_controls = true;
 
 #define STAT_NOFIND	0
 #define STAT_OK		1
@@ -62,7 +63,7 @@ void retro_set_environment(retro_environment_t cb)
       { "fba-diagnostics", "Diagnostics; disabled|enabled" },
       { "fba-unibios", "Neo Geo UniBIOS; disabled|enabled" },
       { "fba-cpu-speed-adjust", "CPU Speed Overclock; 100|110|120|130|140|150|160|170|180|190|200" },
-      { "fba-controls", "Controls; gamepad|arcade" },
+      { "fba-controls", "Controls; gamepad|arcade|newgen" },
       { NULL, NULL },
    };
 
@@ -578,10 +579,16 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
-      if (strcmp(var.value, "arcade") == 0)
+      if (strcmp(var.value, "arcade") == 0) {
          gamepad_controls = false;
-      else if (strcmp(var.value, "gamepad") == 0)
+         newgen_controls = false;
+	  } else if (strcmp(var.value, "gamepad") == 0) {
          gamepad_controls = true;
+         newgen_controls = false;
+      } else if (strcmp(var.value, "newgen") == 0) {
+         gamepad_controls = true;
+         newgen_controls = true;
+	  }
    }
 }
 
@@ -2667,38 +2674,76 @@ static bool init_input(void)
    bind_map[PTR_INCR].nCode[1] = 0;
 
    /* Neo Geo */
+   if (newgen_controls == false)
+   {
+      /* Official neogeo mapping */
+      bind_map[PTR_INCR].bii_name = "P1 Button A";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_B;
+      bind_map[PTR_INCR].nCode[1] = 0;
 
-   bind_map[PTR_INCR].bii_name = "P1 Button A";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_B;
-   bind_map[PTR_INCR].nCode[1] = 0;
+      bind_map[PTR_INCR].bii_name = "P1 Button B";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
+      bind_map[PTR_INCR].nCode[1] = 0;
 
-   bind_map[PTR_INCR].bii_name = "P1 Button B";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
-   bind_map[PTR_INCR].nCode[1] = 0;
+      bind_map[PTR_INCR].bii_name = "P1 Button C";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
+      bind_map[PTR_INCR].nCode[1] = 0;
 
-   bind_map[PTR_INCR].bii_name = "P1 Button C";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
-   bind_map[PTR_INCR].nCode[1] = 0;
+      bind_map[PTR_INCR].bii_name = "P1 Button D";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_X;
+      bind_map[PTR_INCR].nCode[1] = 0;
 
-   bind_map[PTR_INCR].bii_name = "P1 Button D";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_X;
-   bind_map[PTR_INCR].nCode[1] = 0;
+      bind_map[PTR_INCR].bii_name = "P2 Button A";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_B;
+      bind_map[PTR_INCR].nCode[1] = 1;
 
-   bind_map[PTR_INCR].bii_name = "P2 Button A";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_B;
-   bind_map[PTR_INCR].nCode[1] = 1;
+      bind_map[PTR_INCR].bii_name = "P2 Button B";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
+      bind_map[PTR_INCR].nCode[1] = 1;
 
-   bind_map[PTR_INCR].bii_name = "P2 Button B";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
-   bind_map[PTR_INCR].nCode[1] = 1;
+      bind_map[PTR_INCR].bii_name = "P2 Button C";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
+      bind_map[PTR_INCR].nCode[1] = 1;
 
-   bind_map[PTR_INCR].bii_name = "P2 Button C";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
-   bind_map[PTR_INCR].nCode[1] = 1;
+      bind_map[PTR_INCR].bii_name = "P2 Button D";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_X;
+      bind_map[PTR_INCR].nCode[1] = 1;
+   }
+   if (newgen_controls == true)
+   {
+      /* NewGen neogeo mapping from DC, PS, Xbox, ... remakes */
+      bind_map[PTR_INCR].bii_name = "P1 Button A";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
+      bind_map[PTR_INCR].nCode[1] = 0;
 
-   bind_map[PTR_INCR].bii_name = "P2 Button D";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_X;
-   bind_map[PTR_INCR].nCode[1] = 1;
+      bind_map[PTR_INCR].bii_name = "P1 Button B";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_B;
+      bind_map[PTR_INCR].nCode[1] = 0;
+
+      bind_map[PTR_INCR].bii_name = "P1 Button C";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_X;
+      bind_map[PTR_INCR].nCode[1] = 0;
+
+      bind_map[PTR_INCR].bii_name = "P1 Button D";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
+      bind_map[PTR_INCR].nCode[1] = 0;
+
+      bind_map[PTR_INCR].bii_name = "P2 Button A";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
+      bind_map[PTR_INCR].nCode[1] = 1;
+
+      bind_map[PTR_INCR].bii_name = "P2 Button B";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_B;
+      bind_map[PTR_INCR].nCode[1] = 1;
+
+      bind_map[PTR_INCR].bii_name = "P2 Button C";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_X;
+      bind_map[PTR_INCR].nCode[1] = 1;
+
+      bind_map[PTR_INCR].bii_name = "P2 Button D";
+      bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
+      bind_map[PTR_INCR].nCode[1] = 1;
+   }
 
    /* Street Fighter II, Darkstalkers, etc. */
 
