@@ -21,7 +21,7 @@ static unsigned int BurnDrvGetIndexByName(const char* name);
 
 static bool g_opt_bUseUNIBIOS = false;
 static bool gamepad_controls = true;
-static bool newgen_controls = true;
+static bool newgen_controls = false;
 
 #define STAT_NOFIND	0
 #define STAT_OK		1
