@@ -246,7 +246,16 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 	char setname[128];
 	void *destination = NULL;
 	char szTempPath[MAX_PATH];
-	sprintf(szTempPath, _TtoA(SAMPLE_DIRECTORY));
+#ifdef __LIBRETRO__
+#ifdef _WIN32
+   char slash = '\\';
+#else
+   char slash = '/';
+#endif
+	snprintf(szTempPath, sizeof(szTempPath), "%s%csamples", g_rom_dir, slash);
+#else
+	snprintf(szTempPath, sizeof(szTempPath), _TtoA(SAMPLE_DIRECTORY));
+#endif
 
 	// test to see if file exists
 	INT32 nEnableSamples = 0;

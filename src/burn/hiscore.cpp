@@ -360,7 +360,16 @@ void HiscoreInit()
 	HiscoresInUse = 0;
 	
 	TCHAR szDatFilename[MAX_PATH];
+#ifdef __LIBRETRO__
+#ifdef _WIN32
+   char slash = '\\';
+#else
+   char slash = '/';
+#endif
+	snprintf(szDatFilename, sizeof(szDatFilename), "%s%chiscore.dat", g_rom_dir, slash);
+#else
 	_stprintf(szDatFilename, _T("%shiscore.dat"), szAppHiscorePath);
+#endif
 
 	FILE *fp = _tfopen(szDatFilename, _T("r"));
 	if (fp) {
@@ -411,7 +420,11 @@ void HiscoreInit()
 	if (nHiscoreNumRanges) HiscoresInUse = 1;
 	
 	TCHAR szFilename[MAX_PATH];
+#ifdef __LIBRETRO__
+	snprintf(szFilename, sizeof(szFilename), "%s%c%s.hi", g_rom_dir, slash, BurnDrvGetText(DRV_NAME));
+#else
 	_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
+#endif
 
 	fp = _tfopen(szFilename, _T("r"));
 	INT32 Offset = 0;
@@ -549,7 +562,16 @@ void HiscoreExit()
 	if (nCpuType == -1) set_cpu_type();
 	
 	TCHAR szFilename[MAX_PATH];
+#ifdef __LIBRETRO__
+#ifdef _WIN32
+   char slash = '\\';
+#else
+   char slash = '/';
+#endif
+	snprintf(szFilename, sizeof(szFilename), "%s%c%s.hi", g_rom_dir, slash, BurnDrvGetText(DRV_NAME));
+#else
 	_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
+#endif
 
 	FILE *fp = _tfopen(szFilename, _T("w"));
 	if (fp) {
