@@ -3397,10 +3397,12 @@ static bool init_input(void)
       }
    }
 
-   if(!strcmp(boardrom,"neogeo"))
+
+   if(boardrom && !strcmp(boardrom,"neogeo"))
        environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, gamepad_neogeo);
    else
 	   environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, gamepad_defaults);
+
    return has_analog;
 }
 
