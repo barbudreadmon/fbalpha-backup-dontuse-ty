@@ -226,11 +226,7 @@ void KonamiBlendCopy(UINT32 *pPalette)
 	UINT32 *bmp = konami_bitmap32;
 
 	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
-#ifdef __LIBRETRO__
-		PutPix(pBurnDraw + (i * nBurnBpp), BurnHighCol(bmp[i]>>16, bmp[i]>>8, bmp[i], 0));
-#else
 		PutPix(pBurnDraw + (i * nBurnBpp), BurnHighCol(bmp[i]>>16, (bmp[i]>>8)&0xff, bmp[i]&0xff, 0));
-#endif
 	}
 }
 
