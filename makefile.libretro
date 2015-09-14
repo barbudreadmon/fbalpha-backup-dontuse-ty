@@ -479,7 +479,7 @@ else
 	WARNINGS_DEFINES = -Wno-write-strings
 endif
 
-CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS) -std=gnu++0x
+CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
 CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS) -std=gnu++0x
 LDFLAGS += $(fpic)
 
