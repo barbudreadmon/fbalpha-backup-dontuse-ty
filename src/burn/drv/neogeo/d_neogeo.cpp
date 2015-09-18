@@ -15707,7 +15707,7 @@ struct BurnDriver BurnDrvneoprimo = {
 	0x1000,	304, 224, 4, 3
 };
 
-
+/*
 // Crouching Poney Hidden Dragon (DEMO)
 
 static struct BurnRomInfo cphddRomDesc[] = {
@@ -15726,7 +15726,8 @@ static struct BurnRomInfo cphddRomDesc[] = {
 	{ "cphdd.v1",	0x2000000, 0x04eb9c07, 5 | BRF_SND },			//  8 Sound data
 	{ "cphdd.v2",	0x2000000, 0x9c9aec7f, 5 | BRF_SND },			//  8 Sound data
 	
-}; 
+};
+ 
 
 STDROMPICKEXT(cphdd, cphdd, neogeo)
 STD_ROM_FN(cphdd)
@@ -15739,7 +15740,7 @@ struct BurnDriver BurnDrvcphdd = {
 	NULL, cphddRomInfo, cphddRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
 	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
 	0x1000,	304, 224, 4, 3
-};
+};*/
 
 // Crouching Poney Hidden Dragon
 
@@ -15765,7 +15766,7 @@ STDROMPICKEXT(cphd, cphd, neogeo)
 STD_ROM_FN(cphd)
 
 struct BurnDriver BurnDrvcphd = {
-	"cphdd", NULL, "neogeo", NULL, "2015",
+	"cphd", NULL, "neogeo", NULL, "2015",
 	"Crouching Poney Hidden Dragon \0", NULL, "Le Cortex", "Neo Geo",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
