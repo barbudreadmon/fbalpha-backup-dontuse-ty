@@ -9,6 +9,12 @@
 
 #define FBA_VERSION "v0.2.97.36"
 
+#ifdef _WIN32
+   char slash = '\\';
+#else
+   char slash = '/';
+#endif
+
 static retro_environment_t environ_cb;
 static retro_log_printf_t log_cb;
 static retro_video_refresh_t video_cb;
@@ -469,8 +475,14 @@ void retro_init()
 
 void retro_deinit()
 {
+   char output[128];
+
    if (driver_inited)
+   {
+      sprintf (output, "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+      BurnStateSave(output, 0);
       BurnDrvExit();
+   }
    driver_inited = false;
    BurnLibExit();
    if (g_fba_frame)
@@ -736,7 +748,11 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    nFMInterpolation = 3;
    nInterpolation = 3;
 
+      char input[128];
+  
    BurnDrvInit();
+   sprintf (input, "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+   BurnStateLoad(input, 0, NULL);
 
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
