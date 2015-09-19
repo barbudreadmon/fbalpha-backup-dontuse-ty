@@ -1045,7 +1045,7 @@ static bool init_input(void)
    /* Universal controls */
 
    bind_map[PTR_INCR].bii_name = "Diagnostic";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_L3;
+   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
    bind_map[PTR_INCR].nCode[1] = 0;
 
    bind_map[PTR_INCR].bii_name = "Coin 1";
