@@ -9,6 +9,12 @@
 
 #define FBA_VERSION "v0.2.97.36"
 
+#ifdef _WIN32
+   char slash = '\\';
+#else
+   char slash = '/';
+#endif
+
 static retro_environment_t environ_cb;
 static retro_log_printf_t log_cb;
 static retro_video_refresh_t video_cb;
@@ -77,6 +83,7 @@ void retro_set_environment(retro_environment_t cb)
 }
 
 char g_rom_dir[1024];
+char g_save_dir[1024];
 static bool driver_inited;
 
 void retro_get_system_info(struct retro_system_info *info)
@@ -462,14 +469,20 @@ void retro_init()
    else
       log_cb = NULL;
 
-	BurnLibInit();
+   BurnLibInit();
 
 }
 
 void retro_deinit()
 {
+   char output[128];
+
    if (driver_inited)
+   {
+      sprintf (output, "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+      BurnStateSave(output, 0);
       BurnDrvExit();
+   }
    driver_inited = false;
    BurnLibExit();
    if (g_fba_frame)
@@ -735,7 +748,11 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    nFMInterpolation = 3;
    nInterpolation = 3;
 
+      char input[128];
+  
    BurnDrvInit();
+   sprintf (input, "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+   BurnStateLoad(input, 0, NULL);
 
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
@@ -870,6 +887,14 @@ bool retro_load_game(const struct retro_game_info *info)
    char basename[128];
    extract_basename(basename, info->path, sizeof(basename));
    extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
+
+   //todo, add a fallback in case save_directory is not defined
+   const char *dir = NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &dir) && dir)
+   {
+      snprintf(g_save_dir, sizeof(g_save_dir), "%s", dir);
+      log_cb(RETRO_LOG_ERROR, "Setting save dir to %s\n", g_save_dir);
+   }
 
    unsigned i = BurnDrvGetIndexByName(basename);
    if (i < nBurnDrvCount)
@@ -1045,7 +1070,7 @@ static bool init_input(void)
    /* Universal controls */
 
    bind_map[PTR_INCR].bii_name = "Diagnostic";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_L3;
+   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
    bind_map[PTR_INCR].nCode[1] = 0;
 
    bind_map[PTR_INCR].bii_name = "Coin 1";
@@ -3405,19 +3430,19 @@ static bool init_input(void)
    if(gamepad_controls)
    {
       if(boardrom && !strcmp(boardrom,"neogeo"))
-		 if(newgen_controls)
+         if(newgen_controls)
             environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad_newgen);
-		 else
-			environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad);
+         else
+            environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad);
       else
-	     environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_gamepad);
+      environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_gamepad);
    }
    else
    {
       if(boardrom && !strcmp(boardrom,"neogeo"))
          environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_arcade);
       else
-	     environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_arcade);
+         environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_arcade);
    }
 
    return has_analog;

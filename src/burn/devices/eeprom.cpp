@@ -96,7 +96,7 @@ void EEPROMInit(const eeprom_interface *interface)
 #else
 	char slash = '/';
 #endif
-	sprintf (output, "%s%c%s.nv", g_rom_dir, slash, BurnDrvGetTextA(DRV_NAME));
+	sprintf (output, "%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
 #else
 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
 #endif
@@ -126,7 +126,7 @@ void EEPROMExit()
 #else
 	char slash = '/';
 #endif
-	sprintf (output, "%s%c%s.nv", g_rom_dir, slash, BurnDrvGetTextA(DRV_NAME));
+	sprintf (output, "%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
 #else
 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
 #endif
