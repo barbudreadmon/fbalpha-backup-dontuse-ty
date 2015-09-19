@@ -3405,19 +3405,19 @@ static bool init_input(void)
    if(gamepad_controls)
    {
       if(boardrom && !strcmp(boardrom,"neogeo"))
-		 if(newgen_controls)
+         if(newgen_controls)
             environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad_newgen);
-		 else
-			environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad);
+         else
+            environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad);
       else
-	     environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_gamepad);
+      environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_gamepad);
    }
    else
    {
       if(boardrom && !strcmp(boardrom,"neogeo"))
          environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_arcade);
       else
-	     environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_arcade);
+         environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_arcade);
    }
 
    return has_analog;
