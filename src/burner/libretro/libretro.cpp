@@ -99,6 +99,11 @@ void retro_get_system_info(struct retro_system_info *info)
 static void poll_input();
 static bool init_input();
 
+void wav_exit()
+{
+
+}
+
 // FBA stubs
 unsigned ArcadeJoystick;
 

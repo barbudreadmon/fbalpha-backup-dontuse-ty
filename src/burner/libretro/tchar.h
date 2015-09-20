@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <wchar.h>
 
+#include "libretro.h"
 #include "inp_keys.h"
 #define TCHAR char
 #define _T(x) x
