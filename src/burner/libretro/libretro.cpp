@@ -167,7 +167,7 @@ void InpDIPSWResetDIPs (void)
 		{
 			pgi = GameInp + bdi.nInput + nDIPOffset;
 			if (pgi)
-				pgi->Input.Constant.nConst = (pgi->Input.Constant.nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);	
+				pgi->Input.Constant.nConst = (pgi->Input.Constant.nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);
 		}
 		i++;
 	}
@@ -243,9 +243,9 @@ static int find_rom_by_name(char *name, const ZipEntry *list, unsigned elems)
 	unsigned i = 0;
 	for (i = 0; i < elems; i++)
 	{
-		if( strcmp(list[i].szName, name) == 0 ) 
+		if( strcmp(list[i].szName, name) == 0 )
 		{
-			return i; 
+			return i;
 		}
 	}
 
@@ -329,7 +329,7 @@ static bool open_archive()
 		g_rom_count++;
 
 	g_find_list_path.clear();
-	
+
 	// Check if we have said archives.
 	// Check if archives are found. These are relative to g_rom_dir.
 	char *rom_name;
@@ -372,7 +372,7 @@ static bool open_archive()
 		int count;
 		ZipGetList(&list, &count);
 
-		
+
 
 		// Try to map the ROMs FBA wants to ROMs we find inside our pretty archives ...
 		for (unsigned i = 0; i < g_rom_count; i++)
@@ -389,7 +389,7 @@ static bool open_archive()
 			int index = -1;
 
 			// USE UNI-BIOS...
-			if (g_opt_bUseUNIBIOS) 
+			if (g_opt_bUseUNIBIOS)
 			{
 				char *szPossibleName=NULL;
 				BurnDrvGetRomName(&szPossibleName, i, 0);
@@ -419,7 +419,7 @@ static bool open_archive()
 					if(index < 0) {	index = find_rom_by_crc(0x5DDA0D84, list, count); }
 					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_1_0.rom", list, count); }
 					if(index < 0) {	index = find_rom_by_crc(0x0CE453A0, list, count); }
-					
+
 					// uni-bios not found, try to find regular bios
 					if(index < 0) {	index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count); }
 
@@ -484,7 +484,7 @@ void retro_deinit()
 
    if (driver_inited)
    {
-      sprintf (output, "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+      snprintf (output, sizeof(output), "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
       BurnStateSave(output, 0);
       BurnDrvExit();
    }
@@ -523,46 +523,6 @@ static bool first_init = true;
 static void check_variables(void)
 {
    struct retro_variable var = {0};
-   var.key = "fba-diagnostics";
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !first_init)
-   {
-      static bool old_value = false;
-      bool value = false;
-
-      if (strcmp(var.value, "disabled") == 0)
-         value = false;
-      else if (strcmp(var.value, "enabled") == 0)
-         value = true;
-
-      if (old_value != value)
-      {
-         old_value = value;
-         struct GameInp* pgi = GameInp;
-
-         for (unsigned i = 0; i < nGameInpCount; i++, pgi++)
-         {
-            if (pgi->Input.Switch.nCode != FBK_F2)
-               continue;
-
-            pgi->Input.nVal = 1;
-            *(pgi->Input.pVal) = pgi->Input.nVal;
-
-            break;
-         }
-
-         nBurnLayer = 0xff;
-         pBurnSoundOut = g_audio_buf;
-         nBurnSoundRate = AUDIO_SAMPLERATE;
-         //nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
-         nCurrentFrame++;
-
-         BurnDrvFrame();
-      }
-   }
-   else if (first_init)
-      first_init = false;
-
    var.key = "fba-unibios";
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
@@ -754,9 +714,9 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    nInterpolation = 3;
 
       char input[128];
-  
+
    BurnDrvInit();
-   sprintf (input, "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+   snprintf (input, sizeof(input), "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
    BurnStateLoad(input, 0, NULL);
 
    int width, height;
@@ -799,7 +759,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
          (strcmp("soldivid", game_zip_name) == 0) ||
          (strcmp("daraku", game_zip_name) == 0) ||
          (strcmp("sbomber", game_zip_name) == 0) ||
-         (strcmp("sbombera", game_zip_name) == 0) 
+         (strcmp("sbombera", game_zip_name) == 0)
 
          )
    {
@@ -818,14 +778,14 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    {
       enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 
-      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt) && log_cb) 
+      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt) && log_cb)
          log_cb(RETRO_LOG_INFO, "Frontend supports XRGB888 - will use that instead of XRGB1555.\n");
    }
    else
    {
       enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
 
-      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt) && log_cb) 
+      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt) && log_cb)
          log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
    }
 #endif
@@ -956,7 +916,7 @@ struct key_map
    const char *bii_name;
    unsigned nCode[2];
 };
-static uint8_t keybinds[0x5000][2]; 
+static uint8_t keybinds[0x5000][2];
 
 #define BIND_MAP_COUNT 310
 
@@ -1485,7 +1445,7 @@ static bool init_input(void)
     bind_map[PTR_INCR].bii_name = "Stick X";
     bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_X;
     bind_map[PTR_INCR].nCode[1] = 0;
-    
+
     bind_map[PTR_INCR].bii_name = "Stick Y";
     bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_Y;
     bind_map[PTR_INCR].nCode[1] = 0;
@@ -1493,7 +1453,7 @@ static bool init_input(void)
    /* Light gun controls
     *
     * FIXME: Controls don't seem to work properly */
-    
+
    bind_map[PTR_INCR].bii_name = "P1 X-Axis";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_X;
    bind_map[PTR_INCR].nCode[1] = 0;
@@ -1517,7 +1477,7 @@ static bool init_input(void)
    bind_map[PTR_INCR].bii_name = "P3 Y-Axis";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_Y;
    bind_map[PTR_INCR].nCode[1] = 2;
-    
+
    bind_map[PTR_INCR].bii_name = "Crosshair X";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_X;
    bind_map[PTR_INCR].nCode[1] = 0;
@@ -1541,7 +1501,7 @@ static bool init_input(void)
    bind_map[PTR_INCR].bii_name = "P2 Gun Y";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_Y;
    bind_map[PTR_INCR].nCode[1] = 1;
-   
+
    /* Gamepad friendly mapping */
    if (gamepad_controls == false)
    {
@@ -2679,7 +2639,7 @@ static bool init_input(void)
          bind_map[PTR_INCR].nCode[1] = 1;
       }
       /* NewGen neogeo mapping from DC, PS, Xbox, ... remakes */
-      else 
+      else
       {
          bind_map[PTR_INCR].bii_name = "P1 Button A";
          bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
