@@ -71,7 +71,7 @@ INT32 EEPROMAvailable()
 void EEPROMInit(const eeprom_interface *interface)
 {
 	DebugDev_EEPROMInitted = 1;
-	
+
 	intf = interface;
 
 	if ((1 << intf->address_bits) * intf->data_bits / 8 > MEMORY_SIZE)
@@ -96,7 +96,7 @@ void EEPROMInit(const eeprom_interface *interface)
 #else
 	char slash = '/';
 #endif
-	sprintf (output, "%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+	snprintf (output, sizeof(output),"%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
 #else
 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
 #endif
@@ -126,7 +126,7 @@ void EEPROMExit()
 #else
 	char slash = '/';
 #endif
-	sprintf (output, "%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+	snprintf (output, sizeof(output), "%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
 #else
 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
 #endif
@@ -140,7 +140,7 @@ void EEPROMExit()
 		fwrite (eeprom_data, len, 1, fz);
 		fclose (fz);
 	}
-	
+
 	DebugDev_EEPROMInitted = 0;
 }
 
