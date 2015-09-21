@@ -30,11 +30,11 @@ static bool g_opt_bUseUNIBIOS = false;
 static bool gamepad_controls = true;
 static bool newgen_controls = false;
 
-#define STAT_NOFIND	0
-#define STAT_OK		1
-#define STAT_CRC	   2
-#define STAT_SMALL	3
-#define STAT_LARGE	4
+#define STAT_NOFIND   0
+#define STAT_OK      1
+#define STAT_CRC      2
+#define STAT_SMALL   3
+#define STAT_LARGE   4
 
 #define cpsx 1
 #define neogeo 2
@@ -43,9 +43,9 @@ static int descriptor_id = 0;
 
 struct ROMFIND
 {
-	unsigned int nState;
-	int nArchive;
-	int nPos;
+   unsigned int nState;
+   int nArchive;
+   int nPos;
    BurnRomInfo ri;
 };
 
@@ -138,39 +138,39 @@ static int nDIPOffset;
 
 static void InpDIPSWGetOffset (void)
 {
-	BurnDIPInfo bdi;
-	nDIPOffset = 0;
+   BurnDIPInfo bdi;
+   nDIPOffset = 0;
 
-	for(int i = 0; BurnDrvGetDIPInfo(&bdi, i) == 0; i++)
-	{
-		if (bdi.nFlags == 0xF0)
-		{
-			nDIPOffset = bdi.nInput;
+   for(int i = 0; BurnDrvGetDIPInfo(&bdi, i) == 0; i++)
+   {
+      if (bdi.nFlags == 0xF0)
+      {
+         nDIPOffset = bdi.nInput;
          if (log_cb)
             log_cb(RETRO_LOG_INFO, "DIP switches offset: %d.\n", bdi.nInput);
-			break;
-		}
-	}
+         break;
+      }
+   }
 }
 
 void InpDIPSWResetDIPs (void)
 {
-	int i = 0;
-	BurnDIPInfo bdi;
-	struct GameInp * pgi = NULL;
+   int i = 0;
+   BurnDIPInfo bdi;
+   struct GameInp * pgi = NULL;
 
-	InpDIPSWGetOffset();
+   InpDIPSWGetOffset();
 
-	while (BurnDrvGetDIPInfo(&bdi, i) == 0)
-	{
-		if (bdi.nFlags == 0xFF)
-		{
-			pgi = GameInp + bdi.nInput + nDIPOffset;
-			if (pgi)
-				pgi->Input.Constant.nConst = (pgi->Input.Constant.nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);
-		}
-		i++;
-	}
+   while (BurnDrvGetDIPInfo(&bdi, i) == 0)
+   {
+      if (bdi.nFlags == 0xFF)
+      {
+         pgi = GameInp + bdi.nInput + nDIPOffset;
+         if (pgi)
+            pgi->Input.Constant.nConst = (pgi->Input.Constant.nConst & ~bdi.nMask) | (bdi.nSetting & bdi.nMask);
+      }
+      i++;
+   }
 }
 
 static int InpDIPSWInit()
@@ -240,32 +240,32 @@ const int nConfigMinVersion = 0x020921;
 // addition to support loading of roms without crc check
 static int find_rom_by_name(char *name, const ZipEntry *list, unsigned elems)
 {
-	unsigned i = 0;
-	for (i = 0; i < elems; i++)
-	{
-		if( strcmp(list[i].szName, name) == 0 )
-		{
-			return i;
-		}
-	}
+   unsigned i = 0;
+   for (i = 0; i < elems; i++)
+   {
+      if( strcmp(list[i].szName, name) == 0 )
+      {
+         return i;
+      }
+   }
 
 #if 0
    if (log_cb)
       log_cb(RETRO_LOG_ERROR, "Not found: %s (name = %s)\n", list[i].szName, name);
 #endif
 
-	return -1;
+   return -1;
 }
 
 static int find_rom_by_crc(uint32_t crc, const ZipEntry *list, unsigned elems)
 {
-	unsigned i = 0;
+   unsigned i = 0;
    for (i = 0; i < elems; i++)
    {
       if (list[i].nCrc == crc)
-	  {
+     {
          return i;
-	  }
+     }
    }
 
 #if 0
@@ -312,7 +312,7 @@ static int archive_load_rom(uint8_t *dest, int *wrote, int i)
 // This code is very confusing. The original code is even more confusing :(
 static bool open_archive()
 {
-	memset(g_find_list, 0, sizeof(g_find_list));
+   memset(g_find_list, 0, sizeof(g_find_list));
 
    struct retro_variable var = {0};
    var.key = "fba-unibios";
@@ -323,147 +323,147 @@ static bool open_archive()
          g_opt_bUseUNIBIOS = true;
    }
 
-	// FBA wants some roms ... Figure out how many.
-	g_rom_count = 0;
-	while (!BurnDrvGetRomInfo(&g_find_list[g_rom_count].ri, g_rom_count))
-		g_rom_count++;
+   // FBA wants some roms ... Figure out how many.
+   g_rom_count = 0;
+   while (!BurnDrvGetRomInfo(&g_find_list[g_rom_count].ri, g_rom_count))
+      g_rom_count++;
 
-	g_find_list_path.clear();
+   g_find_list_path.clear();
 
-	// Check if we have said archives.
-	// Check if archives are found. These are relative to g_rom_dir.
-	char *rom_name;
-	for (unsigned index = 0; index < 32; index++)
-	{
-		if (BurnDrvGetZipName(&rom_name, index))
-			continue;
+   // Check if we have said archives.
+   // Check if archives are found. These are relative to g_rom_dir.
+   char *rom_name;
+   for (unsigned index = 0; index < 32; index++)
+   {
+      if (BurnDrvGetZipName(&rom_name, index))
+         continue;
 
       if (log_cb)
          log_cb(RETRO_LOG_INFO, "[FBA] Archive: %s\n", rom_name);
 
-		char path[1024];
+      char path[1024];
 #ifdef _XBOX
-		snprintf(path, sizeof(path), "%s\\%s", g_rom_dir, rom_name);
+      snprintf(path, sizeof(path), "%s\\%s", g_rom_dir, rom_name);
 #else
-		snprintf(path, sizeof(path), "%s/%s", g_rom_dir, rom_name);
+      snprintf(path, sizeof(path), "%s/%s", g_rom_dir, rom_name);
 #endif
 
-		if (ZipOpen(path) != 0)
-		{
+      if (ZipOpen(path) != 0)
+      {
          if (log_cb)
             log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s\n", path);
-			return false;
-		}
-		ZipClose();
+         return false;
+      }
+      ZipClose();
 
-		g_find_list_path.push_back(path);
-	}
+      g_find_list_path.push_back(path);
+   }
 
-	for (unsigned z = 0; z < g_find_list_path.size(); z++)
-	{
-		if (ZipOpen((char*)g_find_list_path[z].c_str()) != 0)
-		{
+   for (unsigned z = 0; z < g_find_list_path.size(); z++)
+   {
+      if (ZipOpen((char*)g_find_list_path[z].c_str()) != 0)
+      {
          if (log_cb)
             log_cb(RETRO_LOG_ERROR, "[FBA] Failed to open archive %s\n", g_find_list_path[z].c_str());
-			return false;
-		}
+         return false;
+      }
 
-		ZipEntry *list = NULL;
-		int count;
-		ZipGetList(&list, &count);
+      ZipEntry *list = NULL;
+      int count;
+      ZipGetList(&list, &count);
 
 
 
-		// Try to map the ROMs FBA wants to ROMs we find inside our pretty archives ...
-		for (unsigned i = 0; i < g_rom_count; i++)
-		{
-			if (g_find_list[i].nState == STAT_OK)
-				continue;
+      // Try to map the ROMs FBA wants to ROMs we find inside our pretty archives ...
+      for (unsigned i = 0; i < g_rom_count; i++)
+      {
+         if (g_find_list[i].nState == STAT_OK)
+            continue;
 
-			if (g_find_list[i].ri.nType == 0 || g_find_list[i].ri.nLen == 0 || g_find_list[i].ri.nCrc == 0)
-			{
-				g_find_list[i].nState = STAT_OK;
-				continue;
-			}
+         if (g_find_list[i].ri.nType == 0 || g_find_list[i].ri.nLen == 0 || g_find_list[i].ri.nCrc == 0)
+         {
+            g_find_list[i].nState = STAT_OK;
+            continue;
+         }
 
-			int index = -1;
+         int index = -1;
 
-			// USE UNI-BIOS...
-			if (g_opt_bUseUNIBIOS)
-			{
-				char *szPossibleName=NULL;
-				BurnDrvGetRomName(&szPossibleName, i, 0);
-				if(strcmp(szPossibleName, "asia-s3.rom") == 0)
-				{
-					if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_1.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x0C58093F, list, count); }
-					if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_0.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0xA97C89A9, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_2_3o.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x601720AE, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_2_3.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x27664EB5, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_2_2.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x2D50996A, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_2_1.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x8DABF76B, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_2_0.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x0C12C2AD, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_1_3.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0xB24B44A0, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_1_2o.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0xE19D3CE9, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_1_2.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x4FA698E9, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_1_1.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x5DDA0D84, list, count); }
-					if(index < 0) {	index = find_rom_by_name((char*)"uni-bios_1_0.rom", list, count); }
-					if(index < 0) {	index = find_rom_by_crc(0x0CE453A0, list, count); }
+         // USE UNI-BIOS...
+         if (g_opt_bUseUNIBIOS)
+         {
+            char *szPossibleName=NULL;
+            BurnDrvGetRomName(&szPossibleName, i, 0);
+            if(strcmp(szPossibleName, "asia-s3.rom") == 0)
+            {
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_1.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x0C58093F, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_0.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0xA97C89A9, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_3o.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x601720AE, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_3.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x27664EB5, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_2.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x2D50996A, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_1.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x8DABF76B, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_0.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x0C12C2AD, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_3.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0xB24B44A0, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_2o.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0xE19D3CE9, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_2.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x4FA698E9, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_1.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x5DDA0D84, list, count); }
+               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_0.rom", list, count); }
+               if(index < 0) {   index = find_rom_by_crc(0x0CE453A0, list, count); }
 
-					// uni-bios not found, try to find regular bios
-					if(index < 0) {	index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count); }
+               // uni-bios not found, try to find regular bios
+               if(index < 0) {   index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count); }
 
-				} else {
-					index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
-				}
-			} else {
-				index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
-			}
+            } else {
+               index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
+            }
+         } else {
+            index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
+         }
 
-			if (index < 0)
-				continue;
+         if (index < 0)
+            continue;
 
-			// Yay, we found it!
-			g_find_list[i].nArchive = z;
-			g_find_list[i].nPos = index;
-			g_find_list[i].nState = STAT_OK;
+         // Yay, we found it!
+         g_find_list[i].nArchive = z;
+         g_find_list[i].nPos = index;
+         g_find_list[i].nState = STAT_OK;
 
-			if (list[index].nLen < g_find_list[i].ri.nLen)
-				g_find_list[i].nState = STAT_SMALL;
-			else if (list[index].nLen > g_find_list[i].ri.nLen)
-				g_find_list[i].nState = STAT_LARGE;
-		}
+         if (list[index].nLen < g_find_list[i].ri.nLen)
+            g_find_list[i].nState = STAT_SMALL;
+         else if (list[index].nLen > g_find_list[i].ri.nLen)
+            g_find_list[i].nState = STAT_LARGE;
+      }
 
-		free_archive_list(list, count);
-		ZipClose();
-	}
+      free_archive_list(list, count);
+      ZipClose();
+   }
 
-	// Going over every rom to see if they are properly loaded before we continue ...
-	for (unsigned i = 0; i < g_rom_count; i++)
-	{
-		if (g_find_list[i].nState != STAT_OK)
-		{
+   // Going over every rom to see if they are properly loaded before we continue ...
+   for (unsigned i = 0; i < g_rom_count; i++)
+   {
+      if (g_find_list[i].nState != STAT_OK)
+      {
          if (log_cb)
             log_cb(RETRO_LOG_ERROR, "[FBA] ROM index %i was not found ... CRC: 0x%08x\n", i, g_find_list[i].ri.nCrc);
 
-			if(!(g_find_list[i].ri.nType & BRF_OPT)) {
-				return false;
-			}
-		}
-	}
+         if(!(g_find_list[i].ri.nType & BRF_OPT)) {
+            return false;
+         }
+      }
+   }
 
-	BurnExtLoadRom = archive_load_rom;
-	return true;
+   BurnExtLoadRom = archive_load_rom;
+   return true;
 }
 
 void retro_init()
@@ -568,13 +568,13 @@ static void check_variables(void)
       if (strcmp(var.value, "arcade") == 0) {
          gamepad_controls = false;
          newgen_controls = false;
-	  } else if (strcmp(var.value, "gamepad") == 0) {
+     } else if (strcmp(var.value, "gamepad") == 0) {
          gamepad_controls = true;
          newgen_controls = false;
       } else if (strcmp(var.value, "newgen") == 0) {
          gamepad_controls = true;
          newgen_controls = true;
-	  }
+     }
    }
 }
 
@@ -987,11 +987,11 @@ static bool init_input(void)
    }
 
    //needed for Neo Geo button mappings (and other drivers in future)
-   const char * parentrom	= BurnDrvGetTextA(DRV_PARENT);
-   const char * boardrom	= BurnDrvGetTextA(DRV_BOARDROM);
-   const char * drvname		= BurnDrvGetTextA(DRV_NAME);
-   INT32	genre		= BurnDrvGetGenreFlags();
-   INT32	hardware	= BurnDrvGetHardwareCode();
+   const char * parentrom   = BurnDrvGetTextA(DRV_PARENT);
+   const char * boardrom   = BurnDrvGetTextA(DRV_BOARDROM);
+   const char * drvname      = BurnDrvGetTextA(DRV_NAME);
+   INT32   genre      = BurnDrvGetGenreFlags();
+   INT32   hardware   = BurnDrvGetHardwareCode();
 
    if (log_cb)
    {
@@ -3465,10 +3465,10 @@ static void poll_input(void)
       if (pgi->nInput == GIT_KEYSLIDER)
       {
          // Get states of the two keys
-			if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
-				nAdd -= 0x100;
-			if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
-				nAdd += 0x100;
+         if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
+            nAdd -= 0x100;
+         if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
+            nAdd += 0x100;
       }
 
       // nAdd is now -0x100 to +0x100
@@ -3542,7 +3542,7 @@ static void poll_input(void)
                }
                break;
             }
-         case GIT_KEYSLIDER:						// Keyboard slider
+         case GIT_KEYSLIDER:                  // Keyboard slider
 #if 0
             if (log_cb)
                log_cb(RETRO_LOG_INFO, "GIT_JOYSLIDER\n");
@@ -3562,7 +3562,7 @@ static void poll_input(void)
 #endif
                break;
             }
-         case GIT_MOUSEAXIS:						// Mouse axis
+         case GIT_MOUSEAXIS:                  // Mouse axis
             {
                pgi->Input.nVal = (UINT16)(CinpMouseAxis(pgi->Input.MouseAxis.nMouse, pgi->Input.MouseAxis.nAxis) * nAnalogSpeed);
 #ifdef LSB_FIRST
@@ -3573,7 +3573,7 @@ static void poll_input(void)
             }
             break;
          case GIT_JOYAXIS_FULL:
-            {				// Joystick axis
+            {            // Joystick axis
                INT32 nJoy = CinpJoyAxis(pgi->Input.JoyAxis.nJoy, pgi->Input.JoyAxis.nAxis);
 
                if (pgi->nType == BIT_ANALOG_REL) {
@@ -3609,7 +3609,7 @@ static void poll_input(void)
                break;
             }
          case GIT_JOYAXIS_NEG:
-            {				// Joystick axis Lo
+            {            // Joystick axis Lo
                INT32 nJoy = CinpJoyAxis(pgi->Input.JoyAxis.nJoy, pgi->Input.JoyAxis.nAxis);
                if (nJoy < 32767)
                {
@@ -3633,7 +3633,7 @@ static void poll_input(void)
                break;
             }
          case GIT_JOYAXIS_POS:
-            {				// Joystick axis Hi
+            {            // Joystick axis Hi
                INT32 nJoy = CinpJoyAxis(pgi->Input.JoyAxis.nJoy, pgi->Input.JoyAxis.nAxis);
                if (nJoy > 32767)
                {
@@ -3698,187 +3698,187 @@ static INT32 nTotalLen = 0;
 
 static INT32 __cdecl StateLenAcb(struct BurnArea* pba)
 {
-	nTotalLen += pba->nLen;
+   nTotalLen += pba->nLen;
 
-	return 0;
+   return 0;
 }
 
 static INT32 StateInfo(INT32* pnLen, INT32* pnMinVer, INT32 bAll)
 {
-	INT32 nMin = 0;
-	nTotalLen = 0;
-	BurnAcb = StateLenAcb;
+   INT32 nMin = 0;
+   nTotalLen = 0;
+   BurnAcb = StateLenAcb;
 
-	BurnAreaScan(ACB_NVRAM, &nMin);						// Scan nvram
-	if (bAll) {
-		INT32 m;
-		BurnAreaScan(ACB_MEMCARD, &m);					// Scan memory card
-		if (m > nMin) {									// Up the minimum, if needed
-			nMin = m;
-		}
-		BurnAreaScan(ACB_VOLATILE, &m);					// Scan volatile ram
-		if (m > nMin) {									// Up the minimum, if needed
-			nMin = m;
-		}
-	}
-	*pnLen = nTotalLen;
-	*pnMinVer = nMin;
+   BurnAreaScan(ACB_NVRAM, &nMin);                  // Scan nvram
+   if (bAll) {
+      INT32 m;
+      BurnAreaScan(ACB_MEMCARD, &m);               // Scan memory card
+      if (m > nMin) {                           // Up the minimum, if needed
+         nMin = m;
+      }
+      BurnAreaScan(ACB_VOLATILE, &m);               // Scan volatile ram
+      if (m > nMin) {                           // Up the minimum, if needed
+         nMin = m;
+      }
+   }
+   *pnLen = nTotalLen;
+   *pnMinVer = nMin;
 
-	return 0;
+   return 0;
 }
 
 // State load
 INT32 BurnStateLoadEmbed(FILE* fp, INT32 nOffset, INT32 bAll, INT32 (*pLoadGame)())
 {
-	const char* szHeader = "FS1 ";						// Chunk identifier
+   const char* szHeader = "FS1 ";                  // Chunk identifier
 
-	INT32 nLen = 0;
-	INT32 nMin = 0, nFileVer = 0, nFileMin = 0;
-	INT32 t1 = 0, t2 = 0;
-	char ReadHeader[4];
-	char szForName[33];
-	INT32 nChunkSize = 0;
-	UINT8 *Def = NULL;
-	INT32 nDefLen = 0;									// Deflated version
-	INT32 nRet = 0;
+   INT32 nLen = 0;
+   INT32 nMin = 0, nFileVer = 0, nFileMin = 0;
+   INT32 t1 = 0, t2 = 0;
+   char ReadHeader[4];
+   char szForName[33];
+   INT32 nChunkSize = 0;
+   UINT8 *Def = NULL;
+   INT32 nDefLen = 0;                           // Deflated version
+   INT32 nRet = 0;
 
-	if (nOffset >= 0) {
-		fseek(fp, nOffset, SEEK_SET);
-	} else {
-		if (nOffset == -2) {
-			fseek(fp, 0, SEEK_END);
-		} else {
-			fseek(fp, 0, SEEK_CUR);
-		}
-	}
+   if (nOffset >= 0) {
+      fseek(fp, nOffset, SEEK_SET);
+   } else {
+      if (nOffset == -2) {
+         fseek(fp, 0, SEEK_END);
+      } else {
+         fseek(fp, 0, SEEK_CUR);
+      }
+   }
 
-	memset(ReadHeader, 0, 4);
-	fread(ReadHeader, 1, 4, fp);						// Read identifier
-	if (memcmp(ReadHeader, szHeader, 4)) {				// Not the right file type
-		return -2;
-	}
+   memset(ReadHeader, 0, 4);
+   fread(ReadHeader, 1, 4, fp);                  // Read identifier
+   if (memcmp(ReadHeader, szHeader, 4)) {            // Not the right file type
+      return -2;
+   }
 
-	fread(&nChunkSize, 1, 4, fp);
-	if (nChunkSize <= 0x40) {							// Not big enough
-		return -1;
-	}
+   fread(&nChunkSize, 1, 4, fp);
+   if (nChunkSize <= 0x40) {                     // Not big enough
+      return -1;
+   }
 
-	INT32 nChunkData = ftell(fp);
+   INT32 nChunkData = ftell(fp);
 
-	fread(&nFileVer, 1, 4, fp);							// Version of FB that this file was saved from
+   fread(&nFileVer, 1, 4, fp);                     // Version of FB that this file was saved from
 
-	fread(&t1, 1, 4, fp);								// Min version of FB that NV  data will work with
-	fread(&t2, 1, 4, fp);								// Min version of FB that All data will work with
+   fread(&t1, 1, 4, fp);                        // Min version of FB that NV  data will work with
+   fread(&t2, 1, 4, fp);                        // Min version of FB that All data will work with
 
-	if (bAll) {											// Get the min version number which applies to us
-		nFileMin = t2;
-	} else {
-		nFileMin = t1;
-	}
+   if (bAll) {                                 // Get the min version number which applies to us
+      nFileMin = t2;
+   } else {
+      nFileMin = t1;
+   }
 
-	fread(&nDefLen, 1, 4, fp);							// Get the size of the compressed data block
+   fread(&nDefLen, 1, 4, fp);                     // Get the size of the compressed data block
 
-	memset(szForName, 0, sizeof(szForName));
-	fread(szForName, 1, 32, fp);
+   memset(szForName, 0, sizeof(szForName));
+   fread(szForName, 1, 32, fp);
 
-	if (nBurnVer < nFileMin) {							// Error - emulator is too old to load this state
-		return -5;
-	}
+   if (nBurnVer < nFileMin) {                     // Error - emulator is too old to load this state
+      return -5;
+   }
 
-	// Check the game the savestate is for, and load it if needed.
-	{
-		bool bLoadGame = false;
+   // Check the game the savestate is for, and load it if needed.
+   {
+      bool bLoadGame = false;
 
-		if (nBurnDrvActive < nBurnDrvCount) {
-			if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME))) {	// The save state is for the wrong game
-				bLoadGame = true;
-			}
-		} else {										// No game loaded
-			bLoadGame = true;
-		}
+      if (nBurnDrvActive < nBurnDrvCount) {
+         if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME))) {   // The save state is for the wrong game
+            bLoadGame = true;
+         }
+      } else {                              // No game loaded
+         bLoadGame = true;
+      }
 
-		if (bLoadGame) {
-			UINT32 nCurrentGame = nBurnDrvActive;
-			UINT32 i;
-			for (i = 0; i < nBurnDrvCount; i++) {
-				nBurnDrvActive = i;
-				if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME)) == 0) {
-					break;
-				}
-			}
-			if (i == nBurnDrvCount) {
-				nBurnDrvActive = nCurrentGame;
-				return -3;
-			} else {
-				if (pLoadGame == NULL) {
-					return -1;
-				}
-				if (pLoadGame()) {
-					return -1;
-				}
-			}
-		}
-	}
+      if (bLoadGame) {
+         UINT32 nCurrentGame = nBurnDrvActive;
+         UINT32 i;
+         for (i = 0; i < nBurnDrvCount; i++) {
+            nBurnDrvActive = i;
+            if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME)) == 0) {
+               break;
+            }
+         }
+         if (i == nBurnDrvCount) {
+            nBurnDrvActive = nCurrentGame;
+            return -3;
+         } else {
+            if (pLoadGame == NULL) {
+               return -1;
+            }
+            if (pLoadGame()) {
+               return -1;
+            }
+         }
+      }
+   }
 
-	StateInfo(&nLen, &nMin, bAll);
-	if (nLen <= 0) {									// No memory to load
-		return -1;
-	}
+   StateInfo(&nLen, &nMin, bAll);
+   if (nLen <= 0) {                           // No memory to load
+      return -1;
+   }
 
-	// Check if the save state is okay
-	if (nFileVer < nMin) {								// Error - this state is too old and cannot be loaded.
-		return -4;
-	}
+   // Check if the save state is okay
+   if (nFileVer < nMin) {                        // Error - this state is too old and cannot be loaded.
+      return -4;
+   }
 
-	fseek(fp, nChunkData + 0x30, SEEK_SET);				// Read current frame
-	fread(&nCurrentFrame, 1, 4, fp);					//
+   fseek(fp, nChunkData + 0x30, SEEK_SET);            // Read current frame
+   fread(&nCurrentFrame, 1, 4, fp);               //
 
-	fseek(fp, 0x0C, SEEK_CUR);							// Move file pointer to the start of the compressed block
-	Def = (UINT8*)malloc(nDefLen);
-	if (Def == NULL) {
-		return -1;
-	}
-	memset(Def, 0, nDefLen);
-	fread(Def, 1, nDefLen, fp);							// Read in deflated block
+   fseek(fp, 0x0C, SEEK_CUR);                     // Move file pointer to the start of the compressed block
+   Def = (UINT8*)malloc(nDefLen);
+   if (Def == NULL) {
+      return -1;
+   }
+   memset(Def, 0, nDefLen);
+   fread(Def, 1, nDefLen, fp);                     // Read in deflated block
 
-	nRet = BurnStateDecompress(Def, nDefLen, bAll);		// Decompress block into driver
-	if (Def) {
-		free(Def);											// free deflated block
-		Def = NULL;
-	}
+   nRet = BurnStateDecompress(Def, nDefLen, bAll);      // Decompress block into driver
+   if (Def) {
+      free(Def);                                 // free deflated block
+      Def = NULL;
+   }
 
-	fseek(fp, nChunkData + nChunkSize, SEEK_SET);
+   fseek(fp, nChunkData + nChunkSize, SEEK_SET);
 
-	if (nRet) {
-		return -1;
-	} else {
-		return 0;
-	}
+   if (nRet) {
+      return -1;
+   } else {
+      return 0;
+   }
 }
 
 // State load
 INT32 BurnStateLoad(TCHAR* szName, INT32 bAll, INT32 (*pLoadGame)())
 {
-	const char szHeader[] = "FB1 ";						// File identifier
-	char szReadHeader[4] = "";
-	INT32 nRet = 0;
+   const char szHeader[] = "FB1 ";                  // File identifier
+   char szReadHeader[4] = "";
+   INT32 nRet = 0;
 
-	FILE* fp = _tfopen(szName, _T("rb"));
-	if (fp == NULL) {
-		return 1;
-	}
+   FILE* fp = _tfopen(szName, _T("rb"));
+   if (fp == NULL) {
+      return 1;
+   }
 
-	fread(szReadHeader, 1, 4, fp);						// Read identifier
-	if (memcmp(szReadHeader, szHeader, 4) == 0) {		// Check filetype
-		nRet = BurnStateLoadEmbed(fp, -1, bAll, pLoadGame);
-	}
+   fread(szReadHeader, 1, 4, fp);                  // Read identifier
+   if (memcmp(szReadHeader, szHeader, 4) == 0) {      // Check filetype
+      nRet = BurnStateLoadEmbed(fp, -1, bAll, pLoadGame);
+   }
     fclose(fp);
 
-	if (nRet < 0) {
-		return -nRet;
-	} else {
-		return 0;
-	}
+   if (nRet < 0) {
+      return -nRet;
+   } else {
+      return 0;
+   }
 }
 
 // Write a savestate as a chunk of an "FB1 " file
@@ -3887,120 +3887,120 @@ INT32 BurnStateLoad(TCHAR* szName, INT32 bAll, INT32 (*pLoadGame)())
 // -2: Append at EOF
 INT32 BurnStateSaveEmbed(FILE* fp, INT32 nOffset, INT32 bAll)
 {
-	const char* szHeader = "FS1 ";						// Chunk identifier
+   const char* szHeader = "FS1 ";                  // Chunk identifier
 
-	INT32 nLen = 0;
-	INT32 nNvMin = 0, nAMin = 0;
-	INT32 nZero = 0;
-	char szGame[33];
-	UINT8 *Def = NULL;
-	INT32 nDefLen = 0;									// Deflated version
-	INT32 nRet = 0;
+   INT32 nLen = 0;
+   INT32 nNvMin = 0, nAMin = 0;
+   INT32 nZero = 0;
+   char szGame[33];
+   UINT8 *Def = NULL;
+   INT32 nDefLen = 0;                           // Deflated version
+   INT32 nRet = 0;
 
-	if (fp == NULL) {
-		return -1;
-	}
+   if (fp == NULL) {
+      return -1;
+   }
 
-	StateInfo(&nLen, &nNvMin, 0);						// Get minimum version for NV part
-	nAMin = nNvMin;
-	if (bAll) {											// Get minimum version for All data
-		StateInfo(&nLen, &nAMin, 1);
-	}
+   StateInfo(&nLen, &nNvMin, 0);                  // Get minimum version for NV part
+   nAMin = nNvMin;
+   if (bAll) {                                 // Get minimum version for All data
+      StateInfo(&nLen, &nAMin, 1);
+   }
 
-	if (nLen <= 0) {									// No memory to save
-		return -1;
-	}
+   if (nLen <= 0) {                           // No memory to save
+      return -1;
+   }
 
-	if (nOffset >= 0) {
-		fseek(fp, nOffset, SEEK_SET);
-	} else {
-		if (nOffset == -2) {
-			fseek(fp, 0, SEEK_END);
-		} else {
-			fseek(fp, 0, SEEK_CUR);
-		}
-	}
+   if (nOffset >= 0) {
+      fseek(fp, nOffset, SEEK_SET);
+   } else {
+      if (nOffset == -2) {
+         fseek(fp, 0, SEEK_END);
+      } else {
+         fseek(fp, 0, SEEK_CUR);
+      }
+   }
 
-	fwrite(szHeader, 1, 4, fp);							// Chunk identifier
-	INT32 nSizeOffset = ftell(fp);						// Reserve space to write the size of this chunk
-	fwrite(&nZero, 1, 4, fp);							//
+   fwrite(szHeader, 1, 4, fp);                     // Chunk identifier
+   INT32 nSizeOffset = ftell(fp);                  // Reserve space to write the size of this chunk
+   fwrite(&nZero, 1, 4, fp);                     //
 
-	fwrite(&nBurnVer, 1, 4, fp);						// Version of FB this was saved from
-	fwrite(&nNvMin, 1, 4, fp);							// Min version of FB NV  data will work with
-	fwrite(&nAMin, 1, 4, fp);							// Min version of FB All data will work with
+   fwrite(&nBurnVer, 1, 4, fp);                  // Version of FB this was saved from
+   fwrite(&nNvMin, 1, 4, fp);                     // Min version of FB NV  data will work with
+   fwrite(&nAMin, 1, 4, fp);                     // Min version of FB All data will work with
 
-	fwrite(&nZero, 1, 4, fp);							// Reserve space to write the compressed data size
+   fwrite(&nZero, 1, 4, fp);                     // Reserve space to write the compressed data size
 
-	memset(szGame, 0, sizeof(szGame));					// Game name
-	sprintf(szGame, "%.32s", BurnDrvGetTextA(DRV_NAME));			//
-	fwrite(szGame, 1, 32, fp);							//
+   memset(szGame, 0, sizeof(szGame));               // Game name
+   sprintf(szGame, "%.32s", BurnDrvGetTextA(DRV_NAME));         //
+   fwrite(szGame, 1, 32, fp);                     //
 
-	fwrite(&nCurrentFrame, 1, 4, fp);					// Current frame
+   fwrite(&nCurrentFrame, 1, 4, fp);               // Current frame
 
-	fwrite(&nZero, 1, 4, fp);							// Reserved
-	fwrite(&nZero, 1, 4, fp);							//
-	fwrite(&nZero, 1, 4, fp);							//
+   fwrite(&nZero, 1, 4, fp);                     // Reserved
+   fwrite(&nZero, 1, 4, fp);                     //
+   fwrite(&nZero, 1, 4, fp);                     //
 
-	nRet = BurnStateCompress(&Def, &nDefLen, bAll);		// Compress block from driver and return deflated buffer
-	if (Def == NULL) {
-		return -1;
-	}
+   nRet = BurnStateCompress(&Def, &nDefLen, bAll);      // Compress block from driver and return deflated buffer
+   if (Def == NULL) {
+      return -1;
+   }
 
-	nRet = fwrite(Def, 1, nDefLen, fp);					// Write block to disk
-	if (Def) {
-		free(Def);											// free deflated block and close file
-		Def = NULL;
-	}
+   nRet = fwrite(Def, 1, nDefLen, fp);               // Write block to disk
+   if (Def) {
+      free(Def);                                 // free deflated block and close file
+      Def = NULL;
+   }
 
-	if (nRet != nDefLen) {								// error writing block to disk
-		return -1;
-	}
+   if (nRet != nDefLen) {                        // error writing block to disk
+      return -1;
+   }
 
-	if (nDefLen & 3) {									// Chunk size must be a multiple of 4
-		fwrite(&nZero, 1, 4 - (nDefLen & 3), fp);		// Pad chunk if needed
-	}
+   if (nDefLen & 3) {                           // Chunk size must be a multiple of 4
+      fwrite(&nZero, 1, 4 - (nDefLen & 3), fp);      // Pad chunk if needed
+   }
 
-	fseek(fp, nSizeOffset + 0x10, SEEK_SET);			// Write size of the compressed data
-	fwrite(&nDefLen, 1, 4, fp);							//
+   fseek(fp, nSizeOffset + 0x10, SEEK_SET);         // Write size of the compressed data
+   fwrite(&nDefLen, 1, 4, fp);                     //
 
-	nDefLen = (nDefLen + 0x43) & ~3;					// Add for header size and align
+   nDefLen = (nDefLen + 0x43) & ~3;               // Add for header size and align
 
-	fseek(fp, nSizeOffset, SEEK_SET);					// Write size of the chunk
-	fwrite(&nDefLen, 1, 4, fp);							//
+   fseek(fp, nSizeOffset, SEEK_SET);               // Write size of the chunk
+   fwrite(&nDefLen, 1, 4, fp);                     //
 
-	fseek (fp, 0, SEEK_END);							// Set file pointer to the end of the chunk
+   fseek (fp, 0, SEEK_END);                     // Set file pointer to the end of the chunk
 
-	return nDefLen;
+   return nDefLen;
 }
 
 // State save
 INT32 BurnStateSave(TCHAR* szName, INT32 bAll)
 {
-	const char szHeader[] = "FB1 ";						// File identifier
-	INT32 nLen = 0, nVer = 0;
-	INT32 nRet = 0;
+   const char szHeader[] = "FB1 ";                  // File identifier
+   INT32 nLen = 0, nVer = 0;
+   INT32 nRet = 0;
 
-	if (bAll) {											// Get amount of data
-		StateInfo(&nLen, &nVer, 1);
-	} else {
-		StateInfo(&nLen, &nVer, 0);
-	}
-	if (nLen <= 0) {									// No data, so exit without creating a savestate
-		return 0;										// Don't return an error code
-	}
+   if (bAll) {                                 // Get amount of data
+      StateInfo(&nLen, &nVer, 1);
+   } else {
+      StateInfo(&nLen, &nVer, 0);
+   }
+   if (nLen <= 0) {                           // No data, so exit without creating a savestate
+      return 0;                              // Don't return an error code
+   }
 
-	FILE* fp = _tfopen(szName, _T("wb"));
-	if (fp == NULL) {
-		return 1;
-	}
+   FILE* fp = _tfopen(szName, _T("wb"));
+   if (fp == NULL) {
+      return 1;
+   }
 
-	fwrite(&szHeader, 1, 4, fp);
-	nRet = BurnStateSaveEmbed(fp, -1, bAll);
+   fwrite(&szHeader, 1, 4, fp);
+   nRet = BurnStateSaveEmbed(fp, -1, bAll);
     fclose(fp);
 
-	if (nRet < 0) {
-		return 1;
-	} else {
-		return 0;
-	}
+   if (nRet < 0) {
+      return 1;
+   } else {
+      return 0;
+   }
 }
