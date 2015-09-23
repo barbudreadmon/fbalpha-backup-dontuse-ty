@@ -24,15 +24,27 @@ static retro_audio_sample_batch_t audio_batch_cb;
 
 // FBARL ---
 
+enum neo_geo_modes
+{
+   /* MVS, asia-s3.rom [0x91B64BE3] */
+   NEO_GEO_MODE_MVS = 0,
+
+   /* AES, neo-epo.bin [0xD27A71F1] */
+   NEO_GEO_MODE_AES = 1,
+
+   /* UNIBIOS, latest UniBios known and/or available */
+   NEO_GEO_MODE_UNIBIOS = 2,
+};
+
 static unsigned int BurnDrvGetIndexByName(const char* name);
 
-static bool g_opt_bUseUNIBIOS = false;
+static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 static bool gamepad_controls = true;
 static bool newgen_controls = false;
 
-#define STAT_NOFIND   0
+#define STAT_NOFIND  0
 #define STAT_OK      1
-#define STAT_CRC      2
+#define STAT_CRC     2
 #define STAT_SMALL   3
 #define STAT_LARGE   4
 
@@ -72,8 +84,7 @@ void retro_set_environment(retro_environment_t cb)
    environ_cb = cb;
 
    static const struct retro_variable vars[] = {
-      { "fba-diagnostics", "Diagnostics; disabled|enabled" },
-      { "fba-unibios", "Neo Geo UniBIOS; disabled|enabled" },
+      { "fba-neogeo-mode", "Neo Geo Mode; mvs|aes|unibios" },
       { "fba-cpu-speed-adjust", "CPU Speed Overclock; 100|110|120|130|140|150|160|170|180|190|200" },
       { "fba-controls", "Controls; gamepad|arcade|newgen" },
       { NULL, NULL },
@@ -315,12 +326,16 @@ static bool open_archive()
    memset(g_find_list, 0, sizeof(g_find_list));
 
    struct retro_variable var = {0};
-   var.key = "fba-unibios";
+   var.key = "fba-neogeo-mode";
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
-      if (strcmp(var.value, "enabled") == 0)
-         g_opt_bUseUNIBIOS = true;
+      if (strcmp(var.value, "mvs") == 0)
+         g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
+      else if (strcmp(var.value, "aes") == 0)
+         g_opt_neo_geo_mode = NEO_GEO_MODE_AES;
+      else if (strcmp(var.value, "unibios") == 0)
+         g_opt_neo_geo_mode = NEO_GEO_MODE_UNIBIOS;
    }
 
    // FBA wants some roms ... Figure out how many.
@@ -388,40 +403,46 @@ static bool open_archive()
 
          int index = -1;
 
-         // USE UNI-BIOS...
-         if (g_opt_bUseUNIBIOS)
+         char *szPossibleName=NULL;
+         BurnDrvGetRomName(&szPossibleName, i, 0);
+         if(strcmp(szPossibleName, "asia-s3.rom") == 0)
          {
-            char *szPossibleName=NULL;
-            BurnDrvGetRomName(&szPossibleName, i, 0);
-            if(strcmp(szPossibleName, "asia-s3.rom") == 0)
+            // USE AES-BIOS...
+            if (g_opt_neo_geo_mode == NEO_GEO_MODE_AES)
+            {
+               if(index < 0) { index = find_rom_by_name((char*)"neo-epo.bin", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0xD27A71F1, list, count); }
+            } else
+            // USE UNI-BIOS...
+            if (g_opt_neo_geo_mode == NEO_GEO_MODE_UNIBIOS)
             {
                if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_1.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x0C58093F, list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x0C58093F, list, count); }
                if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_0.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0xA97C89A9, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_3o.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x601720AE, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_3.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x27664EB5, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_2.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x2D50996A, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_1.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x8DABF76B, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_2_0.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x0C12C2AD, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_3.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0xB24B44A0, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_2o.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0xE19D3CE9, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_2.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x4FA698E9, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_1.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x5DDA0D84, list, count); }
-               if(index < 0) {   index = find_rom_by_name((char*)"uni-bios_1_0.rom", list, count); }
-               if(index < 0) {   index = find_rom_by_crc(0x0CE453A0, list, count); }
+               if(index < 0) { index = find_rom_by_crc(0xA97C89A9, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_3o.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x601720AE, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_3.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x27664EB5, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_2.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x2D50996A, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_1.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x8DABF76B, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_0.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x0C12C2AD, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_3.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0xB24B44A0, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_2o.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0xE19D3CE9, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_2.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x4FA698E9, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_1.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x5DDA0D84, list, count); }
+               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_0.rom", list, count); }
+               if(index < 0) { index = find_rom_by_crc(0x0CE453A0, list, count); }
 
-               // uni-bios not found, try to find regular bios
-               if(index < 0) {   index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count); }
+               // uni-bios not found, try to find regular MVS bios
+               if(index < 0) { index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count); }
 
             } else {
                index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
@@ -518,19 +539,19 @@ void retro_reset()
    BurnDrvFrame();
 }
 
-static bool first_init = true;
-
 static void check_variables(void)
 {
    struct retro_variable var = {0};
-   var.key = "fba-unibios";
+   var.key = "fba-neogeo-mode";
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
-      if (strcmp(var.value, "disabled") == 0)
-         g_opt_bUseUNIBIOS = false;
-      if (strcmp(var.value, "enabled") == 0)
-         g_opt_bUseUNIBIOS = true;
+      if (strcmp(var.value, "mvs") == 0)
+         g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
+      else if (strcmp(var.value, "aes") == 0)
+         g_opt_neo_geo_mode = NEO_GEO_MODE_AES;
+      else if (strcmp(var.value, "unibios") == 0)
+         g_opt_neo_geo_mode = NEO_GEO_MODE_UNIBIOS;
    }
 
    var.key = "fba-cpu-speed-adjust";
