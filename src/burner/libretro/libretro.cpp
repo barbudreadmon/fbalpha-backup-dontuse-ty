@@ -685,8 +685,17 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
    int maximum = width > height ? width : height;
-   struct retro_game_geometry geom = { width, height, maximum, maximum };
+   struct retro_game_geometry geom = { (uint)width, (uint)height, (uint)maximum, (uint)maximum };
 
+   int game_aspect_x, game_aspect_y;
+   BurnDrvGetAspect(&game_aspect_x, &game_aspect_y);
+
+   if (game_aspect_x != 0 && game_aspect_y != 0)
+      geom.aspect_ratio = (float)game_aspect_x / (float)game_aspect_y;
+
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "retro_get_system_av_info: base_width: %d, base_height: %d, max_width: %d, max_height: %d, aspect_ratio: %f\n", geom.base_width, geom.base_height, geom.max_width, geom.max_height, geom.aspect_ratio);
+   
 #ifdef FBACORES_CPS
    struct retro_system_timing timing = { 59.629403, 59.629403 * AUDIO_SEGMENT_LENGTH };
 #else
