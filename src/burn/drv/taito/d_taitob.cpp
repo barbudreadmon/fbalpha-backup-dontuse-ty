@@ -396,8 +396,8 @@ static struct BurnInputInfo Rambo3uInputList[] = {
 	{"P1 Button 1",		BIT_DIGITAL,	TC0220IOCInputPort0 + 0,	"p1 fire 1"	},
 	{"P1 Button 2",		BIT_DIGITAL,	TC0220IOCInputPort0 + 1,	"p1 fire 2"	},
 
-	A("P1 Trackball X",     BIT_ANALOG_REL, &TaitoAnalogPort0,		"p1 x-axis"	),
-	A("P1 Trackball Y",     BIT_ANALOG_REL, &TaitoAnalogPort1,		"p1 y-axis"	),
+	A("_P1 Trackball X",     BIT_ANALOG_REL, &TaitoAnalogPort0,		"_p1 x-axis"	),
+	A("_P1 Trackball Y",     BIT_ANALOG_REL, &TaitoAnalogPort1,		"_p1 y-axis"	),
 
 	{"P2 Coin",		BIT_DIGITAL,	TC0220IOCInputPort1 + 5,	"p2 coin"	},
 	{"P2 Start",		BIT_DIGITAL,	TC0220IOCInputPort1 + 3,	"p2 start"	},
@@ -408,8 +408,8 @@ static struct BurnInputInfo Rambo3uInputList[] = {
 	{"P2 Button 1",		BIT_DIGITAL,	TC0220IOCInputPort0 + 3,	"p2 fire 1"	},
 	{"P2 Button 2",		BIT_DIGITAL,	TC0220IOCInputPort0 + 4,	"p2 fire 2"	},
 
-	A("P2 Trackball X",	BIT_ANALOG_REL, &TaitoAnalogPort2,		"p2 x-axis"	),
-	A("P2 Trackball Y",	BIT_ANALOG_REL, &TaitoAnalogPort3,		"p2 y-axis"	),
+	A("_P2 Trackball X",	BIT_ANALOG_REL, &TaitoAnalogPort2,		"_p2 x-axis"	),
+	A("_P2 Trackball Y",	BIT_ANALOG_REL, &TaitoAnalogPort3,		"_p2 y-axis"	),
 
 	{"Reset",		BIT_DIGITAL,	&TaitoReset,	"reset"},
 	{"Service",		BIT_DIGITAL,	TC0220IOCInputPort1 + 1,	"service"	},
