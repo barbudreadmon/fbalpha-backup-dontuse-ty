@@ -79,18 +79,18 @@ void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_c
 void retro_set_input_poll(retro_input_poll_t cb) { poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_cb = cb; }
 
+static const struct retro_variable vars_generic[] = {
+   { "fba-cpu-speed-adjust", "CPU Speed Overclock; 100|110|120|130|140|150|160|170|180|190|200" },
+   { "fba-controls", "Controls; gamepad|arcade" },
+   { "fba-neogeo-mode", "Neo Geo Mode; mvs|aes|unibios" },
+   { "fba-neogeo-controls", "Neo Geo Gamepad Layout; classic|newgen" },
+   { NULL, NULL },
+};
+
 void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
-
-   static const struct retro_variable vars[] = {
-      { "fba-neogeo-mode", "Neo Geo Mode; mvs|aes|unibios" },
-      { "fba-cpu-speed-adjust", "CPU Speed Overclock; 100|110|120|130|140|150|160|170|180|190|200" },
-      { "fba-controls", "Controls; gamepad|arcade|newgen" },
-      { NULL, NULL },
-   };
-
-   cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars);
+   cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars_generic);
 }
 
 char g_rom_dir[1024];
@@ -109,6 +109,7 @@ void retro_get_system_info(struct retro_system_info *info)
 /////
 static void poll_input();
 static bool init_input();
+static void check_variables();
 
 void wav_exit()
 {
@@ -325,18 +326,7 @@ static bool open_archive()
 {
    memset(g_find_list, 0, sizeof(g_find_list));
 
-   struct retro_variable var = {0};
-   var.key = "fba-neogeo-mode";
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
-   {
-      if (strcmp(var.value, "mvs") == 0)
-         g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
-      else if (strcmp(var.value, "aes") == 0)
-         g_opt_neo_geo_mode = NEO_GEO_MODE_AES;
-      else if (strcmp(var.value, "unibios") == 0)
-         g_opt_neo_geo_mode = NEO_GEO_MODE_UNIBIOS;
-   }
+   check_variables();
 
    // FBA wants some roms ... Figure out how many.
    g_rom_count = 0;
@@ -542,8 +532,8 @@ void retro_reset()
 static void check_variables(void)
 {
    struct retro_variable var = {0};
-   var.key = "fba-neogeo-mode";
 
+   var.key = "fba-neogeo-mode";
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
       if (strcmp(var.value, "mvs") == 0)
@@ -555,12 +545,9 @@ static void check_variables(void)
    }
 
    var.key = "fba-cpu-speed-adjust";
-
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
-      if (strcmp(var.value, "100") == 0)
-         nBurnCPUSpeedAdjust = 0x0100;
-      else if (strcmp(var.value, "110") == 0)
+      if (strcmp(var.value, "110") == 0)
          nBurnCPUSpeedAdjust = 0x0110;
       else if (strcmp(var.value, "120") == 0)
          nBurnCPUSpeedAdjust = 0x0120;
@@ -580,22 +567,26 @@ static void check_variables(void)
          nBurnCPUSpeedAdjust = 0x0190;
       else if (strcmp(var.value, "200") == 0)
          nBurnCPUSpeedAdjust = 0x0200;
+      else
+         nBurnCPUSpeedAdjust = 0x0100;
    }
 
    var.key = "fba-controls";
-
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
-      if (strcmp(var.value, "arcade") == 0) {
+      if (strcmp(var.value, "gamepad") == 0)
+         gamepad_controls = true;
+      else
          gamepad_controls = false;
-         newgen_controls = false;
-     } else if (strcmp(var.value, "gamepad") == 0) {
-         gamepad_controls = true;
-         newgen_controls = false;
-      } else if (strcmp(var.value, "newgen") == 0) {
-         gamepad_controls = true;
+   }
+
+   var.key = "fba-neogeo-controls";
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+      if (strcmp(var.value, "newgen") == 0)
          newgen_controls = true;
-     }
+      else
+         newgen_controls = false;
    }
 }
 
@@ -637,7 +628,10 @@ void retro_run()
 
    bool updated = false;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
+   {
       check_variables();
+      init_input();
+   }
 }
 
 static uint8_t *write_state_ptr;
@@ -706,7 +700,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
    int maximum = width > height ? width : height;
-   struct retro_game_geometry geom = { (uint)width, (uint)height, (uint)maximum, (uint)maximum };
+   struct retro_game_geometry geom = { (unsigned)width, (unsigned)height, (unsigned)maximum, (unsigned)maximum };
 
    int game_aspect_x, game_aspect_y;
    BurnDrvGetAspect(&game_aspect_x, &game_aspect_y);
@@ -716,7 +710,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "retro_get_system_av_info: base_width: %d, base_height: %d, max_width: %d, max_height: %d, aspect_ratio: %f\n", geom.base_width, geom.base_height, geom.max_width, geom.max_height, geom.aspect_ratio);
-   
+
 #ifdef FBACORES_CPS
    struct retro_system_timing timing = { 59.629403, 59.629403 * AUDIO_SEGMENT_LENGTH };
 #else
@@ -920,7 +914,15 @@ bool retro_load_game(const struct retro_game_info *info)
 
    InpDIPSWInit();
 
+   /* I want to try to implement different core options depending on the emulated system, not working so far
+   const char * boardrom   = BurnDrvGetTextA(DRV_BOARDROM);
+   if(boardrom && !strcmp(boardrom,"neogeo"))
+   {
+      environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars_neogeo);
+   }
+   */
    check_variables();
+
 
    return retval;
 }
