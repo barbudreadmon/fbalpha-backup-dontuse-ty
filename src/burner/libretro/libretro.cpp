@@ -41,6 +41,7 @@ static unsigned int BurnDrvGetIndexByName(const char* name);
 static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 static bool gamepad_controls = true;
 static bool newgen_controls = false;
+static bool core_aspect_par = false;
 
 #define STAT_NOFIND  0
 #define STAT_OK      1
@@ -80,6 +81,7 @@ void retro_set_input_poll(retro_input_poll_t cb) { poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_cb = cb; }
 
 static const struct retro_variable vars_generic[] = {
+   { "fba-aspect", "Core Provided Aspect Ratio; PAR|DAR" },
    { "fba-cpu-speed-adjust", "CPU Speed Overclock; 100|110|120|130|140|150|160|170|180|190|200" },
    { "fba-controls", "Controls; gamepad|arcade" },
    { "fba-neogeo-mode", "Neo Geo Mode; mvs|aes|unibios" },
@@ -588,6 +590,15 @@ static void check_variables(void)
       else
          newgen_controls = false;
    }
+
+      var.key = "fba-aspect";
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+      {
+         if (strcmp(var.value, "PAR") == 0)
+            core_aspect_par = true;
+         else
+            core_aspect_par = false;
+      }
 }
 
 void retro_run()
@@ -705,7 +716,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    int game_aspect_x, game_aspect_y;
    BurnDrvGetAspect(&game_aspect_x, &game_aspect_y);
 
-   if (game_aspect_x != 0 && game_aspect_y != 0)
+   if (game_aspect_x != 0 && game_aspect_y != 0 && !core_aspect_par)
       geom.aspect_ratio = (float)game_aspect_x / (float)game_aspect_y;
 
    if (log_cb)
