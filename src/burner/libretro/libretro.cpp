@@ -81,11 +81,11 @@ void retro_set_input_poll(retro_input_poll_t cb) { poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_cb = cb; }
 
 static const struct retro_variable vars_generic[] = {
-   { "fba-aspect", "Core Provided Aspect Ratio; PAR|DAR" },
-   { "fba-cpu-speed-adjust", "CPU Speed Overclock; 100|110|120|130|140|150|160|170|180|190|200" },
-   { "fba-controls", "Controls; gamepad|arcade" },
-   { "fba-neogeo-mode", "Neo Geo Mode; mvs|aes|unibios" },
-   { "fba-neogeo-controls", "Neo Geo Gamepad Layout; classic|newgen" },
+   { "fba-aspect", "Core-provided aspect ratio; DAR|PAR" },
+   { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" },
+   { "fba-controls", "Control scheme; gamepad|arcade" },
+   { "fba-neogeo-mode", "Neo Geo mode; mvs|aes|unibios" },
+   { "fba-neogeo-controls", "Neo Geo gamepad scheme; classic|newgen" },
    { NULL, NULL },
 };
 
