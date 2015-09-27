@@ -706,7 +706,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
    int maximum = width > height ? width : height;
-   struct retro_game_geometry geom = { (uint)width, (uint)height, (uint)maximum, (uint)maximum };
+   struct retro_game_geometry geom = { (unsigned)width, (unsigned)height, (unsigned)maximum, (unsigned)maximum };
 
    int game_aspect_x, game_aspect_y;
    BurnDrvGetAspect(&game_aspect_x, &game_aspect_y);
