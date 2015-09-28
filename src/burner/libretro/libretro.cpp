@@ -894,12 +894,18 @@ bool retro_load_game(const struct retro_game_info *info)
    extract_basename(basename, info->path, sizeof(basename));
    extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
 
-   //todo, add a fallback in case save_directory is not defined
    const char *dir = NULL;
+   // If save directory is defined use it, ...
    if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &dir) && dir)
    {
       snprintf(g_save_dir, sizeof(g_save_dir), "%s", dir);
-      log_cb(RETRO_LOG_ERROR, "Setting save dir to %s\n", g_save_dir);
+      log_cb(RETRO_LOG_INFO, "Setting save dir to %s\n", g_save_dir);
+   }
+   else
+   {
+      // ... otherwise use rom directory
+      strncpy(g_save_dir, g_rom_dir, sizeof(g_save_dir));
+      log_cb(RETRO_LOG_ERROR, "Save dir not defined => use roms dir %s\n", g_save_dir);
    }
 
    unsigned i = BurnDrvGetIndexByName(basename);
