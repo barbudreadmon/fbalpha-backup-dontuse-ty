@@ -24,15 +24,18 @@ static retro_audio_sample_batch_t audio_batch_cb;
 
 // FBARL ---
 
+extern UINT8 NeoSystem;
+bool is_neogeo_game = false;
+
 enum neo_geo_modes
 {
-   /* MVS, asia-s3.rom [0x91B64BE3] */
+   /* MVS */
    NEO_GEO_MODE_MVS = 0,
 
-   /* AES, neo-epo.bin [0xD27A71F1] */
+   /* AES */
    NEO_GEO_MODE_AES = 1,
 
-   /* UNIBIOS, latest UniBios known and/or available */
+   /* UNIBIOS */
    NEO_GEO_MODE_UNIBIOS = 2,
 };
 
@@ -93,6 +96,121 @@ void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
    cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars_generic);
+}
+
+struct RomBiosInfo {
+	char* filename;
+	uint32_t crc;
+	uint8_t NeoSystem;
+	char* friendly_name;
+	uint8_t priority;
+};
+
+static struct RomBiosInfo mvs_bioses[] = {
+   {"asia-s3.rom",       0x91b64be3, 0x00, "MVS Asia/Europe ver. 6 (1 slot)",  1 },
+   {"sp-s2.sp1",         0x9036d879, 0x01, "MVS Asia/Europe ver. 5 (1 slot)",  2 },
+   {"sp-s.sp1",          0xc7f2fa45, 0x02, "MVS Asia/Europe ver. 3 (4 slot)",  3 },
+   {"sp-u2.sp1",         0xe72943de, 0x03, "MVS USA ver. 5 (2 slot)"        ,  4 },
+   {"sp-e.sp1",          0x2723a5b5, 0x04, "MVS USA ver. 5 (6 slot)"        ,  5 },
+   {"vs-bios.rom",       0xf0e8f27d, 0x05, "MVS Japan ver. 6 (? slot)"      ,  6 },
+   {"sp-j2.sp1",         0xacede59C, 0x06, "MVS Japan ver. 5 (? slot)"      ,  7 },
+   {"sp1.jipan.1024",    0x9fb0abe4, 0x07, "MVS Japan ver. 3 (4 slot)"      ,  8 },
+   {"sp-45.sp1",         0x03cc9f6a, 0x08, "NEO-MVH MV1C"                   ,  9 },
+   {"japan-j3.bin",      0xdff6d41f, 0x09, "MVS Japan (J3)"                 , 10 },
+   {"sp-1v1_3db8c.bin",  0x162f0ebe, 0x0d, "Deck ver. 6 (Git Ver 1.3)"      , 11 },
+   {NULL, 0, 0, NULL, 0 }
+};
+
+static struct RomBiosInfo aes_bioses[] = {
+   {"neo-epo.bin",       0xd27a71f1, 0x0b, "AES Asia"                       ,  1 },
+   {"neo-po.bin",        0x16d0c132, 0x0a, "AES Japan"                      ,  2 },
+   {"neodebug.bin",      0x698ebb7d, 0x0c, "Development Kit"                ,  3 },
+   {NULL, 0, 0, NULL, 0 }
+};
+
+static struct RomBiosInfo uni_bioses[] = {
+   {"uni-bios_3_1.rom",  0x0c58093f, 0x0e, "Universe BIOS ver. 3.1"         ,  1 },
+   {"uni-bios_3_0.rom",  0xa97c89a9, 0x0f, "Universe BIOS ver. 3.0"         ,  2 },
+   {"uni-bios_2_3.rom",  0x27664eb5, 0x10, "Universe BIOS ver. 2.3"         ,  3 },
+   {"uni-bios_2_3o.rom", 0x601720ae, 0x11, "Universe BIOS ver. 2.3 (alt)"   ,  4 },
+   {"uni-bios_2_2.rom",  0x2d50996a, 0x12, "Universe BIOS ver. 2.2"         ,  5 },
+   {"uni-bios_2_1.rom",  0x8dabf76b, 0x13, "Universe BIOS ver. 2.1"         ,  6 },
+   {"uni-bios_2_0.rom",  0x0c12c2ad, 0x14, "Universe BIOS ver. 2.0"         ,  7 },
+   {"uni-bios_1_3.rom",  0xb24b44a0, 0x15, "Universe BIOS ver. 1.3"         ,  8 },
+   {"uni-bios_1_2.rom",  0x4fa698e9, 0x16, "Universe BIOS ver. 1.2"         ,  9 },
+   {"uni-bios_1_2o.rom", 0xe19d3ce9, 0x17, "Universe BIOS ver. 1.2 (alt)"   , 10 },
+   {"uni-bios_1_1.rom",  0x5dda0d84, 0x18, "Universe BIOS ver. 1.1"         , 11 },
+   {"uni-bios_1_0.rom",  0x0ce453a0, 0x19, "Universe BIOS ver. 1.0"         , 12 },
+   {NULL, 0, 0, NULL, 0 }
+};
+
+static struct RomBiosInfo unknown_bioses[] = {
+   {"neopen.sp1",        0xcb915e76, 0x1a, "NeoOpen BIOS v0.1 beta"         ,  1 },
+   {NULL, 0, 0, NULL, 0 }
+};
+
+static RomBiosInfo *available_mvs_bios = NULL;
+static RomBiosInfo *available_aes_bios = NULL;
+static RomBiosInfo *available_uni_bios = NULL;
+
+void set_neo_system_bios()
+{
+   NeoSystem = 0;
+
+   if (g_opt_neo_geo_mode == NEO_GEO_MODE_MVS)
+   {
+      if (available_mvs_bios)
+      {
+         NeoSystem |= available_mvs_bios->NeoSystem;
+         log_cb(RETRO_LOG_INFO, "MVS Neo Geo Mode selected => Set NeoSystem: 0x%02x (%s [0x%08x] (%s)).\n", NeoSystem, available_mvs_bios->filename, available_mvs_bios->crc, available_mvs_bios->friendly_name);
+      }
+      else
+      {
+         // fallback to another bios type if we didn't find the bios selected by the user
+         available_mvs_bios = (available_aes_bios) ? available_aes_bios : available_uni_bios;
+         if (available_mvs_bios)
+         {
+            NeoSystem |= available_mvs_bios->NeoSystem;
+            log_cb(RETRO_LOG_WARN, "MVS Neo Geo Mode selected but MVS bios not available => fall back to another: 0x%02x (%s [0x%08x] (%s)).\n", NeoSystem, available_mvs_bios->filename, available_mvs_bios->crc, available_mvs_bios->friendly_name);
+         }
+      }
+   }
+   else if (g_opt_neo_geo_mode == NEO_GEO_MODE_AES)
+   {
+      if (available_aes_bios)
+      {
+         NeoSystem |= available_aes_bios->NeoSystem;
+         log_cb(RETRO_LOG_INFO, "AES Neo Geo Mode selected => Set NeoSystem: 0x%02x (%s [0x%08x] (%s)).\n", NeoSystem, available_aes_bios->filename, available_aes_bios->crc, available_aes_bios->friendly_name);
+      }
+      else
+      {
+         // fallback to another bios type if we didn't find the bios selected by the user
+         available_aes_bios = (available_mvs_bios) ? available_mvs_bios : available_uni_bios;
+         if (available_aes_bios)
+         {
+            NeoSystem |= available_aes_bios->NeoSystem;
+            log_cb(RETRO_LOG_WARN, "AES Neo Geo Mode selected but AES bios not available => fall back to another: 0x%02x (%s [0x%08x] (%s)).\n", NeoSystem, available_aes_bios->filename, available_aes_bios->crc, available_aes_bios->friendly_name);
+         }
+      }      
+   }
+   else if (g_opt_neo_geo_mode == NEO_GEO_MODE_UNIBIOS)
+   {
+      if (available_uni_bios)
+      {
+         NeoSystem |= available_uni_bios->NeoSystem;
+         log_cb(RETRO_LOG_INFO, "UNIBIOS Neo Geo Mode selected => Set NeoSystem: 0x%02x (%s [0x%08x] (%s)).\n", NeoSystem, available_uni_bios->filename, available_uni_bios->crc, available_uni_bios->friendly_name);
+      }
+      else
+      {
+         // fallback to another bios type if we didn't find the bios selected by the user
+         available_uni_bios = (available_mvs_bios) ? available_mvs_bios : available_aes_bios;
+         if (available_uni_bios)
+         {
+            NeoSystem |= available_uni_bios->NeoSystem;
+            log_cb(RETRO_LOG_WARN, "UNIBIOS Neo Geo Mode selected but UNIBIOS not available => fall back to another: 0x%02x (%s [0x%08x] (%s)).\n", NeoSystem, available_uni_bios->filename, available_uni_bios->crc, available_uni_bios->friendly_name);
+         }
+      }
+   }
 }
 
 char g_rom_dir[1024];
@@ -285,6 +403,23 @@ static int find_rom_by_crc(uint32_t crc, const ZipEntry *list, unsigned elems)
    return -1;
 }
 
+static RomBiosInfo* find_bios_info(char *szName, uint32_t crc, struct RomBiosInfo* bioses)
+{
+   for (int i = 0; bioses[i].filename != NULL; i++)
+   {
+      if (strcmp(bioses[i].filename, szName) == 0 || bioses[i].crc == crc)
+      {
+         return &bioses[i];
+      }
+   }
+
+#if 0
+   log_cb(RETRO_LOG_ERROR, "Bios not found: %s (crc: 0x%08x)\n", szName, crc);
+#endif
+
+   return NULL;
+}
+
 static void free_archive_list(ZipEntry *list, unsigned count)
 {
    if (list)
@@ -322,8 +457,6 @@ static int archive_load_rom(uint8_t *dest, int *wrote, int i)
 static bool open_archive()
 {
    memset(g_find_list, 0, sizeof(g_find_list));
-
-   check_variables();
 
    // FBA wants some roms ... Figure out how many.
    g_rom_count = 0;
@@ -367,11 +500,11 @@ static bool open_archive()
          return false;
       }
 
+      log_cb(RETRO_LOG_INFO, "[FBA] Parsing archive %s.\n", g_find_list_path[z].c_str());
+      
       ZipEntry *list = NULL;
       int count;
       ZipGetList(&list, &count);
-
-
 
       // Try to map the ROMs FBA wants to ROMs we find inside our pretty archives ...
       for (unsigned i = 0; i < g_rom_count; i++)
@@ -385,59 +518,49 @@ static bool open_archive()
             continue;
          }
 
-         int index = -1;
+         int index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
 
-         char *szPossibleName=NULL;
-         BurnDrvGetRomName(&szPossibleName, i, 0);
-         if(strcmp(szPossibleName, "asia-s3.rom") == 0)
-         {
-            // USE AES-BIOS...
-            if (g_opt_neo_geo_mode == NEO_GEO_MODE_AES)
-            {
-               if(index < 0) { index = find_rom_by_name((char*)"neo-epo.bin", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0xD27A71F1, list, count); }
-            } else
-            // USE UNI-BIOS...
-            if (g_opt_neo_geo_mode == NEO_GEO_MODE_UNIBIOS)
-            {
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_1.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x0C58093F, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_3_0.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0xA97C89A9, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_3o.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x601720AE, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_3.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x27664EB5, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_2.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x2D50996A, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_1.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x8DABF76B, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_2_0.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x0C12C2AD, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_3.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0xB24B44A0, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_2o.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0xE19D3CE9, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_2.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x4FA698E9, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_1.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x5DDA0D84, list, count); }
-               if(index < 0) { index = find_rom_by_name((char*)"uni-bios_1_0.rom", list, count); }
-               if(index < 0) { index = find_rom_by_crc(0x0CE453A0, list, count); }
-
-               // uni-bios not found, try to find regular MVS bios
-               if(index < 0) { index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count); }
-
-            } else {
-               index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
-            }
-         } else {
-            index = find_rom_by_crc(g_find_list[i].ri.nCrc, list, count);
-         }
+         BurnDrvGetRomName(&rom_name, i, 0);
 
          if (index < 0)
-            continue;
+         {
+            log_cb(RETRO_LOG_WARN, "[FBA] Searching ROM at index %d with CRC 0x%08x and name %s => Not Found\n", i, g_find_list[i].ri.nCrc, rom_name);
+            continue;              
+         }
 
+#if 0
+         log_cb(RETRO_LOG_INFO, "[FBA] Searching ROM at index %d with CRC 0x%08x and name %s => Found\n", i, g_find_list[i].ri.nCrc, rom_name);
+#endif                          
+         // Search for the best bios available by category
+         if (is_neogeo_game)
+         {
+            RomBiosInfo *bios;
+
+            // MVS BIOS
+            bios = find_bios_info(list[index].szName, list[index].nCrc, mvs_bioses);
+            if (bios)
+            {
+               if (!available_mvs_bios || (available_mvs_bios && bios->priority < available_mvs_bios->priority))
+                  available_mvs_bios = bios;
+            }
+
+            // AES BIOS
+            bios = find_bios_info(list[index].szName, list[index].nCrc, aes_bioses);
+            if (bios)
+            {
+               if (!available_aes_bios || (available_aes_bios && bios->priority < available_aes_bios->priority))
+                  available_aes_bios = bios;
+            }
+
+            // Universe BIOS
+            bios = find_bios_info(list[index].szName, list[index].nCrc, uni_bioses);
+            if (bios)
+            {
+               if (!available_uni_bios || (available_uni_bios && bios->priority < available_uni_bios->priority))
+                  available_uni_bios = bios;
+            }
+         }
+         
          // Yay, we found it!
          g_find_list[i].nArchive = z;
          g_find_list[i].nPos = index;
@@ -453,14 +576,35 @@ static bool open_archive()
       ZipClose();
    }
 
+   bool is_neogeo_bios_available = false;
+   if (is_neogeo_game)
+   {
+      if (!available_mvs_bios && !available_aes_bios && !available_uni_bios)
+      {
+         log_cb(RETRO_LOG_WARN, "[FBA] NeoGeo BIOS missing ...\n");
+      }
+      
+      set_neo_system_bios();
+      
+      // if we have a least one type of bios, we will be able to skip the asia-s3.rom non optional bios
+      if (available_mvs_bios || available_aes_bios || available_uni_bios)
+      {
+         is_neogeo_bios_available = true;
+      }
+   }
+
    // Going over every rom to see if they are properly loaded before we continue ...
    for (unsigned i = 0; i < g_rom_count; i++)
    {
       if (g_find_list[i].nState != STAT_OK)
       {
-         log_cb(RETRO_LOG_ERROR, "[FBA] ROM index %i was not found ... CRC: 0x%08x\n", i, g_find_list[i].ri.nCrc);
+         if(!(g_find_list[i].ri.nType & BRF_OPT))
+         {
+            // make the asia-s3.rom [0x91B64BE3] (mvs_bioses[0]) optional if we have another bios available
+            if (is_neogeo_game && g_find_list[i].ri.nCrc == mvs_bioses[0].crc && is_neogeo_bios_available)
+               continue;
 
-         if(!(g_find_list[i].ri.nType & BRF_OPT)) {
+            log_cb(RETRO_LOG_ERROR, "[FBA] ROM at index %d with CRC 0x%08x is required ...\n", i, g_find_list[i].ri.nCrc);
             return false;
          }
       }
@@ -499,6 +643,10 @@ void retro_deinit()
 
 void retro_reset()
 {
+   // restore the NeoSystem because it was changed by during the gameplay
+   if (is_neogeo_game)
+      set_neo_system_bios();
+
    struct GameInp* pgi = GameInp;
 
    for (unsigned i = 0; i < nGameInpCount; i++, pgi++)
@@ -630,6 +778,8 @@ void retro_run()
    bool updated = false;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
    {
+      neo_geo_modes old_g_opt_neo_geo_mode = g_opt_neo_geo_mode;
+
       check_variables();
       // todo: only reinit when needed
       init_input();
@@ -638,6 +788,12 @@ void retro_run()
       struct retro_system_av_info av_info;
       retro_get_system_av_info(&av_info);
       environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
+      
+      // reset to change the bios
+      if (old_g_opt_neo_geo_mode != g_opt_neo_geo_mode)
+      {
+         retro_reset();
+      }
    }
 }
 
@@ -743,7 +899,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    nFMInterpolation = 3;
    nInterpolation = 3;
 
-      char input[128];
+   char input[128];
 
    BurnDrvInit();
    snprintf (input, sizeof(input), "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
@@ -877,7 +1033,6 @@ bool analog_controls_enabled = false;
 
 bool retro_load_game(const struct retro_game_info *info)
 {
-   bool retval = false;
    char basename[128];
    extract_basename(basename, info->path, sizeof(basename));
    extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
@@ -886,7 +1041,7 @@ bool retro_load_game(const struct retro_game_info *info)
    // If save directory is defined use it, ...
    if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &dir) && dir)
    {
-      snprintf(g_save_dir, sizeof(g_save_dir), "%s", dir);
+      strncpy(g_save_dir, dir, sizeof(g_save_dir));
       log_cb(RETRO_LOG_INFO, "Setting save dir to %s\n", g_save_dir);
    }
    else
@@ -897,26 +1052,26 @@ bool retro_load_game(const struct retro_game_info *info)
    }
 
    unsigned i = BurnDrvGetIndexByName(basename);
-   if (i < nBurnDrvCount)
-   {
-      pBurnSoundOut = g_audio_buf;
-      nBurnSoundRate = AUDIO_SAMPLERATE;
-      nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
-
-      if (!fba_init(i, basename))
-         return false;
-
-      check_variables();
-      driver_inited = true;
-      analog_controls_enabled = init_input();
-
-      retval = true;
-   }
-   else
+   if (!(i < nBurnDrvCount))
    {
       log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
       return false;
    }
+
+   const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
+   is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
+
+   pBurnSoundOut = g_audio_buf;
+   nBurnSoundRate = AUDIO_SAMPLERATE;
+   nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
+
+   check_variables();
+
+   if (!fba_init(i, basename))
+      return false;
+
+   driver_inited = true;
+   analog_controls_enabled = init_input();
 
    int32_t width, height;
    BurnDrvGetFullSize(&width, &height);
@@ -932,10 +1087,9 @@ bool retro_load_game(const struct retro_game_info *info)
       environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars_neogeo);
    }
    */
-   check_variables();
 
 
-   return retval;
+   return true;
 }
 
 bool retro_load_game_special(unsigned, const struct retro_game_info*, size_t) { return false; }
