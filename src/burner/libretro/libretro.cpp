@@ -83,13 +83,29 @@ void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_c
 void retro_set_input_poll(retro_input_poll_t cb) { poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_cb = cb; }
 
+static const struct retro_variable var_empty = { NULL, NULL };
+
+static const struct retro_variable var_fba_aspect = { "fba-aspect", "Core-provided aspect ratio; DAR|PAR" };
+static const struct retro_variable var_cpu_speed_adjust = { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" };
+static const struct retro_variable var_fba_controls = { "fba-controls", "Control scheme; gamepad|arcade" };
+
 static const struct retro_variable vars_generic[] = {
-   { "fba-aspect", "Core-provided aspect ratio; DAR|PAR" },
-   { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" },
-   { "fba-controls", "Control scheme; gamepad|arcade" },
-   { "fba-neogeo-mode", "Neo Geo mode; mvs|aes|unibios" },
-   { "fba-neogeo-controls", "Neo Geo gamepad scheme; classic|newgen" },
-   { NULL, NULL },
+   var_fba_aspect,
+   var_cpu_speed_adjust,
+   var_fba_controls,
+   var_empty,
+};
+
+static const struct retro_variable var_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; mvs|aes|unibios" };
+static const struct retro_variable var_neogeo_controls = { "fba-neogeo-controls", "Neo Geo gamepad scheme; classic|newgen" };
+
+static const struct retro_variable vars_neogeo[] = {
+   var_fba_aspect,
+   var_cpu_speed_adjust,
+   var_fba_controls,
+   var_neogeo_mode,
+   var_neogeo_controls,
+   var_empty,
 };
 
 void retro_set_environment(retro_environment_t cb)
@@ -673,18 +689,7 @@ static void check_variables(void)
 {
    struct retro_variable var = {0};
 
-   var.key = "fba-neogeo-mode";
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
-   {
-      if (strcmp(var.value, "mvs") == 0)
-         g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
-      else if (strcmp(var.value, "aes") == 0)
-         g_opt_neo_geo_mode = NEO_GEO_MODE_AES;
-      else if (strcmp(var.value, "unibios") == 0)
-         g_opt_neo_geo_mode = NEO_GEO_MODE_UNIBIOS;
-   }
-
-   var.key = "fba-cpu-speed-adjust";
+   var.key = var_cpu_speed_adjust.key;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
       if (strcmp(var.value, "110") == 0)
@@ -711,7 +716,7 @@ static void check_variables(void)
          nBurnCPUSpeedAdjust = 0x0100;
    }
 
-   var.key = "fba-controls";
+   var.key = var_fba_controls.key;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
       if (strcmp(var.value, "gamepad") == 0)
@@ -720,23 +725,37 @@ static void check_variables(void)
          gamepad_controls = false;
    }
 
-   var.key = "fba-neogeo-controls";
+   var.key = var_fba_aspect.key;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
-      if (strcmp(var.value, "newgen") == 0)
-         newgen_controls = true;
+      if (strcmp(var.value, "PAR") == 0)
+         core_aspect_par = true;
       else
-         newgen_controls = false;
+         core_aspect_par = false;
    }
-
-      var.key = "fba-aspect";
+   
+   if (is_neogeo_game)
+   {
+      var.key = var_neogeo_controls.key;
       if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
       {
-         if (strcmp(var.value, "PAR") == 0)
-            core_aspect_par = true;
+         if (strcmp(var.value, "newgen") == 0)
+            newgen_controls = true;
          else
-            core_aspect_par = false;
+            newgen_controls = false;
       }
+      
+      var.key = var_neogeo_mode.key;
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+      {
+         if (strcmp(var.value, "mvs") == 0)
+            g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
+         else if (strcmp(var.value, "aes") == 0)
+            g_opt_neo_geo_mode = NEO_GEO_MODE_AES;
+         else if (strcmp(var.value, "unibios") == 0)
+            g_opt_neo_geo_mode = NEO_GEO_MODE_UNIBIOS;
+      }
+   }
 }
 
 void retro_run()
@@ -778,18 +797,29 @@ void retro_run()
    bool updated = false;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
    {
+      bool old_gamepad_controls = gamepad_controls;
+      bool old_newgen_controls = newgen_controls;
+      bool old_core_aspect_par = core_aspect_par;
       neo_geo_modes old_g_opt_neo_geo_mode = g_opt_neo_geo_mode;
 
       check_variables();
-      // todo: only reinit when needed
-      init_input();
 
-      // todo: only reinit when needed
-      struct retro_system_av_info av_info;
-      retro_get_system_av_info(&av_info);
-      environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
-      
-      // reset to change the bios
+      // reinitialise input if user changed the control scheme
+      if (old_gamepad_controls != gamepad_controls ||
+          old_newgen_controls != newgen_controls)
+      {
+         init_input();
+      }
+
+      // adjust aspect ratio if the needed
+      if (old_core_aspect_par != core_aspect_par)
+      {
+         struct retro_system_av_info av_info;
+         retro_get_system_av_info(&av_info);
+         environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
+      }
+
+      // reset the game if the user changed the bios
       if (old_g_opt_neo_geo_mode != g_opt_neo_geo_mode)
       {
          retro_reset();
@@ -1060,6 +1090,11 @@ bool retro_load_game(const struct retro_game_info *info)
 
    const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
    is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
+   
+   if (is_neogeo_game)
+   {
+      environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars_neogeo);
+   }
 
    pBurnSoundOut = g_audio_buf;
    nBurnSoundRate = AUDIO_SAMPLERATE;
@@ -1079,15 +1114,6 @@ bool retro_load_game(const struct retro_game_info *info)
    g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
 
    InpDIPSWInit();
-
-   /* I want to try to implement different core options depending on the emulated system, not working so far
-   const char * boardrom   = BurnDrvGetTextA(DRV_BOARDROM);
-   if(boardrom && !strcmp(boardrom,"neogeo"))
-   {
-      environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars_neogeo);
-   }
-   */
-
 
    return true;
 }
