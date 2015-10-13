@@ -5,7 +5,6 @@
 #include <string>
 
 #include "cd/cd_interface.h"
-#include "descriptors.h"
 
 #define FBA_VERSION "v0.2.97.36"
 
@@ -1141,7 +1140,7 @@ struct key_map
 };
 static uint8_t keybinds[0x5000][2];
 
-#define BIND_MAP_COUNT 310
+#define BIND_MAP_COUNT 312
 
 #define RETRO_DEVICE_ID_JOYPAD_RESET      16
 #define RETRO_DEVICE_ID_JOYPAD_SERVICE    17
@@ -1244,17 +1243,27 @@ static bool init_input(void)
    /* NOTE: The following buttons aren't mapped to the RetroPad:
     *
     * "Dip 1/2/3", "Dips", "Debug Dip", "Debug Dip 1/2", "Region",
-    * "Service", "Service 1/2/3/4", "Diagnostic", "Diagnostics",
-    * "Test", "Reset", "Volume Up/Down", "System", "Slots" and "Tilt"
+    * "Service", "Service 1/2/3/4",
+    * "Reset", "Volume Up/Down", "System", "Slots" and "Tilt"
     *
     * Mahjong/Poker controls aren't mapped since they require a keyboard
     * Excite League isn't mapped because it uses 11 buttons
     *
-    * L3 and R3 are unmapped and could still be used */
+    * L3 is unmapped and could still be used */
 
    /* Universal controls */
 
+   // Diagnostic, Diagnostics and Test buttons can share the same input,
+   // they are used to enter the diagnostic menu and will never collide
    bind_map[PTR_INCR].bii_name = "Diagnostic";
+   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
+   bind_map[PTR_INCR].nCode[1] = 0;
+
+   bind_map[PTR_INCR].bii_name = "Diagnostics";
+   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
+   bind_map[PTR_INCR].nCode[1] = 0;
+
+   bind_map[PTR_INCR].bii_name = "Test";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
    bind_map[PTR_INCR].nCode[1] = 0;
 
@@ -1662,13 +1671,13 @@ static bool init_input(void)
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_Y;
    bind_map[PTR_INCR].nCode[1] = 1;
 
-    bind_map[PTR_INCR].bii_name = "Stick X";
-    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_X;
-    bind_map[PTR_INCR].nCode[1] = 0;
+   bind_map[PTR_INCR].bii_name = "Stick X";
+   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_X;
+   bind_map[PTR_INCR].nCode[1] = 0;
 
-    bind_map[PTR_INCR].bii_name = "Stick Y";
-    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_Y;
-    bind_map[PTR_INCR].nCode[1] = 0;
+   bind_map[PTR_INCR].bii_name = "Stick Y";
+   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_Y;
+   bind_map[PTR_INCR].nCode[1] = 0;
 
    /* Light gun controls
     *
@@ -1722,10 +1731,9 @@ static bool init_input(void)
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_ANALOG_Y;
    bind_map[PTR_INCR].nCode[1] = 1;
 
-   /* Gamepad friendly mapping */
+   /* Arcade stick friendly mapping */
    if (gamepad_controls == false)
    {
-
       /* General controls */
 
       bind_map[PTR_INCR].bii_name = "Button 1";
@@ -2604,10 +2612,9 @@ static bool init_input(void)
       bind_map[PTR_INCR].nCode[1] = 0;
 
    }
-   /* Arcade stick friendly mapping */
+   /* Gamepad friendly mapping */
    else
    {
-
      /* General controls */
 
       bind_map[PTR_INCR].bii_name = "Button 1";
@@ -3524,6 +3531,14 @@ static bool init_input(void)
       bind_map[PTR_INCR].nCode[1] = 0;
    }
 
+   struct retro_input_descriptor input_descriptors[nGameInpCount + 1]; // + 1 for the empty ending retro_input_descriptor { 0 }
+   bool is_avsp = (parentrom && strcmp(parentrom, "avsp") == 0 || strcmp(drvname ,"avsp") == 0);
+   bool is_armwar = (parentrom && strcmp(parentrom, "armwar") == 0 || strcmp(drvname, "armwar") == 0);
+
+   unsigned int nGameInpCountAffected = 0;
+   char button_select[15];
+   char button_shot[15];
+
    for(unsigned int i = 0; i < nGameInpCount; i++, pgi++)
    {
       BurnDrvGetInputInfo(&bii, i);
@@ -3532,100 +3547,72 @@ static bool init_input(void)
 
       for(int j = 0; j < counter; j++)
       {
-         if((strcmp(bii.szName,"P1 Select") ==0) && (boardrom && (strcmp(boardrom,"neogeo") == 0)))
-         {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
-            keybinds[pgi->Input.Switch.nCode][1] = 0;
-            value_found = true;
-         }
-         else if((strcmp(bii.szName,"P2 Select") ==0) && (boardrom && (strcmp(boardrom,"neogeo") == 0)))
-         {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
-            keybinds[pgi->Input.Switch.nCode][1] = 1;
-            value_found = true;
-         }
+         unsigned port = bind_map[j].nCode[1];
 
+         sprintf(button_select, "P%d Select", port + 1); // => P1 Select
+         sprintf(button_shot,   "P%d Shot",   port + 1); // => P1 Shot
+
+         value_found = false;
+
+         if (is_neogeo_game && strcmp(bii.szName, button_select) == 0)
+         {
+            value_found = true;
+            // set the retro devie id
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
+         }
          /* Alien vs. Predator and Armored Warriors both use "Px Shot" which usually serves as the shoot button for shmups
           * To make sure the controls don't overlap with each other if statements are used */
-
-         else if((parentrom && strcmp(parentrom,"avsp") == 0 || strcmp(drvname,"avsp") == 0) && (strcmp(bii.szName,"P1 Shot") ==0))
+         else if ((is_avsp || is_armwar) && strcmp(bii.szName, button_shot) == 0)
          {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-            keybinds[pgi->Input.Switch.nCode][1] = 0;
             value_found = true;
-         }
-         else if((parentrom && strcmp(parentrom,"avsp") == 0 || strcmp(drvname,"avsp") == 0) && (strcmp(bii.szName,"P2 Shot") ==0))
-         {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-            keybinds[pgi->Input.Switch.nCode][1] = 1;
-            value_found = true;
-         }
-         else if((parentrom && strcmp(parentrom,"avsp") == 0 || strcmp(drvname,"avsp") == 0) && (strcmp(bii.szName,"P3 Shot") ==0))
-         {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-            keybinds[pgi->Input.Switch.nCode][1] = 2;
-            value_found = true;
-         }
-         else if((parentrom && strcmp(parentrom,"armwar") == 0 || strcmp(drvname,"armwar") == 0) && (strcmp(bii.szName,"P1 Shot") ==0))
-         {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-            keybinds[pgi->Input.Switch.nCode][1] = 0;
-            value_found = true;
-         }
-         else if((parentrom && strcmp(parentrom,"armwar") == 0 || strcmp(drvname,"armwar") == 0) && (strcmp(bii.szName,"P2 Shot") ==0))
-         {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-            keybinds[pgi->Input.Switch.nCode][1] = 1;
-            value_found = true;
-         }
-         else if((parentrom && strcmp(parentrom,"armwar") == 0 || strcmp(drvname,"armwar") == 0) && (strcmp(bii.szName,"P3 Shot") ==0))
-         {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-            keybinds[pgi->Input.Switch.nCode][1] = 2;
-            value_found = true;
+            // set the retro devie id
+            if (gamepad_controls == false)
+               keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
+            else
+               keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
          }
          else if(strcmp(bii.szName, bind_map[j].bii_name) == 0)
          {
-            keybinds[pgi->Input.Switch.nCode][0] = bind_map[j].nCode[0];
-            keybinds[pgi->Input.Switch.nCode][1] = bind_map[j].nCode[1];
             value_found = true;
+            // set the retro devie id
+            keybinds[pgi->Input.Switch.nCode][0] = bind_map[j].nCode[0];
          }
-         else
-            value_found = false;
 
          if (!value_found)
             continue;
 
-         log_cb(RETRO_LOG_INFO, "%s - assigned to key: %s, port: %d.\n", bii.szName, print_label(keybinds[pgi->Input.Switch.nCode][0]),keybinds[pgi->Input.Switch.nCode][1]);
-         log_cb(RETRO_LOG_INFO, "%s - has nSwitch.nCode: %x.\n", bii.szName, pgi->Input.Switch.nCode);
+         // set the port index
+         keybinds[pgi->Input.Switch.nCode][1] = port;
+
+         unsigned device = RETRO_DEVICE_JOYPAD;
+         unsigned index = 0;
+         unsigned id = keybinds[pgi->Input.Switch.nCode][0];
+
+         // "P1 XXX" - try to exclude the "P1 " from the szName
+         int offset_player_x = 0;
+         if (strlen(bii.szName) > 3 && bii.szName[0] == 'P' && bii.szName[2] == ' ')
+            offset_player_x = 3;
+
+         char* description = bii.szName + offset_player_x;
+         
+         input_descriptors[nGameInpCountAffected] = { port, device, index, id, description };
+
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - assigned to key [%-25s] on port %2d.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode, print_label(keybinds[pgi->Input.Switch.nCode][0]), port);
+
+         nGameInpCountAffected++;
+
          break;
       }
 
-      if(!value_found)
+      if (!value_found)
       {
-         log_cb(RETRO_LOG_INFO, "WARNING! Button unaccounted for: [%s].\n", bii.szName);
-         log_cb(RETRO_LOG_INFO, "%s - has nSwitch.nCode: %x.\n", bii.szName, pgi->Input.Switch.nCode);
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - WARNING! Button unaccounted.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
       }
    }
 
-   /* add code to select between different descriptors here */
-   if(gamepad_controls)
-   {
-      if(boardrom && !strcmp(boardrom,"neogeo"))
-         if(newgen_controls)
-            environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad_newgen);
-         else
-            environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_gamepad);
-      else
-      environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_gamepad);
-   }
-   else
-   {
-      if(boardrom && !strcmp(boardrom,"neogeo"))
-         environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, neogeo_arcade);
-      else
-         environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, default_arcade);
-   }
+   input_descriptors[nGameInpCountAffected] = { 0 };
+
+   environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, input_descriptors);
 
    return has_analog;
 }
