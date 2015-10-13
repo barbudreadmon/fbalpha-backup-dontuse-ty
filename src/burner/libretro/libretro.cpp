@@ -5,7 +5,6 @@
 #include <string>
 
 #include "cd/cd_interface.h"
-#include "descriptors.h"
 
 #define FBA_VERSION "v0.2.97.36"
 
