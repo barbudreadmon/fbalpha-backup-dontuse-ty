@@ -485,7 +485,7 @@ else
 endif
 
 CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
-CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS) -std=gnu++0x
+CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES) $(PROFFLAGS)
 LDFLAGS += $(fpic)
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)
@@ -571,6 +571,21 @@ generate-files:
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCFLAGS) -c $^ -o $@
+
+src/burn/drv/midway/%.o: src/burn/drv/midway/%.cpp
+	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
+
+src/cpu/adsp2100_intf.o: src/cpu/adsp2100_intf.cpp
+	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
+
+src/cpu/mips3_intf.o: src/cpu/mips3_intf.cpp
+	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
+
+src/cpu/mips3/%.o: src/cpu/mips3/%.cpp
+	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
+
+src/burner/libretro/libretro.o: src/burner/libretro/libretro.cpp
+	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c $^ -o $@
