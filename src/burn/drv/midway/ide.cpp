@@ -326,7 +326,7 @@ unsigned ide_disk::read_alternate(unsigned offset)
 
 bool ide_disk::load_disk_image(const string &filename)
 {
-    m_disk_image.open(filename, ios_base::binary | ios_base::in | ios_base::out);
+    m_disk_image.open(filename.c_str(), ios_base::binary | ios_base::in | ios_base::out);
     if (!m_disk_image.is_open()) {
         ata_log("disk image not found!\n");
         return false;

@@ -1,7 +1,12 @@
 #include "mips3_intf.h"
 #include "mips3/mips3.h"
 #include "burnint.h"
+
+#ifdef IOS
+#include <tr1/cstdint>
+#else
 #include <cstdint>
+#endif
 
 #ifdef MIPS3_X64_DRC
 #include "mips3/x64/mips3_x64.h"

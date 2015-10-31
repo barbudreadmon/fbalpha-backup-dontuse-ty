@@ -3,7 +3,13 @@
  * Licensed under BSD 3-clause.
  */
 #include <iostream>
+
+#ifdef IOS
+#include <tr1/cstdint>
+#else
 #include <cstdint>
+#endif
+
 #include "mips3.h"
 #include "mipsdef.h"
 #include "memory.h"

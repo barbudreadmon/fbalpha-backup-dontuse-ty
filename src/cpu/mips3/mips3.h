@@ -8,7 +8,12 @@
 #include "common.h"
 
 #include <string>
+#ifdef IOS
+using namespace std::tr1;
+#include <tr1/unordered_set>
+#else
 #include <unordered_set>
+#endif
 
 namespace mips
 {
