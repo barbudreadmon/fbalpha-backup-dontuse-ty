@@ -1,6 +1,10 @@
 #ifndef ADSP2100_INTF
 #define ADSP2100_INTF
+#ifdef IOS
+#include <tr1/cstdint>
+#else
 #include <cstdint>
+#endif
 
 #include "adsp2100/adsp2100_defs.h"
 
