@@ -105,14 +105,16 @@ ifeq ($(IOSSDK),)
 endif
 	CC = cc -arch armv7 -isysroot $(IOSSDK)
 	CXX = c++ -arch armv7 -isysroot $(IOSSDK)
-	CFLAGS += -DIOS
-	CXXFLAGS += -DIOS
 	ENDIANNESS_DEFINES := -DLSB_FIRST
 ifeq ($(platform),ios9)
+	CFLAGS += -DIOS9
+	CXXFLAGS += -DIOS9
 	CC += -miphoneos-version-min=8.0
 	CXX +=  -miphoneos-version-min=8.0
 	CFLAGS += -miphoneos-version-min=8.0
 else
+	CFLAGS += -DIOS
+	CXXFLAGS += -DIOS
 	CC += -miphoneos-version-min=5.0
 	CXX +=  -miphoneos-version-min=5.0
 	CFLAGS += -miphoneos-version-min=5.0

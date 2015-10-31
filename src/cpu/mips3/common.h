@@ -1,11 +1,7 @@
 #ifndef COMMON
 #define COMMON
 
-#ifdef IOS
-#include <tr1/cstdint>
-#else
-#include <cstdint>
-#endif
+#include <stdint.h>
 
 #ifdef __GNUC__
 #define ALIGN_DECL(n)   __attribute__ ((aligned (n)))

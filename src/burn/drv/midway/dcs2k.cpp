@@ -1,9 +1,5 @@
 #include <math.h>
-#ifdef IOS
-#include <tr1/cstdint>
-#else
-#include <cstdint>
-#endif
+#include <stdint.h>
 #include "adsp2100_intf.h"
 #include "adsp2100/adsp2100.h"
 #include "dcs2k.h"
