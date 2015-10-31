@@ -5,11 +5,7 @@
  */
 //#include <QDebug>
 #include <iostream>
-#ifdef IOS
-#include <tr1/cstdint>
-#else
-#include <cstdint>
-#endif
+#include <stdint.h>
 #include "mips3.h"
 #include "mipsdef.h"
 #include "memory.h"
