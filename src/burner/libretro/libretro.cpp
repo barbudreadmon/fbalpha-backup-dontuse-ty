@@ -39,6 +39,9 @@ enum neo_geo_modes
 
    /* UNIBIOS */
    NEO_GEO_MODE_UNIBIOS = 2,
+
+   /* DIPSWITCH */
+   NEO_GEO_MODE_DIPSWITCH = 3,
 };
 
 static unsigned int BurnDrvGetIndexByName(const char* name);
@@ -93,7 +96,7 @@ static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-a
 static const struct retro_variable var_fba_controls = { "fba-controls", "Control scheme; gamepad|arcade" };
 
 // Neo Geo core options
-static const struct retro_variable var_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; mvs|aes|unibios" };
+static const struct retro_variable var_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; MVS|AES|UNIBIOS|DIPSWITCH" };
 static const struct retro_variable var_neogeo_controls = { "fba-neogeo-controls", "Neo Geo gamepad scheme; classic|newgen" };
 
 void retro_set_environment(retro_environment_t cb)
@@ -159,10 +162,14 @@ static RomBiosInfo *available_uni_bios = NULL;
 
 void set_neo_system_bios()
 {
-   NeoSystem &= ~0x1f;
-
-   if (g_opt_neo_geo_mode == NEO_GEO_MODE_MVS)
+   if (g_opt_neo_geo_mode == NEO_GEO_MODE_DIPSWITCH)
    {
+      // Nothing to do in DIPSWITCH mode because the NeoSystem variable is changed by the DIP Switch core option
+      log_cb(RETRO_LOG_INFO, "DIPSWITCH Neo Geo Mode selected => NeoSystem: 0x%02x.\n", NeoSystem);
+   }
+   else if (g_opt_neo_geo_mode == NEO_GEO_MODE_MVS)
+   {
+      NeoSystem &= ~0x1f;
       if (available_mvs_bios)
       {
          NeoSystem |= available_mvs_bios->NeoSystem;
@@ -181,6 +188,7 @@ void set_neo_system_bios()
    }
    else if (g_opt_neo_geo_mode == NEO_GEO_MODE_AES)
    {
+      NeoSystem &= ~0x1f;
       if (available_aes_bios)
       {
          NeoSystem |= available_aes_bios->NeoSystem;
@@ -199,6 +207,7 @@ void set_neo_system_bios()
    }
    else if (g_opt_neo_geo_mode == NEO_GEO_MODE_UNIBIOS)
    {
+      NeoSystem &= ~0x1f;
       if (available_uni_bios)
       {
          NeoSystem |= available_uni_bios->NeoSystem;
@@ -955,12 +964,14 @@ static void check_variables(void)
       var.key = var_neogeo_mode.key;
       if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
       {
-         if (strcmp(var.value, "mvs") == 0)
+         if (strcmp(var.value, "MVS") == 0)
             g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
-         else if (strcmp(var.value, "aes") == 0)
+         else if (strcmp(var.value, "AES") == 0)
             g_opt_neo_geo_mode = NEO_GEO_MODE_AES;
-         else if (strcmp(var.value, "unibios") == 0)
+         else if (strcmp(var.value, "UNIBIOS") == 0)
             g_opt_neo_geo_mode = NEO_GEO_MODE_UNIBIOS;
+         else if (strcmp(var.value, "DIPSWITCH") == 0)
+            g_opt_neo_geo_mode = NEO_GEO_MODE_DIPSWITCH;
       }
    }
 }
