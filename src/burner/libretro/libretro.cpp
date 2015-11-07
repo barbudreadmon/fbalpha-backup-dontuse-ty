@@ -492,7 +492,7 @@ static void set_environment()
 
    log_cb(RETRO_LOG_INFO, "set_environment: SYSTEM: %d, DIPSWITCH: %d\n", nbr_vars, nbr_dips);
 
-   struct retro_variable vars[nbr_vars + nbr_dips];
+   struct retro_variable vars[nbr_vars + nbr_dips + 1];
    
    int idx_var = 0;
 
