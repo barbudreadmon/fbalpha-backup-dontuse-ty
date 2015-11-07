@@ -1754,6 +1754,8 @@ static INT32 DrvDoReset()
 	bg1scrolly = 0;
 	bg2scrolly = 0;
 
+	HiscoreReset();
+
 	return 0;
 }
 
@@ -2336,7 +2338,7 @@ static void turbofrc_drawsprites(INT32 chip, INT32 turbofrc_layer, INT32 paloffs
 		if (!(BURN_ENDIAN_SWAP_INT16(RamSpr3[attr_start + 2]) & 0x0080)) continue;
 		pri = BURN_ENDIAN_SWAP_INT16(RamSpr3[attr_start + 2]) & 0x0010;
 		if ( chip_disabled_pri & !pri) continue;
-		if (!chip_disabled_pri & (pri>>4)) continue;
+		if ((!chip_disabled_pri) & (pri>>4)) continue;
 		ox = BURN_ENDIAN_SWAP_INT16(RamSpr3[attr_start + 1]) & 0x01ff;
 		xsize = (BURN_ENDIAN_SWAP_INT16(RamSpr3[attr_start + 2]) & 0x0700) >> 8;
 		zoomx = (BURN_ENDIAN_SWAP_INT16(RamSpr3[attr_start + 1]) & 0xf000) >> 12;
@@ -2778,7 +2780,7 @@ struct BurnDriver BurnDrvAerofgt = {
 	"aerofgt", NULL, NULL, NULL, "1992",
 	"Aero Fighters\0", NULL, "Video System Co.", "Video System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
 	NULL, aerofgtRomInfo, aerofgtRomName, NULL, NULL, aerofgtInputInfo, aerofgtDIPInfo,
 	aerofgtInit,DrvExit,DrvFrame,DrvDraw,DrvScan,&DrvRecalc,0x400,
 	224,320,3,4
@@ -2854,7 +2856,7 @@ struct BurnDriver BurnDrvAerofgtb = {
 	"aerofgtb", "aerofgt", NULL, NULL, "1992",
 	"Aero Fighters (Turbo Force hardware set 1)\0", NULL, "Video System Co.", "Video System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
 	NULL, aerofgtbRomInfo, aerofgtbRomName, NULL, NULL, aerofgtInputInfo, aerofgtbDIPInfo,
 	aerofgtbInit,DrvExit,DrvFrame,aerofgtbDraw,DrvScan,&DrvRecalc,0x400,
 	224,320,3,4
@@ -2889,7 +2891,7 @@ struct BurnDriver BurnDrvAerofgtc = {
 	"aerofgtc", "aerofgt", NULL, NULL, "1992",
 	"Aero Fighters (Turbo Force hardware set 2)\0", NULL, "Video System Co.", "Video System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
 	NULL, aerofgtcRomInfo, aerofgtcRomName, NULL, NULL, aerofgtInputInfo, aerofgtDIPInfo,
 	aerofgtbInit,DrvExit,DrvFrame,aerofgtbDraw,DrvScan,&DrvRecalc,0x400,
 	224,320,3,4
@@ -2924,14 +2926,14 @@ struct BurnDriver BurnDrvSonicwi = {
 	"sonicwi", "aerofgt", NULL, NULL, "1992",
 	"Sonic Wings (Japan)\0", NULL, "Video System Co.", "Video System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, FBF_SONICWI,
 	NULL, sonicwiRomInfo, sonicwiRomName, NULL, NULL, aerofgtInputInfo, aerofgtDIPInfo,
 	aerofgtbInit,DrvExit,DrvFrame,aerofgtbDraw,DrvScan,&DrvRecalc,0x400,
 	224,320,3,4
 };
 
 
-// Karate Blazers (World?)
+// Karate Blazers (World, set 1)
 
 static struct BurnRomInfo karatblzRomDesc[] = {
 	{ "rom2v3",    	  0x040000, 0x01f772e1, BRF_ESS | BRF_PRG }, // 68000 code swapped
@@ -2959,7 +2961,7 @@ STD_ROM_FN(karatblz)
 
 struct BurnDriver BurnDrvKaratblz = {
 	"karatblz", NULL, NULL, NULL, "1991",
-	"Karate Blazers (World?)\0", NULL, "Video System Co.", "Video System",
+	"Karate Blazers (World, set 1)\0", NULL, "Video System Co.", "Video System",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 4, HARDWARE_MISC_POST90S, GBF_SCRFIGHT, 0,
 	NULL, karatblzRomInfo, karatblzRomName, NULL, NULL, karatblzInputInfo, karatblzDIPInfo,
@@ -2968,7 +2970,42 @@ struct BurnDriver BurnDrvKaratblz = {
 };
 
 
-// Karate Blazers (US)
+// Karate Blazers (World, set 2)
+
+static struct BurnRomInfo karatblaRomDesc[] = {
+	{ "v2.u14",    	  0x040000, 0x7a78976e, BRF_ESS | BRF_PRG }, // 68000 code swapped
+	{ "v1.u15",    	  0x040000, 0x47e410fe, BRF_ESS | BRF_PRG },
+
+	{ "gha.u55",   	  0x080000, 0x3e0cea91, BRF_GRA },			 // gfx1
+	{ "gh9.u61",  	  0x080000, 0x5d1676bd, BRF_GRA },			 // gfx2
+	
+	{ "u42",          0x100000, 0x65f0da84, BRF_GRA },			 // gfx3
+	{ "3.u44",        0x020000, 0x34bdead2, BRF_GRA },
+	{ "u43",          0x100000, 0x7b349e5d, BRF_GRA },			
+	{ "4.u45",        0x020000, 0xbe4d487d, BRF_GRA },
+	
+	{ "u59.ghb",      0x080000, 0x158c9cde, BRF_GRA },			 // gfx4
+	{ "ghd.u60",      0x080000, 0x73180ae3, BRF_GRA },
+
+	{ "5.u92",    	  0x020000, 0x97d67510, BRF_ESS | BRF_PRG }, // Sound CPU
+	
+	{ "u105.gh8",     0x080000, 0x7a68cb1b, BRF_SND },			 // samples
+	{ "u104",         0x100000, 0x5795e884, BRF_SND },	
+};
+
+STD_ROM_PICK(karatbla)
+STD_ROM_FN(karatbla)
+
+struct BurnDriver BurnDrvKaratbla = {
+	"karatblza", "karatblz", NULL, NULL, "1991",
+	"Karate Blazers (World, set 2)\0", NULL, "Video System Co.", "Video System",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_MISC_POST90S, GBF_SCRFIGHT, 0,
+	NULL, karatblaRomInfo, karatblaRomName, NULL, NULL, karatblzInputInfo, karatblzDIPInfo,
+	karatblzInit,DrvExit,DrvFrame,karatblzDraw,DrvScan,&DrvRecalc,0x400,
+	352,240,4,3
+};
+
 
 static struct BurnRomInfo karatbluRomDesc[] = {
 	{ "2.u14",    	  0x040000, 0x202e6220, BRF_ESS | BRF_PRG }, // 68000 code swapped
@@ -3089,7 +3126,7 @@ struct BurnDriver BurnDrvSpinlbrk = {
 	"spinlbrk", NULL, NULL, NULL, "1990",
 	"Spinal Breakers (World)\0", NULL, "V-System Co.", "V-System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_SHOOT, 0,
 	NULL, spinlbrkRomInfo, spinlbrkRomName, NULL, NULL, spinlbrkInputInfo, spinlbrkDIPInfo,
 	spinlbrkInit,DrvExit,DrvFrame,spinlbrkDraw,DrvScan,&DrvRecalc,0x400,
 	352,240,4,3
@@ -3143,7 +3180,7 @@ struct BurnDriver BurnDrvSpinlbru = {
 	"spinlbrku", "spinlbrk", NULL, NULL, "1990",
 	"Spinal Breakers (US)\0", NULL, "V-System Co.", "V-System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_SHOOT, 0,
 	NULL, spinlbruRomInfo, spinlbruRomName, NULL, NULL, spinlbrkInputInfo, spinlbruDIPInfo,
 	spinlbrkInit,DrvExit,DrvFrame,spinlbrkDraw,DrvScan,&DrvRecalc,0x400,
 	352,240,4,3
@@ -3197,7 +3234,7 @@ struct BurnDriver BurnDrvSpinlbrj = {
 	"spinlbrkj", "spinlbrk", NULL, NULL, "1990",
 	"Spinal Breakers (Japan)\0", NULL, "V-System Co.", "V-System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_SHOOT, 0,
 	NULL, spinlbrjRomInfo, spinlbrjRomName, NULL, NULL, spinlbrkInputInfo, spinlbrjDIPInfo,
 	spinlbrkInit,DrvExit,DrvFrame,spinlbrkDraw,DrvScan,&DrvRecalc,0x400,
 	352,240,4,3
@@ -3229,7 +3266,7 @@ struct BurnDriver BurnDrvPspikes = {
 	"pspikes", NULL, NULL, NULL, "1991",
 	"Power Spikes (World)\0", NULL, "Video System Co.", "V-System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
 	NULL, pspikesRomInfo, pspikesRomName, NULL, NULL, PspikesInputInfo, PspikesDIPInfo,
 	pspikesInit,DrvExit,DrvFrame,pspikesDraw,DrvScan,&DrvRecalc,0x800,
 	356,240,4,3
@@ -3263,7 +3300,7 @@ struct BurnDriver BurnDrvPspikesk = {
 	"pspikesk", "pspikes", NULL, NULL, "1991",
 	"Power Spikes (Korea)\0", NULL, "Video System Co.", "V-System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
 	NULL, pspikeskRomInfo, pspikeskRomName, NULL, NULL, PspikesInputInfo, PspikesDIPInfo,
 	pspikesInit,DrvExit,DrvFrame,pspikesDraw,DrvScan,&DrvRecalc,0x800,
 	356,240,4,3
@@ -3294,7 +3331,7 @@ struct BurnDriver BurnDrvPspikesu = {
 	"pspikesu", "pspikes", NULL, NULL, "1991",
 	"Power Spikes (US)\0", NULL, "Video System Co.", "V-System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
 	NULL, pspikesuRomInfo, pspikesuRomName, NULL, NULL, PspikesInputInfo, PspikesDIPInfo,
 	pspikesInit,DrvExit,DrvFrame,pspikesDraw,DrvScan,&DrvRecalc,0x800,
 	356,240,4,3
@@ -3325,7 +3362,7 @@ struct BurnDriver BurnDrvSvolly91 = {
 	"svolly91", "pspikes", NULL, NULL, "1991",
 	"Super Volley '91 (Japan)\0", NULL, "Video System Co.", "V-System",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_POST90S, GBF_SPORTSMISC, 0,
 	NULL, svolly91RomInfo, svolly91RomName, NULL, NULL, PspikesInputInfo, PspikesDIPInfo,
 	pspikesInit,DrvExit,DrvFrame,pspikesDraw,DrvScan,&DrvRecalc,0x800,
 	356,240,4,3

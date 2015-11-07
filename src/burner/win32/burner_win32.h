@@ -453,6 +453,9 @@ int GetIpsNumActivePatches();
 int IpsManagerCreate(HWND hParentWND);
 void IpsPatchExit();
 
+// localise_download.cpp
+int LocaliseDownloadCreate(HWND hParentWND);
+
 // Misc
 #define _TtoA(a)	TCHARToANSI(a, NULL, 0)
 #define _AtoT(a)	ANSIToTCHAR(a, NULL, 0)
@@ -461,3 +464,14 @@ void IpsPatchExit();
 TCHAR* FormatCommasNumber(__int64);
 #define _uInt64ToCommaFormattedTCHAR(szOUT, nIN)	\
 	_stprintf(szOUT, _T("%s"), FormatCommasNumber(nIN));
+
+#ifdef INCLUDE_AVI_RECORDING
+// ----------------------------------------------------------------------------
+// AVI recording
+
+// avi.cpp
+INT32 AviStart();
+INT32 AviRecordFrame(INT32 bDraw);
+void AviStop();
+extern INT32 nAviStatus;
+#endif

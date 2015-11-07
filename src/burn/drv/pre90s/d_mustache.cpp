@@ -212,6 +212,8 @@ static INT32 DrvDoReset()
 	video_control = 0;
 	flipscreen = 0;
 
+	HiscoreReset();
+
 	return 0;
 }
 
@@ -629,7 +631,11 @@ static struct BurnRomInfo mustacheRomDesc[] = {
 	{ "mustache.h18",	0x8000, 0x123bd9b8, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 Code
 	{ "mustache.h16",	0x4000, 0x62552beb, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "t5182.rom",		0x2000, 0xd354c8fc, 2 | BRF_PRG | BRF_ESS }, //  2 t5182 (Z80) Code
+#if !defined (ROM_VERIFY)
+	{ "t5182.rom",		0x2000, 0xd354c8fc, 2 | BRF_PRG | BRF_ESS }, //  2 t5182 (Z80 #1) Code
+#else
+	{ "",				0x0000, 0x00000000, 2 | BRF_PRG | BRF_ESS }, //  2 t5182 (Z80 #1) Code
+#endif
 	{ "mustache.e5",	0x8000, 0xefbb1943, 2 | BRF_PRG | BRF_ESS }, //  3
 
 	{ "mustache.a13",	0x4000, 0x9baee4a7, 3 | BRF_GRA },           //  4 Background Tiles
@@ -655,7 +661,7 @@ struct BurnDriver BurnDrvMustache = {
 	"mustache", NULL, NULL, NULL, "1987",
 	"Mustache Boy\0", NULL, "Seibu Kaihatsu (March license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
 	NULL, mustacheRomInfo, mustacheRomName, NULL, NULL, MustacheInputInfo, MustacheDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	248, 240, 3, 4

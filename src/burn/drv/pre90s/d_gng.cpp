@@ -714,7 +714,9 @@ static INT32 DrvDoReset()
 	ZetClose();
 	
 	BurnYM2203Reset();
-	
+
+	HiscoreReset();
+
 	DrvRomBank = 0;
 	DrvBgScrollX[0] = DrvBgScrollX[1] = 0;
 	DrvBgScrollY[0] = DrvBgScrollY[1] = 0;
@@ -860,6 +862,16 @@ void __fastcall DrvGngZ80Write(UINT16 a, UINT8 d)
 	}
 }
 
+static void DrvRandPalette()
+{ // On first boot we fill the palette with some arbatrary values to see the boot-up messages
+	DrvPaletteRam1[0] = 0x00;
+	DrvPaletteRam2[0] = 0x00;
+	for (INT32 i = 1; i < 0x100; i++) {
+		DrvPaletteRam1[i] = 0xaf;
+		DrvPaletteRam2[i] = 0x5a;
+	}
+}
+
 static INT32 CharPlaneOffsets[2]   = { 4, 0 };
 static INT32 CharXOffsets[8]       = { 0, 1, 2, 3, 8, 9, 10, 11 };
 static INT32 CharYOffsets[8]       = { 0, 16, 32, 48, 64, 80, 96, 112 };
@@ -975,6 +987,7 @@ static INT32 DrvInit()
 	BurnYM2203SetRoute(1, BURN_SND_YM2203_AY8910_ROUTE_3, 0.40, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
+	DrvRandPalette();
 
 	// Reset the driver
 	DrvDoReset();
@@ -1245,7 +1258,7 @@ static void DrvRenderSprites()
 		INT32 yFlip = Attr & 0x08;
 		INT32 Code = DrvSpriteRamBuffer[Offs + 0] + ((Attr << 2) & 0x300);
 		INT32 Colour = (Attr >> 4) & 3;
-		
+
 		if (sx > 16 && sx < 240 && sy > 16 && sy < 208) {
 			if (xFlip) {
 				if (yFlip) {
@@ -1338,10 +1351,10 @@ static void DrvDraw()
 {
 	BurnTransferClear();
 	DrvCalcPalette();
-	DrvRenderBgLayer(0, 1);
-	DrvRenderSprites();
-	DrvRenderBgLayer(1, 0);
-	DrvRenderCharLayer();
+	if (nBurnLayer & 2)     DrvRenderBgLayer(0, 1);
+	if (nSpriteEnable & 1)  DrvRenderSprites();
+	if (nBurnLayer & 4)     DrvRenderBgLayer(1, 0);
+	if (nBurnLayer & 8)     DrvRenderCharLayer();
 	BurnTransferCopy(DrvPalette);
 }
 
@@ -1368,7 +1381,8 @@ static INT32 DrvFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesDone[nCurrentCPU] += M6809Run(nCyclesSegment);
-		if (i == 24) {
+		if (i == 22) {
+			memcpy(DrvSpriteRamBuffer, DrvSpriteRam, 0x200);
 			M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 		M6809Close();
@@ -1391,8 +1405,6 @@ static INT32 DrvFrame()
 	ZetClose();
 
 	if (pBurnDraw) DrvDraw();
-	
-	memcpy(DrvSpriteRamBuffer, DrvSpriteRam, 0x200);
 
 	return 0;
 }
@@ -1437,7 +1449,7 @@ struct BurnDriver BurnDrvGng = {
 	"gng", NULL, NULL, NULL, "1985",
 	"Ghosts'n Goblins (World? set 1)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvRomInfo, DrvRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1447,7 +1459,7 @@ struct BurnDriver BurnDrvGnga = {
 	"gnga", "gng", NULL, NULL, "1985",
 	"Ghosts'n Goblins (World? set 2)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvaRomInfo, DrvaRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	GngaInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1457,7 +1469,7 @@ struct BurnDriver BurnDrvGngbl = {
 	"gngbl", "gng", NULL, NULL, "1985",
 	"Ghosts'n Goblins (bootleg with Cross)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvblRomInfo, DrvblRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	GngaInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1467,7 +1479,7 @@ struct BurnDriver BurnDrvGngbla = {
 	"gngbla", "gng", NULL, NULL, "1985",
 	"Ghosts'n Goblins (bootleg, harder)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvblaRomInfo, DrvblaRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	GngaInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1477,7 +1489,7 @@ struct BurnDriver BurnDrvGngblita = {
 	"gngblita", "gng", NULL, NULL, "1985",
 	"Ghosts'n Goblins (Italian bootleg, harder)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvblitaRomInfo, DrvblitaRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1487,7 +1499,7 @@ struct BurnDriver BurnDrvGngprot = {
 	"gngprot", "gng", NULL, NULL, "1985",
 	"Ghosts'n Goblins (prototype)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvprotRomInfo, DrvprotRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	GngaInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1497,7 +1509,7 @@ struct BurnDriver BurnDrvGngt = {
 	"gngt", "gng", NULL, NULL, "1985",
 	"Ghosts'n Goblins (US)\0", NULL, "Capcom (Taito America License)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvtRomInfo, DrvtRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1507,7 +1519,7 @@ struct BurnDriver BurnDrvGngc = {
 	"gngc", "gng", NULL, NULL, "1985",
 	"Ghosts'n Goblins (World Revision C)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DrvcRomInfo, DrvcRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1517,7 +1529,7 @@ struct BurnDriver BurnDrvMakaimur = {
 	"makaimur", "gng", NULL, NULL, "1985",
 	"Makai-Mura (Japan)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, MakaimurRomInfo, MakaimurRomName, NULL, NULL, DrvInputInfo, DrvjDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1527,7 +1539,7 @@ struct BurnDriver BurnDrvMakaimuc = {
 	"makaimurc", "gng", NULL, NULL, "1985",
 	"Makai-Mura (Japan revision C)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, MakaimucRomInfo, MakaimucRomName, NULL, NULL, DrvInputInfo, DrvjDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1537,7 +1549,7 @@ struct BurnDriver BurnDrvMakaimug = {
 	"makaimurg", "gng", NULL, NULL, "1985",
 	"Makai-Mura (Japan revision G)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, MakaimugRomInfo, MakaimugRomName, NULL, NULL, DrvInputInfo, DrvjDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3
@@ -1547,7 +1559,7 @@ struct BurnDriver BurnDrvDiamond = {
 	"diamond", NULL, NULL, NULL, "1985",
 	"Diamond Run\0", NULL, "KH Video", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
 	NULL, DiamondRomInfo, DiamondRomName, NULL, NULL, DiamondInputInfo, DiamondDIPInfo,
 	DiamondInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x100, 256, 224, 4, 3

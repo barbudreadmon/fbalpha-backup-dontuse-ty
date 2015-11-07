@@ -27,14 +27,20 @@ BUILD_X86_ASM = 1
 # Build for x64 targets (MinGW64 and MSVC only, this will undefine BUILD_A68K and BUILD_X86_ASM)
 #BUILD_X64_EXE = 1
 
-# Build for Windows XP target (for use with Visual Studio 2012-13)
+# Build for Windows XP target (for use with Visual Studio 2012-15)
 #BUILD_VS_XP_TARGET = 1
 
 # Include 7-zip support
 INCLUDE_7Z_SUPPORT = 1
 
+# Include AVI recording support (uses Video For Windows)
+INCLUDE_AVI_RECORDING = 1
+
 # Include Toaplan sound sample hacks for games without MCU dumps
 TOAPLAN_SOUND_SAMPLES_HACK = 1
+
+# Include Killer Instinct driver (and associated files) - requires C++11 support
+#INCLUDE_KILLER_INSTINCT = 1
 
 # Include symbols and other debug information in the executable
 #SYMBOL = 1
@@ -76,6 +82,9 @@ mingw452: FORCE
 	
 mingw471: FORCE
 	@$(MAKE) -s -f makefile.mingw GCC471=1
+	
+mingw510: FORCE
+	@$(MAKE) -s -f makefile.mingw GCC510=1
 
 mamemingw: FORCE
 	@$(MAKE) -s -f makefile.mamemingw 

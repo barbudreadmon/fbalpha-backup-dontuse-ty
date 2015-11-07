@@ -615,6 +615,9 @@ static void OnPaint(HWND hWnd)
 
 static void OnClose(HWND)
 {
+#ifdef INCLUDE_AVI_RECORDING
+	AviStop();
+#endif
     PostQuitMessage(0);					// Quit the program if the window is closed
 }
 
@@ -818,6 +821,10 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			SplashDestroy(1);
 			StopReplay();
 
+#ifdef INCLUDE_AVI_RECORDING
+			AviStop();
+#endif
+
 			InputSetCooperativeLevel(false, bAlwaysProcessKeyboardInput);
 
 			bLoading = 1;
@@ -921,6 +928,9 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 				AudBlankSound();
 				SplashDestroy(1);
 				StopReplay();
+#ifdef INCLUDE_AVI_RECORDING
+				AviStop();
+#endif
 				DrvExit();
 				DoNetGame();
 				MenuEnableItems();
@@ -951,7 +961,21 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 		case MENU_STOPREPLAY:
 			StopReplay();
 			break;
-			
+
+#ifdef INCLUDE_AVI_RECORDING
+			case MENU_AVISTART:
+			if (AviStart()) {
+				AviStop();
+			} else {
+				VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_REC_AVI, true), 0x0000FF);
+			}
+			break;
+		case MENU_AVISTOP:
+			AviStop();
+			VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_STOP_AVI, true), 0xFF3F3F);
+			break;
+#endif
+
 		case MENU_QUIT:
 			AudBlankSound();
 			if (nVidFullscreen) {
@@ -960,6 +984,9 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			}
 			if (bDrvOkay) {
 				StopReplay();
+#ifdef INCLUDE_AVI_RECORDING
+				AviStop();
+#endif
 				DrvExit();
   				if (kNetGame) {
 					kNetGame = 0;
@@ -982,6 +1009,9 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 
 		case MENU_EXIT:
 			StopReplay();
+#ifdef INCLUDE_AVI_RECORDING
+			AviStop();
+#endif
 			if (kNetGame) {
 				kNetGame = 0;
 //				kailleraEndGame();
@@ -1835,6 +1865,11 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			szLocalisationTemplate[0] = _T('\0');
 			FBALocaliseInit(szLocalisationTemplate);
 			POST_INITIALISE_MESSAGE;
+			break;
+		case MENU_LANGUAGE_DOWNLOAD:
+			if (UseDialogs()) {
+				LocaliseDownloadCreate(hScrnWnd);
+			}
 			break;
 			
 		case MENU_LANGUAGE_GL_SELECT:
@@ -3170,7 +3205,7 @@ int ScrnInit()
 
 			rebarBandInfo.cbSize		= sizeof(REBARBANDINFO);
 			rebarBandInfo.fMask			= RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_SIZE | RBBIM_STYLE;// | RBBIM_BACKGROUND;
-			rebarBandInfo.fStyle		= RBBS_GRIPPERALWAYS;// | RBBS_FIXEDBMP;
+			rebarBandInfo.fStyle		= 0;//RBBS_GRIPPERALWAYS;// | RBBS_FIXEDBMP;
 			rebarBandInfo.hwndChild		= hMenubar;
 			rebarBandInfo.cxMinChild	= 100;
 			rebarBandInfo.cyMinChild	= ((SendMessage(hMenubar, TB_GETBUTTONSIZE, 0, 0)) >> 16) + 1;

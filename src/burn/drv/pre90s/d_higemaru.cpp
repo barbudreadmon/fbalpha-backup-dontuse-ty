@@ -14,6 +14,7 @@ static UINT32 *DrvPalette;
 static UINT8 DrvRecalc = 0;
 
 static UINT8 DrvJoy1[8], DrvJoy2[8], DrvJoy3[8], DrvDips[3], DrvReset;
+static UINT8 DrvInput[3];
 
 static INT32 flipscreen;
 
@@ -112,7 +113,18 @@ static struct BurnDIPInfo DrvDIPList[]=
 
 STDDIPINFO(Drv)
 
-void __fastcall higemaru_write(UINT16 address, UINT8 data)
+static void DrvMakeInputs()
+{
+	UINT8 *DrvJoy[3] = { DrvJoy1, DrvJoy2, DrvJoy3 };
+	UINT32 DrvJoyInit[3] = { 0x00, 0x00, DrvDips[0] };
+
+	CompileInput(DrvJoy, (void*)DrvInput, 3, 8, DrvJoyInit);
+
+	ProcessJoystick(&DrvInput[0], 0, 3,2,1,0, INPUT_4WAY | INPUT_MAKEACTIVELOW);
+	ProcessJoystick(&DrvInput[1], 1, 3,2,1,0, INPUT_4WAY | INPUT_MAKEACTIVELOW);
+}
+
+static void __fastcall higemaru_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -132,43 +144,18 @@ void __fastcall higemaru_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 __fastcall higemaru_read(UINT16 address)
+static UINT8 __fastcall higemaru_read(UINT16 address)
 {
-	UINT8 ret;
-
 	switch (address)
 	{
 		case 0xc000:
-		{
-			ret = 0xff;
-
-			for (INT32 i = 0; i < 8; i++) {
-				ret ^= DrvJoy1[i] << i;
-			}
-
-			return ret;
-		}
+			return DrvInput[0];
 
 		case 0xc001:
-		{
-			ret = 0xff;
-
-			for (INT32 i = 0; i < 8; i++) {
-				ret ^= DrvJoy2[i] << i;
-			}
-
-			return ret;
-		}
+			return DrvInput[1];
 
 		case 0xc002:
-		{
-			ret = DrvDips[0];
-
-			for (INT32 i = 0; i < 8; i++)
-				ret ^= DrvJoy3[i] << i;
-
-			return ret;
-		}
+			return DrvInput[2];
 
 		case 0xc003:
 			return DrvDips[1];
@@ -423,7 +410,7 @@ static INT32 DrvDraw()
 
 	return 0;
 }
-
+extern int counter;
 
 static INT32 DrvFrame()
 {
@@ -431,13 +418,23 @@ static INT32 DrvFrame()
 		DrvDoReset();
 	}
 
+	DrvMakeInputs();
+
+	INT32 nInterleave = 262;
+	INT32 nCyclesTotal = 4000000 / 60;
+
 	ZetOpen(0);
-	ZetRun(33333);
-	ZetSetVector(0xd7);
-	ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
-	ZetRun(33334);
-	ZetSetVector(0xcf);
-	ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
+	for (INT32 i = 0; i < nInterleave; i++) {
+		ZetRun(nCyclesTotal / nInterleave);
+		if (i == 0) {
+			ZetSetVector(0xd7);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
+		}
+		if (i == 235) {
+			ZetSetVector(0xcf);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
+		}
+	}
 	ZetClose();
 
 	if (pBurnSoundOut) {

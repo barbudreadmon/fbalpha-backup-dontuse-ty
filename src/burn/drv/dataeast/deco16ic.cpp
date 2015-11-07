@@ -2,6 +2,8 @@
 TO DO!
 
 // why is mutant fight's scrolling off in title?
+// caveman ninja and joe & mac returns is also, in the ending. (savestate attachments in dev thread)
+// side effect: if I get the rowscroll working right, it breaks the ending-text in caveman ninja. o.O
 
 1   Double Wings                MBE     102     52              141             104
 */

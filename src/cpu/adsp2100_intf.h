@@ -1,6 +1,5 @@
 #ifndef ADSP2100_INTF
 #define ADSP2100_INTF
-
 #include <stdint.h>
 
 #include "adsp2100/adsp2100_defs.h"

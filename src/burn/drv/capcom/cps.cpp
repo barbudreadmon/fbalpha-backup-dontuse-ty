@@ -701,6 +701,84 @@ static INT32 CpsLoadOneWonder3b(UINT8* Tile, INT32 nNum, INT32 nWord, INT32 nShi
 	return 0;
 }
 
+static INT32 CpsLoadPunisherbTiles(UINT8* Tile, INT32 nNum)
+{
+	UINT8 *Rom = (UINT8*)BurnMalloc(0x400000 * sizeof(UINT8));
+	UINT8 *pt = NULL, *pr = NULL;
+	INT32 i, j;
+
+	if (Rom == NULL) {
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x000000, nNum + 0, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x000001, nNum + 1, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x100000, nNum + 2, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x100001, nNum + 3, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x200000, nNum + 4, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x200001, nNum + 5, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x300000, nNum + 6, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	if (BurnLoadRom(Rom + 0x300001, nNum + 7, 2)) {
+		BurnFree(Rom);
+		return 1;
+	}
+	
+	INT32 TileOffset[4] = { 0x000000, 0x200000, 0x000004, 0x200004 };
+	
+	for (j = 0; j < 4; j++) {
+		for (i = 0, pt = Tile + TileOffset[j], pr = Rom + (0x80000 * j); i < 0x80000; pt += 8) {
+			UINT32 Pix;		// Eight pixels
+			UINT8 b;
+			b = *pr++; i++; Pix = SepTable[b];
+			b = *pr++; i++; Pix |= SepTable[b] << 1;
+
+			Pix <<= 0;
+			*((UINT32 *)pt) |= Pix;
+		}
+
+		for (i = 0, pt = Tile + TileOffset[j], pr = Rom + 0x200000 +  (0x80000 * j); i < 0x80000; pt += 8) {
+			UINT32 Pix;		// Eight pixels
+			UINT8 b;
+			b = *pr++; i++; Pix = SepTable[b];
+			b = *pr++; i++; Pix |= SepTable[b] << 1;
+
+			Pix <<= 2;
+			*((UINT32 *)pt) |= Pix;
+		}
+	}
+	
+	BurnFree(Rom);
+	return 0;
+}
+
 static INT32 CpsLoadSf2ceuab3Tiles(UINT8* Tile, INT32 nNum)
 {
 	UINT8 *Rom = (UINT8*)BurnMalloc(0x200000 * sizeof(UINT8));
@@ -988,6 +1066,35 @@ INT32 CpsLoadTilesByte(UINT8* Tile, INT32 nStart)
 }
 
 INT32 CpsLoadTilesForgottn(INT32 nStart)
+{
+	CpsLoadOne(CpsGfx + 0 + 0x000000, nStart +  0, 0, 0);
+	CpsLoadOne(CpsGfx + 0 + 0x000000, nStart +  1, 0, 1);
+	CpsLoadOne(CpsGfx + 0 + 0x000000, nStart +  2, 1, 2);
+	CpsLoadOne(CpsGfx + 4 + 0x000000, nStart +  3, 0, 0);
+	CpsLoadOne(CpsGfx + 4 + 0x000000, nStart +  4, 0, 1);
+	CpsLoadOne(CpsGfx + 4 + 0x000000, nStart +  5, 0, 2);
+	CpsLoadOne(CpsGfx + 4 + 0x000000, nStart +  6, 0, 3);
+	CpsLoadOne(CpsGfx + 0 + 0x100000, nStart +  7, 0, 0);
+	CpsLoadOne(CpsGfx + 0 + 0x100000, nStart +  8, 0, 1);
+	CpsLoadOne(CpsGfx + 4 + 0x100000, nStart +  9, 0, 0);
+	CpsLoadOne(CpsGfx + 4 + 0x100000, nStart + 10, 0, 1);
+	CpsLoadOne(CpsGfx + 4 + 0x100000, nStart + 11, 0, 2);
+	CpsLoadOne(CpsGfx + 4 + 0x100000, nStart + 12, 0, 3);
+	CpsLoadOne(CpsGfx + 0 + 0x200000, nStart + 13, 1, 0);
+	CpsLoadOne(CpsGfx + 0 + 0x200000, nStart + 14, 0, 2);
+	CpsLoadOne(CpsGfx + 0 + 0x200000, nStart + 15, 0, 3);
+	CpsLoadOne(CpsGfx + 4 + 0x200000, nStart + 16, 1, 0);
+	CpsLoadOne(CpsGfx + 4 + 0x200000, nStart + 17, 0, 2);
+	CpsLoadOne(CpsGfx + 4 + 0x200000, nStart + 18, 0, 3);
+	CpsLoadOne(CpsGfx + 0 + 0x300000, nStart + 19, 0, 2);
+	CpsLoadOne(CpsGfx + 0 + 0x300000, nStart + 20, 0, 3);
+	CpsLoadOne(CpsGfx + 4 + 0x300000, nStart + 21, 0, 2);
+	CpsLoadOne(CpsGfx + 4 + 0x300000, nStart + 22, 0, 3);
+	
+	return 0;
+}
+
+INT32 CpsLoadTilesForgottna(INT32 nStart)
 {
 	CpsLoadOne(CpsGfx + 0 + 0x000000, nStart +  0, 0, 0);
 	CpsLoadOne(CpsGfx + 0 + 0x000000, nStart +  1, 0, 1);
@@ -1325,6 +1432,13 @@ INT32 CpsLoadTilesPang3r1a(INT32 nStart)
 	CpsLoadOne(CpsGfx + 0x200000, nStart + 5, 1, 2);
 	CpsLoadOne(CpsGfx + 0x000004, nStart + 6, 1, 2);
 	CpsLoadOne(CpsGfx + 0x200004, nStart + 7, 1, 2);
+	
+	return 0;
+}
+
+INT32 CpsLoadTilesPunisherb(INT32 nStart)
+{
+	CpsLoadPunisherbTiles(CpsGfx, nStart);
 	
 	return 0;
 }

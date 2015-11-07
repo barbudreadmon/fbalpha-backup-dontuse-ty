@@ -67,7 +67,7 @@ static struct BurnDIPInfo DrvDIPList[]=
 	{0x14, 0x01, 0x04, 0x04, "On"    		        },
 };
 
-static struct BurnDIPInfo gunsmokeuaDIPList[]=
+static struct BurnDIPInfo gunsmokeuDIPList[]=
 {
 	// Default Values
 	{0x14, 0xff, 0xff, 0xf7, NULL               },
@@ -136,7 +136,7 @@ static struct BurnDIPInfo gunsmokeDIPList[]=
 };
 
 STDDIPINFOEXT(Drv, Drv, gunsmoke)
-STDDIPINFOEXT(gunsmokeua, gunsmokeua, gunsmoke)
+STDDIPINFOEXT(gunsmokeu, gunsmokeu, gunsmoke)
 
 
 static inline void gunsmoke_bankswitch(INT32 nBank)
@@ -288,6 +288,8 @@ static INT32 DrvDoReset()
 	ZetClose();
 
 	BurnYM2203Reset();
+
+	HiscoreReset();
 
 	return 0;
 }
@@ -688,10 +690,7 @@ static INT32 DrvFrame()
 		// Run Z80 #1
 		nCurrentCPU = 1;
 		ZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
-		BurnTimerUpdate(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdate((i + 1) * (nCyclesTotal[nCurrentCPU] / nInterleave));
 		// execute IRQ quarterly 68.5 (or 69) is 25% of 278 (nInterleave)
 		if (i%69 == 0 && i>0) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		// execute CPU_IRQSTATUS_NONE 1 interleave past the last one
@@ -701,13 +700,10 @@ static INT32 DrvFrame()
 	
 	ZetOpen(1);
 	BurnTimerEndFrame(nCyclesTotal[1]);
-	ZetClose();
-
 	if (pBurnSoundOut) {
-		ZetOpen(1);
 		BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
-		ZetClose();
 	}
+	ZetClose();
 	
 	if (pBurnDraw) {
 		DrvDraw();
@@ -761,45 +757,45 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 // Gun.Smoke (World, 851115)
 
 static struct BurnRomInfo gunsmokeRomDesc[] = {
-	{ "09n_gs03.bin", 0x8000, 0x40a06cef, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "10n_gs04.bin", 0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "12n_gs05.bin", 0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "gs03.09n", 	  0x8000, 0x40a06cef, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "gs04.10n", 	  0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "gs05.12n", 	  0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "14h_gs02.bin", 0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
+	{ "gs02.14h", 	  0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
 
-	{ "11f_gs01.bin", 0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
+	{ "gs01.11f", 	  0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
 
-	{ "06c_gs13.bin", 0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
-	{ "05c_gs12.bin", 0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
-	{ "04c_gs11.bin", 0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
-	{ "02c_gs10.bin", 0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
-	{ "06a_gs09.bin", 0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
-	{ "05a_gs08.bin", 0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
-	{ "04a_gs07.bin", 0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
-	{ "02a_gs06.bin", 0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
+	{ "gs13.06c", 	  0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
+	{ "gs12.05c", 	  0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
+	{ "gs11.04c", 	  0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
+	{ "gs10.02c", 	  0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
+	{ "gs09.06a", 	  0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
+	{ "gs08.05a", 	  0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
+	{ "gs07.04a", 	  0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
+	{ "gs06.02a", 	  0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
 
-	{ "06n_gs22.bin", 0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
-	{ "04n_gs21.bin", 0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
-	{ "03n_gs20.bin", 0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
-	{ "01n_gs19.bin", 0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
-	{ "06l_gs18.bin", 0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
-	{ "04l_gs17.bin", 0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
-	{ "03l_gs16.bin", 0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
-	{ "01l_gs15.bin", 0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
+	{ "gs22.06n", 	  0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
+	{ "gs21.04n", 	  0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
+	{ "gs20.03n", 	  0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
+	{ "gs19.01n", 	  0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
+	{ "gs18.06l", 	  0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
+	{ "gs17.04l", 	  0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
+	{ "gs16.03l", 	  0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
+	{ "gs15.01l", 	  0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
 
-	{ "11c_gs14.bin", 0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
+	{ "gs14.11c", 	  0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
 
-	{ "03b_g-01.bin", 0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
-	{ "04b_g-02.bin", 0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
-	{ "05b_g-03.bin", 0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
-	{ "09d_g-04.bin", 0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
-	{ "14a_g-06.bin", 0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
-	{ "15a_g-07.bin", 0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
-	{ "09f_g-09.bin", 0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
-	{ "08f_g-08.bin", 0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
+	{ "g-01.03b", 	  0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
+	{ "g-02.04b", 	  0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
+	{ "g-03.05b", 	  0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
+	{ "g-04.09d", 	  0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
+	{ "g-06.14a", 	  0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
+	{ "g-07.15a", 	  0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
+	{ "g-09.09f", 	  0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
+	{ "g-08.08f", 	  0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
 
-	{ "02j_g-10.bin", 0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
-	{ "01f_g-05.bin", 0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
+	{ "g-10.02j", 	  0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
+	{ "g-05.01f", 	  0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
 };
 
 STD_ROM_PICK(gunsmoke)
@@ -809,7 +805,7 @@ struct BurnDriver BurnDrvGunsmoke = {
 	"gunsmoke", NULL, NULL, NULL, "1985",
 	"Gun.Smoke (World, 851115)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokeRomInfo, gunsmokeRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x300,
 	224, 256, 3, 4
@@ -821,44 +817,44 @@ struct BurnDriver BurnDrvGunsmoke = {
 
 static struct BurnRomInfo gunsmokebRomDesc[] = {
 	{ "3.ic85", 	  0x8000, 0xae6f4b75, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "10n_gs04.bin", 0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "12n_gs05.bin", 0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "4.ic86", 	  0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "5.ic87", 	  0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "14h_gs02.bin", 0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
+	{ "2.ic41", 	  0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
 
-	{ "11f_gs01.bin", 0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
+	{ "1.ic39", 	  0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
 
-	{ "06c_gs13.bin", 0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
-	{ "05c_gs12.bin", 0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
-	{ "04c_gs11.bin", 0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
-	{ "02c_gs10.bin", 0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
-	{ "06a_gs09.bin", 0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
-	{ "05a_gs08.bin", 0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
-	{ "04a_gs07.bin", 0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
-	{ "02a_gs06.bin", 0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
+	{ "13.ic21", 	  0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
+	{ "12.ic20", 	  0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
+	{ "11.ic19", 	  0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
+	{ "10.ic18", 	  0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
+	{ "9.ic04", 	  0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
+	{ "8.ic03", 	  0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
+	{ "7.ic02", 	  0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
+	{ "6.ic01", 	  0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
 
-	{ "06n_gs22.bin", 0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
-	{ "04n_gs21.bin", 0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
-	{ "03n_gs20.bin", 0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
-	{ "01n_gs19.bin", 0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
-	{ "06l_gs18.bin", 0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
-	{ "04l_gs17.bin", 0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
-	{ "03l_gs16.bin", 0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
-	{ "01l_gs15.bin", 0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
+	{ "22.ic134", 	  0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
+	{ "21.ic133", 	  0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
+	{ "20.ic132", 	  0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
+	{ "19.ic131", 	  0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
+	{ "18.ic115", 	  0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
+	{ "17.ic114", 	  0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
+	{ "16.ic113", 	  0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
+	{ "15.ic112", 	  0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
 
-	{ "11c_gs14.bin", 0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
+	{ "14.ic25", 	  0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
 
-	{ "03b_g-01.bin", 0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
-	{ "04b_g-02.bin", 0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
-	{ "05b_g-03.bin", 0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
-	{ "09d_g-04.bin", 0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
-	{ "14a_g-06.bin", 0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
-	{ "15a_g-07.bin", 0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
-	{ "09f_g-09.bin", 0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
-	{ "08f_g-08.bin", 0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
+	{ "prom.ic3", 	  0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
+	{ "prom.ic4", 	  0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
+	{ "prom.ic5", 	  0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
+	{ "g-04.09d", 	  0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
+	{ "g-06.14a", 	  0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
+	{ "g-07.15a", 	  0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
+	{ "g-09.09f", 	  0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
+	{ "g-08.08f", 	  0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
 
-	{ "02j_g-10.bin", 0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
-	{ "01f_g-05.bin", 0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
+	{ "g-10.02j", 	  0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
+	{ "g-05.01f", 	  0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
 };
 
 STD_ROM_PICK(gunsmokeb)
@@ -868,7 +864,7 @@ struct BurnDriver BurnDrvGunsmokeb = {
 	"gunsmokeb", "gunsmoke", NULL, NULL, "1985",
 	"Gun.Smoke (World, 851115) (bootleg)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokebRomInfo, gunsmokebRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x300,
 	224, 256, 3, 4
@@ -878,45 +874,45 @@ struct BurnDriver BurnDrvGunsmokeb = {
 // Gun.Smoke (Japan, 851115)
 
 static struct BurnRomInfo gunsmokejRomDesc[] = {
-	{ "gs03_9n.rom",  0x8000, 0xb56b5df6, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "10n_gs04.bin", 0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "12n_gs05.bin", 0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "gsj_03.09n",   0x8000, 0xb56b5df6, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "gs04.10n", 	  0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "gs05.12n", 	  0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "14h_gs02.bin", 0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
+	{ "gs02.14h", 	  0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
 
-	{ "11f_gs01.bin", 0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
+	{ "gs01.11f", 	  0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
 
-	{ "06c_gs13.bin", 0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
-	{ "05c_gs12.bin", 0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
-	{ "04c_gs11.bin", 0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
-	{ "02c_gs10.bin", 0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
-	{ "06a_gs09.bin", 0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
-	{ "05a_gs08.bin", 0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
-	{ "04a_gs07.bin", 0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
-	{ "02a_gs06.bin", 0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
+	{ "gs13.06c", 	  0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
+	{ "gs12.05c", 	  0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
+	{ "gs11.04c", 	  0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
+	{ "gs10.02c", 	  0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
+	{ "gs09.06a", 	  0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
+	{ "gs08.05a", 	  0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
+	{ "gs07.04a", 	  0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
+	{ "gs06.02a", 	  0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
 
-	{ "06n_gs22.bin", 0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
-	{ "04n_gs21.bin", 0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
-	{ "03n_gs20.bin", 0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
-	{ "01n_gs19.bin", 0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
-	{ "06l_gs18.bin", 0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
-	{ "04l_gs17.bin", 0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
-	{ "03l_gs16.bin", 0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
-	{ "01l_gs15.bin", 0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
+	{ "gs22.06n", 	  0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
+	{ "gs21.04n", 	  0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
+	{ "gs20.03n", 	  0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
+	{ "gs19.01n", 	  0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
+	{ "gs18.06l", 	  0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
+	{ "gs17.04l", 	  0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
+	{ "gs16.03l", 	  0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
+	{ "gs15.01l", 	  0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
 
-	{ "11c_gs14.bin", 0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
+	{ "gs14.11c", 	  0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
 
-	{ "03b_g-01.bin", 0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
-	{ "04b_g-02.bin", 0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
-	{ "05b_g-03.bin", 0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
-	{ "09d_g-04.bin", 0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
-	{ "14a_g-06.bin", 0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
-	{ "15a_g-07.bin", 0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
-	{ "09f_g-09.bin", 0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
-	{ "08f_g-08.bin", 0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
+	{ "g-01.03b", 	  0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
+	{ "g-02.04b", 	  0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
+	{ "g-03.05b", 	  0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
+	{ "g-04.09d", 	  0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
+	{ "g-06.14a", 	  0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
+	{ "g-07.15a", 	  0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
+	{ "g-09.09f", 	  0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
+	{ "g-08.08f", 	  0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
 
-	{ "02j_g-10.bin", 0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
-	{ "01f_g-05.bin", 0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
+	{ "g-10.02j", 	  0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
+	{ "g-05.01f", 	  0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
 };
 
 STD_ROM_PICK(gunsmokej)
@@ -926,66 +922,8 @@ struct BurnDriver BurnDrvGunsmokej = {
 	"gunsmokej", "gunsmoke", NULL, NULL, "1985",
 	"Gun.Smoke (Japan, 851115)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, gunsmokejRomInfo, gunsmokejRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x300,
-	224, 256, 3, 4
-};
-
-
-// Gun.Smoke (US, 851115)
-
-static struct BurnRomInfo gunsmokeuRomDesc[] = {
-	{ "9n_gs03.bin",  0x8000, 0x592f211b, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "10n_gs04.bin", 0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "12n_gs05.bin", 0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
-
-	{ "14h_gs02.bin", 0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
-
-	{ "11f_gs01.bin", 0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
-
-	{ "06c_gs13.bin", 0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
-	{ "05c_gs12.bin", 0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
-	{ "04c_gs11.bin", 0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
-	{ "02c_gs10.bin", 0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
-	{ "06a_gs09.bin", 0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
-	{ "05a_gs08.bin", 0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
-	{ "04a_gs07.bin", 0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
-	{ "02a_gs06.bin", 0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
-
-	{ "06n_gs22.bin", 0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
-	{ "04n_gs21.bin", 0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
-	{ "03n_gs20.bin", 0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
-	{ "01n_gs19.bin", 0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
-	{ "06l_gs18.bin", 0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
-	{ "04l_gs17.bin", 0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
-	{ "03l_gs16.bin", 0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
-	{ "01l_gs15.bin", 0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
-
-	{ "11c_gs14.bin", 0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
-
-	{ "03b_g-01.bin", 0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
-	{ "04b_g-02.bin", 0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
-	{ "05b_g-03.bin", 0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
-	{ "09d_g-04.bin", 0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
-	{ "14a_g-06.bin", 0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
-	{ "15a_g-07.bin", 0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
-	{ "09f_g-09.bin", 0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
-	{ "08f_g-08.bin", 0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
-
-	{ "02j_g-10.bin", 0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
-	{ "01f_g-05.bin", 0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
-};
-
-STD_ROM_PICK(gunsmokeu)
-STD_ROM_FN(gunsmokeu)
-
-struct BurnDriver BurnDrvGunsmokeu = {
-	"gunsmokeu", "gunsmoke", NULL, NULL, "1985",
-	"Gun.Smoke (US, 851115)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
-	NULL, gunsmokeuRomInfo, gunsmokeuRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x300,
 	224, 256, 3, 4
 };
@@ -993,46 +931,105 @@ struct BurnDriver BurnDrvGunsmokeu = {
 
 // Gun.Smoke (US, 860408)
 
+static struct BurnRomInfo gunsmokeuRomDesc[] = {
+	{ "gsa_03.9n",    0x8000, 0x51dc3f76, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "gs04.10n",	  0x8000, 0x5ecf31b8, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "gs05.12n", 	  0x8000, 0x1c9aca13, 1 | BRF_PRG | BRF_ESS }, //  2
+
+	{ "gs02.14h", 	  0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
+
+	{ "gs01.11f", 	  0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
+
+	{ "gs13.06c", 	  0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
+	{ "gs12.05c", 	  0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
+	{ "gs11.04c", 	  0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
+	{ "gs10.02c", 	  0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
+	{ "gs09.06a", 	  0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
+	{ "gs08.05a", 	  0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
+	{ "gs07.04a", 	  0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
+	{ "gs06.02a", 	  0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
+
+	{ "gs22.06n", 	  0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
+	{ "gs21.04n", 	  0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
+	{ "gs20.03n", 	  0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
+	{ "gs19.01n", 	  0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
+	{ "gs18.06l", 	  0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
+	{ "gs17.04l", 	  0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
+	{ "gs16.03l", 	  0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
+	{ "gs15.01l", 	  0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
+
+	{ "gs14.11c", 	  0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
+
+	{ "g-01.03b", 	  0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
+	{ "g-02.04b", 	  0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
+	{ "g-03.05b", 	  0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
+	{ "g-04.09d", 	  0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
+	{ "g-06.14a", 	  0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
+	{ "g-07.15a", 	  0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
+	{ "g-09.09f", 	  0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
+	{ "g-08.08f", 	  0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
+
+	{ "g-10.02j", 	  0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
+	{ "g-05.01f", 	  0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
+};
+
+STD_ROM_PICK(gunsmokeu)
+STD_ROM_FN(gunsmokeu)
+
+struct BurnDriver BurnDrvGunsmokeu = {
+	"gunsmokeu", "gunsmoke", NULL, NULL, "1985",
+	"Gun.Smoke (US, 860408)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	NULL, gunsmokeuRomInfo, gunsmokeuRomName, NULL, NULL, DrvInputInfo, gunsmokeuDIPInfo,
+	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x300,
+	224, 256, 3, 4
+};
+
+
+// Gun.Smoke (US, 851115, set 1)
+// has a small extra piece of code at 0x2f00 and a jump to it at 0x297b, otherwise the same as gunsmokeub including the datecode, chip had an 'A' stamped on it, bugfix?
+
 static struct BurnRomInfo gunsmokeuaRomDesc[] = {
-	{ "gs03.9n",      0x8000, 0x51dc3f76, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "gs04.10n",     0x8000, 0x5ecf31b8, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "gs05.12n",     0x8000, 0x1c9aca13, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "gsr_03a.9n",	  0x8000, 0x2f6e6ad7, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "gs04.10n",	  0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "gs05.12n",     0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "14h_gs02.bin", 0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
+	{ "gs02.14h", 	  0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
 
-	{ "11f_gs01.bin", 0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
+	{ "gs01.11f", 	  0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
 
-	{ "06c_gs13.bin", 0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
-	{ "05c_gs12.bin", 0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
-	{ "04c_gs11.bin", 0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
-	{ "02c_gs10.bin", 0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
-	{ "06a_gs09.bin", 0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
-	{ "05a_gs08.bin", 0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
-	{ "04a_gs07.bin", 0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
-	{ "02a_gs06.bin", 0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
+	{ "gs13.06c", 	  0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
+	{ "gs12.05c", 	  0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
+	{ "gs11.04c", 	  0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
+	{ "gs10.02c", 	  0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
+	{ "gs09.06a", 	  0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
+	{ "gs08.05a", 	  0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
+	{ "gs07.04a", 	  0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
+	{ "gs06.02a", 	  0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
 
-	{ "06n_gs22.bin", 0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
-	{ "04n_gs21.bin", 0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
-	{ "03n_gs20.bin", 0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
-	{ "01n_gs19.bin", 0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
-	{ "06l_gs18.bin", 0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
-	{ "04l_gs17.bin", 0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
-	{ "03l_gs16.bin", 0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
-	{ "01l_gs15.bin", 0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
+	{ "gs22.06n", 	  0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
+	{ "gs21.04n", 	  0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
+	{ "gs20.03n", 	  0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
+	{ "gs19.01n", 	  0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
+	{ "gs18.06l", 	  0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
+	{ "gs17.04l", 	  0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
+	{ "gs16.03l", 	  0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
+	{ "gs15.01l", 	  0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
 
-	{ "11c_gs14.bin", 0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
+	{ "gs14.11c", 	  0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
 
-	{ "03b_g-01.bin", 0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
-	{ "04b_g-02.bin", 0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
-	{ "05b_g-03.bin", 0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
-	{ "09d_g-04.bin", 0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
-	{ "14a_g-06.bin", 0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
-	{ "15a_g-07.bin", 0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
-	{ "09f_g-09.bin", 0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
-	{ "08f_g-08.bin", 0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
+	{ "g-01.03b", 	  0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
+	{ "g-02.04b", 	  0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
+	{ "g-03.05b", 	  0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
+	{ "g-04.09d", 	  0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
+	{ "g-06.14a", 	  0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
+	{ "g-07.15a", 	  0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
+	{ "g-09.09f", 	  0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
+	{ "g-08.08f", 	  0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
 
-	{ "02j_g-10.bin", 0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
-	{ "01f_g-05.bin", 0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
+	{ "g-10.02j", 	  0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
+	{ "g-05.01f", 	  0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
 };
 
 STD_ROM_PICK(gunsmokeua)
@@ -1040,11 +1037,68 @@ STD_ROM_FN(gunsmokeua)
 
 struct BurnDriver BurnDrvGunsmokeua = {
 	"gunsmokeua", "gunsmoke", NULL, NULL, "1986",
-	"Gun.Smoke (US, 860408)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
+	"Gun.Smoke (US, 851115, set 1)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
-	NULL, gunsmokeuaRomInfo, gunsmokeuaRomName, NULL, NULL, DrvInputInfo, gunsmokeuaDIPInfo,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	NULL, gunsmokeuaRomInfo, gunsmokeuaRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x300,
 	224, 256, 3, 4
 };
 
+
+// Gun.Smoke (US, 851115, set 2)
+
+static struct BurnRomInfo gunsmokeubRomDesc[] = {
+	{ "gsr_03.9n",    0x8000, 0x592f211b, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "gs04.10n",     0x8000, 0x8d4b423f, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "gs05.12n",     0x8000, 0x2b5667fb, 1 | BRF_PRG | BRF_ESS }, //  2
+
+	{ "gs02.14h", 	  0x8000, 0xcd7a2c38, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
+
+	{ "gs01.11f", 	  0x4000, 0xb61ece9b, 3 | BRF_GRA },	       //  4 Character Tiles
+
+	{ "gs13.06c", 	  0x8000, 0xf6769fc5, 4 | BRF_GRA },	       //  5 32x32 Tiles
+	{ "gs12.05c", 	  0x8000, 0xd997b78c, 4 | BRF_GRA },	       //  6
+	{ "gs11.04c", 	  0x8000, 0x125ba58e, 4 | BRF_GRA },	       //  7
+	{ "gs10.02c", 	  0x8000, 0xf469c13c, 4 | BRF_GRA },	       //  8
+	{ "gs09.06a", 	  0x8000, 0x539f182d, 4 | BRF_GRA },	       //  9
+	{ "gs08.05a", 	  0x8000, 0xe87e526d, 4 | BRF_GRA },	       // 10
+	{ "gs07.04a", 	  0x8000, 0x4382c0d2, 4 | BRF_GRA },	       // 11 
+	{ "gs06.02a", 	  0x8000, 0x4cafe7a6, 4 | BRF_GRA },	       // 12 
+
+	{ "gs22.06n", 	  0x8000, 0xdc9c508c, 5 | BRF_GRA },	       // 13 Sprites
+	{ "gs21.04n", 	  0x8000, 0x68883749, 5 | BRF_GRA },	       // 14
+	{ "gs20.03n", 	  0x8000, 0x0be932ed, 5 | BRF_GRA },	       // 15
+	{ "gs19.01n", 	  0x8000, 0x63072f93, 5 | BRF_GRA },	       // 16
+	{ "gs18.06l", 	  0x8000, 0xf69a3c7c, 5 | BRF_GRA },	       // 17
+	{ "gs17.04l", 	  0x8000, 0x4e98562a, 5 | BRF_GRA },	       // 18
+	{ "gs16.03l", 	  0x8000, 0x0d99c3b3, 5 | BRF_GRA },	       // 19
+	{ "gs15.01l", 	  0x8000, 0x7f14270e, 5 | BRF_GRA },	       // 20
+
+	{ "gs14.11c", 	  0x8000, 0x0af4f7eb, 6 | BRF_GRA },	       // 21 Background Tilemaps
+
+	{ "g-01.03b", 	  0x0100, 0x02f55589, 7 | BRF_GRA },	       // 22 Color Proms
+	{ "g-02.04b", 	  0x0100, 0xe1e36dd9, 7 | BRF_GRA },	       // 23
+	{ "g-03.05b", 	  0x0100, 0x989399c0, 7 | BRF_GRA },	       // 24
+	{ "g-04.09d", 	  0x0100, 0x906612b5, 7 | BRF_GRA },	       // 25
+	{ "g-06.14a", 	  0x0100, 0x4a9da18b, 7 | BRF_GRA },	       // 26
+	{ "g-07.15a", 	  0x0100, 0xcb9394fc, 7 | BRF_GRA },	       // 27
+	{ "g-09.09f", 	  0x0100, 0x3cee181e, 7 | BRF_GRA },	       // 28
+	{ "g-08.08f", 	  0x0100, 0xef91cdd2, 7 | BRF_GRA },	       // 29
+
+	{ "g-10.02j", 	  0x0100, 0x0eaf5158, 0 | BRF_OPT },	       // 30 Video Timing
+	{ "g-05.01f", 	  0x0100, 0x25c90c2a, 0 | BRF_OPT },	       // 31 Priority
+};
+
+STD_ROM_PICK(gunsmokeub)
+STD_ROM_FN(gunsmokeub)
+
+struct BurnDriver BurnDrvGunsmokeub = {
+	"gunsmokeub", "gunsmoke", NULL, NULL, "1986",
+	"Gun.Smoke (US, 851115, set 2)\0", NULL, "Capcom (Romstar License)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	NULL, gunsmokeubRomInfo, gunsmokeubRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
+	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvCalcPal, 0x300,
+	224, 256, 3, 4
+};

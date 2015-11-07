@@ -7,7 +7,7 @@
 #include "xbyak/xbyak.h"
 #include "../mips3.h"
 #include "../mipsdef.h"
-#include "../memory.h"
+#include "../mips3_memory.h"
 #include "mips3_x64_defs.h"
 #include "mips3_x64_rw.h"
 #include "mips3_x64_branch.h"
@@ -28,6 +28,7 @@
 
 namespace mips
 {
+
 
 mips3_x64::mips3_x64(mips3 *interpreter) : CodeGenerator(1024 * 1024 * 16)
 {
@@ -97,6 +98,10 @@ void mips3_x64::prolog()
     // RBX = cpu_state base
     push(rbp);
     push(rbx);
+#ifdef _WIN32
+    push(rsi);
+    push(rdi);
+#endif
     push(r15);
     mov(rbp, rsp);
     sub(rsp, 16);
@@ -113,6 +118,10 @@ void mips3_x64::epilog(bool do_ret)
     mov(rax, ADR(m_icounter));
     mov(ptr[rax], r15);
     pop(r15);
+#if _WIN32
+    pop(rdi);
+    pop(rsi);
+#endif
     pop(rbx);
     pop(rbp);
     if (do_ret)
@@ -452,10 +461,17 @@ void mips3_x64::set_next_pc(addr_t addr)
 
 void mips3_x64::fallback(uint32_t opcode, void (mips3::*f)(uint32_t))
 {
+#ifdef _WIN32
+    // WIN64 ABI - MICROSOFT
+    mov(rcx, (size_t) m_core);
+    mov(edx, opcode);
+#else
     // SysV AMD64 ABI - GNU
     mov(rdi, (size_t) m_core);
     mov(esi, opcode);
-    mov(rax, (size_t) (void*)f);
+#endif
+    
+    mov(rax, (size_t) (void*&)f);
     call(rax);
 }
 

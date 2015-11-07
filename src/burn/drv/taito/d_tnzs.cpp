@@ -35,13 +35,14 @@ static UINT8 *coin_lockout;
 static UINT8 *soundlatch;
 static UINT8 *tnzs_bg_flag;
 
-static INT32    kageki_csport_sel;
+static INT32  kageki_csport_sel;
 static double kageki_sample_pos;
 static INT32  kageki_sample_select;
 static INT16 *kageki_sample_data[0x30];
 static INT32  kageki_sample_size[0x30];
 static double kageki_sample_gain;
 static INT32 kageki_sample_output_dir;
+static INT32 game_kabukiz = 0;
 
 static INT32 cpu1_reset;
 static INT32 tnzs_banks[3];
@@ -815,32 +816,10 @@ static void kabukiz_sound_bankswitch(UINT32, UINT32 data)
 	if (data != 0xff) {
 		tnzs_banks[2] = data;
 
-	if (ZetGetActive() == -1) return; // fix crash on init
-			// YM2203_postload() eventually gets to code that writes to a port that is mapped to
-			// kabukiz_sound_bankswitch() and at this time, the cpu isn't open
-			// Stack backtrace from crash:
-			/*Program received signal SIGSEGV, Segmentation fault.
-			0x007ffbf3 in ZetMapArea(int, int, int, unsigned char*) ()
-			(gdb) bt
-			#0  0x007ffbf3 in ZetMapArea(int, int, int, unsigned char*) ()
-			#1  0x005fe384 in kabukiz_sound_bankswitch(unsigned int, unsigned int) ()
-			#2  0x00441e4b in _AYWriteReg (n=<optimized out>, r=<optimized out>,
-				v=<optimized out>) at src/burn/snd/ay8910.c:240
-			#3  0x00441ec3 in AYWriteReg (v=0, r=14, chip=0) at src/burn/snd/ay8910.c:282
-			#4  AY8910Write (chip=0, a=1, data=0) at src/burn/snd/ay8910.c:329
-			#5  0x00446285 in YM2203_postload () at src/burn/snd/fm.c:2388
-			#6  0x007c80a9 in BurnStateMAMEScan(int, int*) ()
-			#7  0x007c80dd in BurnAreaScan ()
-			#8  0x00a0592e in BurnStateDecompress(unsigned char*, int, int) ()
-			#9  0x00a05064 in BurnStateLoadEmbed(_iobuf*, int, int, int (*)()) ()
-			#10 0x00a0515b in BurnStateLoad(wchar_t*, int, int (*)()) ()
-			#11 0x009f7043 in StatedLoad(int) ()
-			#12 0x009e1c7d in OnCommand(HWND__*, int, HWND__*, unsigned int) ()
-			#13 0x009e577d in ScrnProc ()
-			#14 0x7e418734 in USER32!GetDC () from C:\WINDOWS.0\system32\user32.dll */
-			
-		ZetMapArea(0x8000, 0xbfff, 0, DrvZ80ROM2 + 0x0000 + 0x4000 * (data & 0x07));
-		ZetMapArea(0x8000, 0xbfff, 2, DrvZ80ROM2 + 0x0000 + 0x4000 * (data & 0x07));
+		if (ZetGetActive() == -1) return;
+
+		ZetMapArea(0x8000, 0xbfff, 0, DrvZ80ROM2 + 0x8000 + 0x4000 * (data & 0x07));
+		ZetMapArea(0x8000, 0xbfff, 2, DrvZ80ROM2 + 0x8000 + 0x4000 * (data & 0x07));
 	}
 }
 
@@ -952,6 +931,8 @@ static INT32 DrvDoReset()
 	kageki_sample_pos = 0;
 	kageki_sample_select = -1;
 
+	HiscoreReset();
+
 	return 0;
 }
 
@@ -1029,7 +1010,7 @@ static void kageki_sample_init()
 		}
 	}
 	
-	kageki_sample_gain = 1.00;
+	kageki_sample_gain = 0.45;
 	kageki_sample_output_dir = BURN_SND_ROUTE_BOTH;
 }
 
@@ -1041,9 +1022,10 @@ void kageki_sample_set_route(double nVolume, INT32 nRouteDir)
 
 static void kageki_sample_exit()
 {
-	for (INT32 i = 0; i < 0x30; i++) {
+	for (INT32 i = 0; i < 0x2f; i++) {
 		BurnFree (kageki_sample_data[i]);
 	}
+	kageki_sample_select = -1;
 }
 
 static INT32 tnzs_gfx_decode()
@@ -1351,6 +1333,10 @@ static INT32 Type1Init(INT32 mcutype)
 		BurnYM2203Init(1, 3000000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
 		BurnYM2203SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 
+		if (mcutype == MCU_EXTRMATN || mcutype == MCU_DRTOPPEL) {
+			BurnYM2203SetPSGVolume(0, 0.10);
+		}
+
 		if (mcutype == MCU_NONE_KAGEKI) {
 			BurnYM2203SetPorts(0, &kageki_ym2203_portA, NULL, NULL, &kageki_ym2203_write_portB);
 			BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.35, BURN_SND_ROUTE_BOTH);
@@ -1363,7 +1349,7 @@ static INT32 Type1Init(INT32 mcutype)
 	}	
 
 	DACInit(0, 0, 1, kabukizSyncDAC); // kabukiz
-	DACSetRoute(0, 1.00, BURN_SND_ROUTE_BOTH);
+	DACSetRoute(0, 0.10, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
 
@@ -1381,6 +1367,8 @@ static INT32 Type2Init()
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
+	game_kabukiz = (strncmp(BurnDrvGetTextA(DRV_NAME), "kabukiz", 7) == 0);
+
 	{
 		if (BurnLoadRom(DrvZ80ROM0 + 0x10000, 0, 1)) return 1;
 		memcpy (DrvZ80ROM0, DrvZ80ROM0 + 0x10000, 0x08000);
@@ -1389,7 +1377,7 @@ static INT32 Type2Init()
 
 		if (BurnLoadRom(DrvZ80ROM2 + 0x00000, 2, 1)) return 1;
 
-		if (strncmp(BurnDrvGetTextA(DRV_NAME), "kabukiz", 7) == 0) {
+		if (game_kabukiz) {
 			if (BurnLoadRom(DrvGfxROM + 0x000000,  3, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM + 0x080000,  4, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM + 0x100000,  5, 1)) return 1;
@@ -1419,7 +1407,7 @@ static INT32 Type2Init()
 	ZetMapArea(0xc000, 0xdfff, 1, DrvSprRAM);
 	ZetMapArea(0xc000, 0xdfff, 2, DrvSprRAM);
 	ZetMapArea(0xe000, 0xeeff, 0, DrvShareRAM);
-	if (strncmp(BurnDrvGetTextA(DRV_NAME), "kabukiz", 7) == 0) {
+	if (game_kabukiz) {
 		ZetMapArea(0xef00, 0xefff, 0, DrvShareRAM + 0x0f00);
 	}
 	ZetMapArea(0xe000, 0xefff, 1, DrvShareRAM);
@@ -1468,7 +1456,7 @@ static INT32 Type2Init()
 	BurnTimerAttachZet(6000000);
 	BurnYM2203SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 	
-	if (strncmp(BurnDrvGetTextA(DRV_NAME), "kabukiz", 7) == 0 || strncmp(BurnDrvGetTextA(DRV_NAME), "tnzs", 5) == 0) {
+	if (game_kabukiz || strncmp(BurnDrvGetTextA(DRV_NAME), "tnzs", 5) == 0) {
 		BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 2.00, BURN_SND_ROUTE_BOTH);
 		BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 1.00, BURN_SND_ROUTE_BOTH);
 		BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_2, 1.00, BURN_SND_ROUTE_BOTH);
@@ -1476,6 +1464,7 @@ static INT32 Type2Init()
 	}
 
 	DACInit(0, 0, 1, kabukizSyncDAC); // kabukiz
+	DACSetRoute(0, 0.10, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
 
@@ -1501,6 +1490,7 @@ static INT32 DrvExit()
 	}
 
 	tnzs_mcu_init(0);
+	game_kabukiz = 0;
 
 	return 0;
 }
@@ -1520,9 +1510,6 @@ static void kageki_sample_render(INT16 *pSoundBuf, INT32 nLength)
 	for (INT32 i = 0; i < nLength; i += 2) {
 		if (Addr >= size) break;
 		INT16 Sample = ptr[(INT32)Addr];
-
-//		pSoundBuf[i    ] = Sample;
-//		pSoundBuf[i + 1] = Sample;
 		INT16 nLeftSample = 0, nRightSample = 0;
 		
 		if ((kageki_sample_output_dir & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
@@ -1706,7 +1693,7 @@ static inline void DrvRecalcPalette()
 
 static void sprite_buffer(INT32 ctrl)
 {
-	if (ctrl & 0x20)
+	if (~ctrl & 0x20)
 	{
 		if (ctrl & 0x40) {
 			memcpy (DrvSprRAM + 0x0000, DrvSprRAM + 0x0800, 0x0400);
@@ -1716,6 +1703,15 @@ static void sprite_buffer(INT32 ctrl)
 			memcpy (DrvSprRAM + 0x1800, DrvSprRAM + 0x1000, 0x0400);
 		}
 
+		memcpy (DrvSprRAM + 0x0400, DrvSprRAM + 0x0c00, 0x0400);
+		memcpy (DrvSprRAM + 0x1400, DrvSprRAM + 0x1c00, 0x0400);
+	}
+}
+
+static void bgsprite_buffer_kabukiz(INT32 ctrl)
+{
+	if (~ctrl & 0x20)
+	{
 		memcpy (DrvSprRAM + 0x0400, DrvSprRAM + 0x0c00, 0x0400);
 		memcpy (DrvSprRAM + 0x1400, DrvSprRAM + 0x1c00, 0x0400);
 	}
@@ -1736,8 +1732,6 @@ static INT32 DrvDraw()
 	draw_foreground(ctrl, flip);
 
 	BurnTransferCopy(DrvPalette);
-
-	sprite_buffer(ctrl);
 
 	return 0;
 }
@@ -1766,49 +1760,39 @@ static INT32 DrvFrame()
 
 	assemble_inputs();
 
-	INT32 nInterleave = 100;
+	INT32 nInterleave = 256;
 	if (tnzs_mcu_type() == MCU_NONE_KAGEKI) nInterleave = nBurnSoundLen;
 	INT32 nSoundBufferPos = 0;
 
-	INT32 nCyclesSegment;
-	INT32 nCyclesDone[3], nCyclesTotal[3];
+	INT32 nCyclesTotal[3];
 
 	nCyclesTotal[0] = 6000000 / 60;
 	nCyclesTotal[1] = 6000000 / 60;
 	nCyclesTotal[2] = 6000000 / 60;
 
-	nCyclesDone[0] = nCyclesDone[1] = nCyclesDone[2] = 0;
-
-	INT32 irq_trigger[2] = { nInterleave - 2, nInterleave - 1 };
-
 	for (INT32 i = 0; i < nInterleave; i++) {
-		INT32 nCurrentCPU, nNext;
+		INT32 nCurrentCPU;
+
+		if (game_kabukiz && i == 1)
+			bgsprite_buffer_kabukiz(DrvObjCtrl[1]);
 
 		// Run Z80 #0
 		nCurrentCPU = 0;
 		ZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
-		if (i == irq_trigger[0]) {
+		ZetRun(nCyclesTotal[nCurrentCPU] / nInterleave);
+		if (i == nInterleave - 1) {
 			tnzs_mcu_interrupt();
-			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		}
-		if (i == irq_trigger[1]) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
 		ZetClose();
 
 		// Run Z80 #1
 		nCurrentCPU = 1;
 		ZetOpen(nCurrentCPU);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		if (cpu1_reset == 0) {
-			nCyclesDone[nCurrentCPU] += ZetRun(nCyclesSegment);
-		} else {
-			nCyclesDone[nCurrentCPU] += nCyclesSegment;
-		}
-		if (i == irq_trigger[0]) ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
-		if (i == irq_trigger[1]) ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
+		if (!cpu1_reset)
+			ZetRun(nCyclesTotal[nCurrentCPU] / nInterleave);
+		if (i == nInterleave - 1)
+			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		ZetClose();
 
 		// Run Z80 #2
@@ -1816,7 +1800,7 @@ static INT32 DrvFrame()
 		{
 			nCurrentCPU = 2;
 			ZetOpen(nCurrentCPU);
-			BurnTimerUpdate(i * (nCyclesTotal[nCurrentCPU] / nInterleave));
+			BurnTimerUpdate((i + 1) * (nCyclesTotal[nCurrentCPU] / nInterleave));
 			ZetClose();
 		}
 		
@@ -1868,6 +1852,8 @@ static INT32 DrvFrame()
 		DrvDraw();
 	}
 
+	sprite_buffer(DrvObjCtrl[1]);
+
 	return 0;
 }
 
@@ -1916,9 +1902,11 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		bankswitch1(tnzs_banks[1]);
 		ZetClose();
 
-		ZetOpen(2);
-		kabukiz_sound_bankswitch(0,tnzs_banks[2]);
-		ZetClose();
+		if (game_kabukiz) {
+			ZetOpen(2);
+			kabukiz_sound_bankswitch(0, tnzs_banks[2]);
+			ZetClose();
+		}
 	}
 
 	return 0;
@@ -1935,17 +1923,17 @@ static struct BurnRomInfo plumppopRomDesc[] = {
 
 	{ "plmp8742.bin",	0x00800, 0x00000000, 3 | BRF_NODUMP },	      //  3 I8742 MCU
 
-	{ "a98-01.bin",		0x10000, 0xf3033dca, 4 | BRF_GRA },	      //  4 Graphics
-	{ "a98-02.bin",		0x10000, 0xf2d17b0c, 4 | BRF_GRA },	      //  5
-	{ "a98-03.bin",		0x10000, 0x1a519b0a, 4 | BRF_GRA },	      //  6
-	{ "a98-04.bin",		0x10000, 0xb64501a1, 4 | BRF_GRA },	      //  7
-	{ "a98-05.bin",		0x10000, 0x45c36963, 4 | BRF_GRA },	      //  8
-	{ "a98-06.bin",		0x10000, 0xe075341b, 4 | BRF_GRA },	      //  9
-	{ "a98-07.bin",		0x10000, 0x8e16cd81, 4 | BRF_GRA },	      // 10
-	{ "a98-08.bin",		0x10000, 0xbfa7609a, 4 | BRF_GRA },	      // 11
+	{ "a98-01.bin",		0x10000, 0xf3033dca, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "a98-02.bin",		0x10000, 0xf2d17b0c, 4 | BRF_GRA },	      	  //  5
+	{ "a98-03.bin",		0x10000, 0x1a519b0a, 4 | BRF_GRA },	      	  //  6
+	{ "a98-04.bin",		0x10000, 0xb64501a1, 4 | BRF_GRA },	      	  //  7
+	{ "a98-05.bin",		0x10000, 0x45c36963, 4 | BRF_GRA },	      	  //  8
+	{ "a98-06.bin",		0x10000, 0xe075341b, 4 | BRF_GRA },	      	  //  9
+	{ "a98-07.bin",		0x10000, 0x8e16cd81, 4 | BRF_GRA },	      	  // 10
+	{ "a98-08.bin",		0x10000, 0xbfa7609a, 4 | BRF_GRA },	      	  // 11
 
-	{ "a98-13.bpr",		0x00200, 0x7cde2da5, 5 | BRF_GRA },	      // 12 Color PROMs
-	{ "a98-12.bpr",		0x00200, 0x90dc9da7, 5 | BRF_GRA },	      // 13
+	{ "a98-13.bpr",		0x00200, 0x7cde2da5, 5 | BRF_GRA },	      	  // 12 Color PROMs
+	{ "a98-12.bpr",		0x00200, 0x90dc9da7, 5 | BRF_GRA },	      	  // 13
 };
 
 STD_ROM_PICK(plumppop)
@@ -1960,7 +1948,7 @@ struct BurnDriver BurnDrvPlumppop = {
 	"plumppop", NULL, NULL, NULL, "1987",
 	"Plump Pop (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
 	NULL, plumppopRomInfo, plumppopRomName, NULL, NULL, PlumppopInputInfo, PlumppopDIPInfo,
 	PlumppopInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -1977,13 +1965,13 @@ static struct BurnRomInfo extrmatnRomDesc[] = {
 
 	{ "extr8742.4f",	0x00800, 0x00000000, 3 | BRF_NODUMP },        //  3 I8742 MCU
 
-	{ "b06-01.13a",		0x20000, 0xd2afbf7e, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b06-02.10a",		0x20000, 0xe0c2757a, 4 | BRF_GRA },	      //  5
-	{ "b06-03.7a",		0x20000, 0xee80ab9d, 4 | BRF_GRA },	      //  6
-	{ "b06-04.4a",		0x20000, 0x3697ace4, 4 | BRF_GRA },	      //  7
+	{ "b06-01.13a",		0x20000, 0xd2afbf7e, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b06-02.10a",		0x20000, 0xe0c2757a, 4 | BRF_GRA },	      	  //  5
+	{ "b06-03.7a",		0x20000, 0xee80ab9d, 4 | BRF_GRA },	      	  //  6
+	{ "b06-04.4a",		0x20000, 0x3697ace4, 4 | BRF_GRA },	      	  //  7
 
-	{ "b06-09.15f",		0x00200, 0xf388b361, 5 | BRF_GRA },	      //  8 Color PROMs
-	{ "b06-08.17f",		0x00200, 0x10c9aac3, 5 | BRF_GRA },	      //  9
+	{ "b06-09.15f",		0x00200, 0xf388b361, 5 | BRF_GRA },	      	  //  8 Color PROMs
+	{ "b06-08.17f",		0x00200, 0x10c9aac3, 5 | BRF_GRA },	      	  //  9
 };
 
 STD_ROM_PICK(extrmatn)
@@ -1998,7 +1986,7 @@ struct BurnDriver BurnDrvExtrmatn = {
 	"extrmatn", NULL, NULL, NULL, "1987",
 	"Extermination (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
 	NULL, extrmatnRomInfo, extrmatnRomName, NULL, NULL, CommonInputInfo, ExtrmatnDIPInfo,
 	ExtrmatnInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2015,13 +2003,13 @@ static struct BurnRomInfo extrmatuRomDesc[] = {
 
 	{ "extr8742.4f",	0x00800, 0x00000000, 3 | BRF_NODUMP }, 	      //  3 I8742 MCU
 
-	{ "b06-01.13a",		0x20000, 0xd2afbf7e, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b06-02.10a",		0x20000, 0xe0c2757a, 4 | BRF_GRA },	      //  5
-	{ "b06-03.7a",		0x20000, 0xee80ab9d, 4 | BRF_GRA },	      //  6
-	{ "b06-04.4a",		0x20000, 0x3697ace4, 4 | BRF_GRA },	      //  7
+	{ "b06-01.13a",		0x20000, 0xd2afbf7e, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b06-02.10a",		0x20000, 0xe0c2757a, 4 | BRF_GRA },	      	  //  5
+	{ "b06-03.7a",		0x20000, 0xee80ab9d, 4 | BRF_GRA },	      	  //  6
+	{ "b06-04.4a",		0x20000, 0x3697ace4, 4 | BRF_GRA },	      	  //  7
 
-	{ "b06-09.15f",		0x00200, 0xf388b361, 5 | BRF_GRA },	      //  8 Color PROMs
-	{ "b06-08.17f",		0x00200, 0x10c9aac3, 5 | BRF_GRA },	      //  9
+	{ "b06-09.15f",		0x00200, 0xf388b361, 5 | BRF_GRA },	      	  //  8 Color PROMs
+	{ "b06-08.17f",		0x00200, 0x10c9aac3, 5 | BRF_GRA },	      	  //  9
 };
 
 STD_ROM_PICK(extrmatu)
@@ -2031,7 +2019,7 @@ struct BurnDriver BurnDrvExtrmatu = {
 	"extrmatnu", "extrmatn", NULL, NULL, "1987",
 	"Extermination (US)\0", NULL, "[Taito] World Games", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
 	NULL, extrmatuRomInfo, extrmatuRomName, NULL, NULL, CommonInputInfo, ExtrmatnDIPInfo,
 	ExtrmatnInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2048,13 +2036,13 @@ static struct BurnRomInfo extrmatjRomDesc[] = {
 
 	{ "extr8742.4f",	0x00800, 0x00000000, 3 | BRF_NODUMP },        //  3 I8742 MCU
 
-	{ "b06-01.13a",		0x20000, 0xd2afbf7e, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b06-02.10a",		0x20000, 0xe0c2757a, 4 | BRF_GRA },	      //  5
-	{ "b06-03.7a",		0x20000, 0xee80ab9d, 4 | BRF_GRA },	      //  6
-	{ "b06-04.4a",		0x20000, 0x3697ace4, 4 | BRF_GRA },	      //  7
+	{ "b06-01.13a",		0x20000, 0xd2afbf7e, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b06-02.10a",		0x20000, 0xe0c2757a, 4 | BRF_GRA },	      	  //  5
+	{ "b06-03.7a",		0x20000, 0xee80ab9d, 4 | BRF_GRA },	      	  //  6
+	{ "b06-04.4a",		0x20000, 0x3697ace4, 4 | BRF_GRA },	      	  //  7
 
-	{ "b06-09.15f",		0x00200, 0xf388b361, 5 | BRF_GRA },	      //  8 Color PROMs
-	{ "b06-08.17f",		0x00200, 0x10c9aac3, 5 | BRF_GRA },	      //  9
+	{ "b06-09.15f",		0x00200, 0xf388b361, 5 | BRF_GRA },	      	  //  8 Color PROMs
+	{ "b06-08.17f",		0x00200, 0x10c9aac3, 5 | BRF_GRA },	      	  //  9
 };
 
 STD_ROM_PICK(extrmatj)
@@ -2064,7 +2052,7 @@ struct BurnDriver BurnDrvExtrmatj = {
 	"extrmatnj", "extrmatn", NULL, NULL, "1987",
 	"Extermination (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
 	NULL, extrmatjRomInfo, extrmatjRomName, NULL, NULL, CommonInputInfo, ExtrmatnDIPInfo,
 	ExtrmatnInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2080,13 +2068,13 @@ static struct BurnRomInfo arknoid2RomDesc[] = {
 
 	{ "ark28742.3g",	0x00800, 0x00000000, 3 | BRF_NODUMP },        //  2 I8742 MCU
 
-	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      //  4
-	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      //  5
-	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      //  6
+	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      	  //  4
+	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      	  //  5
+	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      	  //  6
 
-	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      //  7 Color PROMs
-	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      //  8
+	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      	  //  7 Color PROMs
+	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      	  //  8
 };
 
 STD_ROM_PICK(arknoid2)
@@ -2101,7 +2089,7 @@ struct BurnDriver BurnDrvArknoid2 = {
 	"arknoid2", NULL, NULL, NULL, "1987",
 	"Arkanoid - Revenge of DOH (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
 	NULL, arknoid2RomInfo, arknoid2RomName, NULL, NULL, Arknoid2InputInfo, Arknoid2DIPInfo,
 	Arknoid2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2117,13 +2105,13 @@ static struct BurnRomInfo arknid2uRomDesc[] = {
 
 	{ "ark28742.3g",	0x00800, 0x00000000, 3 | BRF_NODUMP },	      //  2 I8742 MCU
 
-	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      //  4
-	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      //  5
-	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      //  6
+	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      	  //  4
+	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      	  //  5
+	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      	  //  6
 
-	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      //  7 Color PROMs
-	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      //  8
+	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      	  //  7 Color PROMs
+	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      	  //  8
 };
 
 STD_ROM_PICK(arknid2u)
@@ -2133,7 +2121,7 @@ struct BurnDriver BurnDrvArknid2u = {
 	"arknoid2u", "arknoid2", NULL, NULL, "1987",
 	"Arkanoid - Revenge of DOH (US)\0", NULL, "Taito America Corporation (Romstar license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
 	NULL, arknid2uRomInfo, arknid2uRomName, NULL, NULL, Arknoid2InputInfo, Arknid2uDIPInfo,
 	Arknoid2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2149,13 +2137,13 @@ static struct BurnRomInfo arknid2jRomDesc[] = {
 
 	{ "ark28742.3g",	0x00800, 0x00000000, 3 | BRF_NODUMP }, 	      //  2 I8742 MCU
 
-	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      //  4
-	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      //  5
-	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      //  6
+	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      	  //  4
+	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      	  //  5
+	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      	  //  6
 
-	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      //  7 Color PROMs
-	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      //  8
+	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      	  //  7 Color PROMs
+	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      	  //  8
 };
 
 STD_ROM_PICK(arknid2j)
@@ -2165,7 +2153,7 @@ struct BurnDriver BurnDrvArknid2j = {
 	"arknoid2j", "arknoid2", NULL, NULL, "1987",
 	"Arkanoid - Revenge of DOH (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
 	NULL, arknid2jRomInfo, arknid2jRomName, NULL, NULL, Arknoid2InputInfo, Arknid2uDIPInfo,
 	Arknoid2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2181,13 +2169,13 @@ static struct BurnRomInfo arknid2bRomDesc[] = {
 
 	{ "ark28742.3g",	0x00800, 0x00000000, 3 | BRF_NODUMP },	      //  2 I8742 MCU
 
-	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      //  4
-	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      //  5
-	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      //  6
+	{ "b08-01.13a",		0x20000, 0x2ccc86b4, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b08-02.10a",		0x20000, 0x056a985f, 4 | BRF_GRA },	      	  //  4
+	{ "b08-03.7a",		0x20000, 0x274a795f, 4 | BRF_GRA },	      	  //  5
+	{ "b08-04.4a",		0x20000, 0x9754f703, 4 | BRF_GRA },	      	  //  6
 
-	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      //  7 Color PROMs
-	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      //  8
+	{ "b08-08.15f",		0x00200, 0xa4f7ebd9, 5 | BRF_GRA },	      	  //  7 Color PROMs
+	{ "b08-07.16f",		0x00200, 0xea34d9f7, 5 | BRF_GRA },	      	  //  8
 };
 
 STD_ROM_PICK(arknid2b)
@@ -2197,7 +2185,7 @@ struct BurnDriver BurnDrvArknid2b = {
 	"arknoid2b", "arknoid2", NULL, NULL, "1987",
 	"Arkanoid - Revenge of DOH (Japan bootleg)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
 	NULL, arknid2bRomInfo, arknid2bRomName, NULL, NULL, Arknoid2InputInfo, Arknid2uDIPInfo,
 	Arknoid2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2214,17 +2202,17 @@ static struct BurnRomInfo drtoppelRomDesc[] = {
 
 	{ "drt8742.3g",		0x00800, 0x00000000, 3 | BRF_NODUMP },        //  3 I8742 MCU
 
-	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      //  5
-	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      //  6
-	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      //  7
-	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      //  8
-	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      //  9
-	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      // 10
-	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      // 11
+	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      	  //  5
+	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      	  //  6
+	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      	  //  7
+	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      	  //  8
+	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      	  //  9
+	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      	  // 10
+	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      	  // 11
 
-	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      // 12 Color PROMs
-	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      // 13
+	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      	  // 12 Color PROMs
+	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      	  // 13
 };
 
 STD_ROM_PICK(drtoppel)
@@ -2239,7 +2227,7 @@ struct BurnDriver BurnDrvDrtoppel = {
 	"drtoppel", NULL, NULL, NULL, "1987",
 	"Dr. Toppel's Adventure (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
 	NULL, drtoppelRomInfo, drtoppelRomName, NULL, NULL, CommonInputInfo, DrtoppelDIPInfo,
 	DrtoppelInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2257,17 +2245,17 @@ static struct BurnRomInfo drtoppelaRomDesc[] = {
 
 	{ "drt8742.3g",		0x00800, 0x00000000, 3 | BRF_NODUMP },        //  3 I8742 MCU
 
-	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      //  5
-	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      //  6
-	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      //  7
-	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      //  8
-	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      //  9
-	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      // 10
-	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      // 11
+	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      	  //  5
+	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      	  //  6
+	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      	  //  7
+	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      	  //  8
+	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      	  //  9
+	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      	  // 10
+	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      	  // 11
 
-	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      // 12 Color PROMs
-	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      // 13
+	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      	  // 12 Color PROMs
+	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      	  // 13
 };
 
 STD_ROM_PICK(drtoppela)
@@ -2277,7 +2265,7 @@ struct BurnDriver BurnDrvDrtoppela = {
 	"drtoppela", "drtoppel", NULL, NULL, "1987",
 	"Dr. Toppel's Adventure (World, alt?)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
 	NULL, drtoppelaRomInfo, drtoppelaRomName, NULL, NULL, CommonInputInfo, DrtoppelDIPInfo,
 	DrtoppelInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2294,17 +2282,17 @@ static struct BurnRomInfo drtoppluRomDesc[] = {
 
 	{ "drt8742.3g",		0x00800, 0x00000000, 3 | BRF_NODUMP },        //  3 I8742 MCU
 
-	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      //  5
-	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      //  6
-	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      //  7
-	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      //  8
-	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      //  9
-	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      // 10
-	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      // 11
+	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      	  //  5
+	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      	  //  6
+	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      	  //  7
+	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      	  //  8
+	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      	  //  9
+	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      	  // 10
+	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      	  // 11
 
-	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      // 12 Color PROMs
-	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      // 13
+	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      	  // 12 Color PROMs
+	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      	  // 13
 };
 
 STD_ROM_PICK(drtopplu)
@@ -2314,7 +2302,7 @@ struct BurnDriver BurnDrvDrtopplu = {
 	"drtoppelu", "drtoppel", NULL, NULL, "1987",
 	"Dr. Toppel's Adventure (US)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
 	NULL, drtoppluRomInfo, drtoppluRomName, NULL, NULL, CommonInputInfo, DrtoppluDIPInfo,
 	DrtoppelInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2331,17 +2319,17 @@ static struct BurnRomInfo drtoppljRomDesc[] = {
 
 	{ "drt8742.3g",		0x00800, 0x00000000, 3 | BRF_NODUMP },        //  3 I8742 MCU
 
-	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      //  5
-	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      //  6
-	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      //  7
-	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      //  8
-	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      //  9
-	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      // 10
-	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      // 11
+	{ "b19-01.13a",		0x20000, 0xa7e8a0c1, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b19-02.12a",		0x20000, 0x790ae654, 4 | BRF_GRA },	      	  //  5
+	{ "b19-03.10a",		0x20000, 0x495c4c5a, 4 | BRF_GRA },	      	  //  6
+	{ "b19-04.8a",		0x20000, 0x647007a0, 4 | BRF_GRA },	      	  //  7
+	{ "b19-05.7a",		0x20000, 0x49f2b1a5, 4 | BRF_GRA },	      	  //  8
+	{ "b19-06.5a",		0x20000, 0x2d39f1d0, 4 | BRF_GRA },	      	  //  9
+	{ "b19-07.4a",		0x20000, 0x8bb06f41, 4 | BRF_GRA },	      	  // 10
+	{ "b19-08.2a",		0x20000, 0x3584b491, 4 | BRF_GRA },	      	  // 11
 
-	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      // 12 Color PROMs
-	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      // 13
+	{ "b19-13.15f",		0x00200, 0x6a547980, 5 | BRF_GRA },	      	  // 12 Color PROMs
+	{ "b19-12.16f",		0x00200, 0x5754e9d8, 5 | BRF_GRA },	      	  // 13
 };
 
 STD_ROM_PICK(drtopplj)
@@ -2351,7 +2339,7 @@ struct BurnDriver BurnDrvDrtopplj = {
 	"drtoppelj", "drtoppel", NULL, NULL, "1987",
 	"Dr. Toppel's Tankentai (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VERSHOOT, 0,
 	NULL, drtoppljRomInfo, drtoppljRomName, NULL, NULL, CommonInputInfo, DrtoppluDIPInfo,
 	DrtoppelInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2366,16 +2354,16 @@ static struct BurnRomInfo kagekiRomDesc[] = {
 
 	{ "b35-17.43e",		0x10000, 0xfdd9c246, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
-	{ "b35-01.13a",		0x20000, 0x01d83a69, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b35-02.12a",		0x20000, 0xd8af47ac, 4 | BRF_GRA },	      //  4
-	{ "b35-03.10a",		0x20000, 0x3cb68797, 4 | BRF_GRA },	      //  5
-	{ "b35-04.8a",		0x20000, 0x71c03f91, 4 | BRF_GRA },	      //  6
-	{ "b35-05.7a",		0x20000, 0xa4e20c08, 4 | BRF_GRA },	      //  7
-	{ "b35-06.5a",		0x20000, 0x3f8ab658, 4 | BRF_GRA },	      //  8
-	{ "b35-07.4a",		0x20000, 0x1b4af049, 4 | BRF_GRA },	      //  9
-	{ "b35-08.2a",		0x20000, 0xdeb2268c, 4 | BRF_GRA },	      // 10
+	{ "b35-01.13a",		0x20000, 0x01d83a69, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b35-02.12a",		0x20000, 0xd8af47ac, 4 | BRF_GRA },	      	  //  4
+	{ "b35-03.10a",		0x20000, 0x3cb68797, 4 | BRF_GRA },	      	  //  5
+	{ "b35-04.8a",		0x20000, 0x71c03f91, 4 | BRF_GRA },	      	  //  6
+	{ "b35-05.7a",		0x20000, 0xa4e20c08, 4 | BRF_GRA },	      	  //  7
+	{ "b35-06.5a",		0x20000, 0x3f8ab658, 4 | BRF_GRA },	      	  //  8
+	{ "b35-07.4a",		0x20000, 0x1b4af049, 4 | BRF_GRA },	      	  //  9
+	{ "b35-08.2a",		0x20000, 0xdeb2268c, 4 | BRF_GRA },	      	  // 10
 
-	{ "b35-15.98g",		0x10000, 0xe6212a0f, 6 | BRF_SND },	      // 11 Samples
+	{ "b35-15.98g",		0x10000, 0xe6212a0f, 6 | BRF_SND },	      	  // 11 Samples
 };
 
 STD_ROM_PICK(kageki)
@@ -2388,9 +2376,9 @@ static INT32 KagekiInit()
 
 struct BurnDriver BurnDrvKageki = {
 	"kageki", NULL, NULL, NULL, "1988",
-	"Kageki (US)\0", "Imperfect Sound", "Taito America Corporation (Romstar license)", "Miscellaneous",
+	"Kageki (US)\0", NULL, "Taito America Corporation (Romstar license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
 	NULL, kagekiRomInfo, kagekiRomName, NULL, NULL, CommonInputInfo, KagekiDIPInfo,
 	KagekiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2405,16 +2393,16 @@ static struct BurnRomInfo kagekijRomDesc[] = {
 
 	{ "b35-11.43e",		0x10000, 0x64d093fc, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
-	{ "b35-01.13a",		0x20000, 0x01d83a69, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b35-02.12a",		0x20000, 0xd8af47ac, 4 | BRF_GRA },	      //  4
-	{ "b35-03.10a",		0x20000, 0x3cb68797, 4 | BRF_GRA },	      //  5
-	{ "b35-04.8a",		0x20000, 0x71c03f91, 4 | BRF_GRA },	      //  6
-	{ "b35-05.7a",		0x20000, 0xa4e20c08, 4 | BRF_GRA },	      //  7
-	{ "b35-06.5a",		0x20000, 0x3f8ab658, 4 | BRF_GRA },	      //  8
-	{ "b35-07.4a",		0x20000, 0x1b4af049, 4 | BRF_GRA },	      //  9
-	{ "b35-08.2a",		0x20000, 0xdeb2268c, 4 | BRF_GRA },	      // 10
+	{ "b35-01.13a",		0x20000, 0x01d83a69, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b35-02.12a",		0x20000, 0xd8af47ac, 4 | BRF_GRA },	      	  //  4
+	{ "b35-03.10a",		0x20000, 0x3cb68797, 4 | BRF_GRA },	      	  //  5
+	{ "b35-04.8a",		0x20000, 0x71c03f91, 4 | BRF_GRA },	      	  //  6
+	{ "b35-05.7a",		0x20000, 0xa4e20c08, 4 | BRF_GRA },	      	  //  7
+	{ "b35-06.5a",		0x20000, 0x3f8ab658, 4 | BRF_GRA },	      	  //  8
+	{ "b35-07.4a",		0x20000, 0x1b4af049, 4 | BRF_GRA },	      	  //  9
+	{ "b35-08.2a",		0x20000, 0xdeb2268c, 4 | BRF_GRA },	      	  // 10
 
-	{ "b35-12.98g",		0x10000, 0x184409f1, 6 | BRF_SND },	      // 11 Samples
+	{ "b35-12.98g",		0x10000, 0x184409f1, 6 | BRF_SND },	      	  // 11 Samples
 };
 
 STD_ROM_PICK(kagekij)
@@ -2422,9 +2410,9 @@ STD_ROM_FN(kagekij)
 
 struct BurnDriver BurnDrvKagekij = {
 	"kagekij", "kageki", NULL, NULL, "1988",
-	"Kageki (Japan)\0", "Imperfect Sound", "Taito Corporation", "Miscellaneous",
+	"Kageki (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
 	NULL, kagekijRomInfo, kagekijRomName, NULL, NULL, CommonInputInfo, KagekiDIPInfo,
 	KagekiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2439,16 +2427,16 @@ static struct BurnRomInfo kagekihRomDesc[] = {
 
 	{ "b35-11.43e",		0x10000, 0x64d093fc, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
-	{ "b35-01.13a",		0x20000, 0x01d83a69, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b35-02.12a",		0x20000, 0xd8af47ac, 4 | BRF_GRA },	      //  4
-	{ "b35-03.10a",		0x20000, 0x3cb68797, 4 | BRF_GRA },	      //  5
-	{ "b35-04.8a",		0x20000, 0x71c03f91, 4 | BRF_GRA },	      //  6
-	{ "b35-05.7a",		0x20000, 0xa4e20c08, 4 | BRF_GRA },	      //  7
-	{ "b35-06.5a",		0x20000, 0x3f8ab658, 4 | BRF_GRA },	      //  8
-	{ "b35-07.4a",		0x20000, 0x1b4af049, 4 | BRF_GRA },	      //  9
-	{ "b35-08.2a",		0x20000, 0xdeb2268c, 4 | BRF_GRA },	      // 10
+	{ "b35-01.13a",		0x20000, 0x01d83a69, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b35-02.12a",		0x20000, 0xd8af47ac, 4 | BRF_GRA },	      	  //  4
+	{ "b35-03.10a",		0x20000, 0x3cb68797, 4 | BRF_GRA },	      	  //  5
+	{ "b35-04.8a",		0x20000, 0x71c03f91, 4 | BRF_GRA },	      	  //  6
+	{ "b35-05.7a",		0x20000, 0xa4e20c08, 4 | BRF_GRA },	      	  //  7
+	{ "b35-06.5a",		0x20000, 0x3f8ab658, 4 | BRF_GRA },	      	  //  8
+	{ "b35-07.4a",		0x20000, 0x1b4af049, 4 | BRF_GRA },	      	  //  9
+	{ "b35-08.2a",		0x20000, 0xdeb2268c, 4 | BRF_GRA },	      	  // 10
 
-	{ "b35-12.98g",		0x10000, 0x184409f1, 6 | BRF_SND },	      // 11 Samples
+	{ "b35-12.98g",		0x10000, 0x184409f1, 6 | BRF_SND },	      	  // 11 Samples
 };
 
 STD_ROM_PICK(kagekih)
@@ -2456,9 +2444,9 @@ STD_ROM_FN(kagekih)
 
 struct BurnDriver BurnDrvKagekih = {
 	"kagekih", "kageki", NULL, NULL, "1992",
-	"Kageki (hack)\0", "Imperfect Sound", "Taito Corporation", "Miscellaneous",
+	"Kageki (hack)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
 	NULL, kagekihRomInfo, kagekihRomName, NULL, NULL, CommonInputInfo, KagekiDIPInfo,
 	KagekiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2468,21 +2456,21 @@ struct BurnDriver BurnDrvKagekih = {
 // Chuka Taisen (World)
 
 static struct BurnRomInfo chukataiRomDesc[] = {
-	{ "b44-10",		0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "b44-11",		0x10000, 0x32484094, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "b44-10",			0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b44-11",			0x10000, 0x32484094, 1 | BRF_PRG | BRF_ESS }, //  1
 
 	{ "b44-12w",		0x10000, 0xe80ecdca, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
 	{ "b44-8742.mcu",	0x00800, 0x7dff3f9f, 3 | BRF_PRG | BRF_OPT }, //  3 I8742 MCU
 
-	{ "b44-01.a13",		0x20000, 0xaae7b3d5, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b44-02.a12",		0x20000, 0x7f0b9568, 4 | BRF_GRA },	      //  5
-	{ "b44-03.a10",		0x20000, 0x5a54a3b9, 4 | BRF_GRA },	      //  6
-	{ "b44-04.a08",		0x20000, 0x3c5f544b, 4 | BRF_GRA },	      //  7
-	{ "b44-05.a07",		0x20000, 0xd1b7e314, 4 | BRF_GRA },	      //  8
-	{ "b44-06.a05",		0x20000, 0x269978a8, 4 | BRF_GRA },	      //  9
-	{ "b44-07.a04",		0x20000, 0x3e0e737e, 4 | BRF_GRA },	      // 10
-	{ "b44-08.a02",		0x20000, 0x6cb1e8fc, 4 | BRF_GRA },	      // 11
+	{ "b44-01.a13",		0x20000, 0xaae7b3d5, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b44-02.a12",		0x20000, 0x7f0b9568, 4 | BRF_GRA },	      	  //  5
+	{ "b44-03.a10",		0x20000, 0x5a54a3b9, 4 | BRF_GRA },	      	  //  6
+	{ "b44-04.a08",		0x20000, 0x3c5f544b, 4 | BRF_GRA },	      	  //  7
+	{ "b44-05.a07",		0x20000, 0xd1b7e314, 4 | BRF_GRA },	      	  //  8
+	{ "b44-06.a05",		0x20000, 0x269978a8, 4 | BRF_GRA },	      	  //  9
+	{ "b44-07.a04",		0x20000, 0x3e0e737e, 4 | BRF_GRA },	      	  // 10
+	{ "b44-08.a02",		0x20000, 0x6cb1e8fc, 4 | BRF_GRA },	      	  // 11
 };
 
 STD_ROM_PICK(chukatai)
@@ -2497,7 +2485,7 @@ struct BurnDriver BurnDrvChukatai = {
 	"chukatai", NULL, NULL, NULL, "1988",
 	"Chuka Taisen (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
 	NULL, chukataiRomInfo, chukataiRomName, NULL, NULL, CommonInputInfo, ChukataiDIPInfo,
 	ChukataiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2507,21 +2495,21 @@ struct BurnDriver BurnDrvChukatai = {
 // Chuka Taisen (US)
 
 static struct BurnRomInfo chukatauRomDesc[] = {
-	{ "b44-10",		0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "b44-11",		0x10000, 0x32484094, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "b44-10",			0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b44-11",			0x10000, 0x32484094, 1 | BRF_PRG | BRF_ESS }, //  1
 
 	{ "b44-12u",		0x10000, 0x9f09fd5c, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
 	{ "b44-8742.mcu",	0x00800, 0x7dff3f9f, 3 | BRF_PRG | BRF_OPT }, //  3 I8742 MCU
 
-	{ "b44-01.a13",		0x20000, 0xaae7b3d5, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b44-02.a12",		0x20000, 0x7f0b9568, 4 | BRF_GRA },	      //  5
-	{ "b44-03.a10",		0x20000, 0x5a54a3b9, 4 | BRF_GRA },	      //  6
-	{ "b44-04.a08",		0x20000, 0x3c5f544b, 4 | BRF_GRA },	      //  7
-	{ "b44-05.a07",		0x20000, 0xd1b7e314, 4 | BRF_GRA },	      //  8
-	{ "b44-06.a05",		0x20000, 0x269978a8, 4 | BRF_GRA },	      //  9
-	{ "b44-07.a04",		0x20000, 0x3e0e737e, 4 | BRF_GRA },	      // 10
-	{ "b44-08.a02",		0x20000, 0x6cb1e8fc, 4 | BRF_GRA },	      // 11
+	{ "b44-01.a13",		0x20000, 0xaae7b3d5, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b44-02.a12",		0x20000, 0x7f0b9568, 4 | BRF_GRA },	      	  //  5
+	{ "b44-03.a10",		0x20000, 0x5a54a3b9, 4 | BRF_GRA },	      	  //  6
+	{ "b44-04.a08",		0x20000, 0x3c5f544b, 4 | BRF_GRA },	      	  //  7
+	{ "b44-05.a07",		0x20000, 0xd1b7e314, 4 | BRF_GRA },	      	  //  8
+	{ "b44-06.a05",		0x20000, 0x269978a8, 4 | BRF_GRA },	      	  //  9
+	{ "b44-07.a04",		0x20000, 0x3e0e737e, 4 | BRF_GRA },	      	  // 10
+	{ "b44-08.a02",		0x20000, 0x6cb1e8fc, 4 | BRF_GRA },	      	  // 11
 };
 
 STD_ROM_PICK(chukatau)
@@ -2531,7 +2519,7 @@ struct BurnDriver BurnDrvChukatau = {
 	"chukataiu", "chukatai", NULL, NULL, "1988",
 	"Chuka Taisen (US)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
 	NULL, chukatauRomInfo, chukatauRomName, NULL, NULL, CommonInputInfo, ChukatauDIPInfo,
 	ChukataiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2541,21 +2529,21 @@ struct BurnDriver BurnDrvChukatau = {
 // Chuka Taisen (Japan)
 
 static struct BurnRomInfo chukatajRomDesc[] = {
-	{ "b44-10",		0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "b44-11",		0x10000, 0x32484094, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "b44-10",			0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b44-11",			0x10000, 0x32484094, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "b44-12",		0x10000, 0x0600ace6, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
+	{ "b44-12",			0x10000, 0x0600ace6, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
 	{ "b44-8742.mcu",	0x00800, 0x7dff3f9f, 3 | BRF_PRG | BRF_OPT }, //  3 I8742 MCU
 
-	{ "b44-01.a13",		0x20000, 0xaae7b3d5, 4 | BRF_GRA },	      //  4 Graphics
-	{ "b44-02.a12",		0x20000, 0x7f0b9568, 4 | BRF_GRA },	      //  5
-	{ "b44-03.a10",		0x20000, 0x5a54a3b9, 4 | BRF_GRA },	      //  6
-	{ "b44-04.a08",		0x20000, 0x3c5f544b, 4 | BRF_GRA },	      //  7
-	{ "b44-05.a07",		0x20000, 0xd1b7e314, 4 | BRF_GRA },	      //  8
-	{ "b44-06.a05",		0x20000, 0x269978a8, 4 | BRF_GRA },	      //  9
-	{ "b44-07.a04",		0x20000, 0x3e0e737e, 4 | BRF_GRA },	      // 10
-	{ "b44-08.a02",		0x20000, 0x6cb1e8fc, 4 | BRF_GRA },	      // 11
+	{ "b44-01.a13",		0x20000, 0xaae7b3d5, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b44-02.a12",		0x20000, 0x7f0b9568, 4 | BRF_GRA },	      	  //  5
+	{ "b44-03.a10",		0x20000, 0x5a54a3b9, 4 | BRF_GRA },	      	  //  6
+	{ "b44-04.a08",		0x20000, 0x3c5f544b, 4 | BRF_GRA },	      	  //  7
+	{ "b44-05.a07",		0x20000, 0xd1b7e314, 4 | BRF_GRA },	      	  //  8
+	{ "b44-06.a05",		0x20000, 0x269978a8, 4 | BRF_GRA },	      	  //  9
+	{ "b44-07.a04",		0x20000, 0x3e0e737e, 4 | BRF_GRA },	      	  // 10
+	{ "b44-08.a02",		0x20000, 0x6cb1e8fc, 4 | BRF_GRA },	      	  // 11
 };
 
 STD_ROM_PICK(chukataj)
@@ -2565,7 +2553,7 @@ struct BurnDriver BurnDrvChukataj = {
 	"chukataij", "chukatai", NULL, NULL, "1988",
 	"Chuka Taisen (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
 	NULL, chukatajRomInfo, chukatajRomName, NULL, NULL, CommonInputInfo, ChukatauDIPInfo,
 	ChukataiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2581,14 +2569,16 @@ static struct BurnRomInfo tnzsRomDesc[] = {
 
 	{ "b53-26.34", 		0x10000, 0xcfd5649c, 3 | BRF_PRG | BRF_ESS }, //  2 Z80 #2 Code
 
-	{ "b53-16.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b53-17.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      //  4
-	{ "b53-18.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      //  5
-	{ "b53-19.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      //  6
-	{ "b53-22.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      //  7
-	{ "b53-23.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      //  8
-	{ "b53-20.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      //  9
-	{ "b53-21.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      // 10
+	{ "b53-16.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b53-17.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      	  //  4
+	{ "b53-18.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      	  //  5
+	{ "b53-19.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      	  //  6
+	{ "b53-22.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      	  //  7
+	{ "b53-23.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      	  //  8
+	{ "b53-20.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      	  //  9
+	{ "b53-21.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      	  // 10
+	
+	{ "b53-15.pal16l8a.subpcb.ic6.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 11 Pal
 };
 
 STD_ROM_PICK(tnzs)
@@ -2598,7 +2588,7 @@ struct BurnDriver BurnDrvtnzs = {
 	"tnzs", NULL, NULL, NULL, "1988",
 	"The NewZealand Story (World, newer)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, tnzsRomInfo, tnzsRomName, NULL, NULL, CommonInputInfo, TnzsDIPInfo,
 	Type2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2614,14 +2604,16 @@ static struct BurnRomInfo tnzsjRomDesc[] = {
 
 	{ "b53-26.34",  	0x10000, 0xcfd5649c, 3 | BRF_PRG | BRF_ESS }, //  2 Z80 #2 Code
 
-	{ "b53-16.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b53-17.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      //  4
-	{ "b53-18.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      //  5
-	{ "b53-19.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      //  6
-	{ "b53-22.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      //  7
-	{ "b53-23.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      //  8
-	{ "b53-20.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      //  9
-	{ "b53-21.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      // 10
+	{ "b53-16.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b53-17.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      	  //  4
+	{ "b53-18.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      	  //  5
+	{ "b53-19.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      	  //  6
+	{ "b53-22.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      	  //  7
+	{ "b53-23.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      	  //  8
+	{ "b53-20.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      	  //  9
+	{ "b53-21.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      	  // 10
+	
+	{ "b53-15.pal16l8a.subpcb.ic6.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 11 Pal
 };
 
 STD_ROM_PICK(tnzsj)
@@ -2631,7 +2623,7 @@ struct BurnDriver BurnDrvtnzsj = {
 	"tnzsj", "tnzs", NULL, NULL, "1988",
 	"The NewZealand Story (Japan, new version, newer PCB)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, tnzsjRomInfo, tnzsjRomName, NULL, NULL, CommonInputInfo, TnzsjDIPInfo,
 	Type2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2641,20 +2633,25 @@ struct BurnDriver BurnDrvtnzsj = {
 // The NewZealand Story (Japan, old version) (older PCB)
 
 static struct BurnRomInfo tnzsjoRomDesc[] = {
-	{ "b53-10.32",		0x20000, 0xa73745c6, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b53-10.u32",		0x20000, 0xa73745c6, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 
-	{ "b53-11.38",		0x10000, 0x9784d443, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
+	{ "b53-11.u38",		0x10000, 0x9784d443, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
 
 	{ "b53-09.u46",		0x00800, 0xa4bfce19, 3 | BRF_PRG | BRF_OPT }, //  2 I8742 MCU
 
-	{ "b53-08.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b53-07.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      //  4
-	{ "b53-06.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      //  5
-	{ "b53-05.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      //  6
-	{ "b53-04.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      //  7
-	{ "b53-03.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      //  8
-	{ "b53-02.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      //  9
-	{ "b53-01.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      // 10
+	{ "b53-08.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b53-07.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      	  //  4
+	{ "b53-06.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      	  //  5
+	{ "b53-05.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      	  //  6
+	{ "b53-04.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      	  //  7
+	{ "b53-03.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      	  //  8
+	{ "b53-02.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      	  //  9
+	{ "b53-01.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      	  // 10
+	
+	/* these are marked b06 and so are probably shared with extermination */
+	{ "b06-12.pal16l8a.ic26.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 11 Pal
+	{ "b06-13.pal16l8a.ic25.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 12 
+	{ "b06-14.pal16x8a.icxx.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 13 // does this chip exist?
 };
 
 STD_ROM_PICK(tnzsjo)
@@ -2669,7 +2666,7 @@ struct BurnDriver BurnDrvTnzsjo = {
 	"tnzsjo", "tnzs", NULL, NULL, "1988",
 	"The NewZealand Story (Japan, old version) (older PCB)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, tnzsjoRomInfo, tnzsjoRomName, NULL, NULL, CommonInputInfo, TnzsjoDIPInfo,
 	TnzsoInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2679,20 +2676,26 @@ struct BurnDriver BurnDrvTnzsjo = {
 // The NewZealand Story (World, old version) (older PCB)
 
 static struct BurnRomInfo tnzsoRomDesc[] = {
-	{ "u32",		0x20000, 0xedf3b39e, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "u32",			0x20000, 0xedf3b39e, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 
-	{ "u38",		0x10000, 0x60340d63, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
+	{ "u38",			0x10000, 0x60340d63, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
 
-	{ "b53-06.u46",		0x00800, 0xa4bfce19, 3 | BRF_PRG | BRF_OPT }, //  2 I8742 MCU
+	{ "b53-09.u46",		0x00800, 0xa4bfce19, 3 | BRF_PRG | BRF_OPT }, //  2 I8742 MCU
 
-	{ "b53-08.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      //  3 Graphics
-	{ "b53-07.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      //  4
-	{ "b53-06.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      //  5
-	{ "b53-05.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      //  6
-	{ "b53-04.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      //  7
-	{ "b53-03.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      //  8
-	{ "b53-02.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      //  9
-	{ "b53-01.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      // 10
+	{ "b53-08.8",		0x20000, 0xc3519c2a, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b53-07.7",		0x20000, 0x2bf199e8, 4 | BRF_GRA },	      	  //  4
+	{ "b53-06.6",		0x20000, 0x92f35ed9, 4 | BRF_GRA },	      	  //  5
+	{ "b53-05.5",		0x20000, 0xedbb9581, 4 | BRF_GRA },	      	  //  6
+	{ "b53-04.4",		0x20000, 0x59d2aef6, 4 | BRF_GRA },	      	  //  7
+	{ "b53-03.3",		0x20000, 0x74acfb9b, 4 | BRF_GRA },	      	  //  8
+	{ "b53-02.2",		0x20000, 0x095d0dc0, 4 | BRF_GRA },	      	  //  9
+	{ "b53-01.1",		0x20000, 0x9800c54d, 4 | BRF_GRA },	      	  // 10
+	
+	/* PALS not directly observed on this board but assumed to exist */
+	/* these are marked b06 and so are probably shared with extermination */
+	{ "b06-12.pal16l8a.ic26.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 11 Pal
+	{ "b06-13.pal16l8a.ic25.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 12 
+	{ "b06-14.pal16x8a.icxx.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 13 // does this chip exist?
 };
 
 STD_ROM_PICK(tnzso)
@@ -2702,7 +2705,7 @@ struct BurnDriver BurnDrvTnzso = {
 	"tnzso", "tnzs", NULL, NULL, "1988",
 	"The NewZealand Story (World, old version) (older PCB)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, tnzsoRomInfo, tnzsoRomName, NULL, NULL, CommonInputInfo, TnzsopDIPInfo,
 	TnzsoInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2726,6 +2729,12 @@ static struct BurnRomInfo tnzsopRomDesc[] = {
 	{ "ns_a05.rom",		0x20000, 0x6e762e20, 4 | BRF_GRA },	      //  8
 	{ "ns_a04.rom",		0x20000, 0xe1fd1b9d, 4 | BRF_GRA },	      //  9
 	{ "ns_a02.rom",		0x20000, 0x2ab06bda, 4 | BRF_GRA },	      // 10
+	
+	/* PALS not directly observed on this board but assumed to exist */
+	/* these are marked b06 and so are probably shared with extermination */
+	{ "b06-12.pal16l8a.ic26.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 11 Pal
+	{ "b06-13.pal16l8a.ic25.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 12 
+	{ "b06-14.pal16x8a.icxx.jed", 0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 13 // does this chip exist?
 };
 
 STD_ROM_PICK(tnzsop)
@@ -2735,7 +2744,7 @@ struct BurnDriver BurnDrvTnzsop = {
 	"tnzsop", "tnzs", NULL, NULL, "1988",
 	"The NewZealand Story (World, prototype?) (older PCB)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, tnzsopRomInfo, tnzsopRomName, NULL, NULL, CommonInputInfo, TnzsopDIPInfo,
 	TnzsoInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2762,9 +2771,9 @@ STD_ROM_FN(kabukiz)
 
 struct BurnDriverD BurnDrvKabukiz = {
 	"kabukiz", NULL, NULL, NULL, "1988",
-	"Kabuki-Z (World)\0", "Imperfect graphics", "Taito Corporation Japan", "Miscellaneous",
+	"Kabuki-Z (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
 	NULL, kabukizRomInfo, kabukizRomName, NULL, NULL, CommonInputInfo, KabukizDIPInfo,
 	Type2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2791,9 +2800,9 @@ STD_ROM_FN(kabukizj)
 
 struct BurnDriverD BurnDrvKabukizj = {
 	"kabukizj", "kabukiz", NULL, NULL, "1988",
-	"Kabuki-Z (Japan)\0", "Imperfect graphics", "Taito Corporation", "Miscellaneous",
+	"Kabuki-Z (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
 	NULL, kabukizjRomInfo, kabukizjRomName, NULL, NULL, CommonInputInfo, KabukizjDIPInfo,
 	Type2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2823,7 +2832,7 @@ struct BurnDriver BurnDrvInsectx = {
 	"insectx", NULL, NULL, NULL, "1989",
 	"Insector X (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
 	NULL, insectxRomInfo, insectxRomName, NULL, NULL, InsectxInputInfo, InsectxDIPInfo,
 	InsectxInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
@@ -2853,9 +2862,9 @@ static INT32 JpopnicsInit()
 
 struct BurnDriver BurnDrvJpopnics = {
 	"jpopnics", NULL, NULL, NULL, "1992",
-	"Jumping Pop (Nics, Korean bootleg of Plump Pop)\0", "Imperfect graphics", "Nics", "Miscellaneous",
+	"Jumping Pop (Nics, Korean bootleg of Plump Pop)\0", NULL, "Nics", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_BREAKOUT, 0,
 	NULL, jpopnicsRomInfo, jpopnicsRomName, NULL, NULL, JpopnicsInputInfo, JpopnicsDIPInfo,
 	JpopnicsInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3

@@ -6,7 +6,7 @@
 
 #include "cd/cd_interface.h"
 
-#define FBA_VERSION "v0.2.97.36"
+#define FBA_VERSION "v0.2.97.37"
 
 #ifdef _WIN32
    char slash = '\\';
@@ -118,41 +118,42 @@ static struct RomBiosInfo mvs_bioses[] = {
    {"sp-s2.sp1",         0x9036d879, 0x01, "MVS Asia/Europe ver. 5 (1 slot)",  2 },
    {"sp-s.sp1",          0xc7f2fa45, 0x02, "MVS Asia/Europe ver. 3 (4 slot)",  3 },
    {"sp-u2.sp1",         0xe72943de, 0x03, "MVS USA ver. 5 (2 slot)"        ,  4 },
-   {"sp-e.sp1",          0x2723a5b5, 0x04, "MVS USA ver. 5 (6 slot)"        ,  5 },
-   {"vs-bios.rom",       0xf0e8f27d, 0x05, "MVS Japan ver. 6 (? slot)"      ,  6 },
-   {"sp-j2.sp1",         0xacede59C, 0x06, "MVS Japan ver. 5 (? slot)"      ,  7 },
-   {"sp1.jipan.1024",    0x9fb0abe4, 0x07, "MVS Japan ver. 3 (4 slot)"      ,  8 },
-   {"sp-45.sp1",         0x03cc9f6a, 0x08, "NEO-MVH MV1C"                   ,  9 },
-   {"japan-j3.bin",      0xdff6d41f, 0x09, "MVS Japan (J3)"                 , 10 },
-   {"sp-1v1_3db8c.bin",  0x162f0ebe, 0x0d, "Deck ver. 6 (Git Ver 1.3)"      , 11 },
+   {"v2.bin",            0x62f021f4, 0x04, "MVS USA ver. 5 (4 slot)"        ,  5 },  
+   {"sp-e.sp1",          0x2723a5b5, 0x05, "MVS USA ver. 5 (6 slot)"        ,  6 },
+   {"vs-bios.rom",       0xf0e8f27d, 0x06, "MVS Japan ver. 6 (? slot)"      ,  7 },
+   {"sp-j2.sp1",         0xacede59C, 0x07, "MVS Japan ver. 5 (? slot)"      ,  8 },
+   {"sp1.jipan.1024",    0x9fb0abe4, 0x08, "MVS Japan ver. 3 (4 slot)"      ,  9 },
+   {"sp-45.sp1",         0x03cc9f6a, 0x09, "NEO-MVH MV1C"                   , 10 },
+   {"japan-j3.bin",      0xdff6d41f, 0x0a, "MVS Japan (J3)"                 , 11 },
+   {"sp-1v1_3db8c.bin",  0x162f0ebe, 0x0e, "Deck ver. 6 (Git Ver 1.3)"      , 12 },
    {NULL, 0, 0, NULL, 0 }
 };
 
 static struct RomBiosInfo aes_bioses[] = {
-   {"neo-epo.bin",       0xd27a71f1, 0x0b, "AES Asia"                       ,  1 },
-   {"neo-po.bin",        0x16d0c132, 0x0a, "AES Japan"                      ,  2 },
-   {"neodebug.bin",      0x698ebb7d, 0x0c, "Development Kit"                ,  3 },
+   {"neo-epo.bin",       0xd27a71f1, 0x0c, "AES Asia"                       ,  1 },
+   {"neo-po.bin",        0x16d0c132, 0x0b, "AES Japan"                      ,  2 },
+   {"neodebug.bin",      0x698ebb7d, 0x0d, "Development Kit"                ,  3 },
    {NULL, 0, 0, NULL, 0 }
 };
 
 static struct RomBiosInfo uni_bioses[] = {
-   {"uni-bios_3_1.rom",  0x0c58093f, 0x0e, "Universe BIOS ver. 3.1"         ,  1 },
-   {"uni-bios_3_0.rom",  0xa97c89a9, 0x0f, "Universe BIOS ver. 3.0"         ,  2 },
-   {"uni-bios_2_3.rom",  0x27664eb5, 0x10, "Universe BIOS ver. 2.3"         ,  3 },
-   {"uni-bios_2_3o.rom", 0x601720ae, 0x11, "Universe BIOS ver. 2.3 (alt)"   ,  4 },
-   {"uni-bios_2_2.rom",  0x2d50996a, 0x12, "Universe BIOS ver. 2.2"         ,  5 },
-   {"uni-bios_2_1.rom",  0x8dabf76b, 0x13, "Universe BIOS ver. 2.1"         ,  6 },
-   {"uni-bios_2_0.rom",  0x0c12c2ad, 0x14, "Universe BIOS ver. 2.0"         ,  7 },
-   {"uni-bios_1_3.rom",  0xb24b44a0, 0x15, "Universe BIOS ver. 1.3"         ,  8 },
-   {"uni-bios_1_2.rom",  0x4fa698e9, 0x16, "Universe BIOS ver. 1.2"         ,  9 },
-   {"uni-bios_1_2o.rom", 0xe19d3ce9, 0x17, "Universe BIOS ver. 1.2 (alt)"   , 10 },
-   {"uni-bios_1_1.rom",  0x5dda0d84, 0x18, "Universe BIOS ver. 1.1"         , 11 },
-   {"uni-bios_1_0.rom",  0x0ce453a0, 0x19, "Universe BIOS ver. 1.0"         , 12 },
+   {"uni-bios_3_1.rom",  0x0c58093f, 0x0f, "Universe BIOS ver. 3.1"         ,  1 },
+   {"uni-bios_3_0.rom",  0xa97c89a9, 0x10, "Universe BIOS ver. 3.0"         ,  2 },
+   {"uni-bios_2_3.rom",  0x27664eb5, 0x11, "Universe BIOS ver. 2.3"         ,  3 },
+   {"uni-bios_2_3o.rom", 0x601720ae, 0x12, "Universe BIOS ver. 2.3 (alt)"   ,  4 },
+   {"uni-bios_2_2.rom",  0x2d50996a, 0x13, "Universe BIOS ver. 2.2"         ,  5 },
+   {"uni-bios_2_1.rom",  0x8dabf76b, 0x14, "Universe BIOS ver. 2.1"         ,  6 },
+   {"uni-bios_2_0.rom",  0x0c12c2ad, 0x15, "Universe BIOS ver. 2.0"         ,  7 },
+   {"uni-bios_1_3.rom",  0xb24b44a0, 0x16, "Universe BIOS ver. 1.3"         ,  8 },
+   {"uni-bios_1_2.rom",  0x4fa698e9, 0x17, "Universe BIOS ver. 1.2"         ,  9 },
+   {"uni-bios_1_2o.rom", 0xe19d3ce9, 0x18, "Universe BIOS ver. 1.2 (alt)"   , 10 },
+   {"uni-bios_1_1.rom",  0x5dda0d84, 0x19, "Universe BIOS ver. 1.1"         , 11 },
+   {"uni-bios_1_0.rom",  0x0ce453a0, 0x1a, "Universe BIOS ver. 1.0"         , 12 },
    {NULL, 0, 0, NULL, 0 }
 };
 
 static struct RomBiosInfo unknown_bioses[] = {
-   {"neopen.sp1",        0xcb915e76, 0x1a, "NeoOpen BIOS v0.1 beta"         ,  1 },
+   {"neopen.sp1",        0xcb915e76, 0x1b, "NeoOpen BIOS v0.1 beta"         ,  1 },
    {NULL, 0, 0, NULL, 0 }
 };
 

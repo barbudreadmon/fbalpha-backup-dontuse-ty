@@ -10,6 +10,7 @@
 #include "k005289.h"
 #include "vlm5030.h"
 #include "burn_ym2151.h"
+#include "flt_rc.h"
 #include "driver.h"
 extern "C" {
 #include "ay8910.h"
@@ -78,6 +79,7 @@ static INT32 k005289_enable = 0;
 static INT32 k007232_enable = 0;
 static INT32 k051649_enable = 0;
 static INT32 vlm5030_enable = 0;
+static INT32 rcflt_enable = 0;
 static INT32 hcrash_mode = 0;
 
 #define A(a, b, c, d) {a, b, (UINT8*)(c), d}
@@ -1712,6 +1714,23 @@ static UINT8 __fastcall citybomb_main_read_byte(UINT32 address)
 	return 0;
 }
 
+static void nemesis_filter_w(UINT16 /*offset*/)
+{
+#if 0
+	// not used right now..
+	INT32 C1 = /* offset & 0x1000 ? 4700 : */ 0; // is this right? 4.7uF seems too large
+	INT32 C2 = offset & 0x0800 ? 33 : 0;         // 0.033uF = 33 nF
+	INT32 AY8910_INTERNAL_RESISTANCE = 356;
+
+	filter_rc_set_RC(0, FLT_RC_LOWPASS, (AY8910_INTERNAL_RESISTANCE + 12000) / 3, 0, 0, CAP_N(C1)); // unused?
+	filter_rc_set_RC(1, FLT_RC_LOWPASS, (AY8910_INTERNAL_RESISTANCE + 12000) / 3, 0, 0, CAP_N(C1)); // unused?
+	filter_rc_set_RC(2, FLT_RC_LOWPASS, (AY8910_INTERNAL_RESISTANCE + 12000) / 3, 0, 0, CAP_N(C1)); // unused?
+
+	filter_rc_set_RC(3, FLT_RC_LOWPASS, AY8910_INTERNAL_RESISTANCE + 1000, 10000, 0, CAP_N(C2));
+	filter_rc_set_RC(4, FLT_RC_LOWPASS, AY8910_INTERNAL_RESISTANCE + 1000, 10000, 0, CAP_N(C2));
+	filter_rc_set_RC(5, FLT_RC_LOWPASS, AY8910_INTERNAL_RESISTANCE + 1000, 10000, 0, CAP_N(C2));
+#endif
+}
 
 static void __fastcall nemesis_sound_write(UINT16 address, UINT8 data)
 {
@@ -1749,6 +1768,11 @@ static void __fastcall nemesis_sound_write(UINT16 address, UINT8 data)
 			AY8910Write(0, 0, data);
 		return;
 
+		case 0xe007:
+		case 0xe007+0x1ff8:
+			nemesis_filter_w(address);
+		return;
+
 		case 0xe030:
 			if (vlm5030_enable) {
 				vlm5030_st(0,1);
@@ -1764,11 +1788,7 @@ static void __fastcall nemesis_sound_write(UINT16 address, UINT8 data)
 			AY8910Write(1, 1, data);
 		return;
 	}
-	
-	if ((address & ~0x1ff8) == 0xe007) {
-		// nemesis_filter_w
-		return;
-	}
+	//bprintf(0, _T("sw(%X, %X);.."), address, data);
 }
 
 static UINT8 __fastcall nemesis_sound_read(UINT16 address)
@@ -2156,6 +2176,24 @@ static void NemesisSoundInit(INT32 konamigtmode)
 	AY8910SetAllRoutes(0, 0.35, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, (konamigtmode) ? 0.20 : 1.00, BURN_SND_ROUTE_BOTH);
 
+#if 0
+	filter_rc_init(0, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 0); // ay 0
+	filter_rc_init(1, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+	filter_rc_init(2, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+
+	filter_rc_init(3, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1); // ay 1
+	filter_rc_init(4, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+	filter_rc_init(5, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1);
+
+	filter_rc_set_src_gain(0, 0.35);
+	filter_rc_set_src_gain(1, 0.35);
+	filter_rc_set_src_gain(2, 0.35);
+	filter_rc_set_src_gain(3, 1.00);
+	filter_rc_set_src_gain(4, 1.00);
+	filter_rc_set_src_gain(5, 1.00);
+	rcflt_enable = 1;
+#endif
+
 	ay8910_enable = 1;
 	k005289_enable = 1;
 }
@@ -2232,12 +2270,14 @@ static void SalamandSoundInit()
 	K007232SetPortWriteHandler(0, DrvK007232VolCallback);
 	K007232PCMSetAllRoutes(0, (hcrash_mode) ? 0.10 : 0.08, BURN_SND_ROUTE_BOTH);
 
-	vlm5030Init(0,  3579545, salamand_vlm_sync, DrvVLMROM, 0x4000, 1);
-	vlm5030SetAllRoutes(0, (hcrash_mode) ? 0.60 : 2.50, BURN_SND_ROUTE_BOTH);
+	if (DrvVLMROM[1] || DrvVLMROM[2]) {
+		vlm5030Init(0,  3579545, salamand_vlm_sync, DrvVLMROM, 0x4000, 1);
+		vlm5030SetAllRoutes(0, (hcrash_mode) ? 0.60 : 2.50, BURN_SND_ROUTE_BOTH);
+		vlm5030_enable = 1;
+	}
 
 	ym2151_enable = 1;
 	k007232_enable = 1;
-	vlm5030_enable = 1;
 }
 
 static void CitybombSoundInit()
@@ -2504,7 +2544,6 @@ static INT32 BlkpnthrInit()
 	SekClose();
 
 	SalamandSoundInit();
-	vlm5030_enable = 0; // no vlm
 
 	palette_write = salamand_palette_update;
 
@@ -2848,6 +2887,7 @@ static INT32 DrvExit()
 	if (k007232_enable) K007232Exit();
 	if (k005289_enable) K005289Exit();
 	if (k051649_enable) K051649Exit();
+	if (rcflt_enable) filter_rc_exit();
 
 	BurnFree (AllMem);
 
@@ -3048,6 +3088,7 @@ static INT32 NemesisFrame()
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 9216000 / 60, 3579545 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
+	INT32 nSoundBufferPos = 0;
 
 	SekOpen(0);
 	ZetOpen(0);
@@ -3058,18 +3099,49 @@ static INT32 NemesisFrame()
 
 		segment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += SekRun(segment);
-		if (i == (nInterleave - 4) && *m68k_irq_enable) // should be 2500...
+		if (i == 240 && *m68k_irq_enable)
 			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
+
+		// Render Sound Segment
+		if (pBurnSoundOut) {
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			nSoundBufferPos += nSegmentLength;
+
+#if 0
+			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
+			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
+			filter_rc_update(2, pAY8910Buffer[2], pSoundBuf, nSegmentLength);
+			filter_rc_update(3, pAY8910Buffer[3], pSoundBuf, nSegmentLength);
+			filter_rc_update(4, pAY8910Buffer[4], pSoundBuf, nSegmentLength);
+			filter_rc_update(5, pAY8910Buffer[5], pSoundBuf, nSegmentLength);
+#endif
+
+		}
 	}
 
 	ZetClose();
 	SekClose();
 
+	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+		if (nSegmentLength) {
+			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+#if 0
+			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
+			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
+			filter_rc_update(2, pAY8910Buffer[2], pSoundBuf, nSegmentLength);
+			filter_rc_update(3, pAY8910Buffer[3], pSoundBuf, nSegmentLength);
+			filter_rc_update(4, pAY8910Buffer[4], pSoundBuf, nSegmentLength);
+			filter_rc_update(5, pAY8910Buffer[5], pSoundBuf, nSegmentLength);
+#endif
+		}
 		K005289Update(pBurnSoundOut, nBurnSoundLen);
 	}
 
@@ -3394,6 +3466,7 @@ static INT32 Gx400Frame()
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 9216000 / 60, 3579545 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
+	INT32 nSoundBufferPos = 0;
 
 	SekOpen(0);
 	ZetOpen(0);
@@ -3417,13 +3490,26 @@ static INT32 Gx400Frame()
 		segment = nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += ZetRun(segment);
 		if (i == (nInterleave - 1)) ZetNmi();
+
+		// Render Sound Segment
+		if (pBurnSoundOut) {
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			nSoundBufferPos += nSegmentLength;
+		}
 	}
 
 	ZetClose();
 	SekClose();
 
+	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+		if (nSegmentLength) {
+			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+		}
 		vlm5030Update(0, pBurnSoundOut, nBurnSoundLen);
 		K005289Update(pBurnSoundOut, nBurnSoundLen);
 	}

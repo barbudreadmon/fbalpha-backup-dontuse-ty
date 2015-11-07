@@ -78,7 +78,7 @@ static INT32 MemIndex()
     DrvRAM0     = Next;             Next += 0x80000;
     DrvRAM1     = Next;             Next += 0x800000;
     DrvSoundROM = Next;             Next += 0x1000000;
-    DrvColorLUT = (UINT16*) Next;   Next += 0x8000 * 2;
+    DrvColorLUT = (UINT16*) Next;   Next += 0x8000 * sizeof(UINT16);
 
     RamEnd		= Next;
     MemEnd		= Next;
@@ -465,26 +465,63 @@ static INT32 DrvFrame()
 {
     MakeInputs();
 
-    const long fps = 60;
-    const long vblankCycles = kHz(20) * fps;
-    const long cycles = (MHz(100) - vblankCycles) / fps ;
+    const long FPS = 60;
+    const long nMipsCycPerFrame = MHz(100) / FPS;
+    const long nMipsVblankCyc = nMipsCycPerFrame - kHz(20);
+    const long nDcsCycPerFrame = MHz(10) / FPS;
+
+    long nNextMipsSegment = 0;
+    long nNextDcsSegment = 0;
+
+    long nMipsTotalCyc = 0;
+    long nDcsTotalCyc = 0;
+
+    // mips 100MHz ->  dcs 10MHz => 10:1
+    const long mQuantum = kHz(10);
+    const long dQuantum = kHz(1);
+
+    nNextMipsSegment = mQuantum;
+    nNextDcsSegment = dQuantum;
 
     Mips3SetIRQLine(VBLANK_IRQ, 0);
-    Mips3Run(cycles);
 
-    if (pBurnDraw) {
-        DrvDraw();
+    bool isVblank = false;
+
+    while ((nMipsTotalCyc < nMipsCycPerFrame) || (nDcsTotalCyc < nDcsCycPerFrame))
+    {
+        if ((nNextMipsSegment + nMipsTotalCyc) > nMipsCycPerFrame)
+            nNextMipsSegment -= (nNextMipsSegment + nMipsTotalCyc) - nMipsCycPerFrame;
+
+        if ((nNextDcsSegment + nDcsTotalCyc) > nDcsCycPerFrame)
+            nNextDcsSegment -= (nNextDcsSegment + nDcsTotalCyc) - nDcsCycPerFrame;
+
+        if (!isVblank) {
+            if ((nNextMipsSegment + nMipsTotalCyc) >= nMipsVblankCyc) {
+                nNextMipsSegment -= (nNextMipsSegment + nMipsTotalCyc) - nMipsVblankCyc;
+            }
+            if (nMipsTotalCyc == nMipsVblankCyc) {
+                isVblank = true;
+                Mips3SetIRQLine(VBLANK_IRQ, 1);
+                if (pBurnDraw) {
+                    DrvDraw();
+                }
+            }
+        }
+        if (nNextMipsSegment) {
+            Mips3Run(nNextMipsSegment);
+            nMipsTotalCyc += nNextMipsSegment;
+        }
+        if (nNextDcsSegment) {
+            Dcs2kRun(nNextDcsSegment);
+            nDcsTotalCyc += nNextDcsSegment;
+        }
+
+        nNextDcsSegment = dQuantum;
+        nNextMipsSegment = mQuantum;
     }
-
-
-    Dcs2kRun(MHz(10) / 60);
     if (pBurnSoundOut) {
         Dcs2kRender(pBurnSoundOut, nBurnSoundLen);
     }
-
-    Mips3SetIRQLine(VBLANK_IRQ, 1);
-    Mips3Run(kHz(20));
-
 
     return 0;
 }
@@ -510,10 +547,10 @@ STD_ROM_PICK(kinst)
 STD_ROM_FN(kinst)
 
 struct BurnDriver BurnDrvKinst = {
-    "kinst", "kinst", NULL, NULL, "1994/1995",
+    "kinst", NULL, NULL, NULL, "1994/1995",
     "Killer Instinct (ver. 1.5)\0", NULL, "Rare/Nintendo", "MIDWAY",
     NULL, NULL, NULL, NULL,
-    BDF_GAME_WORKING, 2, HARDWARE_PREFIX_MIDWAY, GBF_VSFIGHT, 0,
+    BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_MISC_POST90S, GBF_VSFIGHT, 0,
     NULL, kinstRomInfo, kinstRomName, NULL, NULL, kinstInputInfo, kinstDIPInfo,
     kinstDrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x8000,
     320, 240, 4, 3
@@ -535,10 +572,10 @@ STD_ROM_PICK(kinst2)
 STD_ROM_FN(kinst2)
 
 struct BurnDriver BurnDrvKinst2 = {
-    "kinst2", "kinst2", NULL, NULL, "1994/1995",
+    "kinst2", NULL, NULL, NULL, "1994/1995",
     "Killer Instinct II (ver. 1.4)\0", NULL, "Rare/Nintendo", "MIDWAY",
     NULL, NULL, NULL, NULL,
-    BDF_GAME_WORKING, 2, HARDWARE_PREFIX_MIDWAY, GBF_VSFIGHT, 0,
+    BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_MISC_POST90S, GBF_VSFIGHT, 0,
     NULL, kinst2RomInfo, kinst2RomName, NULL, NULL, kinstInputInfo, kinstDIPInfo,
     kinst2DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x8000,
     320, 240, 4, 3

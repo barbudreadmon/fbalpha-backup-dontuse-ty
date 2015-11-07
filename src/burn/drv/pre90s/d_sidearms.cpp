@@ -778,6 +778,8 @@ static INT32 DrvDoReset(INT32 clear_mem)
 	starscrolly = 0;
 	hflop_74a = 1;
 
+	HiscoreReset();
+
 	return 0;
 }
 
@@ -1514,7 +1516,7 @@ struct BurnDriver BurnDrvSidearms = {
 	"sidearms", NULL, NULL, NULL, "1986",
 	"Side Arms - Hyper Dyne (World, 861129)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, sidearmsRomInfo, sidearmsRomName, NULL, NULL, SidearmsInputInfo, SidearmsDIPInfo,
 	SidearmsInit, DrvExit, DrvFrame, SidearmsDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -1567,7 +1569,7 @@ struct BurnDriver BurnDrvSidearmsu = {
 	"sidearmsu", "sidearms", NULL, NULL, "1986",
 	"Side Arms - Hyper Dyne (US, 861202)\0", NULL, "Capcom (Romstar license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, sidearmsuRomInfo, sidearmsuRomName, NULL, NULL, SidearmsInputInfo, SidearmsDIPInfo,
 	SidearmsInit, DrvExit, DrvFrame, SidearmsDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -1620,7 +1622,7 @@ struct BurnDriver BurnDrvSidearmsur1 = {
 	"sidearmsur1", "sidearms", NULL, NULL, "1986",
 	"Side Arms - Hyper Dyne (US, 861128)\0", NULL, "Capcom (Romstar license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, sidearmsur1RomInfo, sidearmsur1RomName, NULL, NULL, SidearmsInputInfo, SidearmsDIPInfo,
 	SidearmsInit, DrvExit, DrvFrame, SidearmsDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -1673,7 +1675,7 @@ struct BurnDriver BurnDrvSidearmsj = {
 	"sidearmsj", "sidearms", NULL, NULL, "1986",
 	"Side Arms - Hyper Dyne (Japan, 861128)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, sidearmsjRomInfo, sidearmsjRomName, NULL, NULL, SidearmsInputInfo, SidearmsDIPInfo,
 	SidearmsInit, DrvExit, DrvFrame, SidearmsDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -1684,19 +1686,19 @@ struct BurnDriver BurnDrvSidearmsj = {
 
 static struct BurnRomInfo turtshipRomDesc[] = {
 	{ "t-3.bin",		0x08000, 0xb73ed7f2, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
-	{ "t-2.3g",		0x08000, 0x2327b35a, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "t-2.3g",			0x08000, 0x2327b35a, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "t-1.bin",		0x08000, 0xa258ffec, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "t-4.8a",		0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+	{ "t-4.8a",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
 
-	{ "t-5.8k",		0x08000, 0x35c3dbc5, 3 | BRF_GRA },           //  4 Characters
+	{ "t-5.8k",			0x08000, 0x35c3dbc5, 3 | BRF_GRA },           //  4 Characters
 
-	{ "t-8.1d",		0x10000, 0x30a857f0, 4 | BRF_GRA },           //  5 Tiles
+	{ "t-8.1d",			0x10000, 0x30a857f0, 4 | BRF_GRA },           //  5 Tiles
 	{ "t-10.3c",		0x10000, 0x76bb73bb, 4 | BRF_GRA },           //  6
 	{ "t-11.3d",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
-	{ "t-6.1a",		0x10000, 0x45ce41ad, 4 | BRF_GRA },           //  8
-	{ "t-7.1c",		0x10000, 0x3ccf11b9, 4 | BRF_GRA },           //  9
-	{ "t-9.3a",		0x10000, 0x44762916, 4 | BRF_GRA },           // 10
+	{ "t-6.1a",			0x10000, 0x45ce41ad, 4 | BRF_GRA },           //  8
+	{ "t-7.1c",			0x10000, 0x3ccf11b9, 4 | BRF_GRA },           //  9
+	{ "t-9.3a",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
 
 	{ "t-13.1i",		0x10000, 0x599f5246, 5 | BRF_GRA },           // 11 Sprites
 	{ "t-15.bin",		0x10000, 0x6489b7b4, 5 | BRF_GRA },           // 12
@@ -1713,7 +1715,7 @@ struct BurnDriver BurnDrvTurtship = {
 	"turtship", NULL, NULL, NULL, "1988",
 	"Turtle Ship (North America)\0", NULL, "Philko (Sharp Image license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, turtshipRomInfo, turtshipRomName, NULL, NULL, TurtshipInputInfo, TurtshipDIPInfo,
 	TurtshipInit, DrvExit, DrvFrame, TurtshipDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -1723,20 +1725,20 @@ struct BurnDriver BurnDrvTurtship = {
 // Turtle Ship (Japan)
 
 static struct BurnRomInfo turtshipjRomDesc[] = {
-	{ "t-3.5g",		0x08000, 0x0863fc1c, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
-	{ "t-2.3g",		0x08000, 0x2327b35a, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "t-1.3e",		0x08000, 0x845a9ab0, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "t-3.5g",			0x08000, 0x0863fc1c, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
+	{ "t-2.3g",			0x08000, 0x2327b35a, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "t-1.3e",			0x08000, 0x845a9ab0, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "t-4.8a",		0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+	{ "t-4.8a",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
 
-	{ "t-5.8k",		0x08000, 0x35c3dbc5, 3 | BRF_GRA },           //  4 Characters
+	{ "t-5.8k",			0x08000, 0x35c3dbc5, 3 | BRF_GRA },           //  4 Characters
 
-	{ "t-8.1d",		0x10000, 0x30a857f0, 4 | BRF_GRA },           //  5 Tiles
+	{ "t-8.1d",			0x10000, 0x30a857f0, 4 | BRF_GRA },           //  5 Tiles
 	{ "t-10.3c",		0x10000, 0x76bb73bb, 4 | BRF_GRA },           //  6
 	{ "t-11.3d",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
-	{ "t-6.1a",		0x10000, 0x45ce41ad, 4 | BRF_GRA },           //  8
-	{ "t-7.1c",		0x10000, 0x3ccf11b9, 4 | BRF_GRA },           //  9
-	{ "t-9.3a",		0x10000, 0x44762916, 4 | BRF_GRA },           // 10
+	{ "t-6.1a",			0x10000, 0x45ce41ad, 4 | BRF_GRA },           //  8
+	{ "t-7.1c",			0x10000, 0x3ccf11b9, 4 | BRF_GRA },           //  9
+	{ "t-9.3a",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
 
 	{ "t-13.1i",		0x10000, 0x599f5246, 5 | BRF_GRA },           // 11 Sprites
 	{ "t-15.3i",		0x10000, 0xf30cfa90, 5 | BRF_GRA },           // 12
@@ -1753,7 +1755,7 @@ struct BurnDriver BurnDrvTurtshipj = {
 	"turtshipj", "turtship", NULL, NULL, "1988",
 	"Turtle Ship (Japan)\0", NULL, "Philko (Pacific Games license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, turtshipjRomInfo, turtshipjRomName, NULL, NULL, TurtshipInputInfo, TurtshipDIPInfo,
 	TurtshipInit, DrvExit, DrvFrame, TurtshipDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -1767,7 +1769,7 @@ static struct BurnRomInfo turtshipkRomDesc[] = {
 	{ "turtship.002",	0x08000, 0xe576f482, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "turtship.001",	0x08000, 0xa9b64240, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "t-4.8a",		0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+	{ "t-4.8a",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
 
 	{ "turtship.005",	0x04000, 0x651fef75, 3 | BRF_GRA },           //  4 Characters
 
@@ -1775,8 +1777,8 @@ static struct BurnRomInfo turtshipkRomDesc[] = {
 	{ "t-10.3c",		0x10000, 0x76bb73bb, 4 | BRF_GRA },           //  6
 	{ "t-11.3d",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
 	{ "turtship.006",	0x10000, 0xa7cce654, 4 | BRF_GRA },           //  8
-	{ "t-7.1c",		0x10000, 0x3ccf11b9, 4 | BRF_GRA },           //  9
-	{ "t-9.3a",		0x10000, 0x44762916, 4 | BRF_GRA },           // 10
+	{ "t-7.1c",			0x10000, 0x3ccf11b9, 4 | BRF_GRA },           //  9
+	{ "t-9.3a",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
 
 	{ "t-13.1i",		0x10000, 0x599f5246, 5 | BRF_GRA },           // 11 Sprites
 	{ "turtship.015",	0x10000, 0x69fd202f, 5 | BRF_GRA },           // 12
@@ -1793,9 +1795,89 @@ struct BurnDriver BurnDrvTurtshipk = {
 	"turtshipk", "turtship", NULL, NULL, "1988",
 	"Turtle Ship (Korea)\0", NULL, "Philko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, turtshipkRomInfo, turtshipkRomName, NULL, NULL, TurtshipInputInfo, TurtshipDIPInfo,
 	TurtshipkInit, DrvExit, DrvFrame, TurtshipDraw, DrvScan, &DrvRecalc, 0x800,
+	384, 224, 4, 3
+};
+
+
+// Turtle Ship (Korea, older)
+
+static struct BurnRomInfo turtshipkoRomDesc[] = {
+	{ "T-3.G5",			0x08000, 0xcd789535, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
+	{ "T-2.G3",			0x08000, 0x253678c0, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "T-1.E3",			0x08000, 0xd6fdc376, 1 | BRF_PRG | BRF_ESS }, //  2
+
+	{ "T-4.A8",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+
+	{ "T-5.K8",			0x08000, 0x35c3dbc5, 3 | BRF_GRA },           //  4 Characters
+
+	{ "T-8.D1",			0x10000, 0x2f0b2336, 4 | BRF_GRA },           //  5 Tiles
+	{ "T-10.C3",		0x10000, 0x6a0072f4, 4 | BRF_GRA },           //  6
+	{ "T-11.D3",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
+	{ "T-6.A1",			0x10000, 0xa7cce654, 4 | BRF_GRA },           //  8
+	{ "T-7.C1",			0x10000, 0x90dd8415, 4 | BRF_GRA },           //  9
+	{ "T-9.A3",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
+
+	{ "T-13.I1",		0x10000, 0x1cc87f50, 5 | BRF_GRA },           // 11 Sprites
+	{ "T-15.I3",		0x10000, 0x775ee5d9, 5 | BRF_GRA },           // 12
+	{ "T-12.G1",		0x10000, 0x57783312, 5 | BRF_GRA },           // 13
+	{ "T-14.G3",		0x10000, 0xa30e3346, 5 | BRF_GRA },           // 14
+
+	{ "T-16.F9",		0x08000, 0x9b377277, 6 | BRF_GRA },           // 15 Tilemap
+};
+
+STD_ROM_PICK(turtshipko)
+STD_ROM_FN(turtshipko)
+
+struct BurnDriver BurnDrvTurtshipko = {
+	"turtshipko", "turtship", NULL, NULL, "1988",
+	"Turtle Ship (Korea, older)\0", NULL, "Philko", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	NULL, turtshipkoRomInfo, turtshipkoRomName, NULL, NULL, TurtshipInputInfo, TurtshipDIPInfo,
+	TurtshipInit, DrvExit, DrvFrame, TurtshipDraw, DrvScan, &DrvRecalc, 0x800,
+	384, 224, 4, 3
+};
+
+
+// Turtle Ship (Korea, 88/9)
+
+static struct BurnRomInfo turtshipknRomDesc[] = {
+	{ "T-3.G5",			0x08000, 0x529b091c, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
+	{ "T-2.G3",			0x08000, 0xd2f30195, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "T-1.E3",			0x08000, 0x2d02da90, 1 | BRF_PRG | BRF_ESS }, //  2
+
+	{ "T-4.A8",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+
+	{ "T-5.K8",			0x08000, 0x5c2ee02d, 3 | BRF_GRA },           //  4 Characters
+
+	{ "T-8.D1",			0x10000, 0x2f0b2336, 4 | BRF_GRA },           //  5 Tiles
+	{ "T-10.C3",		0x10000, 0x6a0072f4, 4 | BRF_GRA },           //  6
+	{ "T-11.D3",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
+	{ "T-6.A1",			0x10000, 0xa7cce654, 4 | BRF_GRA },           //  8
+	{ "T-7.C1",			0x10000, 0x90dd8415, 4 | BRF_GRA },           //  9
+	{ "T-9.A3",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
+
+	{ "T-13.I1",		0x10000, 0x1cc87f50, 5 | BRF_GRA },           // 11 Sprites
+	{ "T-15.I3",		0x10000, 0x3bf91fb8, 5 | BRF_GRA },           // 12
+	{ "T-12.G1",		0x10000, 0x57783312, 5 | BRF_GRA },           // 13
+	{ "T-14.G3",		0x10000, 0xee162dc0, 5 | BRF_GRA },           // 14
+
+	{ "T-16.F9",		0x08000, 0x9b377277, 6 | BRF_GRA },           // 15 Tilemap
+};
+
+STD_ROM_PICK(turtshipkn)
+STD_ROM_FN(turtshipkn)
+
+struct BurnDriver BurnDrvTurtshipkn = {
+	"turtshipkn", "turtship", NULL, NULL, "1988",
+	"Turtle Ship (Korea, 88/9)\0", NULL, "Philko", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	NULL, turtshipknRomInfo, turtshipknRomName, NULL, NULL, TurtshipInputInfo, TurtshipDIPInfo,
+	TurtshipInit, DrvExit, DrvFrame, TurtshipDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
 };
 
@@ -1803,20 +1885,20 @@ struct BurnDriver BurnDrvTurtshipk = {
 // Dyger (Korea set 1)
 
 static struct BurnRomInfo dygerRomDesc[] = {
-	{ "d-3.5g",		0x08000, 0xbae9882e, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
-	{ "d-2.3g",		0x08000, 0x059ac4dc, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "d-1.3e",		0x08000, 0xd8440f66, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "d-3.5g",			0x08000, 0xbae9882e, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
+	{ "d-2.3g",			0x08000, 0x059ac4dc, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "d-1.3e",			0x08000, 0xd8440f66, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "d-4.8a",		0x08000, 0x8a256c09, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+	{ "d-4.8a",			0x08000, 0x8a256c09, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
 
-	{ "d-5.8k",		0x08000, 0xc4bc72a5, 3 | BRF_GRA },           //  4 Characters
+	{ "d-5.8k",			0x08000, 0xc4bc72a5, 3 | BRF_GRA },           //  4 Characters
 
 	{ "d-10.1d",		0x10000, 0x9715880d, 4 | BRF_GRA },           //  5 Tiles
-	{ "d-9.3c",		0x10000, 0x628dae72, 4 | BRF_GRA },           //  6
+	{ "d-9.3c",			0x10000, 0x628dae72, 4 | BRF_GRA },           //  6
 	{ "d-11.3d",		0x10000, 0x23248db1, 4 | BRF_GRA },           //  7
-	{ "d-6.1a",		0x10000, 0x4ba7a437, 4 | BRF_GRA },           //  8
-	{ "d-8.1c",		0x10000, 0x6c0f0e0c, 4 | BRF_GRA },           //  9
-	{ "d-7.3a",		0x10000, 0x2c50a229, 4 | BRF_GRA },           // 10
+	{ "d-6.1a",			0x10000, 0x4ba7a437, 4 | BRF_GRA },           //  8
+	{ "d-8.1c",			0x10000, 0x6c0f0e0c, 4 | BRF_GRA },           //  9
+	{ "d-7.3a",			0x10000, 0x2c50a229, 4 | BRF_GRA },           // 10
 
 	{ "d-14.1i",		0x10000, 0x99c60b26, 5 | BRF_GRA },           // 11 Sprites
 	{ "d-15.3i",		0x10000, 0xd6475ecc, 5 | BRF_GRA },           // 12
@@ -1829,13 +1911,23 @@ static struct BurnRomInfo dygerRomDesc[] = {
 STD_ROM_PICK(dyger)
 STD_ROM_FN(dyger)
 
+static INT32 DygerInit()
+{
+	INT32 nRet = TurtshipInit();
+
+	BurnYM2203SetPSGVolume(0, 0.10);
+	BurnYM2203SetPSGVolume(1, 0.10);
+
+	return nRet;
+}
+
 struct BurnDriver BurnDrvDyger = {
 	"dyger", NULL, NULL, NULL, "1989",
 	"Dyger (Korea set 1)\0", NULL, "Philko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_PRE90S, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_VERSHOOT, 0,
 	NULL, dygerRomInfo, dygerRomName, NULL, NULL, DygerInputInfo, DygerDIPInfo,
-	TurtshipInit, DrvExit, DrvFrame, DygerDraw, DrvScan, &DrvRecalc, 0x800,
+	DygerInit, DrvExit, DrvFrame, DygerDraw, DrvScan, &DrvRecalc, 0x800,
 	224, 384, 3, 4
 };
 
@@ -1844,19 +1936,19 @@ struct BurnDriver BurnDrvDyger = {
 
 static struct BurnRomInfo dygeraRomDesc[] = {
 	{ "d-3.bin",		0x08000, 0xfc63da8b, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
-	{ "d-2.3g",		0x08000, 0x059ac4dc, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "d-1.3e",		0x08000, 0xd8440f66, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "d-2.3g",			0x08000, 0x059ac4dc, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "d-1.3e",			0x08000, 0xd8440f66, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "d-4.8a",		0x08000, 0x8a256c09, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+	{ "d-4.8a",			0x08000, 0x8a256c09, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
 
-	{ "d-5.8k",		0x08000, 0xc4bc72a5, 3 | BRF_GRA },           //  4 Characters
+	{ "d-5.8k",			0x08000, 0xc4bc72a5, 3 | BRF_GRA },           //  4 Characters
 
 	{ "d-10.1d",		0x10000, 0x9715880d, 4 | BRF_GRA },           //  5 Tiles
-	{ "d-9.3c",		0x10000, 0x628dae72, 4 | BRF_GRA },           //  6
+	{ "d-9.3c",			0x10000, 0x628dae72, 4 | BRF_GRA },           //  6
 	{ "d-11.3d",		0x10000, 0x23248db1, 4 | BRF_GRA },           //  7
-	{ "d-6.1a",		0x10000, 0x4ba7a437, 4 | BRF_GRA },           //  8
-	{ "d-8.1c",		0x10000, 0x6c0f0e0c, 4 | BRF_GRA },           //  9
-	{ "d-7.3a",		0x10000, 0x2c50a229, 4 | BRF_GRA },           // 10
+	{ "d-6.1a",			0x10000, 0x4ba7a437, 4 | BRF_GRA },           //  8
+	{ "d-8.1c",			0x10000, 0x6c0f0e0c, 4 | BRF_GRA },           //  9
+	{ "d-7.3a",			0x10000, 0x2c50a229, 4 | BRF_GRA },           // 10
 
 	{ "d-14.1i",		0x10000, 0x99c60b26, 5 | BRF_GRA },           // 11 Sprites
 	{ "d-15.3i",		0x10000, 0xd6475ecc, 5 | BRF_GRA },           // 12
@@ -1873,9 +1965,9 @@ struct BurnDriver BurnDrvDygera = {
 	"dygera", "dyger", NULL, NULL, "1989",
 	"Dyger (Korea set 2)\0", NULL, "Philko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_PRE90S, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_VERSHOOT, 0,
 	NULL, dygeraRomInfo, dygeraRomName, NULL, NULL, DygerInputInfo, DygerDIPInfo,
-	TurtshipInit, DrvExit, DrvFrame, DygerDraw, DrvScan, &DrvRecalc, 0x800,
+	DygerInit, DrvExit, DrvFrame, DygerDraw, DrvScan, &DrvRecalc, 0x800,
 	224, 384, 3, 4
 };
 
@@ -1886,9 +1978,9 @@ static struct BurnRomInfo twinfalcRomDesc[] = {
 	{ "t-15.bin",		0x08000, 0xe1f20144, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
 	{ "t-14.bin",		0x10000, 0xc499ff83, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "t-1.b4",		0x08000, 0xb84bc980, 2 | BRF_PRG | BRF_ESS }, //  2 Sound CPU
+	{ "t-1.b4",			0x08000, 0xb84bc980, 2 | BRF_PRG | BRF_ESS }, //  2 Sound CPU
 
-	{ "t-6.r6",		0x08000, 0x8e4ca776, 3 | BRF_GRA },           //  3 Characters
+	{ "t-6.r6",			0x08000, 0x8e4ca776, 3 | BRF_GRA },           //  3 Characters
 
 	{ "t-10.y10",		0x10000, 0xb678ef5b, 4 | BRF_GRA },           //  4 Tiles
 	{ "t-9.w10",		0x10000, 0xd7345fb9, 4 | BRF_GRA },           //  5
@@ -1897,12 +1989,12 @@ static struct BurnRomInfo twinfalcRomDesc[] = {
 	{ "t-12.w11",		0x10000, 0xc65050ce, 4 | BRF_GRA },           //  8
 	{ "t-11.u11",		0x10000, 0x51a2c65d, 4 | BRF_GRA },           //  9
 
-	{ "t-2.a5",		0x10000, 0x9c106835, 5 | BRF_GRA },           // 10 Sprites
-	{ "t-3.b5",		0x10000, 0x9b421ccf, 5 | BRF_GRA },           // 11
-	{ "t-4.a7",		0x10000, 0x3a1db986, 5 | BRF_GRA },           // 12
-	{ "t-5.b7",		0x10000, 0x9bd22190, 5 | BRF_GRA },           // 13
+	{ "t-2.a5",			0x10000, 0x9c106835, 5 | BRF_GRA },           // 10 Sprites
+	{ "t-3.b5",			0x10000, 0x9b421ccf, 5 | BRF_GRA },           // 11
+	{ "t-4.a7",			0x10000, 0x3a1db986, 5 | BRF_GRA },           // 12
+	{ "t-5.b7",			0x10000, 0x9bd22190, 5 | BRF_GRA },           // 13
 
-	{ "t-7.y8",		0x08000, 0xa8b5f750, 6 | BRF_GRA },           // 14 Tilemap
+	{ "t-7.y8",			0x08000, 0xa8b5f750, 6 | BRF_GRA },           // 14 Tilemap
 };
 
 STD_ROM_PICK(twinfalc)
@@ -1912,7 +2004,7 @@ struct BurnDriver BurnDrvTwinfalc = {
 	"twinfalc", NULL, NULL, NULL, "1989",
 	"Twin Falcons\0", NULL, "Philko (Poara Enterprises license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, twinfalcRomInfo, twinfalcRomName, NULL, NULL, WhizzInputInfo, WhizzDIPInfo,
 	WhizzInit, DrvExit, DrvFrame, DygerDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -1925,9 +2017,9 @@ static struct BurnRomInfo whizzRomDesc[] = {
 	{ "t-15.l11",		0x08000, 0x73161302, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
 	{ "t-14.k11",		0x10000, 0xbf248879, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "t-1.b4",		0x08000, 0xb84bc980, 2 | BRF_PRG | BRF_ESS }, //  2 Sound CPU
+	{ "t-1.b4",			0x08000, 0xb84bc980, 2 | BRF_PRG | BRF_ESS }, //  2 Sound CPU
 
-	{ "t-6.r6",		0x08000, 0x8e4ca776, 3 | BRF_GRA },           //  3 Characters
+	{ "t-6.r6",			0x08000, 0x8e4ca776, 3 | BRF_GRA },           //  3 Characters
 
 	{ "t-10.y10",		0x10000, 0xb678ef5b, 4 | BRF_GRA },           //  4 Tiles
 	{ "t-9.w10",		0x10000, 0xd7345fb9, 4 | BRF_GRA },           //  5
@@ -1936,12 +2028,12 @@ static struct BurnRomInfo whizzRomDesc[] = {
 	{ "t-12.w11",		0x10000, 0xc65050ce, 4 | BRF_GRA },           //  8
 	{ "t-11.u11",		0x10000, 0x51a2c65d, 4 | BRF_GRA },           //  9
 
-	{ "t-2.a5",		0x10000, 0x9c106835, 5 | BRF_GRA },           // 10 Sprites
-	{ "t-3.b5",		0x10000, 0x9b421ccf, 5 | BRF_GRA },           // 11
-	{ "t-4.a7",		0x10000, 0x3a1db986, 5 | BRF_GRA },           // 12
-	{ "t-5.b7",		0x10000, 0x9bd22190, 5 | BRF_GRA },           // 13
+	{ "t-2.a5",			0x10000, 0x9c106835, 5 | BRF_GRA },           // 10 Sprites
+	{ "t-3.b5",			0x10000, 0x9b421ccf, 5 | BRF_GRA },           // 11
+	{ "t-4.a7",			0x10000, 0x3a1db986, 5 | BRF_GRA },           // 12
+	{ "t-5.b7",			0x10000, 0x9bd22190, 5 | BRF_GRA },           // 13
 
-	{ "t-7.y8",		0x08000, 0xa8b5f750, 6 | BRF_GRA },           // 14 Tilemap
+	{ "t-7.y8",			0x08000, 0xa8b5f750, 6 | BRF_GRA },           // 14 Tilemap
 };
 
 STD_ROM_PICK(whizz)
@@ -1951,7 +2043,7 @@ struct BurnDriver BurnDrvWhizz = {
 	"whizz", "twinfalc", NULL, NULL, "1989",
 	"Whizz\0", NULL, "Philko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, whizzRomInfo, whizzRomName, NULL, NULL, WhizzInputInfo, WhizzDIPInfo,
 	WhizzInit, DrvExit, DrvFrame, DygerDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3

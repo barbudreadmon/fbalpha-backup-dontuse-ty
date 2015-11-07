@@ -1349,7 +1349,15 @@ void MenuEnableItems()
 				EnableMenuItem(hMenu, MENU_STATE_LOAD_DIALOG,	MF_ENABLED | MF_BYCOMMAND);
 			}
 		}
-
+#ifdef INCLUDE_AVI_RECORDING
+		if (nAviStatus) {
+			EnableMenuItem(hMenu, MENU_AVISTART,	        MF_GRAYED | MF_BYCOMMAND);
+			EnableMenuItem(hMenu, MENU_AVISTOP,		        MF_ENABLED | MF_BYCOMMAND);
+		} else {
+			EnableMenuItem(hMenu, MENU_AVISTART,	        MF_ENABLED | MF_BYCOMMAND);
+			EnableMenuItem(hMenu, MENU_AVISTOP,		        MF_GRAYED | MF_BYCOMMAND);
+		}
+#endif
 	} else {
 		bAltPause = 0;
 
@@ -1400,7 +1408,10 @@ void MenuEnableItems()
 		EnableMenuItem(hMenu, MENU_SNAPFACT,			MF_GRAYED  | MF_BYCOMMAND);
 		EnableMenuItem(hMenu, MENU_PALETTEVIEWER,		MF_GRAYED | MF_BYCOMMAND);
 		EnableMenuItem(hMenu, MENU_SAVEGAMEINPUTNOW,		MF_GRAYED  | MF_BYCOMMAND);
-		
+#ifdef INCLUDE_AVI_RECORDING
+		EnableMenuItem(hMenu, MENU_AVISTART,	        MF_GRAYED | MF_BYCOMMAND);
+		EnableMenuItem(hMenu, MENU_AVISTOP,		        MF_GRAYED | MF_BYCOMMAND);
+#endif
 		EnableMenuItem(hMenu, MENU_CDIMAGE,				MF_ENABLED | MF_BYCOMMAND);
 		
 		EnableMenuItem(hMenu, MENU_AUD_PLUGIN_1, 		MF_ENABLED  | MF_BYCOMMAND);

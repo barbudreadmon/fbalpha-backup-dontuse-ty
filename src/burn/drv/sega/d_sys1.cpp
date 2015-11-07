@@ -3,6 +3,7 @@
 #include "sn76496.h"
 #include "bitswap.h"
 #include "mc8123.h"
+#include "8255ppi.h"
 
 static UINT8 System1InputPort0[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 System1InputPort1[8]    = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -15,6 +16,7 @@ static UINT8 *Mem                    = NULL;
 static UINT8 *MemEnd                 = NULL;
 static UINT8 *RamStart               = NULL;
 static UINT8 *RamEnd                 = NULL;
+
 static UINT8 *System1Rom1            = NULL;
 static UINT8 *System1Rom2            = NULL;
 static UINT8 *System1PromRed         = NULL;
@@ -42,30 +44,31 @@ static UINT8 *System1Fetch1          = NULL;
 static UINT8 *System1MC8123Key       = NULL;
 static UINT32 *System1TilesPenUsage  = NULL;
 // for vbt's choplifter driver
-static UINT8 choplifter_scroll_x_on  = 0;
-static INT32  System1BankSwitch;
-static UINT8  System1BgBankLatch;
-//static UINT8  System1BgBank;
+static UINT8 System1RowScroll = 0;
+static INT32 System1BankSwitch;
+static UINT8 System1BgBankLatch;
+static UINT8 System1BgBank = 0;
 // end choplifter
-static UINT8  System1ScrollX[2];
-static UINT8  System1ScrollY;
-static INT32  System1BgScrollX;
-static INT32  System1BgScrollY;
-static INT32  System1VideoMode;
-static INT32  System1FlipScreen;
-static INT32  System1SoundLatch;
-static INT32  System1RomBank;
-static INT32  NoboranbInp16Step;
-static INT32  NoboranbInp17Step;
-static INT32  NoboranbInp23Step;
-static UINT8  BlockgalDial1;
-static UINT8  BlockgalDial2;
+static UINT8 System1ScrollX[2];
+static UINT8 System1ScrollY;
+static INT32 System1BgScrollX;
+static INT32 System1BgScrollY;
+static INT32 System1VideoMode;
+static INT32 System1FlipScreen;
+static INT32 System1SoundLatch;
+static INT32 System1RomBank;
+static INT32 NoboranbInp16Step;
+static INT32 NoboranbInp17Step;
+static INT32 NoboranbInp23Step;
+static UINT8 BlockgalDial1;
+static UINT8 BlockgalDial2;
 
 static INT32 System1SpriteRomSize;
 static INT32 System1NumTiles;
 static INT32 System1SpriteXOffset;
 static INT32 System1ColourProms = 0;
 static INT32 System1BankedRom = 0;
+static INT32 IsSystem2 = 0;
 
 typedef void (*Decode)();
 static Decode DecodeFunction;
@@ -74,14 +77,13 @@ static Decode TileDecodeFunction;
 typedef void (*Render)();
 static Render System1Draw;
 static void System1Render();
-//static void WbmlRender();
+static void System2Render();
 
 typedef void (*MakeInputs)();
 static MakeInputs MakeInputsFunction;
 
 static INT32 nCyclesDone[2], nCyclesTotal[2];
 static INT32 nCyclesSegment;
-
 /*==============================================================================================
 Input Definitions
 ===============================================================================================*/
@@ -308,7 +310,39 @@ static struct BurnInputInfo ChplftbInputList[] = {
 
 STDINPUTINFO(Chplftb)
 
-inline void System1ClearOpposites(UINT8* nJoystickInputs)
+static struct BurnInputInfo UfosensiInputList[] = {
+	{"Coin 1"            , BIT_DIGITAL  , System1InputPort2 + 0, "p1 coin"   },
+	{"Start 1"           , BIT_DIGITAL  , System1InputPort2 + 4, "p1 start"  },
+	{"Coin 2"            , BIT_DIGITAL  , System1InputPort2 + 1, "p2 coin"   },
+	{"Start 2"           , BIT_DIGITAL  , System1InputPort2 + 5, "p2 start"  },
+
+	{"P1 Up"             , BIT_DIGITAL  , System1InputPort0 + 5, "p1 up"     },
+	{"P1 Down"           , BIT_DIGITAL  , System1InputPort0 + 4, "p1 down"   },
+	{"P1 Left"           , BIT_DIGITAL  , System1InputPort0 + 7, "p1 left"   },
+	{"P1 Right"          , BIT_DIGITAL  , System1InputPort0 + 6, "p1 right"  },
+	{"P1 Fire 1"         , BIT_DIGITAL  , System1InputPort0 + 1, "p1 fire 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL  , System1InputPort0 + 2, "p1 fire 2" },
+	{"P1 Fire 3"         , BIT_DIGITAL  , System1InputPort0 + 0, "p1 fire 3" },
+
+	{"P2 Up"             , BIT_DIGITAL  , System1InputPort1 + 5, "p2 up"     },
+	{"P2 Down"           , BIT_DIGITAL  , System1InputPort1 + 4, "p2 down"   },
+	{"P2 Left"           , BIT_DIGITAL  , System1InputPort1 + 7, "p2 left"   },
+	{"P2 Right"          , BIT_DIGITAL  , System1InputPort1 + 6, "p2 right"  },
+	{"P2 Fire 1"         , BIT_DIGITAL  , System1InputPort1 + 1, "p2 fire 1" },
+	{"P2 Fire 2"         , BIT_DIGITAL  , System1InputPort1 + 2, "p2 fire 2" },
+	{"P2 Fire 3"         , BIT_DIGITAL  , System1InputPort1 + 0, "p2 fire 3" },
+
+	{"Reset"             , BIT_DIGITAL  , &System1Reset        , "reset"     },
+	{"Service"           , BIT_DIGITAL  , System1InputPort2 + 3, "service"   },
+	{"Test"              , BIT_DIGITAL  , System1InputPort2 + 2, "diag"      },
+	{"Dip 1"             , BIT_DIPSWITCH, System1Dip + 0       , "dip"       },
+	{"Dip 2"             , BIT_DIPSWITCH, System1Dip + 1       , "dip"       },
+
+};
+
+STDINPUTINFO(Ufosensi)
+
+static inline void System1ClearOpposites(UINT8* nJoystickInputs)
 {
 	if ((*nJoystickInputs & 0x30) == 0x30) {
 		*nJoystickInputs &= ~0x30;
@@ -324,7 +358,7 @@ static inline void System1MakeInputs()
 	System1Input[0] = System1Input[1] = System1Input[2] = 0x00;
 
 	// Compile Digital Inputs
-	for (int i = 0; i < 8; i++) {
+	for (INT32 i = 0; i < 8; i++) {
 		System1Input[0] |= (System1InputPort0[i] & 1) << i;
 		System1Input[1] |= (System1InputPort1[i] & 1) << i;
 		System1Input[2] |= (System1InputPort2[i] & 1) << i;
@@ -339,7 +373,7 @@ static inline void BlockgalMakeInputs()
 {
 	System1Input[2] = 0x00;
 	
-	for (int i = 0; i < 8; i++) {
+	for (INT32 i = 0; i < 8; i++) {
 		System1Input[2] |= (System1InputPort2[i] & 1) << i;
 	}
 	
@@ -1216,6 +1250,49 @@ static struct BurnDIPInfo TeddybbDIPList[]=
 
 STDDIPINFO(Teddybb)
 
+static struct BurnDIPInfo TokisensDIPList[]=
+{
+	// Default Values
+	{0x13, 0xff, 0xff, 0xff, NULL                     },
+	{0x14, 0xff, 0xff, 0xfe, NULL                     },
+
+	// Dip 1
+	SYSTEM1_COINAGE(0x13)
+
+	// Dip 2
+	{0   , 0xfe, 0   , 2   , "Cabinet"                },
+	{0x14, 0x01, 0x01, 0x00, "Upright"                },
+	{0x14, 0x01, 0x01, 0x01, "Cocktail"               },
+
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"          },
+	{0x14, 0x01, 0x02, 0x00, "Off"          },
+	{0x14, 0x01, 0x02, 0x02, "On"           },
+
+	{0   , 0xfe, 0   ,    4, "Lives"                },
+	{0x14, 0x01, 0x0c, 0x00, "1"            },
+	{0x14, 0x01, 0x0c, 0x08, "2"            },
+	{0x14, 0x01, 0x0c, 0x0c, "3"            },
+	{0x14, 0x01, 0x0c, 0x04, "4"            },
+
+	{0   , 0xfe, 0   ,    2, "Unknown"              },
+	{0x14, 0x01, 0x10, 0x10, "Off"          },
+	{0x04, 0x01, 0x10, 0x00, "On"           },
+
+	{0   , 0xfe, 0   ,    2, "Unknown"              },
+	{0x14, 0x01, 0x20, 0x20, "Off"          },
+	{0x14, 0x01, 0x20, 0x00, "On"           },
+
+	{0   , 0xfe, 0   ,    2, "Unknown"              },
+	{0x14, 0x01, 0x40, 0x40, "Off"          },
+	{0x14, 0x01, 0x40, 0x00, "On"           },
+
+	{0   , 0xfe, 0   ,    2, "Unknown"              },
+	{0x14, 0x01, 0x80, 0x80, "Off"          },
+	{0x14, 0x01, 0x80, 0x00, "On"           },
+};
+
+STDDIPINFO(Tokisens)
+
 static struct BurnDIPInfo UpndownDIPList[]=
 {
 	// Default Values
@@ -1499,6 +1576,106 @@ static struct BurnDIPInfo ChplftbDIPList[]=
 };
 
 STDDIPINFO(Chplftb)
+
+static struct BurnDIPInfo UfosensiDIPList[]=
+{
+   // Default Values
+   {0x15, 0xff, 0xff, 0x8d, NULL                     },
+   {0x16, 0xff, 0xff, 0xff, NULL                     },
+
+   // Dip 1
+   {0   , 0xfe, 0   ,    4, "Difficulty"		},
+   {0x15, 0x01, 0x03, 0x00, "Easy"		},
+   {0x15, 0x01, 0x03, 0x01, "Normal"		},
+   {0x15, 0x01, 0x03, 0x02, "Hard"		},
+   {0x15, 0x01, 0x03, 0x03, "Hardest"		},
+
+   {0   , 0xfe, 0   ,    3, "Lives"		},
+   {0x15, 0x01, 0x0c, 0x0c, "3"		},
+   {0x15, 0x01, 0x0c, 0x04, "4"		},
+   {0x15, 0x01, 0x0c, 0x00, "5"		},
+
+   {0   , 0xfe, 0   ,    2, "Cabinet"		},
+   {0x15, 0x01, 0x10, 0x00, "Upright"		},
+   {0x15, 0x01, 0x10, 0x10, "Cocktail"		},
+
+   {0   , 0xfe, 0   ,    2, "Allow Continue"		},
+   {0x15, 0x01, 0x20, 0x20, "No"		},
+   {0x15, 0x01, 0x20, 0x00, "Yes"		},
+
+   {0   , 0xfe, 0   ,    2, "Unknown"		},
+   {0x15, 0x01, 0x40, 0x40, "Off"		},
+   {0x15, 0x01, 0x40, 0x00, "On"		},
+
+   {0   , 0xfe, 0   ,    2, "Invulnerability"		},
+   {0x15, 0x01, 0x80, 0x80, "Off"		},
+   {0x15, 0x01, 0x80, 0x00, "On"		},
+   
+   // Dip 2
+   {0   , 0xfe, 0   , 8   , "Coinage"                },
+   {0x16, 0x01, 0x07, 0x04, "4 Coins 1 Credit"       },
+   {0x16, 0x01, 0x07, 0x05, "3 Coins 1 Credit"       },
+   {0x16, 0x01, 0x07, 0x00, "4 Coins 2 Credits"      },
+   {0x16, 0x01, 0x07, 0x06, "2 Coins 1 Credit"       },
+   {0x16, 0x01, 0x07, 0x01, "3 Coins 2 Credits"      },
+   {0x16, 0x01, 0x07, 0x02, "2 Coins 1 Credits"      },
+   {0x16, 0x01, 0x07, 0x07, "1 Coin  1 Credit"       },
+   {0x16, 0x01, 0x07, 0x03, "1 Coin  2 Credits"      },
+
+   {0   , 0xfe, 0   , 2   , "Allow Continue"         },
+   {0x16, 0x01, 0x10, 0x00, "Off"                    },
+   {0x16, 0x01, 0x10, 0x10, "On"                     },
+   
+   {0   , 0xfe, 0   , 4   , "Mode"                   },
+   {0x16, 0x01, 0xc0, 0xc0, "Normal Game"            },
+   {0x16, 0x01, 0xc0, 0x80, "Free Play"              },
+   {0x16, 0x01, 0xc0, 0x40, "Test Mode"              },
+   {0x16, 0x01, 0xc0, 0x00, "Endless Game"           },
+};
+
+STDDIPINFO(Ufosensi)
+
+static struct BurnDIPInfo WbmlDIPList[]=
+{
+	// Default Values
+	{0x13, 0xff, 0xff, 0xff, NULL                     },
+	{0x14, 0xff, 0xff, 0xfe, NULL                     },
+
+	// Dip 1
+	SYSTEM1_COINAGE(0x13)
+	
+	// Dip 2	
+	{0   , 0xfe, 0   , 2   , "Cabinet"                },
+	{0x14, 0x01, 0x01, 0x00, "Upright"                },
+	{0x14, 0x01, 0x01, 0x01, "Cocktail"               },
+
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
+	{0x14, 0x01, 0x02, 0x00, "Off"		},
+	{0x14, 0x01, 0x02, 0x02, "On"		},
+
+	{0   , 0xfe, 0   ,    3, "Lives"		},
+	{0x14, 0x01, 0x0c, 0x04, "3"		},
+	{0x14, 0x01, 0x0c, 0x0c, "4"		},
+	{0x14, 0x01, 0x0c, 0x08, "5"		},
+
+	{0   , 0xfe, 0   ,    2, "Bonus Life"		},
+	{0x14, 0x01, 0x10, 0x10, "30000 100000 200000"		},
+	{0x14, 0x01, 0x10, 0x00, "50000 150000 250000"		},
+
+	{0   , 0xfe, 0   ,    2, "Difficulty"		},
+	{0x14, 0x01, 0x20, 0x20, "Easy"		},
+	{0x14, 0x01, 0x20, 0x00, "Hard"		},
+
+	{0   , 0xfe, 0   ,    2, "Test Mode"		},
+	{0x14, 0x01, 0x40, 0x40, "Off"		},
+	{0x14, 0x01, 0x40, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x14, 0x01, 0x80, 0x80, "Off"		},
+	{0x14, 0x01, 0x80, 0x00, "On"		},
+};
+
+STDDIPINFO(Wbml)
 
 #undef SYSTEM1_COINAGE
 
@@ -1809,6 +1986,31 @@ static struct BurnRomInfo GardiabRomDesc[] = {
 
 STD_ROM_PICK(Gardiab)
 STD_ROM_FN(Gardiab)
+
+static struct BurnRomInfo GardiajRomDesc[] = {
+	{ "epr-10250.ic90",     0x8000, 0xc97943a7, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "epr-10251.ic91",     0x8000, 0xb2ed05dc, BRF_ESS | BRF_PRG }, //  1
+	{ "epr-10252.ic92",     0x8000, 0x0a490588, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr-10243.ic126",    0x4000, 0x87220660, BRF_ESS | BRF_PRG }, //  Z80 #2 Program Code
+
+	{ "epr-10240.ic4",      0x8000, 0x998ce090, BRF_GRA }, //  4 Tiles
+	{ "epr-10241.ic5",      0x8000, 0x81ab0b07, BRF_GRA }, //  5
+	{ "epr-10242.ic6",      0x8000, 0x2dc4c4c7, BRF_GRA }, //  6
+
+	{ "epr-10234.ic87",     0x8000, 0x8a6aed33, BRF_GRA }, //  7 Sprites
+	{ "epr-10233.ic86",     0x8000, 0xc52784d3, BRF_GRA }, //  8
+	{ "epr-10236.ic89",     0x8000, 0xb35ab227, BRF_GRA }, //  9
+	{ "epr-10235.ic88",     0x8000, 0x006a3151, BRF_GRA }, // 10
+
+	{ "pr-7345.ic20",       0x0100, 0x8eee0f72, BRF_GRA }, // 11 Palette
+	{ "pr-7344.ic14",       0x0100, 0x3e7babd7, BRF_GRA }, // 12
+	{ "pr-7343.ic8",        0x0100, 0x371c44a6, BRF_GRA }, // 13
+	{ "pr5317.ic28",        0x0100, 0x648350b8, BRF_OPT }, // 14 Timing proms
+};
+
+STD_ROM_PICK(Gardiaj)
+STD_ROM_FN(Gardiaj)
 
 static struct BurnRomInfo HvymetalRomDesc[] = {
 	{ "epra6790.1",        0x008000, 0x59195bb9, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
@@ -2617,6 +2819,60 @@ static struct BurnRomInfo TeddybboblRomDesc[] = {
 STD_ROM_PICK(Teddybbobl)
 STD_ROM_FN(Teddybbobl)
 
+static struct BurnRomInfo tokisensRomDesc[] = {
+	{ "epr10961.90",        0x8000, 0x1466b61d, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "epr10962.91",        0x8000, 0xa8479f91, BRF_ESS | BRF_PRG }, //  1
+	{ "epr10963.92",        0x8000, 0xb7193b39, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr10967.126",       0x8000, 0x97966bf2, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+
+	{ "epr10964.4",         0x8000, 0x9013b85c, BRF_GRA }, //  4 Tiles
+	{ "epr10965.5",         0x8000, 0xe4755cc6, BRF_GRA }, //  5
+	{ "epr10966.6",         0x8000, 0x5bbfbdcc, BRF_GRA }, //  6
+
+	{ "epr10958.87",        0x8000, 0xfc2bcbd7, BRF_GRA }, //  7 Sprites
+	{ "epr10957.86",        0x8000, 0x4ec56860, BRF_GRA }, //  8
+	{ "epr10960.89",        0x8000, 0x880e0d44, BRF_GRA }, //  9
+	{ "epr10959.88",        0x8000, 0x4deda48f, BRF_GRA }, // 10
+
+	{ "bprom.20",           0x0100, 0x8eee0f72, BRF_GRA }, // 11 Palette
+	{ "bprom.14",           0x0100, 0x3e7babd7, BRF_GRA }, // 12
+	{ "bprom.8",            0x0100, 0x371c44a6, BRF_GRA }, // 13
+
+	{ "bprom.28",           0x0100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+};
+ 
+STD_ROM_PICK(tokisens)
+STD_ROM_FN(tokisens)
+
+static struct BurnRomInfo ufosensiRomDesc[] = {
+	{ "epr11661.90",	0x8000, 0xf3e394e2, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "epr11662.91",	0x8000, 0x0c2e4120, BRF_ESS | BRF_PRG }, //  1
+	{ "epr11663.92",	0x8000, 0x4515ebae, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr11667.126",	0x8000, 0x110baba9, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+
+	{ "epr11664.4",		0x8000, 0x1b1bc3d5, BRF_GRA }, //  4 Tiles
+	{ "epr11665.5",		0x8000, 0x3659174a, BRF_GRA }, //  5
+	{ "epr11666.6",		0x8000, 0x99dcc793, BRF_GRA }, //  6
+
+	{ "epr11658.87",	0x8000, 0x3b5a20f7, BRF_GRA }, //  7 Sprites
+	{ "epr11657.86",	0x8000, 0x010f81a9, BRF_GRA }, //  8
+	{ "epr11660.89",	0x8000, 0xe1e2e7c5, BRF_GRA }, //  9
+	{ "epr11659.88",	0x8000, 0x286c7286, BRF_GRA }, // 10
+
+	{ "pr11656.20",		0x0100, 0x640740eb, BRF_GRA }, // 11 Palette
+	{ "pr11655.14",		0x0100, 0xa0c3fa77, BRF_GRA }, // 12
+	{ "pr11654.8",		0x0100, 0xba624305, BRF_GRA }, // 13
+
+	{ "pr5317.28",		0x0100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+
+	{ "317-0064.key",	0x2000, 0xda326f36, BRF_ESS }, // 15 Encryption Key
+};
+
+STD_ROM_PICK(ufosensi)
+STD_ROM_FN(ufosensi)
+
 static struct BurnRomInfo UpndownRomDesc[] = {
 	{ "epr5516a.129",      0x002000, 0x038c82da, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr5517a.130",      0x002000, 0x6930e1de, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
@@ -3028,6 +3284,117 @@ static struct BurnRomInfo ChopliftblRomDesc[] = {
 STD_ROM_PICK(Chopliftbl)
 STD_ROM_FN(Chopliftbl)
 
+// Wonder Boy in Monster Land (Japan New Ver., MC-8123, 317-0043)
+
+static struct BurnRomInfo wbmlRomDesc[] = {
+	{ "ep11031a.90",	0x8000, 0xbd3349e5, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "epr11032.91",	0x8000, 0x9d03bdb2, BRF_ESS | BRF_PRG }, //  1
+	{ "epr11033.92",	0x8000, 0x7076905c, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr11037.126",	0x8000, 0x7a4ee585, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+
+	{ "epr11034.4",		0x8000, 0x37a2077d, BRF_GRA }, //  4 Tiles
+	{ "epr11035.5",		0x8000, 0xcdf2a21b, BRF_GRA }, //  5
+	{ "epr11036.6",		0x8000, 0x644687fa, BRF_GRA }, //  6
+
+	{ "epr11028.87",	0x8000, 0xaf0b3972, BRF_GRA }, //  7 Sprites
+	{ "epr11027.86",	0x8000, 0x277d8f1d, BRF_GRA }, //  8
+	{ "epr11030.89",	0x8000, 0xf05ffc76, BRF_GRA }, //  9
+	{ "epr11029.88",	0x8000, 0xcedc9c61, BRF_GRA }, // 10
+
+	{ "pr11026.20",		0x0100, 0x27057298, BRF_GRA }, // 11 Red PROM
+	{ "pr11025.14",		0x0100, 0x41e4d86b, BRF_GRA }, // 12 Blue
+	{ "pr11024.8",		0x0100, 0x08d71954, BRF_GRA }, // 13 Green
+	{ "pr5317.37",		0x0100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+
+	{ "317-0043.key",	0x2000, 0xe354abfc, BRF_ESS }, // 15 Encryption Key
+};
+
+STD_ROM_PICK(wbml)
+STD_ROM_FN(wbml)
+
+// Wonder Boy in Monster Land (Japan not encrypted)
+
+static struct BurnRomInfo wbmljbRomDesc[] = {
+	{ "wbml.01",		0x10000, 0x66482638, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "m-6.bin",		0x10000, 0x8c08cd11, BRF_ESS | BRF_PRG }, //  1
+	{ "m-7.bin",		0x10000, 0x11881703, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr11037.126",	0x08000, 0x7a4ee585, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+
+	{ "epr11034.4",		0x08000, 0x37a2077d, BRF_GRA }, //  4 Tiles
+	{ "epr11035.5",		0x08000, 0xcdf2a21b, BRF_GRA }, //  5
+	{ "epr11036.6",		0x08000, 0x644687fa, BRF_GRA }, //  6
+
+	{ "epr11028.87",	0x08000, 0xaf0b3972, BRF_GRA }, //  7 Sprites
+	{ "epr11027.86",	0x08000, 0x277d8f1d, BRF_GRA }, //  8
+	{ "epr11030.89",	0x08000, 0xf05ffc76, BRF_GRA }, //  9
+	{ "epr11029.88",	0x08000, 0xcedc9c61, BRF_GRA }, // 10
+
+	{ "pr11026.20",		0x00100, 0x27057298, BRF_GRA }, // 11 Red PROM
+	{ "pr11025.14",		0x00100, 0x41e4d86b, BRF_GRA }, // 12 Blue
+	{ "pr11024.8",		0x00100, 0x08d71954, BRF_GRA }, // 13 Green
+	{ "pr5317.37",		0x00100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+};
+
+STD_ROM_PICK(wbmljb)
+STD_ROM_FN(wbmljb)
+
+
+static struct BurnRomInfo wbmljoRomDesc[] = {
+	{ "epr11031.90",	0x8000, 0x497ebfb4, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "epr11032.91",	0x8000, 0x9d03bdb2, BRF_ESS | BRF_PRG }, //  1
+	{ "epr11033.92",	0x8000, 0x7076905c, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr11037.126",	0x8000, 0x7a4ee585, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+
+	{ "epr11034.4",		0x8000, 0x37a2077d, BRF_GRA }, //  4 Tiles
+	{ "epr11035.5",		0x8000, 0xcdf2a21b, BRF_GRA }, //  5
+	{ "epr11036.6",		0x8000, 0x644687fa, BRF_GRA }, //  6
+
+	{ "epr11028.87",	0x8000, 0xaf0b3972, BRF_GRA }, //  7 Sprites
+	{ "epr11027.86",	0x8000, 0x277d8f1d, BRF_GRA }, //  8
+	{ "epr11030.89",	0x8000, 0xf05ffc76, BRF_GRA }, //  9
+	{ "epr11029.88",	0x8000, 0xcedc9c61, BRF_GRA }, // 10
+
+	{ "pr11026.20",		0x0100, 0x27057298, BRF_GRA }, // 11 Red PROM
+	{ "pr11025.14",		0x0100, 0x41e4d86b, BRF_GRA }, // 12 Blue
+	{ "pr11024.8",		0x0100, 0x08d71954, BRF_GRA }, // 13 Green
+	{ "pr5317.37",		0x0100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+
+	{ "317-0043.key",	0x2000, 0xe354abfc, BRF_ESS }, // 15 Encryption Key
+};
+
+STD_ROM_PICK(wbmljo)
+STD_ROM_FN(wbmljo)
+
+// Wonder Boy in Monster Land (English bootleg set 1)
+
+static struct BurnRomInfo wbmlbRomDesc[] = {
+	{ "wbml.01",		0x10000, 0x66482638, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "wbml.02",		0x10000, 0x48746bb6, BRF_ESS | BRF_PRG }, //  1
+	{ "wbml.03",		0x10000, 0xd57ba8aa, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr11037.126",	0x08000, 0x7a4ee585, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+
+	{ "wbml.08",		0x08000, 0xbbea6afe, BRF_GRA }, //  4 Tiles
+	{ "wbml.09",		0x08000, 0x77567d41, BRF_GRA }, //  5
+	{ "wbml.10",		0x08000, 0xa52ffbdd, BRF_GRA }, //  6
+
+	{ "epr11028.87",	0x08000, 0xaf0b3972, BRF_GRA }, //  7 Sprites
+	{ "epr11027.86",	0x08000, 0x277d8f1d, BRF_GRA }, //  8
+	{ "epr11030.89",	0x08000, 0xf05ffc76, BRF_GRA }, //  9
+	{ "epr11029.88",	0x08000, 0xcedc9c61, BRF_GRA }, // 10
+
+	{ "pr11026.20",		0x00100, 0x27057298, BRF_GRA }, // 11 Red PROM
+	{ "pr11025.14",		0x00100, 0x41e4d86b, BRF_GRA }, // 12 Blue
+	{ "pr11024.8",		0x00100, 0x08d71954, BRF_GRA }, // 13 Green
+	{ "pr5317.37",		0x00100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+};
+
+STD_ROM_PICK(wbmlb)
+STD_ROM_FN(wbmlb)
+
 /*==============================================================================================
 Decode Functions
 ===============================================================================================*/
@@ -3080,7 +3447,7 @@ static void sega_decode(const UINT8 convtable[32][4])
 	}
 }
 
-void bullfgtj_decode(void)
+static void bullfgtj_decode(void)
 {
 	static const UINT8 convtable[32][4] =
 	{
@@ -3161,7 +3528,7 @@ static void hvymetal_decode(void)
 	sega_decode(convtable);
 }
 
-void imsorry_decode(void)
+static void imsorry_decode(void)
 {
 	static const UINT8 convtable[32][4] =
 	{
@@ -3188,7 +3555,7 @@ void imsorry_decode(void)
 	sega_decode(convtable);
 }
 
-void mrviking_decode(void)
+static void mrviking_decode(void)
 {
 	static const UINT8 convtable[32][4] =
 	{
@@ -3215,7 +3582,7 @@ void mrviking_decode(void)
 	sega_decode(convtable);
 }
 
-void myheroj_decode(void)
+static void myheroj_decode(void)
 {
 	static const UINT8 convtable[32][4] =
 	{
@@ -3242,7 +3609,7 @@ void myheroj_decode(void)
 	sega_decode(convtable);
 }
 
-void myherok_decode(void)
+static void myherok_decode(void)
 {
 	UINT8 *rom = System1Rom1;
 
@@ -3382,7 +3749,7 @@ static void seganinj_decode(void)
 	sega_decode(convtable);
 }
 
-void spatter_decode(void)
+static void spatter_decode(void)
 {
 	static const UINT8 convtable[32][4] =
 	{
@@ -3409,7 +3776,7 @@ void spatter_decode(void)
 	sega_decode(convtable);
 }
 
-void swat_decode(void)
+static void swat_decode(void)
 {
 	static const UINT8 convtable[32][4] =
 	{
@@ -3463,7 +3830,7 @@ static void teddybb_decode(void)
 	sega_decode(convtable);
 }
 
-void wmatch_decode(void)
+static void wmatch_decode(void)
 {
 	static const UINT8 convtable[32][4] =
 	{
@@ -3576,7 +3943,7 @@ static void astrofl_decode(void)
 	sega_decode_2(System1Rom1, System1Fetch1, opcode_xor,opcode_swap_select,data_xor,data_swap_select);
 }
 
-void fdwarrio_decode(void)
+static void fdwarrio_decode(void)
 {
 	static const UINT8 opcode_xor[64] =
 	{
@@ -3754,6 +4121,16 @@ static void blockgal_decode()
 	mc8123_decrypt_rom(0, 0, System1Rom1, System1Fetch1, System1MC8123Key);
 }
 
+static void wbml_decode() // & Ufosensi
+{
+	mc8123_decrypt_rom(1, 4, System1Rom1, System1Rom1 + 0x20000, System1MC8123Key);
+}
+
+static void wbmljb_decode()
+{
+	return; // fake decode function
+}
+
 static void myherok_tile_decode()
 {
 	INT32 A;
@@ -3795,21 +4172,21 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = Mem;
 
-	System1Rom1            = Next; Next += 0x020000;
-	System1Fetch1          = Next; Next += 0x010000;
-	System1Rom2            = Next; Next += 0x008000;
+	System1Rom1            = Next; Next += 0x040000;
+	System1Fetch1          = Next; Next += 0x040000;
+	System1Rom2            = Next; Next += 0x010000;
 	System1PromRed         = Next; Next += 0x000100;
 	System1PromGreen       = Next; Next += 0x000100;
 	System1PromBlue        = Next; Next += 0x000100;
 
 	RamStart = Next;
 
-	System1Ram1            = Next; Next += 0x0020fd;
+	System1Ram1            = Next; Next += 0x0040fd;
 	System1Ram2            = Next; Next += 0x000800;
-	System1SpriteRam       = Next; Next += 0x000200;
-	System1PaletteRam      = Next; Next += 0x000600;
+	System1SpriteRam       = Next; Next += 0x000800;
+	System1PaletteRam      = Next; Next += 0x000800;
 	System1BgRam           = Next; Next += 0x000800;
-	System1VideoRam        = Next; Next += 0x000800;
+	System1VideoRam        = Next; Next += 0x004000;
 	System1ScrollXRam      = System1VideoRam + 0x7C0;
 	System1BgCollisionRam  = Next; Next += 0x000400;
 	System1SprCollisionRam = Next; Next += 0x000400;
@@ -3824,7 +4201,7 @@ static INT32 MemIndex()
 	System1Sprites         = Next; Next += System1SpriteRomSize;
 	System1Tiles           = Next; Next += (System1NumTiles * 8 * 8);
 	System1TilesPenUsage   = (UINT32*)Next; Next += System1NumTiles * sizeof(UINT32);
-	System1Palette         = (UINT32*)Next; Next += 0x000600 * sizeof(UINT32);
+	System1Palette         = (UINT32*)Next; Next += 0x000800 * sizeof(UINT32);
 	MemEnd = Next;
 
 	return 0;
@@ -3836,14 +4213,22 @@ Reset Functions
 
 static INT32 System1DoReset()
 {
+	if (IsSystem2 || DecodeFunction == regulus_decode) {
+		ppi8255_init(1); // this resets the 8255ppi, needed or wbml reset fails (bad sound, or rom errors)
+	}
+
+	memset (RamStart, 0, RamEnd - RamStart);
+
 	ZetOpen(0);
 	ZetReset();
 	ZetClose();
-	
+
 	ZetOpen(1);
 	ZetReset();
 	ZetClose();
-	
+
+	SN76496Reset();
+
 	System1ScrollX[0] = System1ScrollX[1] = System1ScrollY = 0;
 	System1BgScrollX = 0;
 	System1BgScrollY = 0;
@@ -3851,6 +4236,9 @@ static INT32 System1DoReset()
 	System1FlipScreen = 0;
 	System1SoundLatch = 0;
 	System1RomBank = 0;
+	System1BankSwitch = 0;
+	System1BgBankLatch = 0;
+	System1BgBank = 0;
 	NoboranbInp16Step = 0;
 	NoboranbInp17Step = 0;
 	NoboranbInp23Step = 0;
@@ -3867,11 +4255,48 @@ Memory Handlers
 static void System1BankRom()
 {
 	INT32 BankAddress = (System1RomBank * 0x4000) + 0x10000;
+
 	ZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + BankAddress);
-	ZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
+
+	if (DecodeFunction && IsSystem2)
+	{
+		ZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress + 0x20000, System1Rom1 + BankAddress);
+	}
+	else
+	{
+		ZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + BankAddress);
+	}
 }
 
-UINT8 __fastcall System1Z801PortRead(UINT16 a)
+static inline void System2_bankswitch_w(UINT8 d)
+{
+	System1RomBank = (d & 0x0c) >> 2;
+	System1BankRom();
+	System1BankSwitch = d;
+}
+
+static inline void System2_videoram_bank_latch_w(UINT8 d)
+{
+	System1BgBankLatch = d;
+	System1BgBank = (d >> 1) & 0x03;	/* Select 4 banks of 4k, bit 2,1 */
+
+	// iq_132
+	ZetMapMemory(System1VideoRam + System1BgBank * 0x1000, 0xe000, 0xefff, MAP_RAM);
+}
+
+static inline void __fastcall System1SoundLatchWrite(UINT8 d)
+{
+	System1SoundLatch = d;
+
+	ZetClose();
+	ZetOpen(1);
+	ZetNmi();
+	ZetClose();
+	ZetOpen(0);
+	return;
+}
+
+static UINT8 __fastcall System1Z801PortRead(UINT16 a)
 {
 	a &= 0xff;
 	
@@ -3913,11 +4338,11 @@ UINT8 __fastcall System1Z801PortRead(UINT16 a)
 		}
 	}	
 
-	bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
+	//bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
 	return 0;
 }
 
-UINT8 __fastcall BlockgalZ801PortRead(UINT16 a)
+static UINT8 __fastcall BlockgalZ801PortRead(UINT16 a)
 {
 	a &= 0xff;
 	
@@ -3959,11 +4384,11 @@ UINT8 __fastcall BlockgalZ801PortRead(UINT16 a)
 		}
 	}	
 
-	bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
+	//bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
 	return 0;
 }
 
-UINT8 __fastcall NoboranbZ801PortRead(UINT16 a)
+static UINT8 __fastcall NoboranbZ801PortRead(UINT16 a)
 {
 	a &= 0xff;
 	
@@ -4009,28 +4434,35 @@ UINT8 __fastcall NoboranbZ801PortRead(UINT16 a)
 		}
 	}	
 
-	bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
+	//bprintf(PRINT_NORMAL, _T("IO Read %x\n"), a);
 	return 0;
 }
 
-void __fastcall System1Z801PortWrite(UINT16 a, UINT8 d)
+static void __fastcall System1Z801PortWrite(UINT16 a, UINT8 d)
 {
+	if (DecodeFunction == regulus_decode) {
+		a &= 0x1f;
+		switch (a)
+		{
+			case 0x14:
+			case 0x15:
+			case 0x16:
+			case 0x17:
+				ppi8255_w(0, a & 3, d);
+				return;
+		}
+		return;
+	}
+
 	a &= 0xff;
 	
 	switch (a) {
 		case 0x14:
-		case 0x18: {
-			System1SoundLatch = d;
-			
-			ZetClose();
-			ZetOpen(1);
-			ZetNmi();
-			ZetClose();
-			ZetOpen(0);
+		case 0x18:
+			System1SoundLatchWrite(d);
 			return;
-		}
-		
-		case 0x15:		
+
+		case 0x15:
 		case 0x19: {
 			System1VideoMode = d;
 			System1FlipScreen = d & 0x80;
@@ -4039,41 +4471,23 @@ void __fastcall System1Z801PortWrite(UINT16 a, UINT8 d)
 		case 0x1c: return; // NOP
 	}
 	
-	bprintf(PRINT_NORMAL, _T("IO Write %x, %x\n"), a, d);
+	//bprintf(PRINT_NORMAL, _T("IO Write %x, %x\n"), a, d);
 }
 
-inline void __fastcall system1_soundport_w(UINT8 d)
-{
-	System1SoundLatch = d;
-	ZetClose();
-	ZetOpen(1);
-	ZetNmi();
-	ZetClose();
-	ZetOpen(0);
-	return;
-}
-
-inline void chplft_bankswitch_w (UINT8 d)
-{
-	System1RomBank = (((d & 0x0c)>>2) );
-	System1BankRom();
-	System1BankSwitch = d;
-}
-
-void __fastcall ChplftZ801PortWrite(UINT16 a, UINT8 d)
+static void __fastcall ChplftZ801PortWrite(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
-	switch (a) 
+	switch (a)
 	{
-		case 0x14:{system1_soundport_w(d);	return;}
-		case 0x15:{chplft_bankswitch_w(d);	return;}
+		case 0x14: { System1SoundLatchWrite(d);    return; }
+		case 0x15: { System2_bankswitch_w(d);   return; }
 	}
 }
 
-UINT8 __fastcall ChplftZ801PortRead(UINT16 a)
+static UINT8 __fastcall ChplftZ801PortRead(UINT16 a)
 {
 	a &= 0xff;
-	switch (a) 
+	switch (a)
 	{
 		case 0x00: return 0xff - System1Input[0];
 		case 0x04: return 0xff - System1Input[1];
@@ -4088,24 +4502,17 @@ UINT8 __fastcall ChplftZ801PortRead(UINT16 a)
 	return 0;
 }
 
-void __fastcall BrainZ801PortWrite(UINT16 a, UINT8 d)
+static void __fastcall BrainZ801PortWrite(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
 	switch (a) {
 		case 0x14:
-		case 0x18: {
-			System1SoundLatch = d;
-			
-			ZetClose();
-			ZetOpen(1);
-			ZetNmi();
-			ZetClose();
-			ZetOpen(0);
+		case 0x18:
+			System1SoundLatchWrite(d);
 			return;
-		}
-		
-		case 0x15:		
+
+		case 0x15:
 		case 0x19: {
 			System1VideoMode = d;
 			System1FlipScreen = d & 0x80;
@@ -4116,26 +4523,19 @@ void __fastcall BrainZ801PortWrite(UINT16 a, UINT8 d)
 		}
 	}
 	
-	bprintf(PRINT_NORMAL, _T("IO Write %x, %x\n"), a, d);
+	//bprintf(PRINT_NORMAL, _T("IO Write %x, %x\n"), a, d);
 }
 
-void __fastcall NoboranbZ801PortWrite(UINT16 a, UINT8 d)
+static void __fastcall NoboranbZ801PortWrite(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
 	switch (a) {
 		case 0x14:
-		case 0x18: {
-			System1SoundLatch = d;
-			
-			ZetClose();
-			ZetOpen(1);
-			ZetNmi();
-			ZetClose();
-			ZetOpen(0);
+		case 0x18:
+			System1SoundLatchWrite(d);
 			return;
-		}
-		
+
 		case 0x15: {
 			System1VideoMode = d;
 			System1FlipScreen = d & 0x80;
@@ -4161,10 +4561,10 @@ void __fastcall NoboranbZ801PortWrite(UINT16 a, UINT8 d)
 		}
 	}
 	
-	bprintf(PRINT_NORMAL, _T("IO Write %x, %x\n"), a, d);
+	//bprintf(PRINT_NORMAL, _T("IO Write %x, %x\n"), a, d);
 }
 
-void __fastcall System1Z801ProgWrite(UINT16 a, UINT8 d)
+static void __fastcall System1Z801ProgWrite(UINT16 a, UINT8 d)
 {
 	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
 	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
@@ -4191,10 +4591,10 @@ void __fastcall System1Z801ProgWrite(UINT16 a, UINT8 d)
 		return;
 	}
 	
-	bprintf(PRINT_NORMAL, _T("Prog Write %x, %x\n"), a, d);
+//	//bprintf(PRINT_NORMAL, _T("Prog Write %x, %x\n"), a, d);
 }
 
-void __fastcall NoboranbZ801ProgWrite(UINT16 a, UINT8 d)
+static void __fastcall NoboranbZ801ProgWrite(UINT16 a, UINT8 d)
 {
 	if (a >= 0xc000 && a <= 0xc3ff) { System1BgCollisionRam[a - 0xc000] = 0x7e; return; }
 	if (a >= 0xc800 && a <= 0xcbff) { System1SprCollisionRam[a - 0xc800] = 0x7e; return; }
@@ -4221,10 +4621,11 @@ void __fastcall NoboranbZ801ProgWrite(UINT16 a, UINT8 d)
 		return;
 	}
 	
-	bprintf(PRINT_NORMAL, _T("Prog Write %x, %x\n"), a, d);
+//	//bprintf(PRINT_NORMAL, _T("Prog Write %x, %x\n"), a, d);
 }
 
-UINT8 __fastcall System1Z802ProgRead(UINT16 a)
+
+static UINT8 __fastcall System1Z802ProgRead(UINT16 a)
 {
 	switch (a) {
 		case 0xe000: {
@@ -4240,7 +4641,7 @@ UINT8 __fastcall System1Z802ProgRead(UINT16 a)
 	return 0;
 }
 
-void __fastcall System1Z802ProgWrite(UINT16 a, UINT8 d)
+static void __fastcall System1Z802ProgWrite(UINT16 a, UINT8 d)
 {
 	switch (a) {
 		case 0xa000:
@@ -4263,6 +4664,88 @@ void __fastcall System1Z802ProgWrite(UINT16 a, UINT8 d)
 	bprintf(PRINT_NORMAL, _T("Z80 2 Prog Write %x, %x\n"), a, d);
 }
 
+static void System2PPI0WriteA(UINT8 data)
+{
+	System1SoundLatchWrite(data);
+}
+
+static void System2PPI0WriteB(UINT8 data)
+{
+	System2_bankswitch_w(data);
+}
+
+static void System2PPI0WriteC(UINT8 data)
+{
+	ZetClose();
+	ZetOpen(1);
+	ZetSetIRQLine(0x20, (data & 0x80) ? CPU_IRQSTATUS_NONE : CPU_IRQSTATUS_ACK);
+	ZetClose();
+	ZetOpen(0);
+
+	if (DecodeFunction != regulus_decode)
+		System2_videoram_bank_latch_w(data);
+}
+
+static UINT8 __fastcall System2Z801PortRead(UINT16 a)
+{
+	a &= 0x1f;
+	switch (a) 
+	{
+		case 0x00: return 0xff - System1Input[0];
+		case 0x04: return 0xff - System1Input[1];
+		case 0x08: return 0xff - System1Input[2];
+		case 0x0c: return System1Dip[0];
+		case 0x0d: return System1Dip[1];
+		case 0x10: return System1Dip[1];
+		//case 0x15: return System1VideoMode;
+		//case 0x16: return System1BgBankLatch;
+		case 0x14:
+		case 0x15:
+		case 0x16:
+		case 0x17: return ppi8255_r(0, a & 3);
+		//case 0x19: return System1VideoMode;
+	}
+	return 0;
+}
+
+static void __fastcall System2Z801PortWrite(UINT16 a, UINT8 d)
+{
+	a &= 0x1f;
+	switch (a) 
+	{
+		case 0x14:
+		case 0x15:
+		case 0x16:
+		case 0x17:
+			ppi8255_w(0, a & 3, d);
+		return;
+
+		//case 0x14: {System1SoundLatchWrite(d);		return;}
+		//case 0x15: {System2_bankswitch_w(d);		return;}
+		//case 0x16: {System2_videoram_bank_latch_w(d);	return;}
+	}
+}
+
+static void __fastcall System2Z801ProgWrite(UINT16 a, UINT8 d)
+{
+	if (a >= 0xf000 && a <= 0xf3ff) { System1BgCollisionRam[a - 0xf000] = 0x7e; return; }
+	if (a >= 0xf800 && a <= 0xfbff) { System1SprCollisionRam[a - 0xf800] = 0x7e; return; }
+	if (a >= 0xe000 && a <= 0xefff)
+	{
+		System1VideoRam[(0x1000*System1BgBank) + (a & 0xfff)] = d;
+		return;
+	}
+}
+
+static UINT8 __fastcall System2Z801ProgRead(UINT16 a)
+{
+	if (a >= 0xe000 && a <= 0xefff) 
+	{ 
+		return System1VideoRam[(0x1000*System1BgBank) + (a & 0xfff)];
+	}
+	return 0;
+}
+
 /*==============================================================================================
 Driver Inits
 ===============================================================================================*/
@@ -4278,7 +4761,7 @@ static void CalcPenUsage()
 		Usage = 0;
 		for (y = 0; y < 8; y++) {
 			for (x = 0; x < 8; x++) {
-				Usage |= 1 << dp[x];					
+				Usage |= 1 << dp[x];
 			}
 			
 			dp += 8;
@@ -4288,16 +4771,15 @@ static void CalcPenUsage()
 	}
 }
 
-static INT32 TilePlaneOffsets[3]  = { 0, 0x20000, 0x40000 };
-static INT32 NoboranbTilePlaneOffsets[3]  = { 0, 0x40000, 0x80000 };
 static INT32 TileXOffsets[8]      = { 0, 1, 2, 3, 4, 5, 6, 7 };
 static INT32 TileYOffsets[8]      = { 0, 8, 16, 24, 32, 40, 48, 56 };
 
 static INT32 System1Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Num, INT32 nZ80Rom2Size, INT32 nTileRomNum, INT32 nTileRomSize, INT32 nSpriteRomNum, INT32 nSpriteRomSize, bool bReset)
 {
+	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 	INT32 nRet = 0, nLen, i, RomOffset;
 	
-	System1NumTiles = (nTileRomNum * nTileRomSize) / 24;
+	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
 	
 	// Allocate and Blank all required memory
@@ -4340,11 +4822,9 @@ static INT32 System1Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1);
 	}
 	if (TileDecodeFunction) TileDecodeFunction();
-	if (System1NumTiles > 0x800) {
-		GfxDecode(System1NumTiles, 3, 8, 8, NoboranbTilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
-	} else {
-		GfxDecode(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
-	}
+
+	GfxDecode(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+
 	CalcPenUsage();
 	BurnFree(System1TempRom);
 	
@@ -4409,7 +4889,7 @@ static INT32 System1Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	ZetMapArea(0xf800, 0xfbff, 2, System1SprCollisionRam);
 	ZetMapArea(0xfc00, 0xffff, 0, System1fcRam);
 	ZetMapArea(0xfc00, 0xffff, 1, System1fcRam);
-	ZetMapArea(0xfc00, 0xffff, 2, System1fcRam);	
+	ZetMapArea(0xfc00, 0xffff, 2, System1fcRam);
 	ZetClose();
 
 	ZetInit(1);
@@ -4422,6 +4902,12 @@ static INT32 System1Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	ZetMapArea(0x8000, 0x87ff, 1, System1Ram2);
 	ZetMapArea(0x8000, 0x87ff, 2, System1Ram2);
 	ZetClose();
+
+	if (DecodeFunction == regulus_decode) { // Regulus uses the PPI for sound
+		ppi8255_init(1);
+		PPI0PortWriteA = System2PPI0WriteA;
+		PPI0PortWriteC = System2PPI0WriteC;
+	}
 	
 	memset(SpriteOnScreenMap, 255, 256 * 256);
 	
@@ -4443,6 +4929,179 @@ static INT32 System1Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	// Reset the driver
 	if (bReset) System1DoReset();
 	
+	return 0;
+}
+
+static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Num, INT32 nZ80Rom2Size, INT32 nTileRomNum, INT32 nTileRomSize, INT32 nSpriteRomNum, INT32 nSpriteRomSize, bool bReset)
+{
+	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
+	INT32 nRet = 0, nLen, i, RomOffset;
+	
+	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
+	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
+	
+	// Allocate and Blank all required memory
+	Mem = NULL;
+	MemIndex();
+	nLen = MemEnd - (UINT8 *)0;
+	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	memset(Mem, 0, nLen);
+	MemIndex();
+
+	System1TempRom = (UINT8*)BurnMalloc(0x40000);
+
+	// Load Z80 #1 Program roms
+	RomOffset = 0;
+	for (i = 0; i < nZ80Rom1Num; i++) {
+		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
+	}
+
+	if (System1BankedRom) 
+	{
+		memcpy(System1TempRom, System1Rom1, 0x40000);
+		memset(System1Rom1, 0, 0x40000);
+		memcpy(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
+		memcpy(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
+		memcpy(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
+
+		if (System1BankedRom == 2)
+		{ // here!
+			memcpy (System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
+			memcpy (System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
+			memcpy (System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
+			memcpy (System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
+			memcpy (System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
+			memcpy (System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+		}
+	}
+
+	memset(System1Rom2, 0, 0x10000);
+
+	if (DecodeFunction) DecodeFunction();
+
+	// Load Z80 #2 Program roms
+	RomOffset += nZ80Rom1Num;
+	for (i = 0; i < nZ80Rom2Num; i++) {
+		nRet = BurnLoadRom(System1Rom2 + (i * nZ80Rom2Size), i + RomOffset, 1); if (nRet != 0) return 1;
+	}
+
+	// Load and decode tiles
+	memset(System1TempRom, 0, 0x20000);
+	RomOffset += nZ80Rom2Num;
+	for (i = 0; i < nTileRomNum; i++) {
+		nRet = BurnLoadRom(System1TempRom + (i * nTileRomSize), i + RomOffset, 1); if (nRet != 0) return 1;
+	}
+
+	if (TileDecodeFunction) TileDecodeFunction();
+
+	GfxDecode(System1NumTiles, 3, 8, 8, TilePlaneOffsets, TileXOffsets, TileYOffsets, 0x40, System1TempRom, System1Tiles);
+
+	CalcPenUsage();
+	BurnFree(System1TempRom);
+
+	// Load Sprite roms
+	RomOffset += nTileRomNum;
+	for (i = 0; i < nSpriteRomNum; i++) {
+		nRet = BurnLoadRom(System1Sprites + (i * nSpriteRomSize), i + RomOffset, 1);
+	}
+
+	// Load Colour proms
+	if (System1ColourProms) {
+		RomOffset += nSpriteRomNum;
+		nRet = BurnLoadRom(System1PromRed, 0 + RomOffset, 1);
+		nRet = BurnLoadRom(System1PromGreen, 1 + RomOffset, 1);
+		nRet = BurnLoadRom(System1PromBlue, 2 + RomOffset, 1);
+	}
+
+	// Setup the Z80 emulation
+	ZetInit(0);
+	ZetOpen(0);
+	ZetSetReadHandler(System2Z801ProgRead);
+	ZetSetWriteHandler(System2Z801ProgWrite);
+	ZetSetInHandler(System2Z801PortRead);
+	ZetSetOutHandler(System2Z801PortWrite);
+
+	ZetMapArea(0x0000, 0x7fff, 0, System1Rom1);
+	ZetMapArea(0x8000, 0xbfff, 0, System1Rom1 + 0x8000);
+	if (DecodeFunction) {
+		ZetMapArea(0x0000, 0x7fff, 2, System1Rom1 + 0x20000, System1Rom1);
+		ZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + 0x30000, System1Rom1 + 0x10000);  // 30 fetch, 10 for code(?)
+	} else {
+		ZetMapArea(0x0000, 0x7fff, 2, System1Rom1);
+		ZetMapArea(0x8000, 0xbfff, 2, System1Rom1 + 0x8000);
+	}
+	ZetMapArea(0xc000, 0xcfff, 0, System1Ram1);
+	ZetMapArea(0xc000, 0xcfff, 1, System1Ram1);
+	ZetMapArea(0xc000, 0xcfff, 2, System1Ram1);
+	ZetMapArea(0xd000, 0xd7ff, 0, System1SpriteRam);
+	ZetMapArea(0xd000, 0xd7ff, 1, System1SpriteRam);
+	ZetMapArea(0xd000, 0xd7ff, 2, System1SpriteRam);
+	ZetMapArea(0xd800, 0xdfff, 0, System1PaletteRam);
+	ZetMapArea(0xd800, 0xdfff, 1, System1PaletteRam);
+	ZetMapArea(0xd800, 0xdfff, 2, System1PaletteRam);
+	ZetMapArea(0xf000, 0xf3ff, 0, System1BgCollisionRam);
+	ZetMapArea(0xf000, 0xf3ff, 2, System1BgCollisionRam);
+	ZetMapArea(0xf400, 0xf7ff, 0, System1f4Ram);
+	ZetMapArea(0xf400, 0xf7ff, 1, System1f4Ram);
+	ZetMapArea(0xf400, 0xf7ff, 2, System1f4Ram);
+	ZetMapArea(0xf800, 0xfbff, 0, System1SprCollisionRam);
+	ZetMapArea(0xf800, 0xfbff, 2, System1SprCollisionRam);
+	ZetMapArea(0xfc00, 0xffff, 0, System1fcRam);
+	ZetMapArea(0xfc00, 0xffff, 1, System1fcRam);
+	ZetMapArea(0xfc00, 0xffff, 2, System1fcRam);
+	ZetClose();
+
+	ZetInit(1);
+	ZetOpen(1);
+	ZetSetReadHandler(System1Z802ProgRead);
+	ZetSetWriteHandler(System1Z802ProgWrite);
+	ZetMapArea(0x0000, 0x7fff, 0, System1Rom2);
+	ZetMapArea(0x0000, 0x7fff, 2, System1Rom2);
+	ZetMapArea(0x8000, 0x87ff, 0, System1Ram2);
+	ZetMapArea(0x8000, 0x87ff, 1, System1Ram2);
+	ZetMapArea(0x8000, 0x87ff, 2, System1Ram2);
+	ZetMapArea(0x8800, 0x8fff, 0, System1Ram2);
+	ZetMapArea(0x8800, 0x8fff, 1, System1Ram2);
+	ZetMapArea(0x8800, 0x8fff, 2, System1Ram2);
+	ZetClose();
+	
+	memset(SpriteOnScreenMap, 255, 256 * 256);
+	
+	System1SpriteXOffset = 1;
+	
+	nCyclesTotal[0] = 4000000 / 60;
+	nCyclesTotal[1] = 4000000 / 60;
+
+	SN76489AInit(0, 2000000, 0);
+	SN76489AInit(1, 4000000, 1);
+	SN76496SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
+	SN76496SetRoute(1, 0.50, BURN_SND_ROUTE_BOTH);
+
+	GenericTilesInit();
+	
+	MakeInputsFunction = System1MakeInputs;
+
+	System1BgRam = NULL;
+	System1SpriteXOffset = 15;
+
+	ZetOpen(0);
+	ZetMemCallback(0xf000, 0xf3ff, 1); // collision ram written through write handler
+	ZetMemCallback(0xf800, 0xfbff, 1); // ""
+	ZetClose();
+
+	ppi8255_init(1);
+	PPI0PortWriteA = System2PPI0WriteA;
+	PPI0PortWriteB = System2PPI0WriteB;
+	PPI0PortWriteC = System2PPI0WriteC;
+
+	System1Draw = System2Render;
+	memset(System1VideoRam, 0x00, 0x4000); // mapped through bank_latch
+	
+	// Reset the driver
+	if (bReset) System1DoReset();
+
+	IsSystem2 = 1; // for banking etc.
+
 	return 0;
 }
 
@@ -4566,6 +5225,26 @@ static INT32 GardiabInit()
 	DecodeFunction = gardiab_decode;
 	
 	nRet = System1Init(3, 0x8000, 1, 0x4000, 3, 0x4000, 4, 0x8000, 0);
+	
+	ZetOpen(0);
+	ZetSetOutHandler(BrainZ801PortWrite);
+	ZetClose();
+		
+	System1DoReset();
+	
+	return nRet;
+}
+
+static INT32 GardiajInit()
+{
+	INT32 nRet;
+	
+	System1ColourProms = 1;
+	System1BankedRom = 1;
+	
+	DecodeFunction = gardia_decode;
+	
+	nRet = System1Init(3, 0x8000, 1, 0x4000, 3, 0x8000, 4, 0x8000, 0);
 	
 	ZetOpen(0);
 	ZetSetOutHandler(BrainZ801PortWrite);
@@ -4857,13 +5536,13 @@ static INT32 WmatchInit()
 	return System1Init(6, 0x2000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
 }
 
-static int ChplftbInit()
+static INT32 ChplftbInit()
 {
-	int nRet;
+	INT32 nRet;
 	System1ColourProms = 1;
 	System1BankedRom = 1;
 	nRet = System1Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
-	choplifter_scroll_x_on = 1;
+	System1RowScroll = 1;
 	ZetOpen(0);
 
 	ZetMapArea(0xe7c0, 0xe7ff, 0, System1ScrollXRam);
@@ -4885,11 +5564,72 @@ static int ChplftbInit()
 	return nRet;
 }
 
+
+static INT32 WbmlInit()
+{
+	INT32 nRet;
+	System1ColourProms = 1;
+	System1BankedRom = 1;
+
+	DecodeFunction = wbml_decode;
+
+	System1MC8123Key = (UINT8*)malloc(0x2000);
+	BurnLoadRom(System1MC8123Key, 15, 1);
+
+	nRet = System2Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
+	free(System1MC8123Key);
+	System1MC8123Key = NULL;
+
+	return nRet;
+}
+
+static INT32 WbmljbInit()
+{
+	INT32 nRet;
+
+	System1ColourProms = 1;
+	System1BankedRom = 2;
+
+	DecodeFunction = wbmljb_decode;
+
+	nRet = System2Init(3, 0x10000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
+
+	System1ScrollXRam = NULL;
+
+	return nRet;
+}
+
+static INT32 TokisensInit()
+{
+	INT32 nRet;
+
+	System1ColourProms = 1;
+	System1BankedRom = 1;
+
+	DecodeFunction = NULL;
+
+	nRet = System2Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
+
+	System1ScrollXRam = NULL;
+
+	return nRet;
+}
+
+static INT32 UfosensiInit()
+{
+	System1RowScroll = 1;
+
+	return WbmlInit();
+}
+
 static INT32 System1Exit()
 {
 	ZetExit();
 	
 	SN76496Exit();
+
+	if (IsSystem2 || DecodeFunction == regulus_decode)
+		ppi8255_exit();
 
 	GenericTilesExit();
 	
@@ -4913,11 +5653,16 @@ static INT32 System1Exit()
 	System1SpriteXOffset = 0;
 	System1ColourProms = 0;
 	System1BankedRom = 0;
-	
+	System1BankSwitch = 0;
+	System1BgBankLatch = 0;
+	System1BgBank = 0;
+
 	DecodeFunction = NULL;
 	TileDecodeFunction = NULL;
 	MakeInputsFunction = NULL;
 	System1Draw = NULL;
+	System1RowScroll = 0;
+	IsSystem2 = 0;
 	
 	return 0;
 }
@@ -4951,9 +5696,11 @@ static void DrawPixel(INT32 x, INT32 y, INT32 SpriteNum, INT32 Colour)
 	xr = ((x - System1BgScrollX) & 0xff) / 8;
 	yr = ((y - System1BgScrollY) & 0xff) / 8;
 	
-	if (System1BgRam[2 * (32 * yr + xr) + 1] & 0x10) {
-		System1BgCollisionRam[0x20 + SpriteNum] = 0xff;
-	}
+	if(System1Draw != System2Render)
+		if (System1BgRam[2 * (32 * yr + xr) + 1] & 0x10) 
+		{
+			System1BgCollisionRam[0x20 + SpriteNum] = 0xff;
+		}
 }
 
 static void DrawSprite(INT32 Num)
@@ -5032,11 +5779,11 @@ static void System1DrawBgLayer(INT32 PriorityDraw)
 	
 	System1BgScrollX = ((System1ScrollX[0] >> 1) + ((System1ScrollX[1] & 1) << 7) + 14) & 0xff;
 	System1BgScrollY = (-System1ScrollY & 0xff);
-	
+
 	if (PriorityDraw == -1) {
 		for (Offs = 0; Offs < 0x800; Offs += 2) {
 			INT32 Code, Colour;
-		
+
 			Code = (System1BgRam[Offs + 1] << 8) | System1BgRam[Offs + 0];
 			Code = ((Code >> 4) & 0x800) | (Code & 0x7ff);
 			Colour = ((Code >> 5) & 0x3f);
@@ -5044,7 +5791,7 @@ static void System1DrawBgLayer(INT32 PriorityDraw)
 			sx = (Offs >> 1) % 32;
 			sy = (Offs >> 1) / 32;
 			
-			if (choplifter_scroll_x_on)
+			if (System1RowScroll)
 				System1BgScrollX = (System1ScrollXRam[(Offs/32) & ~1] >> 1) + ((System1ScrollXRam[(Offs/32) | 1] & 1) << 7) ;
 			sx = 8 * sx + System1BgScrollX;
 			sy = 8 * sy + System1BgScrollY;
@@ -5077,7 +5824,7 @@ static void System1DrawBgLayer(INT32 PriorityDraw)
 				sx = (Offs >> 1) % 32;
 				sy = (Offs >> 1) / 32;
 
-                                if(choplifter_scroll_x_on)
+				if(System1RowScroll)
 					System1BgScrollX = (System1ScrollXRam[(Offs/32) & ~1] >> 1) + ((System1ScrollXRam[(Offs/32) | 1] & 1) << 7) ;
 
 				sx = 8 * sx + System1BgScrollX;
@@ -5154,8 +5901,9 @@ inline static UINT32 CalcCol(UINT16 nColour)
 static INT32 System1CalcPalette()
 {
 	if (System1ColourProms) {
+
 		INT32 i;
-		for (i = 0; i < 0x600; i++) {
+		for (i = 0; i < 0x800; i++) {
 			INT32 bit0, bit1, bit2, bit3, r, g, b, val;
 		
 			val = System1PromRed[System1PaletteRam[i]];
@@ -5182,11 +5930,11 @@ static INT32 System1CalcPalette()
 			System1Palette[i] = BurnHighCol(r, g, b, 0);
 		}
 	} else {
-		for (INT32 i = 0; i < 0x600; i++) {
+
+		for (INT32 i = 0; i < 0x800; i++) {
 			System1Palette[i] = CalcCol(System1PaletteRam[i]);
 		}
 	}
-
 	return 0;
 }
 
@@ -5203,16 +5951,91 @@ static void System1Render()
 	if (System1VideoMode & 0x010) BurnTransferClear();
 	BurnTransferCopy(System1Palette);
 }
-/*
-static void WbmlRender()
+
+static void System2DrawFgLayer()
+{
+	for (INT32 offs = 0; offs < 0x700; offs += 2)
+	{
+		INT32 sx, sy, code;
+
+		sx = (offs / 2) % 32;
+		sy = (offs / 2) / 32;
+		code = System1VideoRam[offs] | (System1VideoRam[offs + 1] << 8);
+		code = ((code >> 4) & 0x800) | (code & 0x7ff);
+		sx *= 8;
+		sy *= 8;
+		Render8x8Tile_Mask_Clip(pTransDraw, code, sx      , sy      , ((code >> 5) & 0x3f), 3, 0, 512, System1Tiles);
+		Render8x8Tile_Mask_Clip(pTransDraw, code, sx - 256, sy      , ((code >> 5) & 0x3f), 3, 0, 512, System1Tiles);
+		Render8x8Tile_Mask_Clip(pTransDraw, code, sx      , sy - 256, ((code >> 5) & 0x3f), 3, 0, 512, System1Tiles);
+		Render8x8Tile_Mask_Clip(pTransDraw, code, sx - 256, sy - 256, ((code >> 5) & 0x3f), 3, 0, 512, System1Tiles);
+	}
+}
+
+static void System2DrawBgLayer(INT32 trasp)
+{
+	INT32 xscroll = (System1VideoRam[0x7c0] >> 1) + ((System1VideoRam[0x7c1] & 1) << 7) - 256 + 5;
+	INT32 yscroll = -System1VideoRam[0x7ba];
+
+	for (INT32 page = 0; page < 4; page++)
+	{
+		if ((nSpriteEnable & (1 << page)) == 0) continue;
+
+		UINT8 *source = System1VideoRam + (System1VideoRam[0x0740 + page * 2] & 0x07) * 0x800;
+
+		INT32 startx = (page & 1) * 256 + xscroll;
+		INT32 starty = (page >> 1) * 256 + yscroll;
+		INT32 row, col;
+
+		INT32 offs = 0;
+		for(row = 0; row < 32 * 8; row += 8)
+		{
+			for(col = 0; col < 32 * 8; col += 8)
+			{
+				INT32 x = (startx + col) & 0x1ff;
+				INT32 y = (starty + row) & 0x1ff;
+
+				if (x > 256) x -= 512;
+				if (y > 224) y -= 512;
+
+				INT32 code = source[offs * 2 + 0] + (source[offs * 2 + 1] << 8);
+				INT32 color = (code >> 5) & 0x3f;
+				INT32 priority = code & 0x800;
+				code = ((code >> 4) & 0x800) | (code & 0x7ff);
+
+				if (!trasp)
+				{
+					Render8x8Tile_Clip(pTransDraw, code, x      , y      , color , 3, 512 * 2, System1Tiles);
+					Render8x8Tile_Clip(pTransDraw, code, x - 256, y      , color , 3, 512 * 2, System1Tiles);
+					Render8x8Tile_Clip(pTransDraw, code, x      , y -256 , color , 3, 512 * 2, System1Tiles);
+					Render8x8Tile_Clip(pTransDraw, code, x - 256, y -256 , color , 3, 512 * 2, System1Tiles);
+				}
+				else  if (priority)
+				{
+					Render8x8Tile_Mask_Clip(pTransDraw, code, x      , y      , color, 3, 0, 512 * 2, System1Tiles);
+					Render8x8Tile_Mask_Clip(pTransDraw, code, x - 256, y      , color, 3, 0, 512 * 2, System1Tiles);
+					Render8x8Tile_Mask_Clip(pTransDraw, code, x      , y - 256, color, 3, 0, 512 * 2, System1Tiles);
+					Render8x8Tile_Mask_Clip(pTransDraw, code, x - 256, y - 256, color, 3, 0, 512 * 2, System1Tiles);
+				}
+
+				offs++;
+			}
+		}
+	}
+}
+
+
+static void System2Render()
 {
 	BurnTransferClear();
 	System1CalcPalette();
-	System1DrawSprites();
+	if (nBurnLayer & 1) System2DrawBgLayer(0);
+	if (nBurnLayer & 2) System1DrawSprites();
+	if (nBurnLayer & 4) System2DrawBgLayer(1);
+	if (nBurnLayer & 8) System2DrawFgLayer();
 	if (System1VideoMode & 0x010) BurnTransferClear();
 	BurnTransferCopy(System1Palette);
 }
-*/
+
 /*==============================================================================================
 Frame functions
 ===============================================================================================*/
@@ -5222,7 +6045,10 @@ INT32 System1Frame()
 	INT32 nInterleave = 10;
 	INT32 nSoundBufferPos = 0;
 		
-	if (System1Reset) System1DoReset();
+	if (System1Reset)
+	{	
+		System1DoReset();
+	}
 
 	MakeInputsFunction();
 	
@@ -5238,7 +6064,7 @@ INT32 System1Frame()
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesSegment = ZetRun(nCyclesSegment);
 		nCyclesDone[nCurrentCPU] += nCyclesSegment;
-		if (i == 9) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
+		if (i == 9) ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		ZetClose();
 		
 		nCurrentCPU = 1;
@@ -5247,7 +6073,7 @@ INT32 System1Frame()
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		nCyclesSegment = ZetRun(nCyclesSegment);
 		nCyclesDone[nCurrentCPU] += nCyclesSegment;
-		if (i == 2 || i == 4 || i == 6 || i == 8) ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
+		if (i == 2 || i == 4 || i == 6 || i == 8) ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		ZetClose();
 		
 		if (pBurnSoundOut) {
@@ -5279,14 +6105,14 @@ INT32 System1Frame()
 Scan Driver
 ===============================================================================================*/
 
-static INT32 System1Scan(INT32 nAction,INT32 *pnMin)
+static INT32 System1Scan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 
 	if (pnMin != NULL) {
-		*pnMin = 0x029675;
+		*pnMin = 0x029736;
 	}
-	
+
 	if (nAction & ACB_MEMORY_RAM) {
 		memset(&ba, 0, sizeof(ba));
 		ba.Data	  = RamStart;
@@ -5299,12 +6125,7 @@ static INT32 System1Scan(INT32 nAction,INT32 *pnMin)
 		ZetScan(nAction);
 		SN76496Scan(nAction, pnMin);
 
-		ScanVar(System1ScrollX, 2, "ScrollX");
-		
-		SCAN_VAR(nCyclesDone);
-		SCAN_VAR(nCyclesSegment);
-		SCAN_VAR(System1Dip);
-		SCAN_VAR(System1Input);
+		SCAN_VAR(System1ScrollX);
 		SCAN_VAR(System1ScrollY);
 		SCAN_VAR(System1BgScrollX);
 		SCAN_VAR(System1BgScrollY);
@@ -5317,7 +6138,11 @@ static INT32 System1Scan(INT32 nAction,INT32 *pnMin)
 		SCAN_VAR(NoboranbInp23Step);
 		SCAN_VAR(BlockgalDial1);
 		SCAN_VAR(BlockgalDial2);
-		
+
+		SCAN_VAR(System1BankSwitch);
+		SCAN_VAR(System1BgBankLatch);
+		SCAN_VAR(System1BgBank);
+
 		if (nAction & ACB_WRITE) {
 			if (System1BankedRom) {
 				ZetOpen(0);
@@ -5326,7 +6151,7 @@ static INT32 System1Scan(INT32 nAction,INT32 *pnMin)
 			}
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -5341,7 +6166,7 @@ struct BurnDriver BurnDrvFourdwarrio = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_HORSHOOT, 0,
 	NULL, FourdwarrioRomInfo, FourdwarrioRomName, NULL, NULL, MyheroInputInfo, FourdwarrioDIPInfo,
 	FourdwarrioInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvBlockgal = {
@@ -5351,7 +6176,7 @@ struct BurnDriver BurnDrvBlockgal = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_SEGA_SYSTEM1, GBF_PUZZLE, 0,
 	NULL, BlockgalRomInfo, BlockgalRomName, NULL, NULL, BlockgalInputInfo, BlockgalDIPInfo,
 	BlockgalInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 256, 3, 4
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriver BurnDrvBrain = {
@@ -5361,7 +6186,7 @@ struct BurnDriver BurnDrvBrain = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_HORSHOOT, 0,
 	NULL, BrainRomInfo, BrainRomName, NULL, NULL, MyheroInputInfo, BrainDIPInfo,
 	BrainInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvBullfgt = {
@@ -5371,7 +6196,7 @@ struct BurnDriver BurnDrvBullfgt = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_MISC, 0,
 	NULL, BullfgtRomInfo, BullfgtRomName, NULL, NULL, MyheroInputInfo, BullfgtDIPInfo,
 	BullfgtInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvThetogyu = {
@@ -5381,7 +6206,7 @@ struct BurnDriver BurnDrvThetogyu = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_MISC, 0,
 	NULL, ThetogyuRomInfo, ThetogyuRomName, NULL, NULL, MyheroInputInfo, BullfgtDIPInfo,
 	ThetogyuInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvFlicky = {
@@ -5391,7 +6216,7 @@ struct BurnDriver BurnDrvFlicky = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, FlickyRomInfo, FlickyRomName, NULL, NULL, FlickyInputInfo, FlickyDIPInfo,
 	FlickyInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvFlickyg = {
@@ -5401,7 +6226,7 @@ struct BurnDriver BurnDrvFlickyg = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, FlickygRomInfo, FlickygRomName, NULL, NULL, FlickyInputInfo, FlickyDIPInfo,
 	FlickygInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvFlickys1 = {
@@ -5411,7 +6236,7 @@ struct BurnDriver BurnDrvFlickys1 = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Flickys1RomInfo, Flickys1RomName, NULL, NULL, FlickyInputInfo, FlickyDIPInfo,
 	Flicks1Init, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvFlickys2 = {
@@ -5421,7 +6246,7 @@ struct BurnDriver BurnDrvFlickys2 = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Flickys2RomInfo, Flickys2RomName, NULL, NULL, FlickyInputInfo, FlickyDIPInfo,
 	Flicks2Init, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvFlickys2g = {
@@ -5431,7 +6256,7 @@ struct BurnDriver BurnDrvFlickys2g = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Flickys2gRomInfo, Flickys2gRomName, NULL, NULL, FlickyInputInfo, FlickyDIPInfo,
 	Flicks2gInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvFlickyo = {
@@ -5441,7 +6266,7 @@ struct BurnDriver BurnDrvFlickyo = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, FlickyoRomInfo, FlickyoRomName, NULL, NULL, FlickyInputInfo, FlickyDIPInfo,
 	Flicks1Init, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvGardia = {
@@ -5451,7 +6276,7 @@ struct BurnDriver BurnDrvGardia = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, GardiaRomInfo, GardiaRomName, NULL, NULL, MyheroInputInfo, GardiaDIPInfo,
 	GardiaInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 256, 3, 4
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriverD BurnDrvGardiab = {
@@ -5461,7 +6286,17 @@ struct BurnDriverD BurnDrvGardiab = {
 	BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, GardiabRomInfo, GardiabRomName, NULL, NULL, MyheroInputInfo, GardiaDIPInfo,
 	GardiabInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 256, 3, 4
+	NULL, 0x800, 224, 256, 3, 4
+};
+
+struct BurnDriverD BurnDrvGardiaj = {
+	"gardiaj", "gardia", NULL, NULL, "1986",
+	"Gardia (Japan, 317-0006)\0", NULL, "Sega / Coreland", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
+	NULL, GardiajRomInfo, GardiajRomName, NULL, NULL, MyheroInputInfo, GardiaDIPInfo,
+	GardiajInit, System1Exit, System1Frame, NULL, System1Scan,
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriver BurnDrvHvymetal = {
@@ -5471,7 +6306,7 @@ struct BurnDriver BurnDrvHvymetal = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, HvymetalRomInfo, HvymetalRomName, NULL, NULL, MyheroInputInfo, HvymetalDIPInfo,
 	HvymetalInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvImsorry = {
@@ -5481,7 +6316,7 @@ struct BurnDriver BurnDrvImsorry = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_MAZE, 0,
 	NULL, ImsorryRomInfo, ImsorryRomName, NULL, NULL, MyheroInputInfo, ImsorryDIPInfo,
 	ImsorryInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvImsorryj = {
@@ -5491,7 +6326,7 @@ struct BurnDriver BurnDrvImsorryj = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_MAZE, 0,
 	NULL, ImsorryjRomInfo, ImsorryjRomName, NULL, NULL, MyheroInputInfo, ImsorryDIPInfo,
 	ImsorryInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvMrviking = {
@@ -5501,7 +6336,7 @@ struct BurnDriver BurnDrvMrviking = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, MrvikingRomInfo, MrvikingRomName, NULL, NULL, MyheroInputInfo, MrvikingDIPInfo,
 	MrvikingInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvMrvikingj = {
@@ -5511,7 +6346,7 @@ struct BurnDriver BurnDrvMrvikingj = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, MrvikingjRomInfo, MrvikingjRomName, NULL, NULL, MyheroInputInfo, MrvikngjDIPInfo,
 	MrvikingInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvMyhero = {
@@ -5521,7 +6356,7 @@ struct BurnDriver BurnDrvMyhero = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, MyheroRomInfo, MyheroRomName, NULL, NULL, MyheroInputInfo, MyheroDIPInfo,
 	MyheroInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvSscandal = {
@@ -5531,7 +6366,7 @@ struct BurnDriver BurnDrvSscandal = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, SscandalRomInfo, SscandalRomName, NULL, NULL, MyheroInputInfo, MyheroDIPInfo,
 	SscandalInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvMyherok = {
@@ -5541,7 +6376,7 @@ struct BurnDriver BurnDrvMyherok = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, MyherokRomInfo, MyherokRomName, NULL, NULL, MyheroInputInfo, MyheroDIPInfo,
 	MyherokInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvNob = {
@@ -5551,7 +6386,7 @@ struct BurnDriver BurnDrvNob = {
 	BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, NobRomInfo, NobRomName, NULL, NULL, MyheroInputInfo, NobbDIPInfo,
 	NobbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvNobb = {
@@ -5561,7 +6396,7 @@ struct BurnDriver BurnDrvNobb = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, NobbRomInfo, NobbRomName, NULL, NULL, MyheroInputInfo, NobbDIPInfo,
 	NobbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvPitfall2 = {
@@ -5571,7 +6406,7 @@ struct BurnDriver BurnDrvPitfall2 = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Pitfall2RomInfo, Pitfall2RomName, NULL, NULL, MyheroInputInfo, Pitfall2DIPInfo,
 	Pitfall2Init, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvPitfall2a = {
@@ -5581,7 +6416,7 @@ struct BurnDriver BurnDrvPitfall2a = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Pitfall2aRomInfo, Pitfall2aRomName, NULL, NULL, MyheroInputInfo, Pitfall2DIPInfo,
 	Pitfall2Init, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvPitfall2u = {
@@ -5591,7 +6426,7 @@ struct BurnDriver BurnDrvPitfall2u = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Pitfall2uRomInfo, Pitfall2uRomName, NULL, NULL, MyheroInputInfo, PitfalluDIPInfo,
 	PitfalluInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvRaflesia = {
@@ -5601,7 +6436,7 @@ struct BurnDriver BurnDrvRaflesia = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, RaflesiaRomInfo, RaflesiaRomName, NULL, NULL, MyheroInputInfo, RaflesiaDIPInfo,
 	RaflesiaInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 256, 3, 4
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriver BurnDrvRegulus = {
@@ -5611,7 +6446,7 @@ struct BurnDriver BurnDrvRegulus = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, RegulusRomInfo, RegulusRomName, NULL, NULL, MyheroInputInfo, RegulusDIPInfo,
 	RegulusInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvReguluso = {
@@ -5621,7 +6456,7 @@ struct BurnDriver BurnDrvReguluso = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, RegulusoRomInfo, RegulusoRomName, NULL, NULL, MyheroInputInfo, RegulusoDIPInfo,
 	RegulusInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvRegulusu = {
@@ -5631,7 +6466,7 @@ struct BurnDriver BurnDrvRegulusu = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, RegulusuRomInfo, RegulusuRomName, NULL, NULL, MyheroInputInfo, RegulusDIPInfo,
 	RegulusuInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvSeganinj = {
@@ -5641,7 +6476,7 @@ struct BurnDriver BurnDrvSeganinj = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, SeganinjRomInfo, SeganinjRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	SeganinjInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvSeganinju = {
@@ -5651,7 +6486,7 @@ struct BurnDriver BurnDrvSeganinju = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, SeganinjuRomInfo, SeganinjuRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	SeganinuInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvNinja = {
@@ -5661,7 +6496,7 @@ struct BurnDriver BurnDrvNinja = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, NinjaRomInfo, NinjaRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	SeganinjInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvNprinces = {
@@ -5671,7 +6506,7 @@ struct BurnDriver BurnDrvNprinces = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, NprincesRomInfo, NprincesRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	NprincesInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvNprinceso = {
@@ -5681,7 +6516,7 @@ struct BurnDriver BurnDrvNprinceso = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, NprincesoRomInfo, NprincesoRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	NprincsoInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvNprincesu = {
@@ -5691,7 +6526,7 @@ struct BurnDriver BurnDrvNprincesu = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, NprincesuRomInfo, NprincesuRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	NprincsuInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvNprincesb = {
@@ -5701,7 +6536,7 @@ struct BurnDriver BurnDrvNprincesb = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, NprincesbRomInfo, NprincesbRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	NprincsbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvSpatter = {
@@ -5711,7 +6546,7 @@ struct BurnDriver BurnDrvSpatter = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_MAZE, 0,
 	NULL, SpatterRomInfo, SpatterRomName, NULL, NULL, MyheroInputInfo, SpatterDIPInfo,
 	SpatterInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 240, 224, 4, 3
+	NULL, 0x800, 240, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvSsanchan = {
@@ -5721,7 +6556,7 @@ struct BurnDriver BurnDrvSsanchan = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_MAZE, 0,
 	NULL, SsanchanRomInfo, SsanchanRomName, NULL, NULL, MyheroInputInfo, SpatterDIPInfo,
 	SpatterInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 240, 224, 4, 3
+	NULL, 0x800, 240, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvStarjack = {
@@ -5731,7 +6566,7 @@ struct BurnDriver BurnDrvStarjack = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, StarjackRomInfo, StarjackRomName, NULL, NULL, MyheroInputInfo, StarjackDIPInfo,
 	StarjackInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvStarjacks = {
@@ -5741,7 +6576,7 @@ struct BurnDriver BurnDrvStarjacks = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, StarjacksRomInfo, StarjacksRomName, NULL, NULL, MyheroInputInfo, StarjacsDIPInfo,
 	StarjackInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvSwat = {
@@ -5751,7 +6586,7 @@ struct BurnDriver BurnDrvSwat = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_SHOOT, 0,
 	NULL, SwatRomInfo, SwatRomName, NULL, NULL, MyheroInputInfo, SwatDIPInfo,
 	SwatInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 256, 3, 4
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriver BurnDrvTeddybb = {
@@ -5761,7 +6596,7 @@ struct BurnDriver BurnDrvTeddybb = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, TeddybbRomInfo, TeddybbRomName, NULL, NULL, MyheroInputInfo, TeddybbDIPInfo,
 	TeddybbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvTeddybbo = {
@@ -5771,7 +6606,7 @@ struct BurnDriver BurnDrvTeddybbo = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, TeddybboRomInfo, TeddybboRomName, NULL, NULL, MyheroInputInfo, TeddybbDIPInfo,
 	TeddybbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvTeddybbobl = {
@@ -5781,7 +6616,17 @@ struct BurnDriver BurnDrvTeddybbobl = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, TeddybboblRomInfo, TeddybboblRomName, NULL, NULL, MyheroInputInfo, TeddybbDIPInfo,
 	TeddybboblInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvTokisens = {
+	"tokisens", NULL, NULL, NULL, "1987",
+	"Toki no Senshi - Chrono Soldier\0", NULL, "Sega", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
+	NULL, tokisensRomInfo, tokisensRomName, NULL, NULL, MyheroInputInfo, TokisensDIPInfo,
+	TokisensInit, System1Exit, System1Frame, NULL, System1Scan,
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriver BurnDrvUpndown = {
@@ -5791,7 +6636,7 @@ struct BurnDriver BurnDrvUpndown = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_RACING, 0,
 	NULL, UpndownRomInfo, UpndownRomName, NULL, NULL, UpndownInputInfo, UpndownDIPInfo,
 	UpndownInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 256, 3, 4
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriver BurnDrvUpndownu = {
@@ -5801,7 +6646,7 @@ struct BurnDriver BurnDrvUpndownu = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_RACING, 0,
 	NULL, UpndownuRomInfo, UpndownuRomName, NULL, NULL, UpndownInputInfo, UpndownDIPInfo,
 	UpndownuInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 256, 3, 4
+	NULL, 0x800, 224, 256, 3, 4
 };
 
 struct BurnDriver BurnDrvWboy = {
@@ -5811,7 +6656,7 @@ struct BurnDriver BurnDrvWboy = {
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, WboyRomInfo, WboyRomName, NULL, NULL, WboyInputInfo, WboyDIPInfo,
 	WboyInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWboyo = {
@@ -5821,7 +6666,7 @@ struct BurnDriver BurnDrvWboyo = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, WboyoRomInfo, WboyoRomName, NULL, NULL, WboyInputInfo, WboyDIPInfo,
 	WboyoInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWboy2 = {
@@ -5831,7 +6676,7 @@ struct BurnDriver BurnDrvWboy2 = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Wboy2RomInfo, Wboy2RomName, NULL, NULL, WboyInputInfo, WboyDIPInfo,
 	Wboy2Init, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWboy2u = {
@@ -5841,7 +6686,7 @@ struct BurnDriver BurnDrvWboy2u = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Wboy2uRomInfo, Wboy2uRomName, NULL, NULL, WboyInputInfo, WboyDIPInfo,
 	Wboy2uInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWboy3 = {
@@ -5851,7 +6696,7 @@ struct BurnDriver BurnDrvWboy3 = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Wboy3RomInfo, Wboy3RomName, NULL, NULL, WboyInputInfo, Wboy3DIPInfo,
 	WboyoInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWboy4 = {
@@ -5861,7 +6706,7 @@ struct BurnDriver BurnDrvWboy4 = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Wboy4RomInfo, Wboy4RomName, NULL, NULL, WboyInputInfo, WboyDIPInfo,
 	Wboy4Init, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWboy5 = {
@@ -5871,7 +6716,7 @@ struct BurnDriver BurnDrvWboy5 = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, Wboy5RomInfo, Wboy5RomName, NULL, NULL, WboyInputInfo, Wboy3DIPInfo,
 	WboyoInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWboyu = {
@@ -5881,7 +6726,7 @@ struct BurnDriver BurnDrvWboyu = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, WboyuRomInfo, WboyuRomName, NULL, NULL, WboyInputInfo, WboyuDIPInfo,
 	WboyuInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWbdeluxe = {
@@ -5891,7 +6736,7 @@ struct BurnDriver BurnDrvWbdeluxe = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, WbdeluxeRomInfo, WbdeluxeRomName, NULL, NULL, WboyInputInfo, WbdeluxeDIPInfo,
 	Wboy2uInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvWmatch = {
@@ -5901,17 +6746,17 @@ struct BurnDriver BurnDrvWmatch = {
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_SEGA_SYSTEM1, GBF_SPORTSMISC, 0,
 	NULL, WmatchRomInfo, WmatchRomName, NULL, NULL, WmatchInputInfo, WmatchDIPInfo,
 	WmatchInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 224, 240, 3, 4
+	NULL, 0x800, 224, 240, 3, 4
 };
 
 struct BurnDriver BurnDrvChoplift = {
 	"choplift", NULL, NULL,  NULL, "1985",
-	"Choplifter (8751 315-5151)\0", NULL, "Sega", "System 1",
+	"Choplifter (8751 315-5151)\0", "The (unprotected) or (bootleg) versions work fine.", "Sega", "System 1",
 	NULL, NULL, NULL, NULL,
 	0, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, ChopliftRomInfo, ChopliftRomName, NULL, NULL, ChplftbInputInfo, ChplftbDIPInfo,
 	ChplftbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvChopliftu = {
@@ -5921,7 +6766,7 @@ struct BurnDriver BurnDrvChopliftu = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, ChopliftuRomInfo, ChopliftuRomName, NULL, NULL, ChplftbInputInfo, ChplftbDIPInfo,
 	ChplftbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
 struct BurnDriver BurnDrvChopliftbl = {
@@ -5931,16 +6776,62 @@ struct BurnDriver BurnDrvChopliftbl = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
 	NULL, ChopliftblRomInfo, ChopliftblRomName, NULL, NULL, ChplftbInputInfo, ChplftbDIPInfo,
 	ChplftbInit, System1Exit, System1Frame, NULL, System1Scan,
-	NULL, 0x600, 256, 224, 4, 3
+	NULL, 0x800, 256, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvUfosensi = {
+	"ufosensi", NULL, NULL, NULL, "1988",
+	"Ufo Senshi Yohko Chan (MC-8123, 317-0064)\0", NULL, "Sega", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
+	NULL, ufosensiRomInfo, ufosensiRomName, NULL, NULL, UfosensiInputInfo, UfosensiDIPInfo,
+	UfosensiInit, System1Exit, System1Frame, NULL, System1Scan,
+	NULL, 0x800, 256, 224, 4, 3
+};
 
-// hvymetal
+struct BurnDriver BurnDrvWbml = {
+	"wbml", NULL, NULL, NULL, "1987",
+	"Wonder Boy in Monster Land (Japan New Ver., MC-8123, 317-0043)\0", NULL, "Sega / Westone", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
+	NULL, wbmlRomInfo, wbmlRomName, NULL, NULL, MyheroInputInfo, WbmlDIPInfo,
+	WbmlInit, System1Exit, System1Frame, NULL, System1Scan, 
+	NULL, 0x800, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvWbmljb = {
+	"wbmljb", "wbml", NULL, NULL, "1987",
+	"Wonder Boy in Monster Land (Japan not encrypted)\0", NULL, "bootleg", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
+	NULL, wbmljbRomInfo, wbmljbRomName, NULL, NULL, MyheroInputInfo, WbmlDIPInfo,
+	WbmljbInit, System1Exit, System1Frame, NULL, System1Scan, 
+	NULL, 0x800, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvWbmljo = {
+	"wbmljo", "wbml", NULL, NULL, "1987",
+	"Wonder Boy in Monster Land (Japan Old Ver., MC-8123, 317-0043)\0", NULL, "Sega / Westone", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
+	NULL, wbmljoRomInfo, wbmljoRomName, NULL, NULL, MyheroInputInfo, WbmlDIPInfo,
+	WbmlInit, System1Exit, System1Frame, NULL, System1Scan, 
+	NULL, 0x800, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvWbmlb = {
+	"wbmlb", "wbml", NULL, NULL, "1987",
+	"Wonder Boy in Monster Land (English bootleg set 1)\0", NULL, "bootleg", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
+	NULL, wbmlbRomInfo, wbmlbRomName, NULL, NULL, MyheroInputInfo, WbmlDIPInfo,
+	WbmljbInit, System1Exit, System1Frame, NULL, System1Scan, 
+	NULL, 0x800, 256, 224, 4, 3
+};
+
 // shtngmst and clones
-// chplft and clones
+// chplft parent [needs decoding]
+// gardiaj/b for JacKc
 // wboysys2
 // blckgalb
-// tokisens
-// wbml and clones
 // dakkochn
-// ufosensi

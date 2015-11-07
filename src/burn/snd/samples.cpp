@@ -66,7 +66,11 @@ static void make_raw(UINT8 *src, UINT32 len)
 
 	sample_ptr->data = (UINT8*)malloc(converted_len * 4);
 
-	// up/down sample everything and convert to raw 16 bit stereo
+//	if (sample_rate == nBurnSoundRate) // copy!
+//	{
+//		memcpy (sample_ptr->data, ptr, converted_len * 4);
+//	}
+//	else	// up/down sample everything and convert to raw 16 bit stereo
 	{
 		INT16 *data = (INT16*)sample_ptr->data;
 		INT16 *poin = (INT16*)ptr;
@@ -108,6 +112,8 @@ static void make_raw(UINT8 *src, UINT32 len)
 	sample_ptr->position = 0;
 }
 
+void BurnSampleInitOne(INT32); // below...
+
 void BurnSamplePlay(INT32 sample)
 {
 #if defined FBA_DEBUG
@@ -119,6 +125,10 @@ void BurnSamplePlay(INT32 sample)
 	sample_ptr = &samples[sample];
 
 	if (sample_ptr->flags & SAMPLE_IGNORE) return;
+
+	if (sample_ptr->flags & SAMPLE_NOSTORE) {
+		BurnSampleInitOne(sample);
+	}
 
 	sample_ptr->playing = 1;
 	sample_ptr->position = 0;
@@ -220,11 +230,6 @@ void BurnSampleReset()
 
 	for (INT32 i = 0; i < nTotalSamples; i++) {
 		BurnSampleStop(i);
-
-		if (sample_ptr->flags & SAMPLE_AUTOLOOP) {
-			BurnSampleSetLoop(i, true);
-			BurnSamplePlay(i);
-		}
 	}
 }
 
@@ -248,9 +253,9 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 	char szTempPath[MAX_PATH];
 #ifdef __LIBRETRO__
 #ifdef _WIN32
-   char slash = '\\';
+	char slash = '\\';
 #else
-   char slash = '/';
+	char slash = '/';
 #endif
 	snprintf(szTempPath, sizeof(szTempPath), "%s%csamples%c", g_rom_dir, slash, slash);
 #else
@@ -306,8 +311,20 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 		char *szSampleName = NULL;
 		BurnDrvGetSampleName(&szSampleName, i, 0);
 		sample_ptr = &samples[i];
+		
+		// append .wav to filename
+		szSampleName[strlen(szSampleName)] = '.';
+		szSampleName[strlen(szSampleName)] = 'w';
+		szSampleName[strlen(szSampleName)] = 'a';
+		szSampleName[strlen(szSampleName)] = 'v';
 
 		if (si.nFlags == 0) break;
+
+		if (si.nFlags & SAMPLE_NOSTORE) {
+			sample_ptr->flags = si.nFlags;
+			sample_ptr->data = NULL;
+			continue;
+		}
 
 		sprintf (path, "%s%s", szTempPath, setname);
 
@@ -316,9 +333,8 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 		ZipLoadOneFile((char*)path, (const char*)szSampleName, &destination, &length);
 		
 		if (length) {
-			make_raw((UINT8*)destination, length);
-
 			sample_ptr->flags = si.nFlags;
+			make_raw((UINT8*)destination, length);
 		} else {
 			sample_ptr->flags = SAMPLE_IGNORE;
 		}
@@ -335,6 +351,74 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 
 		BurnSetProgressRange(1.0 / nTotalSamples);
 		BurnUpdateProgress((double)1.0 / i * nTotalSamples, _T("Loading samples..."), 0);
+	}
+}
+
+void BurnSampleInitOne(INT32 sample)
+{
+	if (sample >= nTotalSamples) {
+		return;
+	}
+
+	{
+		struct sample_format *clr_ptr = &samples[0];
+
+		int i = 0;
+		while (i < nTotalSamples) {
+			
+			if (clr_ptr->data != NULL && i != sample && (clr_ptr->flags & SAMPLE_NOSTORE)) {
+				free(clr_ptr->data);
+				clr_ptr->playing = 0;
+				clr_ptr->data = NULL;
+			}
+
+			clr_ptr++, i++;
+		}
+	}
+
+	if ((sample_ptr->flags & SAMPLE_NOSTORE) == 0) {
+		return;
+	}
+
+	INT32 length;
+	char path[256];
+	char setname[128];
+	void *destination = NULL;
+	char szTempPath[MAX_PATH];
+	sprintf(szTempPath, _TtoA(SAMPLE_DIRECTORY));
+
+	strcpy(setname, BurnDrvGetTextA(DRV_SAMPLENAME));
+	sprintf(path, "%s%s.zip", szTempPath, setname);
+
+	struct BurnSampleInfo si;
+	BurnDrvGetSampleInfo(&si, sample);
+	char *szSampleName = NULL;
+	BurnDrvGetSampleName(&szSampleName, sample, 0);
+	sample_ptr = &samples[sample];
+	
+	// append .wav to filename
+	szSampleName[strlen(szSampleName)] = '.';
+	szSampleName[strlen(szSampleName)] = 'w';
+	szSampleName[strlen(szSampleName)] = 'a';
+	szSampleName[strlen(szSampleName)] = 'v';
+
+	if (sample_ptr->playing || sample_ptr->data != NULL || sample_ptr->flags == SAMPLE_IGNORE) {
+		return;
+	}
+
+	sprintf (path, "%s%s", szTempPath, setname);
+
+	destination = NULL;
+	length = 0;
+	ZipLoadOneFile((char*)path, (const char*)szSampleName, &destination, &length);
+		
+	if (length) {
+		make_raw((UINT8*)destination, length);
+	}
+
+	if (destination) {
+		free (destination);
+		destination = NULL;
 	}
 }
 

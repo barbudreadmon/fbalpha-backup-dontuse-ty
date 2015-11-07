@@ -1,7 +1,6 @@
 #include "mips3_intf.h"
 #include "mips3/mips3.h"
 #include "burnint.h"
-
 #include <stdint.h>
 
 #ifdef MIPS3_X64_DRC
@@ -79,11 +78,15 @@ int Mips3Init()
 #endif
 
     ResetMemoryMap();
+	
+	return 0;
 }
 
 int Mips3UseRecompiler(bool use)
 {
     g_useRecompiler = use;
+	
+	return 0;
 }
 
 int Mips3Exit()
@@ -95,6 +98,8 @@ int Mips3Exit()
     delete g_mmap;
     g_mips = nullptr;
     g_mmap = nullptr;
+	
+	return 0;
 }
 
 

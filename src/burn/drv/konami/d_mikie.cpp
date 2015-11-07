@@ -259,6 +259,8 @@ static INT32 DrvDoReset(INT32 clear_mem)
 
 	watchdog = 0;
 
+	HiscoreReset();
+
 	return 0;
 }
 
@@ -300,14 +302,13 @@ static void DrvPaletteInit()
 
 	DrvRecalc = 1;
 }
-
 static INT32 DrvGfxDecode()
 {
 	INT32 Plane0[4]  = { STEP4(0,1) };
 	INT32 Plane1[4]  = { STEP2(0,4), STEP2(256*128*8, 4) };
-	INT32 XOffs0[8] = { STEP8(0,4) };
-	INT32 YOffs0[8] = { STEP8(0,32) };
-	INT32 XOffs1[16] = { STEP4(256, 1), STEP4(128, 1), STEP4(0, 1), STEP4(240,1) };
+	INT32 XOffs0[8]  = { STEP8(0,4) };
+	INT32 YOffs0[8]  = { STEP8(0,32) };
+	INT32 XOffs1[16] = { STEP4(256, 1), STEP4(128, 1), STEP4(0, 1), STEP4(384,1) };
 	INT32 YOffs1[16] = { STEP8(0,16), STEP8(512, 16) };
 
 	UINT8 *buf = (UINT8*)BurnMalloc(0x10000);
@@ -641,7 +642,7 @@ struct BurnDriver BurnDrvMikie = {
 	"mikie", NULL, NULL, NULL, "1984",
 	"Mikie\0", NULL, "Konami", "GX469",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, mikieRomInfo, mikieRomName, NULL, NULL, MikieInputInfo, MikieDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x1000,
 	224, 256, 3, 4
@@ -678,7 +679,7 @@ struct BurnDriver BurnDrvMikiej = {
 	"mikiej", "mikie", NULL, NULL, "1984",
 	"Shinnyuushain Tooru-kun\0", NULL, "Konami", "GX469",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, mikiejRomInfo, mikiejRomName, NULL, NULL, MikieInputInfo, MikieDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x1000,
 	224, 256, 3, 4
@@ -715,7 +716,7 @@ struct BurnDriver BurnDrvMikiehs = {
 	"mikiehs", "mikie", NULL, NULL, "1984",
 	"Mikie (High School Graffiti)\0", NULL, "Konami", "GX469",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, mikiehsRomInfo, mikiehsRomName, NULL, NULL, MikieInputInfo, MikieDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x1000,
 	224, 256, 3, 4

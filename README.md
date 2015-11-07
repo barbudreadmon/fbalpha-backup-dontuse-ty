@@ -1,6 +1,6 @@
 # fba-libretro
 
-MIDWAY support is still a WIP on stand-alone, so i disabled it by default.
+Build your sets with dats from the dats directory, fba dats are NOT mame dats.
 
 ## Raspberry Pi 2 users
 

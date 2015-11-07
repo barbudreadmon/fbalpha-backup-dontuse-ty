@@ -610,6 +610,8 @@ static INT32 DrvDoReset()
 
 	bEnableInterrupts = false;
 
+	HiscoreReset();
+
 	vimana_latch = 0;
 	vimana_credits = 0;
 
@@ -880,41 +882,41 @@ static INT32 DrvScan(INT32 nAction, INT32* pnMin)
 static struct BurnSampleInfo vimanaSampleDesc[] = {
 #ifdef TOAPLAN_SOUND_SAMPLES_HACK
 #if !defined ROM_VERIFY
-	{ "00.wav", SAMPLE_NOLOOP },
-	{ "01.wav", SAMPLE_NOLOOP },
-	{ "02.wav", SAMPLE_NOLOOP },
-	{ "03.wav", SAMPLE_NOLOOP },
-	{ "04.wav", SAMPLE_NOLOOP },
-	{ "05.wav", SAMPLE_NOLOOP },
-	{ "06.wav", SAMPLE_NOLOOP },
-	{ "07.wav", SAMPLE_NOLOOP },
-	{ "08.wav", SAMPLE_NOLOOP },
-	{ "09.wav", SAMPLE_NOLOOP },
-	{ "0a.wav", SAMPLE_NOLOOP },
-	{ "0b.wav", SAMPLE_NOLOOP },
-	{ "0c.wav", SAMPLE_NOLOOP },
-	{ "0d.wav", SAMPLE_NOLOOP },
-	{ "0e.wav", SAMPLE_NOLOOP },
-	{ "0f.wav", SAMPLE_NOLOOP },
-	{ "10.wav", SAMPLE_NOLOOP },
-	{ "11.wav", SAMPLE_NOLOOP },
-	{ "12.wav", SAMPLE_NOLOOP },
-	{ "13.wav", SAMPLE_NOLOOP },
-	{ "14.wav", SAMPLE_NOLOOP },
-	{ "15.wav", SAMPLE_NOLOOP },
-	{ "16.wav", SAMPLE_NOLOOP },
-	{ "17.wav", SAMPLE_NOLOOP },
-	{ "18.wav", SAMPLE_NOLOOP },
-	{ "19.wav", SAMPLE_NOLOOP },
-	{ "dm.wav", SAMPLE_NOLOOP },
-	{ "dm.wav", SAMPLE_NOLOOP },
-	{ "1c.wav", SAMPLE_NOLOOP },
-	{ "1d.wav", SAMPLE_NOLOOP },
-	{ "1e.wav", SAMPLE_NOLOOP },
-	{ "dm.wav", SAMPLE_NOLOOP },
-	{ "20.wav", SAMPLE_NOLOOP },
-	{ "dm.wav", SAMPLE_NOLOOP },
-	{ "22.wav", SAMPLE_NOLOOP },
+	{ "00", SAMPLE_NOLOOP },
+	{ "01", SAMPLE_NOLOOP },
+	{ "02", SAMPLE_NOLOOP },
+	{ "03", SAMPLE_NOLOOP },
+	{ "04", SAMPLE_NOLOOP },
+	{ "05", SAMPLE_NOLOOP },
+	{ "06", SAMPLE_NOLOOP },
+	{ "07", SAMPLE_NOLOOP },
+	{ "08", SAMPLE_NOLOOP },
+	{ "09", SAMPLE_NOLOOP },
+	{ "0a", SAMPLE_NOLOOP },
+	{ "0b", SAMPLE_NOLOOP },
+	{ "0c", SAMPLE_NOLOOP },
+	{ "0d", SAMPLE_NOLOOP },
+	{ "0e", SAMPLE_NOLOOP },
+	{ "0f", SAMPLE_NOLOOP },
+	{ "10", SAMPLE_NOLOOP },
+	{ "11", SAMPLE_NOLOOP },
+	{ "12", SAMPLE_NOLOOP },
+	{ "13", SAMPLE_NOLOOP },
+	{ "14", SAMPLE_NOLOOP },
+	{ "15", SAMPLE_NOLOOP },
+	{ "16", SAMPLE_NOLOOP },
+	{ "17", SAMPLE_NOLOOP },
+	{ "18", SAMPLE_NOLOOP },
+	{ "19", SAMPLE_NOLOOP },
+	{ "dm", SAMPLE_NOLOOP },
+	{ "dm", SAMPLE_NOLOOP },
+	{ "1c", SAMPLE_NOLOOP },
+	{ "1d", SAMPLE_NOLOOP },
+	{ "1e", SAMPLE_NOLOOP },
+	{ "dm", SAMPLE_NOLOOP },
+	{ "20", SAMPLE_NOLOOP },
+	{ "dm", SAMPLE_NOLOOP },
+	{ "22", SAMPLE_NOLOOP },
 #endif
 #endif
 	{ "", 0 }
@@ -951,7 +953,7 @@ struct BurnDriver BurnDrvVimana = {
 	"vimana", NULL, NULL, "vimana", "1991",
 	"Vimana (World, set 1)\0", "No sound", "Toaplan", "Toaplan BCU-2 / FCU-2 based",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | TOA_ROTATE_GRAPHICS_CCW | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, vimanaRomInfo, vimanaRomName, vimanaSampleInfo, vimanaSampleName, VimanaInputInfo, VimanaDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &ToaRecalcPalette, 0x800,
 	240, 320, 3, 4
@@ -985,7 +987,7 @@ struct BurnDriver BurnDrvVimanan = {
 	"vimanan", "vimana", NULL, "vimana", "1991",
 	"Vimana (World, set 2)\0", "No sound", "Toaplan (Nova Apparate GMBH & Co license)", "Toaplan BCU-2 / FCU-2 based",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, vimananRomInfo, vimananRomName, vimanaSampleInfo, vimanaSampleName, VimanaInputInfo, VimananDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &ToaRecalcPalette, 0x800,
 	240, 320, 3, 4
@@ -1019,7 +1021,7 @@ struct BurnDriver BurnDrvVimanaj = {
 	"vimanaj", "vimana", NULL, "vimana", "1991",
 	"Vimana (Japan)\0", "No sound", "Toaplan", "Toaplan BCU-2 / FCU-2 based",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | TOA_ROTATE_GRAPHICS_CCW | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TOAPLAN_RAIZING, GBF_VERSHOOT, 0,
 	NULL, vimanajRomInfo, vimanajRomName, vimanaSampleInfo, vimanaSampleName, VimanaInputInfo, VimanaDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &ToaRecalcPalette, 0x800,
 	240, 320, 3, 4

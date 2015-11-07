@@ -77,6 +77,7 @@ __extension__ typedef long long				INT64;
 #include "state.h"
 #include "cheat.h"
 #include "hiscore.h"
+#include "joyprocess.h"
 
 extern INT32 nBurnVer;						// Version number of the library
 
@@ -332,7 +333,7 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 
 #define HARDWARE_PUBLIC_MASK							(0xFFFF0000)
 
-#define HARDWARE_PREFIX_CARTRIDGE						(0x80000000)
+#define HARDWARE_PREFIX_CARTRIDGE						((INT32)0x80000000)
 
 #define HARDWARE_PREFIX_MISC_PRE90S						(0x00000000)
 #define HARDWARE_PREFIX_CAPCOM							(0x01000000)

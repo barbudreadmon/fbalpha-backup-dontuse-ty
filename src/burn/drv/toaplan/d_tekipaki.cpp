@@ -548,6 +548,7 @@ static INT32 DrvDoReset()
 #ifdef TOAPLAN_SOUND_SAMPLES_HACK
 	StopAllSamples();
 #endif
+	HiscoreReset();
 
 	return 0;
 }
@@ -732,28 +733,28 @@ static INT32 DrvFrame()
 static struct BurnSampleInfo tekipakiSampleDesc[] = {
 #ifdef TOAPLAN_SOUND_SAMPLES_HACK
 #if !defined ROM_VERIFY
-	{ "dm.wav", SAMPLE_NOLOOP },
-	{ "01.wav", SAMPLE_NOLOOP },
-	{ "02.wav", SAMPLE_NOLOOP },
-	{ "03.wav", SAMPLE_NOLOOP },
-	{ "04.wav", SAMPLE_NOLOOP },
-	{ "05.wav", SAMPLE_NOLOOP },
-	{ "06.wav", SAMPLE_NOLOOP },
-	{ "07.wav", SAMPLE_NOLOOP },
-	{ "08.wav", SAMPLE_NOLOOP },
-	{ "09.wav", SAMPLE_NOLOOP },
-	{ "0a.wav", SAMPLE_NOLOOP },
-	{ "0b.wav", SAMPLE_NOLOOP },
-	{ "0c.wav", SAMPLE_NOLOOP },
-	{ "0d.wav", SAMPLE_NOLOOP },
-	{ "0e.wav", SAMPLE_NOLOOP },
-	{ "0f.wav", SAMPLE_NOLOOP },
-	{ "10.wav", SAMPLE_NOLOOP },
-	{ "11.wav", SAMPLE_NOLOOP },
-	{ "12.wav", SAMPLE_NOLOOP },
-	{ "13.wav", SAMPLE_NOLOOP },
-	{ "14.wav", SAMPLE_NOLOOP },
-	{ "15.wav", SAMPLE_NOLOOP },
+	{ "dm", SAMPLE_NOLOOP },
+	{ "01", SAMPLE_NOLOOP },
+	{ "02", SAMPLE_NOLOOP },
+	{ "03", SAMPLE_NOLOOP },
+	{ "04", SAMPLE_NOLOOP },
+	{ "05", SAMPLE_NOLOOP },
+	{ "06", SAMPLE_NOLOOP },
+	{ "07", SAMPLE_NOLOOP },
+	{ "08", SAMPLE_NOLOOP },
+	{ "09", SAMPLE_NOLOOP },
+	{ "0a", SAMPLE_NOLOOP },
+	{ "0b", SAMPLE_NOLOOP },
+	{ "0c", SAMPLE_NOLOOP },
+	{ "0d", SAMPLE_NOLOOP },
+	{ "0e", SAMPLE_NOLOOP },
+	{ "0f", SAMPLE_NOLOOP },
+	{ "10", SAMPLE_NOLOOP },
+	{ "11", SAMPLE_NOLOOP },
+	{ "12", SAMPLE_NOLOOP },
+	{ "13", SAMPLE_NOLOOP },
+	{ "14", SAMPLE_NOLOOP },
+	{ "15", SAMPLE_NOLOOP },
 #endif
 #endif
 	{ "", 0 }
@@ -766,7 +767,7 @@ struct BurnDriver BurnDrvTekiPaki = {
 	"tekipaki", NULL, NULL, "tekipaki", "1991",
 	"Teki Paki\0", "No sound (sound MCU not dumped)", "Toaplan", "Toaplan GP9001 based",
 	L"Teki Paki\0\u6D17\u8133\u30B2\u30FC\u30E0\0", NULL, NULL, NULL,
-	1, 2, HARDWARE_TOAPLAN_68K_Zx80, GBF_PUZZLE, 0,
+	1 | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TOAPLAN_68K_Zx80, GBF_PUZZLE, 0,
 	NULL, drvRomInfo, drvRomName, tekipakiSampleInfo, tekipakiSampleName, tekipakiInputInfo, tekipakiDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &ToaRecalcPalette, 0x800,
 	320, 240, 4, 3
@@ -776,7 +777,7 @@ struct BurnDriver BurnDrvWhoopee = {
 	"whoopee", "pipibibs", NULL, NULL, "1991",
 	"Pipi & Bibis / Whoopee!! (Teki Paki hardware)\0", "No sound (sound MCU not dumped)", "Toaplan", "Toaplan GP9001 based",
 	NULL, NULL, NULL, NULL,
-	1 | BDF_CLONE, 2, HARDWARE_TOAPLAN_68K_Zx80, GBF_PLATFORM, 0,
+	1 | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TOAPLAN_68K_Zx80, GBF_PLATFORM, 0,
 	NULL, whoopeeRomInfo, whoopeeRomName, NULL, NULL, whoopeeInputInfo, whoopeeDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &ToaRecalcPalette, 0x800,
 	320, 240, 4, 3

@@ -78,6 +78,7 @@ UINT8 GameIsGmgalax;
 UINT8 GameIsBagmanmc;
 UINT8 CavelonBankSwitch;
 UINT8 GalVBlank;
+UINT8 Dingo;
 
 static inline void GalMakeInputs()
 {
@@ -841,7 +842,17 @@ void __fastcall JumpbugZ80Write(UINT16 a, UINT8 d)
 			AY8910Write(0, 0, d);
 			return;
 		}
-		
+
+		case 0x2600:
+		case 0x6000:
+		case 0x6001:
+		case 0x6803:
+		case 0x6805:
+		case 0xb000:
+		case 0xb004:
+			// ??? unknown writes
+			return;
+
 		case 0x6002:
 		case 0x6003:
 		case 0x6004:
@@ -1537,6 +1548,7 @@ INT32 GalExit()
 	GalBackgroundEnable = 0;
 	ScrambleProtectionState = 0;
 	ScrambleProtectionResult = 0;
+	Dingo = 0;
 	
 	GalZ80Rom1Size = 0;
 	GalZ80Rom1Num = 0;
@@ -1668,6 +1680,7 @@ INT32 GalFrame()
 		}
 			
 		if (GalSoundType == GAL_SOUND_HARDWARE_TYPE_CHECKMAJAY8910) {
+			if (Dingo && !((i%3) == 0)) continue; // slow down dingo music a bit.
 			// Run Z80 #2
 			nCurrentCPU = 1;
 			ZetOpen(nCurrentCPU);
@@ -1675,10 +1688,7 @@ INT32 GalFrame()
 			nGalCyclesSegment = nNext - nGalCyclesDone[nCurrentCPU];
 			nGalCyclesSegment = ZetRun(nGalCyclesSegment);
 			nGalCyclesDone[nCurrentCPU] += nGalCyclesSegment;
-			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
-			nGalCyclesDone[nCurrentCPU] += ZetRun(300);
-			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
-			nGalCyclesDone[nCurrentCPU] += ZetRun(300);
+			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 			ZetClose();
 		}
 			

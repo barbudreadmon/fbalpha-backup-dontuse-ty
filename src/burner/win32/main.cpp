@@ -530,7 +530,9 @@ static int AppInit()
 	_CrtSetDbgFlag(_CRTDBG_LEAK_CHECK_DF);				//
 #endif
 
+#if defined (FBA_DEBUG)
 	OpenDebugLog();
+#endif
 
 	// Create a handle to the main thread of execution
 	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hMainThread, 0, false, DUPLICATE_SAME_ACCESS);
@@ -889,15 +891,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nShowCmd
 	}
 	
 #if !defined (DONT_DISPLAY_SPLASH)
-	if (lpCmdLine[0] == 0) SplashCreate();
+//	if (lpCmdLine[0] == 0) SplashCreate();
 #endif
 
 	nAppShowCmd = nShowCmd;
 
 	AppDirectory();								// Set current directory to be the applications directory
 
+#ifdef INCLUDE_AVI_RECORDING
+#define DIRCNT 10
+#else
+#define DIRCNT 9
+#endif
 	// Make sure there are roms and cfg subdirectories
-	TCHAR szDirs[9][MAX_PATH] = {
+	TCHAR szDirs[DIRCNT][MAX_PATH] = {
 		{_T("config")},
 		{_T("config/games")},
 		{_T("config/ips")},
@@ -907,11 +914,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nShowCmd
 		{_T("roms")},
 		{_T("savestates")},
 		{_T("screenshots")},
+#ifdef INCLUDE_AVI_RECORDING
+		{_T("avi")},
+#endif
 	};
 
-	for(int x = 0; x < 9; x++) {
+	for(int x = 0; x < DIRCNT; x++) {
 		CreateDirectory(szDirs[x], NULL);
 	}
+#undef DIRCNT
 
 	//
 	

@@ -9207,7 +9207,7 @@ struct BurnDriver BurnDrvDevilfsg = {
 };
 
 // Sound hardware replaced with AY8910
-static struct BurnRomInfo ZigzagRomDesc[] = {
+static struct BurnRomInfo ZigzagbRomDesc[] = {
 	{ "zz_d1.7l",      0x01000, 0x8cc08d81, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "zz_d2.7k",      0x01000, 0x326d8d45, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "zz_d4.7f",      0x01000, 0xa94ed92a, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -9219,10 +9219,10 @@ static struct BurnRomInfo ZigzagRomDesc[] = {
 	{ "zzbpr_e9.bin",  0x00020, 0xaa486dd0, BRF_GRA | GAL_ROM_PROM },
 };
 
-STD_ROM_PICK(Zigzag)
-STD_ROM_FN(Zigzag)
+STD_ROM_PICK(Zigzagb)
+STD_ROM_FN(Zigzagb)
 
-static struct BurnRomInfo Zigzag2RomDesc[] = {
+static struct BurnRomInfo Zigzagb2RomDesc[] = {
 	{ "z1.7l",         0x01000, 0x4c28349a, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "zz_d2.7k",      0x01000, 0x326d8d45, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "zz_d4.7f",      0x01000, 0xa94ed92a, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -9234,8 +9234,8 @@ static struct BurnRomInfo Zigzag2RomDesc[] = {
 	{ "zzbpr_e9.bin",  0x00020, 0xaa486dd0, BRF_GRA | GAL_ROM_PROM },
 };
 
-STD_ROM_PICK(Zigzag2)
-STD_ROM_FN(Zigzag2)
+STD_ROM_PICK(Zigzagb2)
+STD_ROM_FN(Zigzagb2)
 
 static struct BurnRomInfo Ozon1RomDesc[] = {
 	{ "rom1.bin",      0x01000, 0x54899e8b, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -9506,22 +9506,22 @@ static INT32 Ozon1Init()
 	return nRet;
 }
 
-struct BurnDriver BurnDrvZigzag = {
-	"zigzag", NULL, NULL, NULL, "1982",
+struct BurnDriver BurnDrvZigzagb = {
+	"zigzagb", NULL, NULL, NULL, "1982",
 	"Zig Zag (Galaxian hardware, set 1)\0", NULL, "LAX", "Galaxian",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_GALAXIAN, GBF_MAZE, 0,
-	NULL, ZigzagRomInfo, ZigzagRomName, NULL, NULL, ZigzagInputInfo, ZigzagDIPInfo,
+	NULL, ZigzagbRomInfo, ZigzagbRomName, NULL, NULL, ZigzagInputInfo, ZigzagDIPInfo,
 	ZigzagInit, GalExit, GalFrame, NULL, GalScan,
 	NULL, 392, 224, 256, 3, 4
 };
 
-struct BurnDriver BurnDrvZigzag2 = {
-	"zigzag2", "zigzag", NULL, NULL, "1982",
+struct BurnDriver BurnDrvZigzagb2 = {
+	"zigzagb2", "zigzagb", NULL, NULL, "1982",
 	"Zig Zag (Galaxian hardware, set 2)\0", NULL, "LAX", "Galaxian",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_GALAXIAN, GBF_MAZE, 0,
-	NULL, Zigzag2RomInfo, Zigzag2RomName, NULL, NULL, ZigzagInputInfo, ZigzagDIPInfo,
+	NULL, Zigzagb2RomInfo, Zigzagb2RomName, NULL, NULL, ZigzagInputInfo, ZigzagDIPInfo,
 	ZigzagInit, GalExit, GalFrame, NULL, GalScan,
 	NULL, 392, 224, 256, 3, 4
 };
@@ -13502,7 +13502,7 @@ static INT32 DingoInit()
 	
 	GalPostLoadCallbackFunction = DingoPostLoad;
 	GalSoundType = GAL_SOUND_HARDWARE_TYPE_CHECKMAJAY8910;
-	
+	Dingo = 1;
 	nRet = GalInit();
 	
 	AY8910SetAllRoutes(0, 1.00, BURN_SND_ROUTE_BOTH);
@@ -15243,20 +15243,20 @@ STD_ROM_PICK(Theend)
 STD_ROM_FN(Theend)
 
 static struct BurnRomInfo TheendsRomDesc[] = {
-	{ "ic13",          0x00800, 0x90e5ab14, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ic14",          0x00800, 0x950f0a07, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ic15",          0x00800, 0x6786bcf5, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ic16",          0x00800, 0x380a0017, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ic17",          0x00800, 0xaf067b7f, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ic18",          0x00800, 0xa0411b93, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "the_end_ra3_13.ic13",	0x00800, 0x90e5ab14, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "the_end_ra3_14.ic14",    0x00800, 0x950f0a07, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "the_end_ra3_15.ic15",    0x00800, 0x6786bcf5, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "the_end_ra3_16.ic16",    0x00800, 0x380a0017, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "the_end_ra3_17.ic17",    0x00800, 0xaf067b7f, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "the_end_ra3_18.ic18",    0x00800, 0xa0411b93, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	
-	{ "ic56",          0x00800, 0x3b2c2f70, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
-	{ "ic55",          0x00800, 0xe0429e50, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+	{ "the_end_ra3_56.ic56",    0x00800, 0x3b2c2f70, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+	{ "the_end_ra2_55.ic55",    0x00800, 0xe0429e50, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
 
-	{ "ic30",          0x00800, 0x527fd384, BRF_GRA | GAL_ROM_TILES_SHARED },
-	{ "ic31",          0x00800, 0xaf6d09b6, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "the_end_ra3_30.ic30",    0x00800, 0x527fd384, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "the_end_ra3_31.ic31",    0x00800, 0xaf6d09b6, BRF_GRA | GAL_ROM_TILES_SHARED },
 		
-	{ "6331-1j.86",    0x00020, 0x24652bc4, BRF_GRA | GAL_ROM_PROM },
+	{ "6331-1j.86",    			0x00020, 0x24652bc4, BRF_GRA | GAL_ROM_PROM },
 };
 
 STD_ROM_PICK(Theends)
@@ -15800,6 +15800,30 @@ static struct BurnRomInfo MimonscrRomDesc[] = {
 
 STD_ROM_PICK(Mimonscr)
 STD_ROM_FN(Mimonscr)
+
+static struct BurnRomInfo MimonscraRomDesc[] = {
+	{ "1.c2",          0x01000, 0xcfff26f3, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2.e2",          0x01000, 0x1fca805f, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "3.f2",          0x01000, 0x24ce1ce3, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "4.h2",          0x01000, 0xc83fb639, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "5.j2",          0x01000, 0xa9f12dfc, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "6.l2",          0x01000, 0xe492a40c, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "7.m2",          0x01000, 0x5339928d, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "8.p2",          0x01000, 0x0b9915b8, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	
+	{ "2732.c5",       0x01000, 0x5995f24b, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+	{ "2732.d5",       0x01000, 0x35ed0f96, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+			
+	{ "top.g5",        0x01000, 0xf73a8412, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "bottom.g5",     0x01000, 0x3828c9db, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "top.f5",        0x01000, 0x9e0e9289, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "bottom.f5",     0x01000, 0x92085b0c, BRF_GRA | GAL_ROM_TILES_SHARED },
+		
+	{ "mb7051.e6",     0x00020, 0x4e3caeab, BRF_GRA | GAL_ROM_PROM },
+};
+
+STD_ROM_PICK(Mimonscra)
+STD_ROM_FN(Mimonscra)
 
 UINT8 __fastcall ExplorerZ80Read(UINT16 a)
 {
@@ -17451,6 +17475,16 @@ struct BurnDriver BurnDrvMimonscr = {
 	NULL, 392, 224, 256, 3, 4
 };
 
+struct BurnDriver BurnDrvMimonscra = {
+	"mimonscra", "mimonkey", NULL, NULL, "198?",
+	"Mighty Monkey (Kaina Games, bootleg on Scramble hardware)\0", NULL, "bootleg (Kaina Games)", "Galaxian",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_BOOTLEG, 2, HARDWARE_GALAXIAN, GBF_HORSHOOT, 0,
+	NULL, MimonscraRomInfo, MimonscraRomName, NULL, NULL, AtlantisInputInfo, MimonkeyDIPInfo,
+	MimonscrInit, KonamiExit, GalFrame, NULL, GalScan,
+	NULL, 392, 224, 256, 3, 4
+};
+
 // Scramble based hardware with one CPU and one AY8910
 static struct BurnRomInfo TriplepRomDesc[] = {
 	{ "triplep.2g",    0x01000, 0xc583a93d, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -18827,6 +18861,27 @@ static struct BurnRomInfo ScobrabRomDesc[] = {
 STD_ROM_PICK(Scobrab)
 STD_ROM_FN(Scobrab)
 
+static struct BurnRomInfo ScobraeRomDesc[] = {
+	{ "super cobra ra1 2c 1981.2c", 0x01000, 0xba9d4152, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "super cobra ra1 2e 1981.2e", 0x01000, 0xf9b77b27, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "super cobra ra1 2f 1981.2f", 0x01000, 0xe6109c2c, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "super cobra ra1 2h 1981.2h", 0x01000, 0x8762735b, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "super cobra ra1 2j 1981.2j", 0x01000, 0x5648f404, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "super cobra ra1 2l 1981.2l", 0x01000, 0x34476cc3, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	
+	{ "5c",            0x00800, 0xdeeb0dd3, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+	{ "5d",            0x00800, 0x872c1a74, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+	{ "5e",            0x00800, 0xccd7a110, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+		
+	{ "super cobra ra1 5f 1981.5f", 0x00800, 0x64d113b4, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "super cobra ra1 5h 1981.5h", 0x00800, 0xa96316d3, BRF_GRA | GAL_ROM_TILES_SHARED },
+		
+	{ "82s123.6e",     0x00020, 0x9b87f90d, BRF_GRA | GAL_ROM_PROM },
+};
+
+STD_ROM_PICK(Scobrae)
+STD_ROM_FN(Scobrae)
+
 static struct BurnRomInfo SuprheliRomDesc[] = {
 	{ "1.2c",          0x01000, 0xb25141d8, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "scobra2e.bin",  0x01000, 0xa270e44d, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -20087,6 +20142,41 @@ static INT32 ScobraInit()
 	return nRet;
 }
 
+static INT32 ScobraeInit()
+{
+	INT32 nRet;
+	
+	GalPostLoadCallbackFunction = MapScobra;
+	GalSoundType = GAL_SOUND_HARDWARE_TYPE_KONAMIAY8910;
+	
+	nRet = GalInit();
+	KonamiSoundInit();
+	
+	for (INT32 Offs = 0; Offs < 0x6000; Offs++) {
+		INT32 i = Offs & 0x7f;
+		INT32 x = GalZ80Rom1[Offs];
+
+		if (Offs & 0x80) i ^= 0x7f;
+
+		if (i & 0x01) x ^= 0x49;
+		if (i & 0x02) x ^= 0x21;
+		if (i & 0x04) x ^= 0x18;
+		if (i & 0x08) x ^= 0x12;
+		if (i & 0x10) x ^= 0x84;
+		if (i & 0x20) x ^= 0x24;
+		if (i & 0x40) x ^= 0x40;
+
+		GalZ80Rom1[Offs] = x ^ 0xff;
+	}
+	
+	GalRenderBackgroundFunction = ScrambleDrawBackground;
+	GalDrawBulletsFunction = ScrambleDrawBullets;
+	
+	KonamiPPIInit();
+	
+	return nRet;
+}
+
 static INT32 LosttombInit()
 {
 	INT32 nRet;
@@ -20677,11 +20767,11 @@ static void BilliardPostLoad()
 		if (Bits[2] ^ ( Bits[3] &  Bits[6])) XorMask ^= 0x01;
 		if (Bits[4] ^ ( Bits[5] &  Bits[7])) XorMask ^= 0x02;
 		if (Bits[0] ^ ( Bits[7] & !Bits[3])) XorMask ^= 0x04;
-		if (Bits[3] ^ (!Bits[0] &  Bits[2])) XorMask ^= 0x08;
-		if (Bits[5] ^ (!Bits[4] &  Bits[1])) XorMask ^= 0x10;
-		if (Bits[6] ^ (!Bits[2] & !Bits[5])) XorMask ^= 0x20;
-		if (Bits[1] ^ (!Bits[6] & !Bits[4])) XorMask ^= 0x40;
-		if (Bits[7] ^ (!Bits[1] &  Bits[0])) XorMask ^= 0x80;
+		if (Bits[3] ^ ((!Bits[0]) &  Bits[2])) XorMask ^= 0x08;
+		if (Bits[5] ^ ((!Bits[4]) &  Bits[1])) XorMask ^= 0x10;
+		if (Bits[6] ^ ((!Bits[2]) & !Bits[5])) XorMask ^= 0x20;
+		if (Bits[1] ^ ((!Bits[6]) & !Bits[4])) XorMask ^= 0x40;
+		if (Bits[7] ^ ((!Bits[1]) &  Bits[0])) XorMask ^= 0x80;
 
 		GalZ80Rom1[Offset] ^= XorMask;
 		GalZ80Rom1[Offset] = BITSWAP08(GalZ80Rom1[Offset], 6, 1, 2, 5, 4, 3, 0, 7);
@@ -20885,6 +20975,16 @@ struct BurnDriver BurnDrvScobrab = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_BOOTLEG, 2, HARDWARE_GALAXIAN, GBF_HORSHOOT, 0,
 	NULL, ScobrabRomInfo, ScobrabRomName, NULL, NULL, SfxInputInfo, ScobrasDIPInfo,
 	ScobraInit, KonamiExit, GalFrame, NULL, GalScan,
+	NULL, 392, 224, 256, 3, 4
+};
+
+struct BurnDriver BurnDrvScobrae = {
+	"scobrae", "scobra", NULL, NULL, "1981",
+	"Super Cobra (Stern) (encrypted, KONATEC XC-103SS CPU)\0", NULL, "Konami (Stern license)", "Galaxian",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_GALAXIAN, GBF_HORSHOOT, 0,
+	NULL, ScobraeRomInfo, ScobraeRomName, NULL, NULL, SfxInputInfo, ScobrasDIPInfo,
+	ScobraeInit, KonamiExit, GalFrame, NULL, GalScan,
 	NULL, 392, 224, 256, 3, 4
 };
 

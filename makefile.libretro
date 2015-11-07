@@ -54,13 +54,10 @@ GRIFFIN_DIR = griffin-libretro
 profile := accuracy
 ifeq ($(profile),accuracy)
 	PROFFLAGS := -DPROFILE_ACCURACY
-	SH2_CPU_DIR := $(FBA_CPU_DIR)/sh2
 else ifeq ($(profile),balanced)
 	PROFFLAGS := -DPROFILE_BALANCED
-	SH2_CPU_DIR := $(FBA_CPU_DIR)/sh2
 else ifeq ($(profile),performance)
 	PROFFLAGS := -DPROFILE_PERFORMANCE
-	SH2_CPU_DIR := $(FBA_CPU_DIR)/alt/sh2
 else
 	$(error unknown profile.)
 endif
@@ -290,8 +287,10 @@ BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_CPU_DIR)/nec/v25sfr.c \
 	$(FBA_CPU_DIR)/nec/v25instr.c \
 	$(FBA_CPU_DIR)/nec/necinstr.c \
+	$(FBA_CPU_DIR)/mips3/mips3_dasm.cpp \
 	$(FBA_BURN_DIR)/drv/capcom/ctv_make.cpp \
-	$(FBA_BURN_DIR)/drv/pgm/pgm_sprite_create.cpp
+	$(FBA_BURN_DIR)/drv/pgm/pgm_sprite_create.cpp \
+	$(FBA_INTERFACE_DIR)/audio/aud_interface.cpp
 
 #ifeq ($(LIBRETRO_OPTIMIZATIONS), 1)
 #BURN_BLACKLIST += $(FBA_BURN_DIR)/drv/capcom/ctv.cpp
@@ -407,13 +406,15 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/nec \
 	$(FBA_CPU_DIR)/pic16c5x \
 	$(FBA_CPU_DIR)/s2650 \
-	$(SH2_CPU_DIR) \
+	$(FBA_CPU_DIR)/sh2 \
 	$(FBA_CPU_DIR)/tlcs90 \
 	$(FBA_CPU_DIR)/z80
 
 FBA_LIB_DIRS := $(FBA_LIB_DIR)/zlib
 
-FBA_SRC_DIRS := $(FBA_BURNER_DIR) $(FBA_BURN_DIRS) $(FBA_CPU_DIRS) $(FBA_BURNER_DIRS)
+FBA_INTERFACE_DIRS := $(FBA_INTERFACE_DIR)/audio
+
+FBA_SRC_DIRS := $(FBA_BURNER_DIR) $(FBA_BURN_DIRS) $(FBA_CPU_DIRS) $(FBA_BURNER_DIRS) $(FBA_INTERFACE_DIRS)
 
 
 ifeq ($(EXTERNAL_ZLIB), 1)
@@ -450,6 +451,7 @@ INCFLAGS := -I$(FBA_BURNER_DIR)/win32 \
 	-I$(FBA_INTERFACE_DIR) \
 	-I$(FBA_INTERFACE_DIR)/input \
 	-I$(FBA_INTERFACE_DIR)/cd \
+	-I$(FBA_INTERFACE_DIR)/audio \
 	-I$(FBA_BURNER_DIR) \
 	-I$(FBA_CPU_DIR) \
 	-I$(FBA_CPU_DIR)/i8039 \

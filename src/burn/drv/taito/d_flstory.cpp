@@ -1,3 +1,5 @@
+// Todo: victnine
+
 #include "tiles_generic.h"
 #include "taito_m68705.h"
 #include "z80_intf.h"
@@ -24,7 +26,7 @@ static UINT8 *DrvSprRAM;
 static UINT8 *DrvPalRAM;
 static UINT8 *DrvMcuRAM;
 
-static UINT32  *DrvPalette;
+static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
 
 static INT16 *pAY8910Buffer[3];
@@ -34,6 +36,7 @@ static UINT8 snd_flag;
 static INT32 nmi_enable;
 static INT32 pending_nmi;
 static INT32 char_bank = 0;
+static UINT8 m_gfxctrl;
 static INT32 mcu_select;
 
 static UINT8  DrvJoy1[8];
@@ -49,6 +52,20 @@ static UINT8 *flipscreen;
 static UINT8 *soundlatch;
 
 static INT32 select_game;
+
+static INT32 m_vol_ctrl[16];
+static UINT8 m_snd_ctrl0;
+static UINT8 m_snd_ctrl1;
+static UINT8 m_snd_ctrl2;
+static UINT8 m_mcu_cmd;
+static UINT8 m_mcu_counter;
+static UINT8 m_mcu_b4_cmd;
+static UINT8 m_mcu_param;
+static UINT8 m_mcu_b2_res;
+static UINT8 m_mcu_b1_res;
+static UINT8 m_mcu_bb_res;
+static UINT8 m_mcu_b5_res;
+static UINT8 m_mcu_b6_res;
 
 static struct BurnInputInfo FlstoryInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"	},
@@ -74,6 +91,140 @@ static struct BurnInputInfo FlstoryInputList[] = {
 };
 
 STDINPUTINFO(Flstory)
+
+static struct BurnInputInfo RumbaInputList[] = {
+	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"	},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 up"		},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 down"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 fire 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 fire 2"	},
+
+	{"P2 Coin",		BIT_DIGITAL,	DrvJoy1 + 5,	"p2 coin"	},
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 start"	},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 up"		},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 down"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 0,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 fire 2"	},
+
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Service",		BIT_DIGITAL,	DrvJoy1 + 2,	"service"	},
+	{"Tilt",		BIT_DIGITAL,	DrvJoy1 + 3,	"tilt"		},
+	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
+	{"Dip C",		BIT_DIPSWITCH,	DrvDips + 2,	"dip"		},
+};
+
+STDINPUTINFO(Rumba)
+
+static struct BurnDIPInfo RumbaDIPList[]=
+{
+	{0x13, 0xff, 0xff, 0xfc, NULL		},
+	{0x14, 0xff, 0xff, 0x00, NULL		},
+	{0x15, 0xff, 0xff, 0xe3, NULL		},
+
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
+	{0x13, 0x01, 0x03, 0x00, "20000 50000"		},
+	{0x13, 0x01, 0x03, 0x01, "10000 60000"		},
+	{0x13, 0x01, 0x03, 0x02, "10000 40000"		},
+	{0x13, 0x01, 0x03, 0x03, "10000 20000"		},
+
+	{0   , 0xfe, 0   ,    2, "Free Play"		},
+	{0x13, 0x01, 0x04, 0x04, "Off"		},
+	{0x13, 0x01, 0x04, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x13, 0x01, 0x18, 0x18, "3"		},
+	{0x13, 0x01, 0x18, 0x10, "4"		},
+	{0x13, 0x01, 0x18, 0x08, "5"		},
+	{0x13, 0x01, 0x18, 0x00, "6"		},
+
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x13, 0x01, 0x20, 0x20, "Off"		},
+	{0x13, 0x01, 0x20, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x13, 0x01, 0x40, 0x40, "Off"		},
+	{0x13, 0x01, 0x40, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Cabinet"		},
+	{0x13, 0x01, 0x80, 0x00, "Upright"		},
+	{0x13, 0x01, 0x80, 0x80, "Cocktail"		},
+
+	{0   , 0xfe, 0   ,    16, "Coin A"		},
+	{0x14, 0x01, 0x0f, 0x0f, "9 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x0e, "8 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x0d, "7 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x0c, "6 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x0b, "5 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x0a, "4 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x09, "3 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x08, "2 Coins 1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x00, "1 Coin  1 Credits"		},
+	{0x14, 0x01, 0x0f, 0x01, "1 Coin  2 Credits"		},
+	{0x14, 0x01, 0x0f, 0x02, "1 Coin  3 Credits"		},
+	{0x14, 0x01, 0x0f, 0x03, "1 Coin  4 Credits"		},
+	{0x14, 0x01, 0x0f, 0x04, "1 Coin  5 Credits"		},
+	{0x14, 0x01, 0x0f, 0x05, "1 Coin  6 Credits"		},
+	{0x14, 0x01, 0x0f, 0x06, "1 Coin  7 Credits"		},
+	{0x14, 0x01, 0x0f, 0x07, "1 Coin  8 Credits"		},
+
+	{0   , 0xfe, 0   ,    16, "Coin B"		},
+	{0x14, 0x01, 0xf0, 0xf0, "9 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0xe0, "8 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0xd0, "7 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0xc0, "6 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0xb0, "5 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0xa0, "4 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0x90, "3 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0x80, "2 Coins 1 Credits"		},
+	{0x14, 0x01, 0xf0, 0x00, "1 Coin  1 Credits"		},
+	{0x14, 0x01, 0xf0, 0x10, "1 Coin  2 Credits"		},
+	{0x14, 0x01, 0xf0, 0x20, "1 Coin  3 Credits"		},
+	{0x14, 0x01, 0xf0, 0x30, "1 Coin  4 Credits"		},
+	{0x14, 0x01, 0xf0, 0x40, "1 Coin  5 Credits"		},
+	{0x14, 0x01, 0xf0, 0x50, "1 Coin  6 Credits"		},
+	{0x14, 0x01, 0xf0, 0x60, "1 Coin  7 Credits"		},
+	{0x14, 0x01, 0xf0, 0x70, "1 Coin  8 Credits"		},
+
+	{0   , 0xfe, 0   ,    2, "Training Stage"		},
+	{0x15, 0x01, 0x01, 0x00, "Off"		},
+	{0x15, 0x01, 0x01, 0x01, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x15, 0x01, 0x02, 0x02, "Off"		},
+	{0x15, 0x01, 0x02, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Language"		},
+	{0x15, 0x01, 0x04, 0x04, "Japanese"		},
+	{0x15, 0x01, 0x04, 0x00, "English"		},
+
+	{0   , 0xfe, 0   ,    2, "Attract Sound"		},
+	{0x15, 0x01, 0x08, 0x08, "Off"		},
+	{0x15, 0x01, 0x08, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Coinage Display"		},
+	{0x15, 0x01, 0x10, 0x10, "Off"		},
+	{0x15, 0x01, 0x10, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Copyright String"		},
+	{0x15, 0x01, 0x20, 0x20, "Taito Corp. MCMLXXXIV"		},
+	{0x15, 0x01, 0x20, 0x00, "Taito Corporation"		},
+
+	{0   , 0xfe, 0   ,    2, "Infinite Lives"		},
+	{0x15, 0x01, 0x40, 0x40, "Off"		},
+	{0x15, 0x01, 0x40, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x15, 0x01, 0x80, 0x80, "Off"		},
+	{0x15, 0x01, 0x80, 0x00, "On"		},
+};
+
+STDDIPINFO(Rumba)
 
 static struct BurnDIPInfo FlstoryDIPList[]=
 {
@@ -199,35 +350,39 @@ STDINPUTINFO(Onna34ro)
 
 static struct BurnDIPInfo Onna34roDIPList[]=
 {
-	{0x13, 0xff, 0xff, 0xe0, NULL				},
-	{0x14, 0xff, 0xff, 0x00, NULL				},
-	{0x15, 0xff, 0xff, 0x80, NULL				},
+	{0x13, 0xff, 0xff, 0xc0, NULL		},
+	{0x14, 0xff, 0xff, 0x00, NULL		},
+	{0x15, 0xff, 0xff, 0x80, NULL		},
 
-	{0   , 0xfe, 0   ,    4, "Bonus Life"			},
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
 	{0x13, 0x01, 0x03, 0x00, "200000 200000"		},
 	{0x13, 0x01, 0x03, 0x01, "200000 300000"		},
 	{0x13, 0x01, 0x03, 0x02, "100000 200000"		},
 	{0x13, 0x01, 0x03, 0x03, "200000 100000"		},
 
-	{0   , 0xfe, 0   ,    2, "Free Play"			},
-	{0x13, 0x01, 0x04, 0x00, "Off"				},
-	{0x13, 0x01, 0x04, 0x04, "On"				},
+	{0   , 0xfe, 0   ,    2, "Free Play"		},
+	{0x13, 0x01, 0x04, 0x00, "Off"		},
+	{0x13, 0x01, 0x04, 0x04, "On"		},
 
-	{0   , 0xfe, 0   ,    4, "Lives"			},
-	{0x13, 0x01, 0x18, 0x10, "1"				},
-	{0x13, 0x01, 0x18, 0x08, "2"				},
-	{0x13, 0x01, 0x18, 0x00, "3"				},
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x13, 0x01, 0x18, 0x10, "1"		},
+	{0x13, 0x01, 0x18, 0x08, "2"		},
+	{0x13, 0x01, 0x18, 0x00, "3"		},
 	{0x13, 0x01, 0x18, 0x18, "Endless (Cheat)"		},
-	
-	{0   , 0xfe, 0   ,    2, "Flip Screen"			},
-	{0x13, 0x01, 0x40, 0x40, "Off"				},
-	{0x13, 0x01, 0x40, 0x00, "On"				},
 
-	{0   , 0xfe, 0   ,    2, "Cabinet"			},
-	{0x13, 0x01, 0x80, 0x80, "Upright"			},
-	{0x13, 0x01, 0x80, 0x00, "Cocktail"			},
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x13, 0x01, 0x20, 0x20, "Off"		},
+	{0x13, 0x01, 0x20, 0x00, "On"		},
 
-	{0   , 0xfe, 0   ,   16, "Coin A"			},
+	{0   , 0xfe, 0   ,    2, "Flip Screen"		},
+	{0x13, 0x01, 0x40, 0x40, "Off"		},
+	{0x13, 0x01, 0x40, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Cabinet"		},
+	{0x13, 0x01, 0x80, 0x80, "Upright"		},
+	{0x13, 0x01, 0x80, 0x00, "Cocktail"		},
+
+	{0   , 0xfe, 0   ,    16, "Coin A"		},
 	{0x14, 0x01, 0x0f, 0x0f, "9 Coins 1 Credits"		},
 	{0x14, 0x01, 0x0f, 0x0e, "8 Coins 1 Credits"		},
 	{0x14, 0x01, 0x0f, 0x0d, "7 Coins 1 Credits"		},
@@ -245,7 +400,7 @@ static struct BurnDIPInfo Onna34roDIPList[]=
 	{0x14, 0x01, 0x0f, 0x06, "1 Coin  7 Credits"		},
 	{0x14, 0x01, 0x0f, 0x07, "1 Coin  8 Credits"		},
 
-	{0   , 0xfe, 0   ,   16, "Coin B"			},
+	{0   , 0xfe, 0   ,    16, "Coin B"		},
 	{0x14, 0x01, 0xf0, 0xf0, "9 Coins 1 Credits"		},
 	{0x14, 0x01, 0xf0, 0xe0, "8 Coins 1 Credits"		},
 	{0x14, 0x01, 0xf0, 0xd0, "7 Coins 1 Credits"		},
@@ -263,31 +418,35 @@ static struct BurnDIPInfo Onna34roDIPList[]=
 	{0x14, 0x01, 0xf0, 0x60, "1 Coin  7 Credits"		},
 	{0x14, 0x01, 0xf0, 0x70, "1 Coin  8 Credits"		},
 
-	{0   , 0xfe, 0   ,    2, "Invulnerability (Cheat)"},
-	{0x15, 0x01, 0x01, 0x00, "Off"				},
-	{0x15, 0x01, 0x01, 0x01, "On"				},
+	{0   , 0xfe, 0   ,    2, "Invulnerability (Cheat)"		},
+	{0x15, 0x01, 0x01, 0x00, "Off"		},
+	{0x15, 0x01, 0x01, 0x01, "On"		},
 
-	{0   , 0xfe, 0   ,    2, "Rack Test"			},
-	{0x15, 0x01, 0x02, 0x00, "Off"				},
-	{0x15, 0x01, 0x02, 0x02, "On"				},
+	{0   , 0xfe, 0   ,    2, "Rack Test"		},
+	{0x15, 0x01, 0x02, 0x00, "Off"		},
+	{0x15, 0x01, 0x02, 0x02, "On"		},
 
-	{0   , 0xfe, 0   ,    2, "Freeze"			},
-	{0x15, 0x01, 0x08, 0x00, "Off"				},
-	{0x15, 0x01, 0x08, 0x08, "On"				},
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x15, 0x01, 0x04, 0x04, "Off"		},
+	{0x15, 0x01, 0x04, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Freeze"		},
+	{0x15, 0x01, 0x08, 0x00, "Off"		},
+	{0x15, 0x01, 0x08, 0x08, "On"		},
 
 	{0   , 0xfe, 0   ,    2, "Coinage Display"		},
-	{0x15, 0x01, 0x10, 0x10, "Off"				},
-	{0x15, 0x01, 0x10, 0x00, "On"				},
+	{0x15, 0x01, 0x10, 0x10, "Off"		},
+	{0x15, 0x01, 0x10, 0x00, "On"		},
 
-	{0   , 0xfe, 0   ,    4, "Difficulty"			},
-	{0x15, 0x01, 0x60, 0x20, "Easy"				},
-	{0x15, 0x01, 0x60, 0x00, "Normal"			},
-	{0x15, 0x01, 0x60, 0x40, "Difficult"			},
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
+	{0x15, 0x01, 0x60, 0x20, "Easy"		},
+	{0x15, 0x01, 0x60, 0x00, "Normal"		},
+	{0x15, 0x01, 0x60, 0x40, "Difficult"		},
 	{0x15, 0x01, 0x60, 0x60, "Very Difficult"		},
 
-	{0   , 0xfe, 0   ,    2, "Coinage"			},
-	{0x15, 0x01, 0x80, 0x80, "A and B"			},
-	{0x15, 0x01, 0x80, 0x00, "A only"			},
+	{0   , 0xfe, 0   ,    2, "Coinage"		},
+	{0x15, 0x01, 0x80, 0x80, "A and B"		},
+	{0x15, 0x01, 0x80, 0x00, "A only"		},
 };
 
 STDDIPINFO(Onna34ro)
@@ -405,7 +564,7 @@ STDDIPINFO(Victnine)
 
 static void gfxctrl_write(INT32 data)
 {
-	char_bank = (data & 0x10) >> 4;
+	m_gfxctrl = data;
 
 	INT32 bank = (data & 0x20) << 3;
 
@@ -414,12 +573,130 @@ static void gfxctrl_write(INT32 data)
 	ZetMapArea(0xde00, 0xdeff, 0, DrvPalRAM + 0x200 + bank);
 	ZetMapArea(0xde00, 0xdeff, 1, DrvPalRAM + 0x200 + bank);
 
+	if (select_game == 3) {
+		char_bank = 0;
+		return;
+	}
+
+	char_bank = (data & 0x10) >> 4;
+
 	if (data & 4) *flipscreen = (~data & 0x01);
+}
+
+static UINT8 rumba_mcu_read()
+{
+	if((m_mcu_cmd & 0xf0) == 0x00) // end packet cmd, value returned is meaningless (probably used for main <-> mcu comms syncronization)
+		return 0;
+
+	switch(m_mcu_cmd)
+	{
+		case 0x73: return 0xa4; //initial MCU check
+		case 0x33: return m_mcu_b2_res; //0xb2 result
+		case 0x31: return m_mcu_b1_res; //0xb1 result
+
+		case 0x35: m_mcu_b5_res = 1; m_mcu_b6_res = 1; return 0;
+		case 0x36: return m_mcu_b4_cmd; //0xb4 command, extra protection for lives (first play only), otherwise game gives one extra life at start-up (!)
+		case 0x37: return m_mcu_b5_res; //0xb4 / 0xb5 / 0xb6 result y value
+		case 0x38: return m_mcu_b6_res; //x value
+
+		case 0x3b: return m_mcu_bb_res; //0xbb result
+		case 0x40: return 0;
+		case 0x41: return 0;
+		case 0x42:
+		{
+			return 0;
+		}
+	}
+
+	return 0;
+}
+
+static void rumba_mcu_write(UINT8 data)
+{
+	if(m_mcu_param)
+	{
+		m_mcu_param = 0; // clear param
+
+		switch(m_mcu_cmd)
+		{
+			case 0xb0: // counter, used by command 0xb1 (and something else?
+			{
+				m_mcu_counter = data;
+				break;
+			}
+			case 0xb1: // player death sequence, controls X position
+			{
+				m_mcu_b1_res = data;
+
+				/* TODO: this is pretty hard to simulate ... */
+				if(m_mcu_counter >= 0x10)
+					m_mcu_b1_res++; // left
+				else if(m_mcu_counter >= 0x08)
+					m_mcu_b1_res--; // right
+				else
+					m_mcu_b1_res++; // left again
+
+				break;
+			}
+			case 0xb2: // player sprite hook-up param when he throws the wheel
+			{
+				switch(data)
+				{
+					case 1: m_mcu_b2_res = 0xaa; break; //left
+					case 2: m_mcu_b2_res = 0xaa; break; //right
+					case 4: m_mcu_b2_res = 0xab; break; //down
+					case 8: m_mcu_b2_res = 0xa9; break; //up
+				}
+				break;
+			}
+			case 0xbb: // when you start a level, lives
+			{
+				m_mcu_bb_res = data;
+				break;
+			}
+			case 0xb4: // when the bird touches the top / bottom / left / right of the screen, for correct repositioning
+			{
+				m_mcu_b4_cmd = data;
+				break;
+			}
+			case 0xb5: // bird X coord
+			{
+				m_mcu_b5_res = data;
+
+				if(m_mcu_b4_cmd == 3) // from right to left
+					m_mcu_b5_res = 0x0d;
+
+				if(m_mcu_b4_cmd == 2) // from left to right
+					m_mcu_b5_res = 0xe4;
+
+				break;
+			}
+			case 0xb6: // bird Y coord
+			{
+				m_mcu_b6_res = data;
+
+				if(m_mcu_b4_cmd == 1) // from up to down
+					m_mcu_b6_res = 0x04;
+
+				if(m_mcu_b4_cmd == 4) // from down to up
+					m_mcu_b6_res = 0xdc;
+
+				break;
+			}
+		}
+
+		return;
+	}
+
+	m_mcu_cmd = data;
+
+	if(((data & 0xf0) == 0xb0 || (data & 0xf0) == 0xc0) && m_mcu_param == 0)
+		m_mcu_param = 1;
 }
 
 static void onna34ro_mcu_write(INT32 data)
 {
-	INT32 score_adr = (ZetReadByte(0xe29e) << 8) | ZetReadByte(0xe29d);
+	INT32 score_adr = (ZetReadByte(0xe29e) << 8) + ZetReadByte(0xe29d);
 
 	mcu_sent = 1;
 
@@ -433,15 +710,15 @@ static void onna34ro_mcu_write(INT32 data)
 			from_mcu = 0x6a;
 			break;
 
-		case 0x40:
+		case 0x40: if(score_adr >= 0xe000 && score_adr < 0xe800)
 			from_mcu = ZetReadByte(score_adr);
 			break;
 
-		case 0x41:
+		case 0x41: if(score_adr >= 0xe000 && score_adr < 0xe800)
 			from_mcu = ZetReadByte(score_adr+1);
 			break;
 
-		case 0x42:
+		case 0x42: if(score_adr >= 0xe000 && score_adr < 0xe800)
 			from_mcu = ZetReadByte(score_adr+2) & 0x0f;
 			break;
 
@@ -519,8 +796,8 @@ void __fastcall flstory_main_write(UINT16 address, UINT8 data)
 	if ((address & 0xff00) == 0xdc00) {
 		DrvSprRAM[address & 0xff] = data;
 
-		if (select_game == 2 && address == 0xdce0) {
-			gfxctrl_write((data ^ 1) & ~0x10);
+		if (((select_game == 2) || (select_game == 3)) && address == 0xdce0) {
+			gfxctrl_write(data);
 		}
 
 		return;
@@ -529,9 +806,11 @@ void __fastcall flstory_main_write(UINT16 address, UINT8 data)
 	switch (address)
 	{
 		case 0xd000:
-			if (select_game == 2) {
+			if (select_game == 3) {
+				rumba_mcu_write(data);
+			} else if (select_game == 2) {
 				victnine_mcu_write(data);
-			} if (select_game == 1) {
+			} else if (select_game == 1) {
 				onna34ro_mcu_write(data);
 			} else {
 				standard_taito_mcu_write(data);
@@ -555,7 +834,7 @@ void __fastcall flstory_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xdf03:
-			if (select_game != 2) gfxctrl_write(data | 0x04);
+			if ((select_game != 2) && (select_game != 3)) gfxctrl_write(data | 0x04);
 		return;
 	}
 }
@@ -565,7 +844,11 @@ UINT8 __fastcall flstory_main_read(UINT16 address)
 	switch (address)
 	{
 		case 0xd000:
-			if (select_game == 2) {
+			if (select_game == 1) {
+				return from_mcu; }
+			else if (select_game == 3) {
+				return rumba_mcu_read();
+			} else if (select_game == 2) {
 				return from_mcu - ZetReadByte(0xe685);
 			} else {
 				return standard_taito_mcu_read();
@@ -583,8 +866,11 @@ UINT8 __fastcall flstory_main_read(UINT16 address)
 		case 0xd802:
 			return DrvDips[address & 3];
 
-		case 0xd803:
+		case 0xd803: if (select_game != 3) {
 			return DrvInputs[0] & 0x3f;
+		} else {
+			return DrvInputs[0] ^ 0x30;
+		}
 
 		case 0xd804:
 			return DrvInputs[1];
@@ -596,7 +882,7 @@ UINT8 __fastcall flstory_main_read(UINT16 address)
 			if (mcu_sent) res |= 0x02;
 
 			if (select_game == 2) res |= DrvInputs[3];
-
+			if (select_game == 3 || select_game == 1) res = 0x03; // rumba and onna always returns 3
 			return res;
 		}
 
@@ -605,9 +891,64 @@ UINT8 __fastcall flstory_main_read(UINT16 address)
 
 		case 0xd807:
 			return DrvInputs[4];
+		case 0xdce0:
+			return m_gfxctrl;
 	}
 
 	return 0;
+}
+
+static void ta7630_init()
+{
+	int i;
+
+	double db           = 0.0;
+	double db_step      = 1.50; /* 1.50 dB step (at least, maybe more) */
+	double db_step_inc  = 0.125;
+	for (i = 0; i < 16; i++)
+	{
+		double max = 100.0 / pow(10.0, db/20.0 );
+		m_vol_ctrl[15 - i] = (INT32)max;
+
+		db += db_step;
+		db_step += db_step_inc;
+	}
+/*
+  channels 0-2 AY#0
+  channels 3,4 MSM5232 group1,group2
+*/
+}
+
+static void sound_control_0_w(UINT8 data)
+{
+	double vol;
+	m_snd_ctrl0 = data & 0xff;
+
+	vol = m_vol_ctrl[(m_snd_ctrl0 >> 4) & 15] / 100.0;
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_0);
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_1);
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_2);
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_3);
+}
+
+static void sound_control_1_w(UINT8 data)
+{
+	double vol;
+	m_snd_ctrl1 = data & 0xff;
+
+	vol = m_vol_ctrl[(m_snd_ctrl1 >> 4) & 15] / 100.0;
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_4);
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_5);
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_6);
+	MSM5232SetRoute(vol, BURN_SND_MSM5232_ROUTE_7);
+}
+
+static void AY_ayportA_write(UINT32 /*addr*/, UINT32 data)
+{
+	if (data == 0xff) return; // ignore ay-init
+	m_snd_ctrl2 = data & 0xff;
+
+	AY8910SetAllRoutes(0, m_vol_ctrl[(m_snd_ctrl2 >> 4) & 15] / ((select_game == 3) ? 1600.0 : 2000.0), BURN_SND_ROUTE_BOTH);
 }
 
 void __fastcall flstory_sound_write(UINT16 address, UINT8 data)
@@ -635,6 +976,14 @@ void __fastcall flstory_sound_write(UINT16 address, UINT8 data)
 		case 0xca0d:
 			MSM5232Write(address, data);
 		return;
+
+		case 0xcc00:
+			sound_control_0_w(data);
+			break;
+
+		case 0xce00:
+			sound_control_1_w(data);
+			break;
 
 		case 0xd800:
 			snd_data = data;
@@ -689,6 +1038,7 @@ static INT32 DrvDoReset()
 
 	m67805_taito_reset();
 
+	ta7630_init();
 	AY8910Reset(0);
 	MSM5232Reset();
 
@@ -700,6 +1050,17 @@ static INT32 DrvDoReset()
 	pending_nmi = 0;
 	char_bank = 0;
 	mcu_select = 0;
+
+	// below for Rumba mcu sim
+	m_mcu_cmd = 0;
+	m_mcu_counter = 0;
+	m_mcu_b4_cmd = 0;
+	m_mcu_param = 0;
+	m_mcu_b2_res = 0;
+	m_mcu_b1_res = 0;
+	m_mcu_bb_res = 0;
+	m_mcu_b5_res = 0;
+	m_mcu_b6_res = 0;
 
 	return 0;
 }
@@ -744,7 +1105,7 @@ static INT32 MemIndex()
 
 static INT32 DrvGfxDecode()
 {
-	INT32 Plane[4]  = { 0x80000, 0x80004, 0x00000, 0x00004 };
+	INT32 Plane[4]  = { RGN_FRAC(((select_game == 3) ? 0x8000 : 0x20000), 1, 2)+0, RGN_FRAC(((select_game == 3) ? 0x8000 : 0x20000), 1, 2)+4, 0x00000, 0x00004 };
 	INT32 XOffs[16] = { 3, 2, 1, 0, 8+3, 8+2, 8+1, 8+0, 16*8+3, 16*8+2, 16*8+1, 16*8+0, 16*8+8+3, 16*8+8+2, 16*8+8+1, 16*8+8+0 };
 	INT32 YOffs[16] = { 0*16, 1*16, 2*16, 3*16, 4*16, 5*16, 6*16, 7*16, 16*16, 17*16, 18*16, 19*16, 20*16, 21*16, 22*16, 23*16 };
 
@@ -833,6 +1194,19 @@ static INT32 DrvInit()
 			if (BurnLoadRom(DrvGfxROM0 + 0x12000, 17, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM0 + 0x14000, 18, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM0 + 0x16000, 19, 1)) return 1;
+		} else if (select_game == 3) {
+			if (BurnLoadRom(DrvZ80ROM0 + 0x00000,  0, 1)) return 1;
+			if (BurnLoadRom(DrvZ80ROM0 + 0x04000,  1, 1)) return 1;
+			if (BurnLoadRom(DrvZ80ROM0 + 0x08000,  2, 1)) return 1;
+
+			if (BurnLoadRom(DrvZ80ROM1 + 0x00000,  3, 1)) return 1;
+			if (BurnLoadRom(DrvZ80ROM1 + 0x02000,  4, 1)) return 1;
+			if (BurnLoadRom(DrvZ80ROM1 + 0x04000,  5, 1)) return 1;
+			// 6 == undumped mcu
+			if (BurnLoadRom(DrvGfxROM0 + 0x02000,  7, 1)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x00000,  8, 1)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x06000,  9, 1)) return 1;
+			if (BurnLoadRom(DrvGfxROM0 + 0x04000, 10, 1)) return 1;
 		}
 
 		DrvGfxDecode();
@@ -876,8 +1250,11 @@ static INT32 DrvInit()
 
 	m67805_taito_init(DrvMcuROM, DrvMcuRAM, &standard_m68705_interface);
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910SetAllRoutes(0, 0.10, BURN_SND_ROUTE_BOTH);
+	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, AY_ayportA_write, NULL);
+	AY8910SetAllRoutes(0, 0.05, BURN_SND_ROUTE_BOTH);
+	if (select_game == 3) {
+		AY8910SetAllRoutes(0, 0.10, BURN_SND_ROUTE_BOTH);
+	}
 
 	MSM5232Init(2000000, 1);
 	MSM5232SetCapacitors(1.0e-6, 1.0e-6, 1.0e-6, 1.0e-6, 1.0e-6, 1.0e-6, 1.0e-6, 1.0e-6);
@@ -900,7 +1277,7 @@ static INT32 DrvInit()
 	return 0;
 }
 
-static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
+static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 
@@ -908,7 +1285,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		*pnMin = 0x029707;
 	}
 
-	if (nAction & ACB_VOLATILE) {		
+	if (nAction & ACB_VOLATILE) {
 		memset(&ba, 0, sizeof(ba));
 
 		ba.Data	  = AllRam;
@@ -928,6 +1305,19 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		SCAN_VAR(pending_nmi);
 		SCAN_VAR(char_bank);
 		SCAN_VAR(mcu_select);
+		SCAN_VAR(m_snd_ctrl0);
+		SCAN_VAR(m_snd_ctrl1);
+		SCAN_VAR(m_snd_ctrl2);
+		// below for Rumba mcu sim
+		SCAN_VAR(m_mcu_cmd);
+		SCAN_VAR(m_mcu_counter);
+		SCAN_VAR(m_mcu_b4_cmd);
+		SCAN_VAR(m_mcu_param);
+		SCAN_VAR(m_mcu_b2_res);
+		SCAN_VAR(m_mcu_b1_res);
+		SCAN_VAR(m_mcu_bb_res);
+		SCAN_VAR(m_mcu_b5_res);
+		SCAN_VAR(m_mcu_b6_res);
 
 		DrvRecalc = 1;
 	}
@@ -952,7 +1342,7 @@ static INT32 DrvExit()
 }
 
 static void draw_background_layer(INT32 type, INT32 priority)
-{
+{                    //fg      bg      fg      bg
 	INT32 masks[4] = { 0x3fff, 0xc000, 0x8000, 0x7fff };
 	INT32 mask = masks[type];
 
@@ -970,11 +1360,16 @@ static void draw_background_layer(INT32 type, INT32 priority)
 
 		INT32 flipy =  attr & 0x10;
 		INT32 flipx =  attr & 0x08;
+		if (select_game == 3) {
+			flipx = 0; flipy = 0; // no flipping in rumba
+			code &= 0x3ff; // mask code to max_rumba_chars-1
+		}
+
 		INT32 color = (attr & 0x0f) << 4;
 		INT32 prio  = (attr & 0x20) >> 5;
 		if (priority && !prio) continue;
 
-		if (type == 0) {
+		if (type == 1) { // first background layer
 			if (flipy) {
 				if (flipx) {
 					Render8x8Tile_FlipXY_Clip(pTransDraw, code, sx, sy, color >> 4, 4, 0, DrvGfxROM0);
@@ -989,7 +1384,7 @@ static void draw_background_layer(INT32 type, INT32 priority)
 				}
 			}
 		}
-		else if (type == 2) {
+		else if (type == 6) { // not used (for now)
 			if (flipy) {
 				if (flipx) {
 					Render8x8Tile_Mask_FlipXY_Clip(pTransDraw, code, sx, sy, color >> 4, 4, 15, 0, DrvGfxROM0);
@@ -1144,19 +1539,19 @@ static inline void DrvRecalcPalette()
 		DrvPalette[i] = BurnHighCol((r << 4) | r, (g << 4) | g, (b << 4) | b, 0);
 	}
 }
-
 static INT32 DrvDraw()
 {
 	if (DrvRecalc) {
 		DrvRecalcPalette();
 	}
+	BurnTransferClear();
 
-	if (nBurnLayer & 1) draw_background_layer(0, 0);
-	if (nBurnLayer & 2) draw_background_layer(1, 0);
-	if (nBurnLayer & 4) draw_background_layer(2, 1);
-	if (nBurnLayer & 8) draw_background_layer(3, 1);
-	draw_sprites(0x00, 0);
-	draw_sprites(0x80, 0);
+	if (nBurnLayer & 1) draw_background_layer(1, 0);
+	if (nBurnLayer & 2) draw_background_layer(3, 1);
+	if (nSpriteEnable & 1) draw_sprites(0x00, (select_game == 3));
+	if (nBurnLayer & 4) draw_background_layer(0, 0);
+	if (nSpriteEnable & 2) draw_sprites(0x80, (select_game == 3));
+	if (nBurnLayer & 8) draw_background_layer(2, 1);
 
 	BurnTransferCopy(DrvPalette);
 
@@ -1199,7 +1594,9 @@ static INT32 DrvFrame()
 	INT32 nInterleave = 100;
 	INT32 nCyclesTotal[3] = { 5366500 / 60, 4000000 / 60, 3072000 / 60 };
 	INT32 nCyclesDone[3]  = { 0, 0, 0 };
-	if (select_game == 2) nCyclesTotal[0] = nCyclesTotal[1];
+
+	if (select_game == 2 || select_game == 3)
+		nCyclesTotal[0] = 4000000 / 60;
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
@@ -1229,7 +1626,7 @@ static INT32 DrvFrame()
 
 	if (pBurnSoundOut) {
 		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
-		MSM5232Update(pBurnSoundOut, nBurnSoundLen);			
+		MSM5232Update(pBurnSoundOut, nBurnSoundLen);
 		DACUpdate(pBurnSoundOut, nBurnSoundLen);
 	}
 
@@ -1246,23 +1643,23 @@ static INT32 DrvFrame()
 // The FairyLand Story
 
 static struct BurnRomInfo flstoryRomDesc[] = {
-	{ "cpu-a45.15",		0x4000, 0xf03fc969, 1 }, //  0 maincpu
-	{ "cpu-a45.16",		0x4000, 0x311aa82e, 1 }, //  1
-	{ "cpu-a45.17",		0x4000, 0xa2b5d17d, 1 }, //  2
+	{ "cpu-a45.15",		0x4000, 0xf03fc969, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "cpu-a45.16",		0x4000, 0x311aa82e, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "cpu-a45.17",		0x4000, 0xa2b5d17d, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "snd.22",		0x2000, 0xd58b201d, 2 }, //  3 audiocpu
-	{ "snd.23",		0x2000, 0x25e7fd9d, 2 }, //  4
+	{ "snd.22",		    0x2000, 0xd58b201d, 2 | BRF_PRG | BRF_ESS }, //  3 audiocpu
+	{ "snd.23",		    0x2000, 0x25e7fd9d, 2 | BRF_PRG | BRF_ESS }, //  4
 
-	{ "vid-a45.18",		0x4000, 0x6f08f69e, 3 }, //  5 gfx1
-	{ "vid-a45.06",		0x4000, 0xdc856a75, 3 }, //  6
-	{ "vid-a45.08",		0x4000, 0xd0b028ca, 3 }, //  7
-	{ "vid-a45.20",		0x4000, 0x1b0edf34, 3 }, //  8
-	{ "vid-a45.19",		0x4000, 0x2b572dc9, 3 }, //  9
-	{ "vid-a45.07",		0x4000, 0xaa4b0762, 3 }, // 10
-	{ "vid-a45.09",		0x4000, 0x8336be58, 3 }, // 11
-	{ "vid-a45.21",		0x4000, 0xfc382bd1, 3 }, // 12
+	{ "vid-a45.18",		0x4000, 0x6f08f69e, 3 | BRF_GRA }, //  5 gfx1
+	{ "vid-a45.06",		0x4000, 0xdc856a75, 3 | BRF_GRA }, //  6
+	{ "vid-a45.08",		0x4000, 0xd0b028ca, 3 | BRF_GRA }, //  7
+	{ "vid-a45.20",		0x4000, 0x1b0edf34, 3 | BRF_GRA }, //  8
+	{ "vid-a45.19",		0x4000, 0x2b572dc9, 3 | BRF_GRA }, //  9
+	{ "vid-a45.07",		0x4000, 0xaa4b0762, 3 | BRF_GRA }, // 10
+	{ "vid-a45.09",		0x4000, 0x8336be58, 3 | BRF_GRA }, // 11
+	{ "vid-a45.21",		0x4000, 0xfc382bd1, 3 | BRF_GRA }, // 12
 
-	{ "a45.mcu",		0x0800, 0x5378253c, 4 }, // 13 mcu
+	{ "a45.mcu",		0x0800, 0x5378253c, 4 | BRF_PRG | BRF_ESS }, // 13 mcu
 };
 
 STD_ROM_PICK(flstory)
@@ -1289,23 +1686,23 @@ struct BurnDriver BurnDrvFlstory = {
 // The FairyLand Story (Japan)
 
 static struct BurnRomInfo flstoryjRomDesc[] = {
-	{ "cpu-a45.15",		0x4000, 0xf03fc969, 1 }, //  0 maincpu
-	{ "cpu-a45.16",		0x4000, 0x311aa82e, 1 }, //  1
-	{ "cpu-a45.17",		0x4000, 0xa2b5d17d, 1 }, //  2
+	{ "cpu-a45.15",		0x4000, 0xf03fc969, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "cpu-a45.16",		0x4000, 0x311aa82e, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "cpu-a45.17",		0x4000, 0xa2b5d17d, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "a45_12.8",		0x2000, 0xd6f593fb, 2 }, //  3 audiocpu
-	{ "a45_13.9",		0x2000, 0x451f92f9, 2 }, //  4
+	{ "a45_12.8",		0x2000, 0xd6f593fb, 2 | BRF_PRG | BRF_ESS }, //  3 audiocpu
+	{ "a45_13.9",		0x2000, 0x451f92f9, 2 | BRF_PRG | BRF_ESS }, //  4
 
-	{ "vid-a45.18",		0x4000, 0x6f08f69e, 3 }, //  5 gfx1
-	{ "vid-a45.06",		0x4000, 0xdc856a75, 3 }, //  6
-	{ "vid-a45.08",		0x4000, 0xd0b028ca, 3 }, //  7
-	{ "vid-a45.20",		0x4000, 0x1b0edf34, 3 }, //  8
-	{ "vid-a45.19",		0x4000, 0x2b572dc9, 3 }, //  9
-	{ "vid-a45.07",		0x4000, 0xaa4b0762, 3 }, // 10
-	{ "vid-a45.09",		0x4000, 0x8336be58, 3 }, // 11
-	{ "vid-a45.21",		0x4000, 0xfc382bd1, 3 }, // 12
+	{ "vid-a45.18",		0x4000, 0x6f08f69e, 3 | BRF_GRA }, //  5 gfx1
+	{ "vid-a45.06",		0x4000, 0xdc856a75, 3 | BRF_GRA }, //  6
+	{ "vid-a45.08",		0x4000, 0xd0b028ca, 3 | BRF_GRA }, //  7
+	{ "vid-a45.20",		0x4000, 0x1b0edf34, 3 | BRF_GRA }, //  8
+	{ "vid-a45.19",		0x4000, 0x2b572dc9, 3 | BRF_GRA }, //  9
+	{ "vid-a45.07",		0x4000, 0xaa4b0762, 3 | BRF_GRA }, // 10
+	{ "vid-a45.09",		0x4000, 0x8336be58, 3 | BRF_GRA }, // 11
+	{ "vid-a45.21",		0x4000, 0xfc382bd1, 3 | BRF_GRA }, // 12
 
-	{ "a45.mcu",		0x0800, 0x5378253c, 4 }, // 13 mcu
+	{ "a45.mcu",		0x0800, 0x5378253c, 4 | BRF_PRG | BRF_ESS }, // 13 mcu
 };
 
 STD_ROM_PICK(flstoryj)
@@ -1325,24 +1722,24 @@ struct BurnDriver BurnDrvFlstoryj = {
 // Onna Sansirou - Typhoon Gal (set 1)
 
 static struct BurnRomInfo onna34roRomDesc[] = {
-	{ "a52-01-1.40c",	0x4000, 0xffddcb02, 1 }, //  0 maincpu
-	{ "a52-02-1.41c",	0x4000, 0xda97150d, 1 }, //  1
-	{ "a52-03-1.42c",	0x4000, 0xb9749a53, 1 }, //  2
+	{ "a52-01-1.40c",	0x4000, 0xffddcb02, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "a52-02-1.41c",	0x4000, 0xda97150d, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "a52-03-1.42c",	0x4000, 0xb9749a53, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "a52-12.08s",		0x2000, 0x28f48096, 2 }, //  3 audiocpu
-	{ "a52-13.09s",		0x2000, 0x4d3b16f3, 2 }, //  4
-	{ "a52-14.10s",		0x2000, 0x90a6f4e8, 2 }, //  5
-	{ "a52-15.37s",		0x2000, 0x5afc21d0, 2 }, //  6
-	{ "a52-16.38s",		0x2000, 0xccf42aee, 2 }, //  7
+	{ "a52-12.08s",		0x2000, 0x28f48096, 2 | BRF_PRG | BRF_ESS }, //  3 audiocpu
+	{ "a52-13.09s",		0x2000, 0x4d3b16f3, 2 | BRF_PRG | BRF_ESS }, //  4
+	{ "a52-14.10s",		0x2000, 0x90a6f4e8, 2 | BRF_PRG | BRF_ESS }, //  5
+	{ "a52-15.37s",		0x2000, 0x5afc21d0, 2 | BRF_PRG | BRF_ESS }, //  6
+	{ "a52-16.38s",		0x2000, 0xccf42aee, 2 | BRF_PRG | BRF_ESS }, //  7
 
-	{ "a52-04.11v",		0x4000, 0x5b126294, 3 }, //  8 gfx1
-	{ "a52-06.10v",		0x4000, 0x78114721, 3 }, //  9
-	{ "a52-08.09v",		0x4000, 0x4a293745, 3 }, // 10
-	{ "a52-10.08v",		0x4000, 0x8be7b4db, 3 }, // 11
-	{ "a52-05.35v",		0x4000, 0xa1a99588, 3 }, // 12
-	{ "a52-07.34v",		0x4000, 0x0bf420f2, 3 }, // 13
-	{ "a52-09.33v",		0x4000, 0x39c543b5, 3 }, // 14
-	{ "a52-11.32v",		0x4000, 0xd1dda6b3, 3 }, // 15
+	{ "a52-04.11v",		0x4000, 0x5b126294, 3 | BRF_GRA }, //  8 gfx1
+	{ "a52-06.10v",		0x4000, 0x78114721, 3 | BRF_GRA }, //  9
+	{ "a52-08.09v",		0x4000, 0x4a293745, 3 | BRF_GRA }, // 10
+	{ "a52-10.08v",		0x4000, 0x8be7b4db, 3 | BRF_GRA }, // 11
+	{ "a52-05.35v",		0x4000, 0xa1a99588, 3 | BRF_GRA }, // 12
+	{ "a52-07.34v",		0x4000, 0x0bf420f2, 3 | BRF_GRA }, // 13
+	{ "a52-09.33v",		0x4000, 0x39c543b5, 3 | BRF_GRA }, // 14
+	{ "a52-11.32v",		0x4000, 0xd1dda6b3, 3 | BRF_GRA }, // 15
 
 	{ "a52-17.54c",		0x0800, 0x00000000, 4 | BRF_NODUMP }, // 16 cpu2
 };
@@ -1371,24 +1768,24 @@ struct BurnDriver BurnDrvOnna34ro = {
 // Onna Sansirou - Typhoon Gal (set 2)
 
 static struct BurnRomInfo onna34raRomDesc[] = {
-	{ "ry-08.rom",		0x4000, 0xe4587b85, 1 }, //  0 maincpu
-	{ "ry-07.rom",		0x4000, 0x6ffda515, 1 }, //  1
-	{ "ry-06.rom",		0x4000, 0x6fefcda8, 1 }, //  2
+	{ "ry-08.rom",		0x4000, 0xe4587b85, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "ry-07.rom",		0x4000, 0x6ffda515, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "ry-06.rom",		0x4000, 0x6fefcda8, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "a52-12.08s",		0x2000, 0x28f48096, 2 }, //  3 audiocpu
-	{ "a52-13.09s",		0x2000, 0x4d3b16f3, 2 }, //  4
-	{ "a52-14.10s",		0x2000, 0x90a6f4e8, 2 }, //  5
-	{ "a52-15.37s",		0x2000, 0x5afc21d0, 2 }, //  6
-	{ "a52-16.38s",		0x2000, 0xccf42aee, 2 }, //  7
+	{ "a52-12.08s",		0x2000, 0x28f48096, 2 | BRF_PRG | BRF_ESS }, //  3 audiocpu
+	{ "a52-13.09s",		0x2000, 0x4d3b16f3, 2 | BRF_PRG | BRF_ESS }, //  4
+	{ "a52-14.10s",		0x2000, 0x90a6f4e8, 2 | BRF_PRG | BRF_ESS }, //  5
+	{ "a52-15.37s",		0x2000, 0x5afc21d0, 2 | BRF_PRG | BRF_ESS }, //  6
+	{ "a52-16.38s",		0x2000, 0xccf42aee, 2 | BRF_PRG | BRF_ESS }, //  7
 
-	{ "a52-04.11v",		0x4000, 0x5b126294, 3 }, //  8 gfx1
-	{ "a52-06.10v",		0x4000, 0x78114721, 3 }, //  9
-	{ "a52-08.09v",		0x4000, 0x4a293745, 3 }, // 10
-	{ "a52-10.08v",		0x4000, 0x8be7b4db, 3 }, // 11
-	{ "a52-05.35v",		0x4000, 0xa1a99588, 3 }, // 12
-	{ "a52-07.34v",		0x4000, 0x0bf420f2, 3 }, // 13
-	{ "a52-09.33v",		0x4000, 0x39c543b5, 3 }, // 14
-	{ "a52-11.32v",		0x4000, 0xd1dda6b3, 3 }, // 15
+	{ "a52-04.11v",		0x4000, 0x5b126294, 3 | BRF_GRA }, //  8 gfx1
+	{ "a52-06.10v",		0x4000, 0x78114721, 3 | BRF_GRA }, //  9
+	{ "a52-08.09v",		0x4000, 0x4a293745, 3 | BRF_GRA }, // 10
+	{ "a52-10.08v",		0x4000, 0x8be7b4db, 3 | BRF_GRA }, // 11
+	{ "a52-05.35v",		0x4000, 0xa1a99588, 3 | BRF_GRA }, // 12
+	{ "a52-07.34v",		0x4000, 0x0bf420f2, 3 | BRF_GRA }, // 13
+	{ "a52-09.33v",		0x4000, 0x39c543b5, 3 | BRF_GRA }, // 14
+	{ "a52-11.32v",		0x4000, 0xd1dda6b3, 3 | BRF_GRA }, // 15
 
 	{ "a52-17.54c",		0x0800, 0x00000000, 4 | BRF_NODUMP }, // 16 cpu2
 };
@@ -1410,28 +1807,28 @@ struct BurnDriver BurnDrvOnna34ra = {
 // Victorious Nine
 
 static struct BurnRomInfo victnineRomDesc[] = {
-	{ "a16-19.1",		0x2000, 0xdeb7c439, 1 }, //  0 maincpu
-	{ "a16-20.2",		0x2000, 0x60cdb6ae, 1 }, //  1
-	{ "a16-21.3",		0x2000, 0x121bea03, 1 }, //  2
-	{ "a16-22.4",		0x2000, 0xb20e3027, 1 }, //  3
-	{ "a16-23.5",		0x2000, 0x95fe9cb7, 1 }, //  4
-	{ "a16-24.6",		0x2000, 0x32b5c155, 1 }, //  5
+	{ "a16-19.1",		0x2000, 0xdeb7c439, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "a16-20.2",		0x2000, 0x60cdb6ae, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "a16-21.3",		0x2000, 0x121bea03, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "a16-22.4",		0x2000, 0xb20e3027, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "a16-23.5",		0x2000, 0x95fe9cb7, 1 | BRF_PRG | BRF_ESS }, //  4
+	{ "a16-24.6",		0x2000, 0x32b5c155, 1 | BRF_PRG | BRF_ESS }, //  5
 
-	{ "a16-12.8",		0x2000, 0x4b9bff43, 2 }, //  6 audiocpu
-	{ "a16-13.9",		0x2000, 0x355121b9, 2 }, //  7
-	{ "a16-14.10",		0x2000, 0x0f33ef4d, 2 }, //  8
-	{ "a16-15.37",		0x2000, 0xf91d63dc, 2 }, //  9
-	{ "a16-16.38",		0x2000, 0x9395351b, 2 }, // 10
-	{ "a16-17.39",		0x2000, 0x872270b3, 2 }, // 11
+	{ "a16-12.8",		0x2000, 0x4b9bff43, 2 | BRF_PRG | BRF_ESS }, //  6 audiocpu
+	{ "a16-13.9",		0x2000, 0x355121b9, 2 | BRF_PRG | BRF_ESS }, //  7
+	{ "a16-14.10",		0x2000, 0x0f33ef4d, 2 | BRF_PRG | BRF_ESS }, //  8
+	{ "a16-15.37",		0x2000, 0xf91d63dc, 2 | BRF_PRG | BRF_ESS }, //  9
+	{ "a16-16.38",		0x2000, 0x9395351b, 2 | BRF_PRG | BRF_ESS }, // 10
+	{ "a16-17.39",		0x2000, 0x872270b3, 2 | BRF_PRG | BRF_ESS }, // 11
 
-	{ "a16-06-1.7",		0x2000, 0xb708134d, 3 }, // 12 gfx1
-	{ "a16-07-2.8",		0x2000, 0xcdaf7f83, 3 }, // 13
-	{ "a16-10.90",		0x2000, 0xe8e42454, 3 }, // 14
-	{ "a16-11-1.91",	0x2000, 0x1f766661, 3 }, // 15
-	{ "a16-04.5",		0x2000, 0xb2fae99f, 3 }, // 16
-	{ "a16-05-1.6",		0x2000, 0x85dfbb6e, 3 }, // 17
-	{ "a16-08.88",		0x2000, 0x1ddb6466, 3 }, // 18
-	{ "a16-09-1.89",	0x2000, 0x23d4c43c, 3 }, // 19
+	{ "a16-06-1.7",		0x2000, 0xb708134d, 3 | BRF_GRA }, // 12 gfx1
+	{ "a16-07-2.8",		0x2000, 0xcdaf7f83, 3 | BRF_GRA }, // 13
+	{ "a16-10.90",		0x2000, 0xe8e42454, 3 | BRF_GRA }, // 14
+	{ "a16-11-1.91",	0x2000, 0x1f766661, 3 | BRF_GRA }, // 15
+	{ "a16-04.5",		0x2000, 0xb2fae99f, 3 | BRF_GRA }, // 16
+	{ "a16-05-1.6",		0x2000, 0x85dfbb6e, 3 | BRF_GRA }, // 17
+	{ "a16-08.88",		0x2000, 0x1ddb6466, 3 | BRF_GRA }, // 18
+	{ "a16-09-1.89",	0x2000, 0x23d4c43c, 3 | BRF_GRA }, // 19
 
 	{ "a16-18.mcu",		0x0800, 0x00000000, 4 | BRF_NODUMP }, // 20 cpu2
 };
@@ -1460,3 +1857,43 @@ struct BurnDriverD BurnDrvVictnine = {
 	256, 224, 4, 3
 };
 
+static INT32 rumbaInit()
+{
+	select_game = 3;
+
+	INT32 nRet = DrvInit();
+
+	return nRet;
+}
+
+// Rumba Lumber
+
+static struct BurnRomInfo rumbaRomDesc[] = {
+	{ "a23_01-1.bin",	0x4000, 0x4bea6e18, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "a23_02-1.bin",	0x4000, 0x08f98c6f, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "a23_03-1.bin",	0x4000, 0xab595427, 1 | BRF_PRG | BRF_ESS }, //  2
+
+	{ "a23_08-1.bin",	0x2000, 0xa18eae00, 2 | BRF_PRG | BRF_ESS }, //  3 audiocpu
+	{ "a23_09.bin",		0x2000, 0xd0a101d3, 2 | BRF_PRG | BRF_ESS }, //  4
+	{ "a23_10.bin",		0x2000, 0xf9447bd4, 2 | BRF_PRG | BRF_ESS }, //  5
+
+	{ "a23-11.mc68705p5s",	0x0800, 0x00000000, 3 | BRF_NODUMP }, //  6 mcu
+
+	{ "a23_07.bin",		0x2000, 0xc98fbea6, 4 | BRF_GRA }, //  7 gfx1
+	{ "a23_06.bin",		0x2000, 0xbf1e3a7f, 4 | BRF_GRA }, //  8
+	{ "a23_05.bin",		0x2000, 0xb40db231, 4 | BRF_GRA }, //  9
+	{ "a23_04.bin",		0x2000, 0x1d4f001f, 4 | BRF_GRA }, // 10
+};
+
+STD_ROM_PICK(rumba)
+STD_ROM_FN(rumba)
+
+struct BurnDriver BurnDrvRumba = {
+	"rumba", NULL, NULL, NULL, "1984",
+	"Rumba Lumber\0", NULL, "Taito", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	NULL, rumbaRomInfo, rumbaRomName, NULL, NULL, RumbaInputInfo, RumbaDIPInfo,
+	rumbaInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
+	224, 256, 3, 4
+};

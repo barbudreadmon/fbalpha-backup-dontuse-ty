@@ -47,6 +47,9 @@ static UINT8 DrvDips[2];
 static UINT8 DrvInputs[4];
 static UINT8 DrvReset;
 
+// 4-Way input stuff
+static UINT8 fourwaymode     = 0;        // enabled or disabled (per-game)
+
 static struct BurnInputInfo LadybugInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 start"	},
@@ -869,6 +872,8 @@ static INT32 SraiderInit()
 
 	DrvDoReset();
 
+	fourwaymode = 1;
+
 	return 0;
 }
 
@@ -882,6 +887,8 @@ static INT32 DrvExit()
 	BurnFree (AllMem);
 
 	ladybug = 0;
+
+	fourwaymode = 0;
 
 	return 0;
 }
@@ -1125,7 +1132,11 @@ static INT32 DrvFrame()
 	{
 		INT32 previous = DrvInputs[3] ^ 0xff;
 
-		memset (DrvInputs, 0xff, 4);
+		DrvInputs[0] = 0x00; // p1. active=low conv. happens after the 4-way conv.
+		DrvInputs[1] = 0x00; // p2. ""
+		DrvInputs[2] = 0xff;
+		DrvInputs[3] = 0xff;
+
 		for (INT32 i = 0; i < 8; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
@@ -1136,6 +1147,15 @@ static INT32 DrvFrame()
 		if ((previous & 2) != (~DrvInputs[3] & 2)) coin |= 2;
 		DrvInputs[1] &= 0x7f;
 	}
+
+	if (fourwaymode) {
+		// Convert to 4-way
+		ProcessJoystick(&DrvInputs[0], 0, 3,1,0,2, INPUT_4WAY);
+		ProcessJoystick(&DrvInputs[1], 1, 3,1,0,2, INPUT_4WAY);
+	}
+
+	DrvInputs[0] = ~DrvInputs[0]; // convert to active=low
+	DrvInputs[1] = ~DrvInputs[1];
 
 	ZetOpen(0);
 	if (coin & 1) Z80SetIrqLine(0x20, DrvJoy4[0] ? Z80_ASSERT_LINE : Z80_CLEAR_LINE);
@@ -1259,6 +1279,8 @@ STD_ROM_FN(ladybug)
 
 static INT32 LadybugInit()
 {
+	fourwaymode = 1;
+
 	return DrvInit(0);
 }
 
@@ -1342,6 +1364,13 @@ struct BurnDriver BurnDrvLadybgb2 = {
 	196, 240, 3, 4
 };
 
+static INT32 SnapJackInit()
+{
+	fourwaymode = 0;
+
+	return DrvInit(0);
+}
+
 
 // Snap Jack
 
@@ -1373,7 +1402,7 @@ struct BurnDriver BurnDrvSnapjack = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, snapjackRomInfo, snapjackRomName, NULL, NULL, LadybugInputInfo, SnapjackDIPInfo,
-	LadybugInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
+	SnapJackInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
 	240, 196, 4, 3
 };
 
@@ -1403,6 +1432,8 @@ STD_ROM_FN(cavenger)
 
 static INT32 CavengerInit()
 {
+	fourwaymode = 0;
+
 	return DrvInit(1);
 }
 
@@ -1443,6 +1474,7 @@ STD_ROM_FN(dorodon)
 
 static INT32 DorodonInit()
 {
+	fourwaymode = 1;
 	return DrvInit(2);
 }
 
