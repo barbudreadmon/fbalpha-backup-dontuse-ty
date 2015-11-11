@@ -143,7 +143,7 @@ typedef enum {
 /* prefetch timing */
 
 //#define FETCHWORD() 		(cpu_readop_arg((Sreg(PS)<<4) + sChipsPtr->ip)+(cpu_readop_arg(((Sreg(PS)<<4) + sChipsPtr->ip+1))<<8)); sChipsPtr->ip+=2
-#define FETCH() 		cpu_readop_arg((Sreg(PS)<<4) + sChipsPtr->ip++)
+#define FETCH() 		({ UINT8 retval; retval = cpu_readop_arg((Sreg(PS)<<4) + sChipsPtr->ip); sChipsPtr->ip++; retval; })
 #define FETCHWORD()		(FETCH() + FETCH() * 256)
 #define EMPTY_PREFETCH()	nec_state->prefetch_reset = 1
 
