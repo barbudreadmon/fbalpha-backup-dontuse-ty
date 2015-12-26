@@ -593,8 +593,9 @@ void NamcoSoundExit()
 		free(namco_soundregs);
 		namco_soundregs = NULL;
 
-		free (namco_wavedata);
-		namco_wavedata = NULL;
+		/* Fix: Invalid pointer at Galaga and Ms. Pac-Man #58 */
+		//free (namco_wavedata);
+		//namco_wavedata = NULL;
 	}
 
 	if (enable_ram) {
