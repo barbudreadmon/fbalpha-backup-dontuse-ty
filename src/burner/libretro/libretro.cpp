@@ -44,6 +44,21 @@ enum neo_geo_modes
    NEO_GEO_MODE_DIPSWITCH = 3,
 };
 
+#define RETRO_DEVICE_ID_JOYPAD_EMPTY 255
+static UINT8 diag_input_hold_frame_delay = 0;
+static int   diag_input_combo_start_frame = 0;
+static bool  diag_combo_activated = false;
+static bool  one_diag_input_pressed = false;
+static bool  all_diag_input_pressed = true;
+
+static UINT8 *diag_input;
+static UINT8 diag_input_start[] =       {RETRO_DEVICE_ID_JOYPAD_START,  RETRO_DEVICE_ID_JOYPAD_EMPTY };
+static UINT8 diag_input_start_a_b[] =   {RETRO_DEVICE_ID_JOYPAD_START,  RETRO_DEVICE_ID_JOYPAD_A, RETRO_DEVICE_ID_JOYPAD_B, RETRO_DEVICE_ID_JOYPAD_EMPTY };
+static UINT8 diag_input_start_l_r[] =   {RETRO_DEVICE_ID_JOYPAD_START,  RETRO_DEVICE_ID_JOYPAD_L, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_EMPTY };
+static UINT8 diag_input_select[] =      {RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_EMPTY };
+static UINT8 diag_input_select_a_b[] =  {RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_A, RETRO_DEVICE_ID_JOYPAD_B, RETRO_DEVICE_ID_JOYPAD_EMPTY };
+static UINT8 diag_input_select_l_r[] =  {RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_L, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_EMPTY };
+
 static unsigned int BurnDrvGetIndexByName(const char* name);
 
 static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
@@ -95,6 +110,8 @@ static const struct retro_variable var_fba_aspect = { "fba-aspect", "Core-provid
 static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" };
 static const struct retro_variable var_fba_controls = { "fba-controls", "Control scheme; gamepad|arcade" };
 
+static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-input", "Diagnostic Input; None|Hold Start|Start + A + B|Hold Start + A + B|Start + L + R|Hold Start + L + R|Hold Select|Select + A + B|Hold Select + A + B|Select + L + R|Hold Select + L + R" };
+
 // Neo Geo core options
 static const struct retro_variable var_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; MVS|AES|UNIBIOS|DIPSWITCH" };
 static const struct retro_variable var_neogeo_controls = { "fba-neogeo-controls", "Neo Geo gamepad scheme; classic|newgen" };
@@ -118,7 +135,7 @@ static struct RomBiosInfo mvs_bioses[] = {
    {"sp-s2.sp1",         0x9036d879, 0x01, "MVS Asia/Europe ver. 5 (1 slot)",  2 },
    {"sp-s.sp1",          0xc7f2fa45, 0x02, "MVS Asia/Europe ver. 3 (4 slot)",  3 },
    {"sp-u2.sp1",         0xe72943de, 0x03, "MVS USA ver. 5 (2 slot)"        ,  4 },
-   {"v2.bin",            0x62f021f4, 0x04, "MVS USA ver. 5 (4 slot)"        ,  5 },  
+   {"v2.bin",            0x62f021f4, 0x04, "MVS USA ver. 5 (4 slot)"        ,  5 },
    {"sp-e.sp1",          0x2723a5b5, 0x05, "MVS USA ver. 5 (6 slot)"        ,  6 },
    {"vs-bios.rom",       0xf0e8f27d, 0x06, "MVS Japan ver. 6 (? slot)"      ,  7 },
    {"sp-j2.sp1",         0xacede59C, 0x07, "MVS Japan ver. 5 (? slot)"      ,  8 },
@@ -170,7 +187,7 @@ void set_neo_system_bios()
    }
    else if (g_opt_neo_geo_mode == NEO_GEO_MODE_MVS)
    {
-      NeoSystem &= ~0x1f;
+      NeoSystem &= ~(UINT8)0x1f;
       if (available_mvs_bios)
       {
          NeoSystem |= available_mvs_bios->NeoSystem;
@@ -189,7 +206,7 @@ void set_neo_system_bios()
    }
    else if (g_opt_neo_geo_mode == NEO_GEO_MODE_AES)
    {
-      NeoSystem &= ~0x1f;
+      NeoSystem &= ~(UINT8)0x1f;
       if (available_aes_bios)
       {
          NeoSystem |= available_aes_bios->NeoSystem;
@@ -208,7 +225,7 @@ void set_neo_system_bios()
    }
    else if (g_opt_neo_geo_mode == NEO_GEO_MODE_UNIBIOS)
    {
-      NeoSystem &= ~0x1f;
+      NeoSystem &= ~(UINT8)0x1f;
       if (available_uni_bios)
       {
          NeoSystem |= available_uni_bios->NeoSystem;
@@ -275,6 +292,9 @@ INT32 CDEmuLoadSector(INT32 LBA, char* pBuffer) { return 0; }
 UINT8* CDEmuReadTOC(INT32 track) { return 0; }
 UINT8* CDEmuReadQChannel() { return 0; }
 INT32 CDEmuGetSoundBuffer(INT16* buffer, INT32 samples) { return 0; }
+
+static struct GameInp *pgi_reset;
+static struct GameInp *pgi_diag;
 
 struct dipswitch_core_option_value
 {
@@ -480,7 +500,12 @@ static void set_environment()
    vars_systems.push_back(&var_fba_aspect);
    vars_systems.push_back(&var_fba_cpu_speed_adjust);
    vars_systems.push_back(&var_fba_controls);
-   
+
+   if (pgi_diag)
+   {
+      vars_systems.push_back(&var_fba_diagnostic_input);
+   }
+
    if (is_neogeo_game)
    {
       // Add the Neo Geo core options
@@ -493,7 +518,7 @@ static void set_environment()
 
    log_cb(RETRO_LOG_INFO, "set_environment: SYSTEM: %d, DIPSWITCH: %d\n", nbr_vars, nbr_dips);
 
-   struct retro_variable vars[nbr_vars + nbr_dips + 1];
+   struct retro_variable vars[nbr_vars + nbr_dips + 1]; // + 1 for the empty ending retro_variable
    
    int idx_var = 0;
 
@@ -886,17 +911,10 @@ void retro_reset()
    if (is_neogeo_game)
       set_neo_system_bios();
 
-   struct GameInp* pgi = GameInp;
-
-   for (unsigned i = 0; i < nGameInpCount; i++, pgi++)
+   if (pgi_reset)
    {
-      if (pgi->Input.Switch.nCode != FBK_F3)
-         continue;
-
-      pgi->Input.nVal = 1;
-      *(pgi->Input.pVal) = pgi->Input.nVal;
-
-      break;
+      pgi_reset->Input.nVal = 1;
+      *(pgi_reset->Input.pVal) = pgi_reset->Input.nVal;
    }
 
    ForceFrameStep();
@@ -950,7 +968,67 @@ static void check_variables(void)
       else
          core_aspect_par = false;
    }
-   
+
+   if (pgi_diag)
+   {
+      var.key = var_fba_diagnostic_input.key;
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+      {
+         diag_input = NULL;
+         diag_input_hold_frame_delay = 0;
+         if (strcmp(var.value, "Hold Start") == 0)
+         {
+            diag_input = diag_input_start;
+            diag_input_hold_frame_delay = 60;
+         }
+         else if(strcmp(var.value, "Start + A + B") == 0)
+         {
+            diag_input = diag_input_start_a_b;
+            diag_input_hold_frame_delay = 0;
+         }
+         else if(strcmp(var.value, "Hold Start + A + B") == 0)
+         {
+            diag_input = diag_input_start_a_b;
+            diag_input_hold_frame_delay = 60;
+         }
+         else if(strcmp(var.value, "Start + L + R") == 0)
+         {
+            diag_input = diag_input_start_l_r;
+            diag_input_hold_frame_delay = 0;
+         }
+         else if(strcmp(var.value, "Hold Start + L + R") == 0)
+         {
+            diag_input = diag_input_start_l_r;
+            diag_input_hold_frame_delay = 60;
+         }
+         else if(strcmp(var.value, "Hold Select") == 0)
+         {
+            diag_input = diag_input_select;
+            diag_input_hold_frame_delay = 60;
+         }
+         else if(strcmp(var.value, "Select + A + B") == 0)
+         {
+            diag_input = diag_input_select_a_b;
+            diag_input_hold_frame_delay = 0;
+         }
+         else if(strcmp(var.value, "Hold Select + A + B") == 0)
+         {
+            diag_input = diag_input_select_a_b;
+            diag_input_hold_frame_delay = 60;
+         }
+         else if(strcmp(var.value, "Select + L + R") == 0)
+         {
+            diag_input = diag_input_select_l_r;
+            diag_input_hold_frame_delay = 0;
+         }
+         else if(strcmp(var.value, "Hold Select + L + R") == 0)
+         {
+            diag_input = diag_input_select_l_r;
+            diag_input_hold_frame_delay = 60;
+         }
+      }
+   }
+
    if (is_neogeo_game)
    {
       var.key = var_neogeo_controls.key;
@@ -3762,6 +3840,9 @@ static bool init_input(void)
    char button_select[15];
    char button_shot[15];
 
+   pgi_reset = NULL;
+   pgi_diag = NULL;
+
    for(unsigned int i = 0; i < nGameInpCount; i++, pgi++)
    {
       BurnDrvGetInputInfo(&bii, i);
@@ -3776,6 +3857,22 @@ static bool init_input(void)
          sprintf(button_shot,   "P%d Shot",   port + 1); // => P1 Shot
 
          value_found = false;
+
+         // Store the pgi that controls the reset input
+         if (strcmp(bii.szInfo, "reset") == 0)
+         {
+            value_found = true;
+            pgi_reset = pgi;
+            break;
+         }
+
+         // Store the pgi that controls the diagnostic input
+         if (strcmp(bii.szInfo, "diag") == 0)
+         {
+            value_found = true;
+            pgi_diag = pgi;
+            break;
+         }
 
          if (is_neogeo_game && strcmp(bii.szName, button_select) == 0)
          {
@@ -3827,7 +3924,7 @@ static bool init_input(void)
          break;
       }
 
-      if (!value_found)
+      if (!value_found && bii.nType != BIT_DIPSWITCH)
       {
          log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - WARNING! Button unaccounted.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
       }
@@ -3836,6 +3933,10 @@ static bool init_input(void)
    input_descriptors[nGameInpCountAffected] = { 0 };
 
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, input_descriptors);
+
+   // Update core option for diagnostic input
+   set_environment();
+   check_variables();
 
    return has_analog;
 }
@@ -3876,9 +3977,69 @@ static inline int CinpMouseAxis(int i, int axis)
    return 0;
 }
 
+static bool poll_diag_input()
+{
+   if (pgi_diag && diag_input)
+   {
+      one_diag_input_pressed = false;
+      all_diag_input_pressed = true;
+      
+      for (int combo_idx = 0; diag_input[combo_idx] != RETRO_DEVICE_ID_JOYPAD_EMPTY; combo_idx++)
+      {
+         if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, diag_input[combo_idx]) == false)
+            all_diag_input_pressed = false;
+         else
+            one_diag_input_pressed = true;
+      }
+
+      if (diag_combo_activated == false && all_diag_input_pressed)
+      {
+         if (diag_input_combo_start_frame == 0) // => User starts holding all the combo inputs
+            diag_input_combo_start_frame = nCurrentFrame;
+         else if ((nCurrentFrame - diag_input_combo_start_frame) > diag_input_hold_frame_delay) // Delays of the hold reached
+            diag_combo_activated = true;
+      }
+      else if (one_diag_input_pressed == false)
+      {
+         diag_combo_activated = false;
+         diag_input_combo_start_frame = 0;
+      }
+      
+      if (diag_combo_activated)
+      {
+         // Cancel each input of the combo at the emulator side to not interfere when the diagnostic menu will be opened and the combo not yet released
+         struct GameInp* pgi = GameInp;
+         for (int combo_idx = 0; diag_input[combo_idx] != RETRO_DEVICE_ID_JOYPAD_EMPTY; combo_idx++)
+         {
+            for (int i = 0; i < nGameInpCount; i++, pgi++)
+            {
+               if (pgi->nInput == GIT_SWITCH)
+               {
+                  pgi->Input.nVal = 0;
+                  *(pgi->Input.pVal) = pgi->Input.nVal;
+               }
+            }
+         }
+
+         // Activate the diagnostic key
+         pgi_diag->Input.nVal = 1;
+         *(pgi_diag->Input.pVal) = pgi_diag->Input.nVal;
+
+         // Return true to stop polling game inputs while diagnostic combo inputs is pressed
+         return true;
+      }
+   }
+
+   // Return false to poll game inputs
+   return false;
+}
+
 static void poll_input(void)
 {
    poll_cb();
+
+   if (poll_diag_input())
+      return;
 
    struct GameInp* pgi = GameInp;
 
