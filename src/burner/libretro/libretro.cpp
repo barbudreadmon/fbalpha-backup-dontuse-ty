@@ -1437,7 +1437,7 @@ struct key_map
 };
 static uint8_t keybinds[0x5000][2];
 
-#define BIND_MAP_COUNT 312
+#define BIND_MAP_COUNT 304
 
 #define RETRO_DEVICE_ID_JOYPAD_RESET      16
 #define RETRO_DEVICE_ID_JOYPAD_SERVICE    17
@@ -1553,20 +1553,6 @@ static bool init_input(void)
     * L3 is unmapped and could still be used */
 
    /* Universal controls */
-
-   // Diagnostic, Diagnostics and Test buttons can share the same input,
-   // they are used to enter the diagnostic menu and will never collide
-   bind_map[PTR_INCR].bii_name = "Diagnostic";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
-   bind_map[PTR_INCR].nCode[1] = 0;
-
-   bind_map[PTR_INCR].bii_name = "Diagnostics";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
-   bind_map[PTR_INCR].nCode[1] = 0;
-
-   bind_map[PTR_INCR].bii_name = "Test";
-   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_R3;
-   bind_map[PTR_INCR].nCode[1] = 0;
 
    bind_map[PTR_INCR].bii_name = "Coin 1";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
@@ -3849,30 +3835,28 @@ static bool init_input(void)
 
       bool value_found = false;
 
-      for(int j = 0; j < counter; j++)
+      // Store the pgi that controls the reset input
+      if (strcmp(bii.szInfo, "reset") == 0)
+      {
+         value_found = true;
+         pgi_reset = pgi;
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
+      }
+
+      // Store the pgi that controls the diagnostic input
+      if (strcmp(bii.szInfo, "diag") == 0)
+      {
+         value_found = true;
+         pgi_diag = pgi;
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - controlled by core option.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
+      }
+
+      for(int j = 0; j < counter && !value_found; j++)
       {
          unsigned port = bind_map[j].nCode[1];
 
          sprintf(button_select, "P%d Select", port + 1); // => P1 Select
          sprintf(button_shot,   "P%d Shot",   port + 1); // => P1 Shot
-
-         value_found = false;
-
-         // Store the pgi that controls the reset input
-         if (strcmp(bii.szInfo, "reset") == 0)
-         {
-            value_found = true;
-            pgi_reset = pgi;
-            break;
-         }
-
-         // Store the pgi that controls the diagnostic input
-         if (strcmp(bii.szInfo, "diag") == 0)
-         {
-            value_found = true;
-            pgi_diag = pgi;
-            break;
-         }
 
          if (is_neogeo_game && strcmp(bii.szName, button_select) == 0)
          {
