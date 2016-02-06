@@ -424,7 +424,7 @@ else
 endif
 
 SOURCES_CXX := $(GRIFFIN_CXXSRCFILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
-SOURCES_CXX += $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp
+SOURCES_CXX += $(LIBRETRO_DIR)/bind_map.cpp $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp
 FBA_CXXOBJ := $(SOURCES_CXX:.cpp=.o)
 SOURCES_C := $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
 FBA_COBJ := $(SOURCES_C:.c=.o)
