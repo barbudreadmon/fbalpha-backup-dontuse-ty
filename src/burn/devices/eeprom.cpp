@@ -90,7 +90,16 @@ void EEPROMInit(const eeprom_interface *interface)
 	else locked = 0;
 
 	char output[128];
+#ifdef __LIBRETRO__
+#ifdef _WIN32
+	char slash = '\\';
+#else
+	char slash = '/';
+#endif
+	snprintf (output, sizeof(output),"%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+#else
 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
+#endif
 
 	neeprom_available = 0;
 
