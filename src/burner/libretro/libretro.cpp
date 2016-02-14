@@ -33,6 +33,33 @@ static retro_input_poll_t poll_cb;
 static retro_input_state_t input_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
 
+#define BPRINTF_BUFFER_SIZE 512
+char bprintf_buf[BPRINTF_BUFFER_SIZE];
+static INT32 __cdecl libretro_bprintf(INT32 nStatus, TCHAR* szFormat, ...)
+{
+   va_list vp;
+   va_start(vp, szFormat);
+   int rc = vsnprintf(bprintf_buf, BPRINTF_BUFFER_SIZE, szFormat, vp);
+   va_end(vp);
+
+   if (rc >= 0)
+   {
+      retro_log_level retro_log = RETRO_LOG_DEBUG;
+      if (nStatus == PRINT_UI)
+         retro_log = RETRO_LOG_INFO;
+      else if (nStatus == PRINT_IMPORTANT)
+         retro_log = RETRO_LOG_WARN;
+      else if (nStatus == PRINT_ERROR)
+         retro_log = RETRO_LOG_ERROR;
+         
+      log_cb(retro_log, bprintf_buf);
+   }
+   
+   return rc;
+}
+
+INT32 (__cdecl *bprintf) (INT32 nStatus, TCHAR* szFormat, ...) = libretro_bprintf;
+
 // FBARL ---
 
 extern UINT8 NeoSystem;

@@ -34,8 +34,6 @@
 typedef struct { int x, y, width, height; } RECT;
 #undef __cdecl
 #define __cdecl
-
-#define bprintf(...) {}
 #endif
 
 #undef __fastcall
