@@ -5,6 +5,7 @@
 #include "z80_intf.h"
 #include "burn_ym2203.h"
 #include "msm5205.h"
+#include "msm6295.h"
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -17,6 +18,7 @@ static UINT8 *DrvGfxROM0;
 static UINT8 *DrvGfxROM1;
 static UINT8 *DrvGfxROM2;
 static UINT8 *DrvGfxROM3;
+static UINT8 *DrvSampleROM;
 static UINT8 *DrvTileMap;
 static UINT8 *DrvGfxMask;
 static UINT8 *DrvZ80RAM0;
@@ -36,14 +38,18 @@ static UINT8 DrvReset;
 static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
 static UINT8 DrvJoy3[8];
+static UINT8 DrvJoy4[8];
+static UINT8 DrvJoy5[8];
 static UINT8 DrvDip[2];
-static UINT8 DrvInp[3];
+static UINT8 DrvInp[5];
 
 static UINT8 interrupt_enable;
 static UINT8 soundlatch;
 static UINT8 soundlatch2;
 static UINT8 flipscreen;
 static UINT8 DrvZ80Bank;
+static UINT8 DrvSampleBank;
+static UINT8 DrvSpriteBank;
 
 static UINT8 avengers_param[4];
 static UINT32 avengers_palette_pen;
@@ -53,8 +59,12 @@ static UINT8 avengers_soundstate;
 static UINT8 trojan_bg2_scrollx;
 static UINT8 trojan_bg2_image;
 
+static INT32 irq_counter = 0;
+
+static INT32 fball = 0;
 static INT32 avengers = 0;
 static INT32 MSM5205InUse = 0;
+static INT32 spritelen = 0;
 
 static INT32 nCyclesTotal[3];
 
@@ -83,6 +93,80 @@ static struct BurnInputInfo DrvInputList[] = {
 };
 
 STDINPUTINFO(Drv)
+
+static struct BurnInputInfo FballInputList[] = {
+	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 down"},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 left"},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 right"},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 1"},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 2"},
+
+	{"P2 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p2 coin"},
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 start"},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 up"},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 down"},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 left"},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy3 + 0,	"p2 right"},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"},
+
+	{"P3 Start",		BIT_DIGITAL,	DrvJoy1 + 2,	"p3 start"},
+	{"P3 Up",		BIT_DIGITAL,	DrvJoy4 + 3,	"p3 up"},
+	{"P3 Down",		BIT_DIGITAL,	DrvJoy4 + 2,	"p3 down"},
+	{"P3 Left",		BIT_DIGITAL,	DrvJoy4 + 1,	"p3 left"},
+	{"P3 Right",		BIT_DIGITAL,	DrvJoy4 + 0,	"p3 right"},
+	{"P3 Button 1",		BIT_DIGITAL,	DrvJoy4 + 4,	"p3 fire 1"},
+	{"P3 Button 2",		BIT_DIGITAL,	DrvJoy4 + 5,	"p3 fire 2"},
+
+	{"P4 Start",		BIT_DIGITAL,	DrvJoy1 + 3,	"p4 start"},
+	{"P4 Up",		BIT_DIGITAL,	DrvJoy5 + 3,	"p4 up"},
+	{"P4 Down",		BIT_DIGITAL,	DrvJoy5 + 2,	"p4 down"},
+	{"P4 Left",		BIT_DIGITAL,	DrvJoy5 + 1,	"p4 left"},
+	{"P4 Right",		BIT_DIGITAL,	DrvJoy5 + 0,	"p4 right"},
+	{"P4 Button 1",		BIT_DIGITAL,	DrvJoy5 + 4,	"p4 fire 1"},
+	{"P4 Button 2",		BIT_DIGITAL,	DrvJoy5 + 5,	"p4 fire 2"},
+
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
+};
+
+STDINPUTINFO(Fball)
+
+static struct BurnDIPInfo FballDIPList[]=
+{
+	{0x1f, 0xff, 0xff, 0x6d, NULL		},
+
+	{0   , 0xfe, 0   ,    2, "Difficulty"		},
+	{0x1f, 0x01, 0x01, 0x01, "0"		},
+	{0x1f, 0x01, 0x01, 0x00, "1"		},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x1f, 0x01, 0x06, 0x00, "1"		},
+	{0x1f, 0x01, 0x06, 0x02, "2"		},
+	{0x1f, 0x01, 0x06, 0x04, "3"		},
+	{0x1f, 0x01, 0x06, 0x06, "4"		},
+
+	{0   , 0xfe, 0   ,    4, "Coinage"		},
+	{0x1f, 0x01, 0x18, 0x00, "2 Coins 1 Credits"		},
+	{0x1f, 0x01, 0x18, 0x08, "1 Coin  1 Credits"		},
+	{0x1f, 0x01, 0x18, 0x10, "1 Coin  2 Credits"		},
+	{0x1f, 0x01, 0x18, 0x18, "1 Coin  4 Credits"		},
+
+	{0   , 0xfe, 0   ,    2, "Flip Screen"		},
+	{0x1f, 0x01, 0x20, 0x20, "Off"		},
+	{0x1f, 0x01, 0x20, 0x00, "On"		},
+
+	{0x1f, 0x01, 0x40, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Service Mode"		},
+	{0x1f, 0x01, 0x80, 0x00, "Off"		},
+	{0x1f, 0x01, 0x80, 0x80, "On"		},
+};
+
+STDDIPINFO(Fball)
 
 static struct BurnDIPInfo LwingsDIPList[]=
 {
@@ -430,7 +514,7 @@ static INT32 MemIndex()
 	UINT8 *Next; Next = AllMem;
 
 	DrvZ80ROM0	= Next; Next += 0x020000;
-	DrvZ80ROM1	= Next; Next += 0x008000;
+	DrvZ80ROM1	= Next; Next += 0x010000;
 	DrvZ80ROM2	= Next; Next += 0x010000;
 
 	DrvTileMap	= Next; Next += 0x008000;
@@ -441,6 +525,9 @@ static INT32 MemIndex()
 	DrvGfxROM3	= Next; Next += 0x020000;
 
 	DrvGfxMask	= Next; Next += 0x000020;
+
+	MSM6295ROM	= Next;
+	DrvSampleROM	= Next; Next += 0x200000;
 
 	DrvPalette	= (UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
 
@@ -626,7 +713,12 @@ UINT8 __fastcall lwings_main_read(UINT16 address)
 			return DrvDip[address - 0xf80b];
 
 		case 0xf80d:
-			return avengers_protection_r();
+		case 0xf80e:
+			if (fball) {
+				return DrvInp[(address - 0xf80d) + 3];
+			} else {
+				return avengers_protection_r();
+			}
 	}
 
 	return 0;
@@ -693,16 +785,23 @@ void __fastcall lwings_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xf80d:
-			soundlatch2 = data;
+			if (fball) {
+		//		watchdog = 0;
+			} else {
+				soundlatch2 = data;
+			}
 		return;
 
 		case (0xf80e + 0x10):
-		case 0xf80e:
+		case 0xf80e: {
 			lwings_bankswitch_w(data);
 
 			flipscreen = ~data & 0x01;
 
+			DrvSpriteBank = (data & 0x10) >> 4;
+
 			interrupt_enable = data & 0x08;
+		}
 		return;
 
 		case (0xf809 + 0x10):
@@ -752,6 +851,44 @@ UINT8 __fastcall lwings_sound_read(UINT16 address)
 	return 0;
 }
 
+static void oki_bank(INT32 data)
+{
+	DrvSampleBank = data;
+
+	INT32 bank = (DrvSampleBank & 0x0e) * 0x10000;
+	if (bank >= 0xc0000) bank -= 0xc0000;
+
+	memcpy (DrvSampleROM + 0x20000, DrvSampleROM + 0x40000 + bank, 0x20000);
+}
+
+static void __fastcall fball_sound_write(UINT16 address, UINT8 data)
+{
+	switch (address)
+	{
+		case 0xa000:
+			oki_bank(data);
+		return;
+
+		case 0xe000:
+			MSM6295Command(0, data);
+		return;
+	}
+}
+
+static UINT8 __fastcall fball_sound_read(UINT16 address)
+{
+	switch (address)
+	{
+		case 0x8000:
+			return soundlatch;
+
+		case 0xe000:
+			return MSM6295ReadStatus(0);
+	}
+
+	return 0;
+}
+
 void __fastcall trojan_adpcm_out(UINT16 port, UINT8 data)
 {
 	if ((port & 0xff) == 0x01) {
@@ -769,7 +906,7 @@ UINT8 __fastcall trojan_adpcm_in(UINT16 port)
 	UINT8 ret = 0;
 
 	if (port == 0x00) {
-			ret = soundlatch2;
+		ret = soundlatch2;
 	}
 
 	return ret;
@@ -794,7 +931,12 @@ static INT32 DrvDoReset()
 		ZetClose();
 	}
 
-	BurnYM2203Reset();
+	if (fball) {
+		MSM6295Reset(0);
+		oki_bank(0);
+	} else {
+		BurnYM2203Reset();
+	}
 
 	if (MSM5205InUse) MSM5205Reset();
 
@@ -807,11 +949,15 @@ static INT32 DrvDoReset()
 	avengers_soundlatch2 = 0;
 	avengers_soundstate = 0;
 
+	DrvSpriteBank = 0;
 	DrvZ80Bank = 0;
 	flipscreen = 0;
 	interrupt_enable = 0;
 	soundlatch = 0;
 	soundlatch2 = 0;
+	irq_counter = 0;
+
+	HiscoreReset();
 
 	return 0;
 }
@@ -819,7 +965,7 @@ static INT32 DrvDoReset()
 static INT32 DrvGfxDecode()
 {
 	INT32 Plane0[2]  = { 0x000000, 0x000004 };
-	INT32 Plane1[4]  = { 0x080004, 0x080000, 0x000004, 0x000000 };
+	INT32 Plane1[4]  = { RGN_FRAC(spritelen, 1, 2)+4, RGN_FRAC(spritelen, 1, 2)+0, 4, 0 };//0x080004, 0x080000, 0x000004, 0x000000 };
 	INT32 Plane1a[4] = { 0x100004, 0x100000, 0x000004, 0x000000 };
 	INT32 Plane2[4]  = { 0x180000, 0x100000, 0x080000, 0x000000 };
 	INT32 Plane3[4]  = { 0x040000, 0x040004, 0x000000, 0x000004 };
@@ -965,6 +1111,8 @@ static INT32 DrvInit()
 			if (BurnLoadRom(DrvGfxROM2 + i * 0x8000, i + 13, 1)) return 1;
 		}
 
+		spritelen = 0x20000;
+
 		DrvGfxDecode();
 	}
 
@@ -1009,6 +1157,7 @@ static INT32 TrojanInit()
 			if (BurnLoadRom(DrvGfxROM1 + i * 0x8000, i + 6, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM2 + i * 0x8000, i + 14, 1)) return 1;
 		}
+		spritelen = 0x40000;
 
 		if (BurnLoadRom(DrvGfxROM3 + 0x0000, 22, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM3 + 0x8000, 23, 1)) return 1;
@@ -1053,15 +1202,85 @@ static INT32 TrojanInit()
 	return 0;
 }
 
+static INT32 FballInit()
+{
+	fball = 1;
+
+	AllMem = NULL;
+	MemIndex();
+	INT32 nLen = MemEnd - (UINT8 *)0;
+	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	memset(AllMem, 0, nLen);
+	MemIndex();
+
+	DrvTileMap = NULL;
+
+	{
+		if (BurnLoadRom(DrvZ80ROM0 + 0x00000, 0, 1)) return 1;
+		// bank2 = 0x8000
+
+		if (BurnLoadRom(DrvZ80ROM1 + 0x00000, 1, 1)) return 1;
+		memset (DrvZ80ROM1 + 0x1000, 0xff, 0x10000-0x1000);
+
+		if (BurnLoadRom(DrvGfxROM0 + 0x00000, 2, 1)) return 1;
+		memset (DrvGfxROM0 + 0x4000, 0xff, 0x10000-0x4000);
+
+		if (BurnLoadRom(DrvGfxROM1 + 0x00000, 5, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x10000, 4, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x20000, 3, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x30000, 6, 1)) return 1;
+		memset (DrvGfxROM1 + 0x40000, 0, 0x50000);
+
+		if (BurnLoadRom(DrvGfxROM2 + 0x00000, 7, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM2 + 0x20000, 8, 1)) return 1;
+		spritelen = 0x40000;
+
+		if (BurnLoadRom(DrvSampleROM + 0x00000, 9, 1)) return 1;
+		if (BurnLoadRom(DrvSampleROM + 0x40000, 9, 1)) return 1;
+		if (BurnLoadRom(DrvSampleROM + 0x80000, 10, 1)) return 1;
+		if (BurnLoadRom(DrvSampleROM + 0xc0000, 11, 1)) return 1;
+
+		DrvGfxDecode();
+	}
+
+	ZetInit(0);
+	lwings_main_cpu_init();
+
+	ZetInit(1);
+	ZetOpen(1);
+	ZetMapMemory(DrvZ80ROM1, 0x0000, 0x0fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM1, 0xc000, 0xc7ff, MAP_RAM);
+	ZetSetWriteHandler(fball_sound_write);
+	ZetSetReadHandler(fball_sound_read);
+	ZetClose();
+
+	MSM6295Init(0, 1000000 / 132, 0);
+	MSM6295SetRoute(0, 1.00, BURN_SND_ROUTE_BOTH);
+
+	GenericTilesInit();
+	
+	nCyclesTotal[0] = 6000000 / 60;
+	nCyclesTotal[1] = 3000000 / 60;
+	nCyclesTotal[2] = 0;
+
+	DrvDoReset();
+
+	return 0;
+}
+
 static INT32 DrvExit()
 {
 	GenericTilesExit();
 
 	ZetExit();
-	BurnYM2203Exit();
-
+	if (fball) {
+		MSM6295Exit(0);
+	} else {
+		BurnYM2203Exit();
+	}
 	BurnFree (AllMem);
 
+	fball = 0;
 	avengers = 0;
 	MSM5205InUse = 0;
 
@@ -1383,7 +1602,7 @@ static void trojan_draw_sprites()
 			if (sy > 0xf8) sy-=0x100;
 
 			INT32 color = DrvSprBuf[offs + 1];
-			INT32 code  = DrvSprBuf[offs] | ((color & 0x20) << 4) | ((color & 0x40) << 2) | ((color & 0x80) << 3);
+			INT32 code  = DrvSprBuf[offs] | ((color & 0x20) << 4) | ((color & 0x40) << 2) | ((color & 0x80) << 3) | (DrvSpriteBank << 10);
 
 			if (avengers)
 			{
@@ -1556,6 +1775,69 @@ static INT32 DrvFrame()
 	return 0;
 }
 
+static INT32 FballFrame()
+{
+	if (DrvReset) {
+		DrvDoReset();
+	}
+
+	{
+		memset (DrvInp, 0xff, 5);
+
+		for (INT32 i = 0; i < 8; i++) {
+			DrvInp[0] ^= (DrvJoy1[i] & 1) << i;
+			DrvInp[1] ^= (DrvJoy2[i] & 1) << i;
+			DrvInp[2] ^= (DrvJoy3[i] & 1) << i;
+			DrvInp[3] ^= (DrvJoy4[i] & 1) << i;
+			DrvInp[4] ^= (DrvJoy5[i] & 1) << i;
+		}
+
+		if ((DrvInp[1] & 0x03) == 0) DrvInp[1] |= 0x03;
+		if ((DrvInp[1] & 0x0c) == 0) DrvInp[1] |= 0x0c;
+		if ((DrvInp[2] & 0x03) == 0) DrvInp[2] |= 0x03;
+		if ((DrvInp[2] & 0x0c) == 0) DrvInp[2] |= 0x0c;
+		if ((DrvInp[3] & 0x03) == 0) DrvInp[3] |= 0x03;
+		if ((DrvInp[3] & 0x0c) == 0) DrvInp[3] |= 0x0c;
+		if ((DrvInp[4] & 0x03) == 0) DrvInp[4] |= 0x03;
+		if ((DrvInp[4] & 0x0c) == 0) DrvInp[4] |= 0x0c;
+	}
+
+	INT32 nInterleave = 100;
+	INT32 nCyclesDone[2] = { 0, 0 };
+	
+	ZetNewFrame();
+
+	for (INT32 i = 0; i < nInterleave; i++, irq_counter++)
+	{
+		ZetOpen(0);
+		nCyclesDone[0] += ZetRun(nCyclesTotal[0] / nInterleave);
+		if (interrupt_enable && i == (nInterleave-1)) {
+			ZetNmi();
+		}
+		ZetClose();
+		
+		ZetOpen(1);
+		nCyclesDone[1] += ZetRun(nCyclesTotal[1] / nInterleave);
+		if (irq_counter == 27) {
+			ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
+			irq_counter = 0;
+		}
+		ZetClose();
+	}
+
+	if (pBurnSoundOut) {
+		MSM6295Render(0, pBurnSoundOut, nBurnSoundLen);
+	}
+
+	if (pBurnDraw) {
+		DrvDraw();
+	}
+
+	memcpy (DrvSprBuf, DrvSprRAM, 0x200);
+
+	return 0;
+}
+
 static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
@@ -1575,7 +1857,14 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
 
-		BurnYM2203Scan(nAction, pnMin);
+		SCAN_VAR(DrvSampleBank);
+
+		if (fball) {
+			MSM6295Scan(0, nAction);
+			oki_bank(0); // wrong
+		} else {
+			BurnYM2203Scan(nAction, pnMin);
+		}
 		if (MSM5205InUse) MSM5205Scan(nAction, pnMin);
 
 		SCAN_VAR(interrupt_enable);
@@ -1583,8 +1872,10 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(soundlatch2);
 		SCAN_VAR(flipscreen);
 		SCAN_VAR(DrvZ80Bank);
+		SCAN_VAR(DrvSpriteBank);
+		SCAN_VAR(irq_counter);
 
-		SCAN_VAR(*((UINT32*)avengers_param));
+		SCAN_VAR(avengers_param);
 		SCAN_VAR(avengers_palette_pen);
 		SCAN_VAR(avengers_soundlatch2);
 		SCAN_VAR(avengers_soundstate);
@@ -1635,7 +1926,7 @@ struct BurnDriver BurnDrvSectionz = {
 	"sectionz", NULL, NULL, NULL, "1985",
 	"Section Z (set 1)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARWARE_CAPCOM_MISC, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_HORSHOOT, 0,
 	NULL, sectionzRomInfo, sectionzRomName, NULL, NULL, DrvInputInfo, SectionzDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -1677,7 +1968,7 @@ struct BurnDriver BurnDrvSctionza = {
 	"sectionza", "sectionz", NULL, NULL, "1985",
 	"Section Z (set 2)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_HORSHOOT, 0,
 	NULL, sctionzaRomInfo, sctionzaRomName, NULL, NULL, DrvInputInfo, SectionzDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -1719,7 +2010,7 @@ struct BurnDriver BurnDrvLwings = {
 	"lwings", NULL, NULL, NULL, "1986",
 	"Legendary Wings (US set 1)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, lwingsRomInfo, lwingsRomName, NULL, NULL, DrvInputInfo, LwingsDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1761,7 +2052,7 @@ struct BurnDriver BurnDrvLwings2 = {
 	"lwings2", "lwings", NULL, NULL, "1986",
 	"Legendary Wings (US set 2)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, lwings2RomInfo, lwings2RomName, NULL, NULL, DrvInputInfo, LwingsDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1803,7 +2094,7 @@ struct BurnDriver BurnDrvLwingsjp = {
 	"lwingsj", "lwings", NULL, NULL, "1986",
 	"Ares no Tsubasa (Japan)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, lwingsjpRomInfo, lwingsjpRomName, NULL, NULL, DrvInputInfo, LwingsDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1845,7 +2136,7 @@ struct BurnDriver BurnDrvLwingsb = {
 	"lwingsb", "lwings", NULL, NULL, "1986",
 	"Legendary Wings (bootleg)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, lwingsbRomInfo, lwingsbRomName, NULL, NULL, DrvInputInfo, LwingsbDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1899,7 +2190,7 @@ struct BurnDriver BurnDrvTrojan = {
 	"trojan", NULL, NULL, NULL, "1986",
 	"Trojan (US set 1)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
 	NULL, trojanRomInfo, trojanRomName, NULL, NULL, DrvInputInfo, TrojanlsDIPInfo,
 	TrojanInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -1953,7 +2244,7 @@ struct BurnDriver BurnDrvTrojana = {
 	"trojana", "trojan", NULL, NULL, "1986",
 	"Trojan (US set 2)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
 	NULL, trojanaRomInfo, trojanaRomName, NULL, NULL, DrvInputInfo, TrojanlsDIPInfo,
 	TrojanInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -2007,7 +2298,7 @@ struct BurnDriver BurnDrvTrojanr = {
 	"trojanr", "trojan", NULL, NULL, "1986",
 	"Trojan (Romstar)\0", NULL, "Capcom (Romstar license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
 	NULL, trojanrRomInfo, trojanrRomName, NULL, NULL, DrvInputInfo, TrojanDIPInfo,
 	TrojanInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -2061,7 +2352,7 @@ struct BurnDriver BurnDrvTrojanb = {
 	"trojanb", "trojan", NULL, NULL, "1986",
 	"Trojan (bootleg)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
 	NULL, trojanbRomInfo, trojanbRomName, NULL, NULL, DrvInputInfo, TrojanlsDIPInfo,
 	TrojanInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -2115,7 +2406,7 @@ struct BurnDriver BurnDrvTrojanj = {
 	"trojanj", "trojan", NULL, NULL, "1986",
 	"Tatakai no Banka (Japan)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM | GBF_SCRFIGHT, 0,
 	NULL, trojanjRomInfo, trojanjRomName, NULL, NULL, DrvInputInfo, TrojanDIPInfo,
 	TrojanInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -2176,7 +2467,7 @@ struct BurnDriver BurnDrvAvengers = {
 	"avengers", NULL, NULL, NULL, "1987",
 	"Avengers (US set 1)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARWARE_CAPCOM_MISC, GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_SCRFIGHT, 0,
 	NULL, avengersRomInfo, avengersRomName, NULL, NULL, DrvInputInfo, AvengersDIPInfo,
 	AvengersInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -2230,7 +2521,7 @@ struct BurnDriver BurnDrvAvenger2 = {
 	"avengers2", "avengers", NULL, NULL, "1987",
 	"Avengers (US set 2)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARWARE_CAPCOM_MISC, GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_SCRFIGHT, 0,
 	NULL, avenger2RomInfo, avenger2RomName, NULL, NULL, DrvInputInfo, AvengersDIPInfo,
 	AvengersInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -2284,8 +2575,44 @@ struct BurnDriver BurnDrvBuraiken = {
 	"buraiken", "avengers", NULL, NULL, "1987",
 	"Hissatsu Buraiken (Japan)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARWARE_CAPCOM_MISC, GBF_SCRFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_SCRFIGHT, 0,
 	NULL, buraikenRomInfo, buraikenRomName, NULL, NULL, DrvInputInfo, AvengersDIPInfo,
 	AvengersInit, TrojanExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
+};
+
+
+// Fire Ball (FM Work)
+
+static struct BurnRomInfo fballRomDesc[] = {
+	{ "D4.bin",		0x20000, 0x6122b3dc, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+
+	{ "A05.bin",		0x10000, 0x474dd19e, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
+
+	{ "J03.bin",		0x10000, 0xbe11627f, 3 | BRF_GRA },           //  2 Characters
+
+	{ "B15.bin",		0x20000, 0x2169ad3e, 4 | BRF_GRA },           //  3 Background Layer 1 Tiles
+	{ "C15.bin",		0x20000, 0x0f77b03e, 4 | BRF_GRA },           //  4
+	{ "E15.bin",		0x20000, 0x89a761d2, 4 | BRF_GRA },           //  5
+	{ "F15.bin",		0x20000, 0x34b3f9a2, 4 | BRF_GRA },           //  6
+
+	{ "J15.bin",		0x20000, 0xed7be8e7, 5 | BRF_GRA },           //  7 Sprites
+	{ "H15.bin",		0x20000, 0x6ffb5433, 5 | BRF_GRA },           //  8
+
+	{ "A03.bin",		0x40000, 0x22b0d089, 6 | BRF_SND },           //  9 msm6295 Samples
+	{ "A02.bin",		0x40000, 0x951d6579, 6 | BRF_SND },           // 10
+	{ "A01.bin",		0x40000, 0x020b5261, 6 | BRF_SND },           // 11
+};
+
+STD_ROM_PICK(fball)
+STD_ROM_FN(fball)
+
+struct BurnDriver BurnDrvFball = {
+	"fball", NULL, NULL, NULL, "1992",
+	"Fire Ball (FM Work)\0", "Black Bar on the left side is normal.", "FM Work", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARWARE_CAPCOM_MISC, GBF_MISC, 0,
+	NULL, fballRomInfo, fballRomName, NULL, NULL, FballInputInfo, FballDIPInfo,
+	FballInit, DrvExit, FballFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
+	256, 240, 4, 3
 };

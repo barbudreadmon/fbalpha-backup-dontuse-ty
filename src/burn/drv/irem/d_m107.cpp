@@ -954,7 +954,7 @@ static void draw_layer_byline(INT32 start, INT32 finish, INT32 layer, INT32 forc
 
 static void DrawLayers(INT32 start, INT32 finish)
 {
-#if defined PROFILE_PERFORMANCE
+#if defined USE_SPEEDHACKS
 	if(!pBurnDraw) return;
 #endif
 	memset (RamPrioBitmap + (start * nScreenWidth), 0, nScreenWidth * (finish - start)); // clear priority

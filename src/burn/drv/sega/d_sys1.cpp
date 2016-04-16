@@ -2211,6 +2211,30 @@ static struct BurnRomInfo MyherokRomDesc[] = {
 STD_ROM_PICK(Myherok)
 STD_ROM_FN(Myherok)
 
+static struct BurnRomInfo MyheroblRomDesc[] = {
+	{ "1.f2",         	   0x004000, 0xc1d354dc, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "2.g2",         	   0x004000, 0x688c9ede, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
+	{ "3.h2",              0x004000, 0x3cbbaf64, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
+	
+	{ "6.E10",      	   0x002000, 0xaf467223, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
+	
+	{ "B13.R10",           0x004000, 0x9a4861b1, BRF_GRA },		  //  4 Tiles
+	{ "B11.R7",            0x004000, 0x0d6f248a, BRF_GRA },		  //  5 Tiles
+	{ "x.R8",              0x004000, 0x24537709, BRF_GRA },		  //  6 Tiles
+	
+	{ "4.f4",      		   0x004000, 0xf19e05a1, BRF_GRA },		  //  7 Sprites
+	{ "x.H4",              0x004000, 0x7988adc3, BRF_GRA },		  //  8 Sprites
+	{ "x.G4",      		   0x004000, 0x37f77a78, BRF_GRA },		  //  9 Sprites
+	{ "B7.K4",       	   0x004000, 0x42bdc8f6, BRF_GRA },		  //  10 Sprites
+
+	{ "pr-5317.76",        0x000100, 0x648350b8, BRF_OPT },		  //  11 Timing PROM
+	
+	{ "PROM.A2",           0x000200, 0x4fcaf000, BRF_OPT },       //  12 Timing PROMBL
+};
+
+STD_ROM_PICK(Myherobl)
+STD_ROM_FN(Myherobl)
+
 static struct BurnRomInfo NobRomDesc[] = {
 	{ "dm08.1f",           0x008000, 0x98d602d6, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "dm10.1k",           0x008000, 0xe7c06663, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
@@ -2436,9 +2460,9 @@ STD_ROM_PICK(Regulusu)
 STD_ROM_FN(Regulusu)
 
 static struct BurnRomInfo SeganinjRomDesc[] = {
-	{ "epr-.116",          0x004000, 0xa5d0c9d0, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
-	{ "epr-.109",          0x004000, 0xb9e6775c, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
-	{ "epr-6552.96",       0x004000, 0xf2eeb0d8, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
+	{ "epr-6594a.116",     0x004000, 0xa5d0c9d0, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "epr-6595a.109",     0x004000, 0xb9e6775c, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
+	{ "epr-6596a.96",      0x004000, 0xf2eeb0d8, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
 	
 	{ "epr-6559.120",      0x002000, 0x5a1570ee, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
 	
@@ -2452,7 +2476,7 @@ static struct BurnRomInfo SeganinjRomDesc[] = {
 	{ "epr-6546.117",      0x004000, 0xa4785692, BRF_GRA },		  //  10 Sprites
 	{ "epr-6548.04",       0x004000, 0xbdf278c1, BRF_GRA },		  //  11 Sprites
 	{ "epr-6547.110",      0x004000, 0x34451b08, BRF_GRA },		  //  12 Sprites
-	{ "epr-6549.05",       0x004000, 0xd2057668, BRF_GRA },		  //  13 Sprites
+	{ "epr-6549a.05",      0x004000, 0x7c51488c, BRF_GRA },		  //  13 Sprites
 
 	{ "pr-5317.76",        0x000100, 0x648350b8, BRF_OPT },		  //  14 Timing PROM
 };
@@ -2463,7 +2487,7 @@ STD_ROM_FN(Seganinj)
 static struct BurnRomInfo SeganinjuRomDesc[] = {
 	{ "epr-7149.116",      0x004000, 0xcd9fade7, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
 	{ "epr-7150.109",      0x004000, 0xc36351e2, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
-	{ "epr-6552.96",       0x004000, 0xf2eeb0d8, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
+	{ "epr-7151.96",       0x004000, 0xf2eeb0d8, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
 	
 	{ "epr-6559.120",      0x002000, 0x5a1570ee, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
 	
@@ -2484,6 +2508,31 @@ static struct BurnRomInfo SeganinjuRomDesc[] = {
 
 STD_ROM_PICK(Seganinju)
 STD_ROM_FN(Seganinju)
+
+static struct BurnRomInfo SeganinjaRomDesc[] = {
+	{ "epr-6879.116",      0x004000, 0xcae7e51f, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "epr-6880.109",      0x004000, 0x7af85e01, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
+	{ "epr-6881.96",       0x004000, 0xf2eeb0d8, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
+	
+	{ "epr-6559.120",      0x002000, 0x5a1570ee, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
+	
+	{ "epr-6558.62",       0x002000, 0x2af9eaeb, BRF_GRA },		  //  4 Tiles
+	{ "epr-6592.61",       0x002000, 0x7804db86, BRF_GRA },		  //  5 Tiles
+	{ "epr-6556.64",       0x002000, 0x79fd26f7, BRF_GRA },		  //  6 Tiles
+	{ "epr-6590.63",       0x002000, 0xbf858cad, BRF_GRA },		  //  7 Tiles
+	{ "epr-6554.66",       0x002000, 0x5ac9d205, BRF_GRA },		  //  8 Tiles
+	{ "epr-6588.65",       0x002000, 0xdc931dbb, BRF_GRA },		  //  9 Tiles
+	
+	{ "epr-6546.117",      0x004000, 0xa4785692, BRF_GRA },		  //  10 Sprites
+	{ "epr-6548.04",       0x004000, 0xbdf278c1, BRF_GRA },		  //  11 Sprites
+	{ "epr-6547.110",      0x004000, 0x34451b08, BRF_GRA },		  //  12 Sprites
+	{ "epr-6549.05",       0x004000, 0xd2057668, BRF_GRA },		  //  13 Sprites
+
+	{ "pr-5317.76",        0x000100, 0x648350b8, BRF_OPT },		  //  14 Timing PROM
+};
+
+STD_ROM_PICK(Seganinja)
+STD_ROM_FN(Seganinja)
 
 static struct BurnRomInfo NinjaRomDesc[] = {
 	{ "epr6594.bin",       0x004000, 0x3ef0e5fc, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
@@ -2515,7 +2564,7 @@ static struct BurnRomInfo NprincesRomDesc[] = {
 	{ "epr-6613.130",      0x002000, 0x18281f27, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "epr-6614.131",      0x002000, 0x69fc3d73, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
 	{ "epr-6615.132",      0x002000, 0x1d0374c8, BRF_ESS | BRF_PRG }, //  3	Z80 #1 Program Code
-	{ "epr-6577.133",      0x002000, 0x73616e03, BRF_ESS | BRF_PRG }, //  4	Z80 #1 Program Code
+	{ "epr-6616.133",      0x002000, 0x73616e03, BRF_ESS | BRF_PRG }, //  4	Z80 #1 Program Code
 	{ "epr-6617.134",      0x002000, 0x20b6f895, BRF_ESS | BRF_PRG }, //  5	Z80 #1 Program Code
 	
 	{ "epr-6559.120",      0x002000, 0x5a1570ee, BRF_ESS | BRF_PRG }, //  6	Z80 #2 Program Code
@@ -2797,23 +2846,25 @@ STD_ROM_PICK(Teddybbo)
 STD_ROM_FN(Teddybbo)
 
 static struct BurnRomInfo TeddybboblRomDesc[] = {
-	{ "epr-6739.116", 	   0x004000, 0x81a37e69, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
-	{ "epr-6740.109",	   0x004000, 0x715388a9, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
-	{ "epr-6741.96",   	   0x004000, 0xe5a74f5f, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
+	{ "1.f2",        	   0x004000, 0x81a37e69, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "2.j2",	           0x004000, 0x715388a9, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
+	{ "3.k2",        	   0x004000, 0xe5a74f5f, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
 
 //	No sound rom present on the PCB - Instead use epr-6748.120 from Teddybbo set //	
-	{ "epr-6748.120",      0x002000, 0x9325a1cf, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
+	{ "6.e10",             0x002000, 0x9325a1cf, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
 	
 	{ "11.r7",       	   0x004000, 0x55d7aaf7, BRF_GRA },		  //  4 Tiles
 	{ "10.r8",       	   0x004000, 0x52a5083d, BRF_GRA },		  //  5 Tiles
 	{ "9.r10",       	   0x004000, 0x8076d3a3, BRF_GRA },		  //  6 Tiles
 		
-	{ "epr-6735.117",	   0x004000, 0x1be35a97, BRF_GRA },		  //  7 Sprites
-	{ "epr-6737.04",   	   0x004000, 0x6b53aa7a, BRF_GRA },		  //  8 Sprites
-	{ "epr-6736.110",	   0x004000, 0x565c25d0, BRF_GRA },		  //  9 Sprites
-	{ "epr-6738.05",   	   0x004000, 0xe116285f, BRF_GRA },		  //  10 Sprites
+	{ "4.f3",	           0x004000, 0x1be35a97, BRF_GRA },		  //  7 Sprites
+	{ "6.k3",        	   0x004000, 0x6b53aa7a, BRF_GRA },		  //  8 Sprites
+	{ "5.h3",	           0x004000, 0x565c25d0, BRF_GRA },		  //  9 Sprites
+	{ "7.m3",        	   0x004000, 0xe116285f, BRF_GRA },		  //  10 Sprites
 
 	{ "pr-5317.76",        0x000100, 0x648350b8, BRF_OPT },		  //  14 Timing PROM
+	
+	{ "74s287.bin",        0x000100, 0xde9af32c, BRF_OPT },		  //  15
 };
 
 STD_ROM_PICK(Teddybbobl)
@@ -3340,6 +3391,7 @@ static struct BurnRomInfo wbmljbRomDesc[] = {
 STD_ROM_PICK(wbmljb)
 STD_ROM_FN(wbmljb)
 
+// Wonder Boy in Monster Land (Japan Old Ver., MC-8123, 317-0043)
 
 static struct BurnRomInfo wbmljoRomDesc[] = {
 	{ "epr11031.90",	0x8000, 0x497ebfb4, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
@@ -3394,6 +3446,33 @@ static struct BurnRomInfo wbmlbRomDesc[] = {
 
 STD_ROM_PICK(wbmlb)
 STD_ROM_FN(wbmlb)
+
+// Wonder Boy in Monster Land (English, Virtual Console)
+
+static struct BurnRomInfo wbmlvcRomDesc[] = {
+	{ "vc.ic90",		0x10000, 0x093c4852, BRF_ESS | BRF_PRG }, //  0 Z80 #1 Program Code
+	{ "vc.ic91",		0x10000, 0x7e973ece, BRF_ESS | BRF_PRG }, //  1
+	{ "vc.ic92",		0x08000, 0x32661e7e, BRF_ESS | BRF_PRG }, //  2
+
+	{ "epr11037.126",	0x08000, 0x7a4ee585, BRF_ESS | BRF_PRG }, //  3 Z80 #2 Program Code
+
+	{ "vc.ic4",		    0x08000, 0x820bee59, BRF_GRA }, //  4 Tiles
+	{ "vc.ic5",		    0x08000, 0xa9a1447e, BRF_GRA }, //  5
+	{ "vc.ic6",		    0x08000, 0x359026a0, BRF_GRA }, //  6
+
+	{ "epr11028.87",	0x08000, 0xaf0b3972, BRF_GRA }, //  7 Sprites
+	{ "epr11027.86",	0x08000, 0x277d8f1d, BRF_GRA }, //  8
+	{ "epr11030.89",	0x08000, 0xf05ffc76, BRF_GRA }, //  9
+	{ "epr11029.88",	0x08000, 0xcedc9c61, BRF_GRA }, // 10
+
+	{ "pr11026.20",		0x00100, 0x27057298, BRF_GRA }, // 11 Red PROM
+	{ "pr11025.14",		0x00100, 0x41e4d86b, BRF_GRA }, // 12 Blue
+	{ "pr11024.8",		0x00100, 0x08d71954, BRF_GRA }, // 13 Green
+	{ "pr5317.37",		0x00100, 0x648350b8, BRF_GRA }, // 14 Timing PROM
+};
+
+STD_ROM_PICK(wbmlvc)
+STD_ROM_FN(wbmlvc)
 
 /*==============================================================================================
 Decode Functions
@@ -4936,7 +5015,8 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 {
 	INT32 TilePlaneOffsets[3]  = { RGN_FRAC((nTileRomSize * nTileRomNum), 0, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 1, 3), RGN_FRAC((nTileRomSize * nTileRomNum), 2, 3) };
 	INT32 nRet = 0, nLen, i, RomOffset;
-	
+	struct BurnRomInfo ri;
+
 	System1NumTiles = (((nTileRomNum * nTileRomSize) / 3) * 8) / (8 * 8);
 	System1SpriteRomSize = nSpriteRomNum * nSpriteRomSize;
 	
@@ -4954,24 +5034,34 @@ static INT32 System2Init(INT32 nZ80Rom1Num, INT32 nZ80Rom1Size, INT32 nZ80Rom2Nu
 	RomOffset = 0;
 	for (i = 0; i < nZ80Rom1Num; i++) {
 		nRet = BurnLoadRom(System1Rom1 + (i * nZ80Rom1Size), i + RomOffset, 1); if (nRet != 0) return 1;
+		BurnDrvGetRomInfo(&ri, i);
 	}
 
-	if (System1BankedRom) 
+	if (System1BankedRom)
 	{
 		memcpy(System1TempRom, System1Rom1, 0x40000);
 		memset(System1Rom1, 0, 0x40000);
-		memcpy(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
-		memcpy(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
-		memcpy(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
+
+		if (System1BankedRom == 1)
+		{ // Encrypted, banked
+			memcpy(System1Rom1 + 0x00000, System1TempRom + 0x00000, 0x8000);
+			memcpy(System1Rom1 + 0x10000, System1TempRom + 0x08000, 0x8000);
+			memcpy(System1Rom1 + 0x18000, System1TempRom + 0x10000, 0x8000);
+		}
 
 		if (System1BankedRom == 2)
-		{ // here!
-			memcpy (System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
-			memcpy (System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
-			memcpy (System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
-			memcpy (System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
-			memcpy (System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
-			memcpy (System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+		{ // Unencrypted, banked
+			memcpy(System1Rom1 + 0x20000, System1TempRom + 0x00000, 0x8000);
+			memcpy(System1Rom1 + 0x00000, System1TempRom + 0x08000, 0x8000);
+			memcpy(System1Rom1 + 0x30000, System1TempRom + 0x10000, 0x8000);//fetch
+			memcpy(System1Rom1 + 0x10000, System1TempRom + 0x18000, 0x8000);
+			memcpy(System1Rom1 + 0x38000, System1TempRom + 0x20000, 0x8000);//fetch
+			memcpy(System1Rom1 + 0x18000, System1TempRom + 0x28000, 0x8000);
+
+			if ((UINT32)nZ80Rom1Size == (ri.nLen * 2))
+			{ // last rom half the size, reload it into the last slot
+				memcpy (System1Rom1 + 0x18000, System1TempRom + 0x20000, 0x8000);
+			}
 		}
 	}
 
@@ -5299,6 +5389,13 @@ static INT32 SscandalInit()
 	DecodeFunction = myheroj_decode;
 	
 	return System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 4, 0x4000, 1);
+}
+
+static INT32 MyheroblInit()
+{
+	DecodeFunction = myheroj_decode;
+			
+	return System1Init(3, 0x4000, 1, 0x2000, 3, 0x4000, 4, 0x4000, 1);
 }
 
 static INT32 MyherokInit()
@@ -6369,6 +6466,16 @@ struct BurnDriver BurnDrvSscandal = {
 	NULL, 0x800, 256, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvMyherobl = {
+	"myherobl", "myhero", NULL, NULL, "1985",
+	"My Hero (bootleg, 315-5132 encryption)\0", NULL, "bootleg", "System 1",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_SEGA_SYSTEM1, GBF_PLATFORM, 0,
+	NULL, MyheroblRomInfo, MyheroblRomName, NULL, NULL, MyheroInputInfo, MyheroDIPInfo,
+	MyheroblInit, System1Exit, System1Frame, NULL, System1Scan,
+	NULL, 0x800, 256, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvMyherok = {
 	"myherok", "myhero", NULL, NULL, "1985",
 	"My Hero (Korea)\0", NULL, "Coreland / Sega", "System 1",
@@ -6486,6 +6593,16 @@ struct BurnDriver BurnDrvSeganinju = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
 	NULL, SeganinjuRomInfo, SeganinjuRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
 	SeganinuInit, System1Exit, System1Frame, NULL, System1Scan,
+	NULL, 0x800, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvSeganinja = {
+	"seganinja", "seganinj", NULL, NULL, "1985",
+	"Sega Ninja (315-5113)\0", "needs decrypting", "Sega", "System 1",
+	NULL, NULL, NULL, NULL,
+	BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_VERSHOOT, 0,
+	NULL, SeganinjaRomInfo, SeganinjaRomName, NULL, NULL, SeganinjInputInfo, SeganinjDIPInfo,
+	SeganinjInit, System1Exit, System1Frame, NULL, System1Scan,
 	NULL, 0x800, 256, 224, 4, 3
 };
 
@@ -6827,6 +6944,16 @@ struct BurnDriver BurnDrvWbmlb = {
 	NULL, wbmlbRomInfo, wbmlbRomName, NULL, NULL, MyheroInputInfo, WbmlDIPInfo,
 	WbmljbInit, System1Exit, System1Frame, NULL, System1Scan, 
 	NULL, 0x800, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvWbmlvc = {
+	"wbmlvc", "wbml", NULL, NULL, "2009",
+	"Wonder Boy in Monster Land (English, Virtual Console)\0", NULL, "Sega", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM1, GBF_MISC, 0,
+	NULL, wbmlvcRomInfo, wbmlvcRomName, NULL, NULL, MyheroInputInfo, WbmlDIPInfo,
+	WbmljbInit, System1Exit, System1Frame, NULL, System1Scan,
+	NULL, 0x600, 256, 224, 4, 3
 };
 
 // shtngmst and clones

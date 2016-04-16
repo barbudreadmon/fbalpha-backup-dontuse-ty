@@ -52,6 +52,7 @@ static UINT8 *Kaneko16Tiles        = NULL;
 static UINT8 *Kaneko16Tiles2       = NULL;
 static UINT8 *Kaneko16Sprites      = NULL;
 static UINT8 *Kaneko16TempGfx      = NULL;
+static UINT8 *DrvPrioBitmap        = NULL; // Wing Force & BlaZeon
 
 static INT16* pFMBuffer;
 static INT16* pAY8910Buffer[6];
@@ -1093,6 +1094,37 @@ static struct BurnRomInfo BlazeonRomDesc[] = {
 STD_ROM_PICK(Blazeon)
 STD_ROM_FN(Blazeon)
 
+static struct BurnRomInfo WingforcRomDesc[] = {
+	{ "e_2.24.u80",       	0x080000, 0x837e0726, BRF_ESS | BRF_PRG }, //  0 68000 Program Code
+	{ "o_2.24.u81",       	0x080000, 0xb6983437, BRF_ESS | BRF_PRG }, //  1
+	
+	// two sprite chips, roms are doubled
+	{ "sp0m.u69",        	0x080000, 0x8be26a05, BRF_GRA },	   	   //  2 Sprites
+	{ "sp0m.u1",        	0x080000, 0x8be26a05, BRF_GRA },	   	   //  3 
+	
+	{ "sp1m.u1",        	0x080000, 0xad8c5b68, BRF_GRA },	   	   //  4
+	{ "sp1m.u69",        	0x080000, 0xad8c5b68, BRF_GRA },	   	   //  5
+
+	{ "sp2m.u20",        	0x080000, 0xb5994bda, BRF_GRA },	   	   //  6 
+	{ "sp2m.u68",        	0x080000, 0xb5994bda, BRF_GRA },	   	   //  7
+	
+	{ "sp3m.u20",        	0x080000, 0x889ddf72, BRF_GRA },	   	   //  8
+	{ "sp3m.u68",        	0x080000, 0x889ddf72, BRF_GRA },	   	   //  9
+	
+	{ "bg0am.u2",	        0x080000, 0xf4276860, BRF_GRA },	   	   // 10 Tiles (scrambled)
+	{ "bg0bm.u2",	        0x080000, 0x9df92283, BRF_GRA },	   	   // 11 Tiles (scrambled)
+	{ "bg1am.u3",	        0x080000, 0xa44fdebb, BRF_GRA },	   	   // 12 Tiles (scrambled)
+	{ "bg1bm.u3",	        0x080000, 0xa9b9fc5d, BRF_GRA },	   	   // 13 Tiles (scrambled)
+	
+	{ "s-drv_2.22.u45",     0x010000, 0xccdc2758, BRF_ESS | BRF_PRG }, // 14 Z80 Program Code
+	
+	{ "pcm.u5",      	    0x080000, 0x233569fd, BRF_SND }, 		   // 15 Samples
+};
+
+
+STD_ROM_PICK(Wingforc)
+STD_ROM_FN(Wingforc)
+
 static struct BurnRomInfo BloodwarRomDesc[] = {
 	{ "ofp0f3.514",        	0x080000, 0x0c93da15, BRF_ESS | BRF_PRG }, //  0 68000 Program Code
 	{ "ofp1f3.513",        	0x080000, 0x894ecbe5, BRF_ESS | BRF_PRG }, //  1	
@@ -1241,6 +1273,7 @@ STD_ROM_PICK(Bakubrkr)
 STD_ROM_FN(Bakubrkr)
 
 static struct BurnRomInfo GtmrRomDesc[] = {
+	// this set shows 'PCB by Jinwei Co Ltd. ROC'
 	{ "u2.bin",            	0x080000, 0x031799f7, BRF_ESS | BRF_PRG }, //  0 68000 Program Code
 	{ "u1.bin",            	0x080000, 0x6238790a, BRF_ESS | BRF_PRG }, //  1	
 	
@@ -1283,6 +1316,54 @@ static struct BurnRomInfo GtmraRomDesc[] = {
 
 STD_ROM_PICK(Gtmra)
 STD_ROM_FN(Gtmra)
+
+static struct BurnRomInfo GtmrbRomDesc[] = {
+	{ "mmp0x1.u514",   		0x080000, 0x6c163f12, BRF_ESS | BRF_PRG }, //  0 68000 Program Code
+	{ "mmp1x1.u513",   		0x080000, 0x424dc7e1, BRF_ESS | BRF_PRG }, //  1	
+	
+	{ "mmd0x1.u124",   		0x020000, 0x3d7cb329, BRF_PRG | BRF_OPT }, //  2 MCU Code // == mmd0x2
+
+	{ "mm-200-402-s0.bin", 	0x200000, 0xc0ab3efc, BRF_GRA },	   	   //  3 Sprites
+	{ "mm-201-403-s1.bin", 	0x200000, 0xcf6b23dc, BRF_GRA },	 	   //  4	
+	{ "mm-202-404-s2.bin", 	0x200000, 0x8f27f5d3, BRF_GRA },	       //  5	
+	{ "mm-203-405-s3.bin", 	0x080000, 0xe9747c8c, BRF_GRA },	       //  6	
+	{ "mms1x1.u30",    		0x020000, 0x9463825c, BRF_GRA },	       //  7	
+	{ "mms0x1.u29",    		0x020000, 0xbd22b7d2, BRF_GRA },	       //  8 		  // == mms0x2	
+	
+	{ "mm-300-406-a0.bin", 	0x200000, 0xb15f6b7f, BRF_GRA },	       //  9 Tiles (scrambled)
+
+	{ "mm-100-401-e0.bin", 	0x100000, 0xb9cbfbee, BRF_SND },		   // 10 Samples
+};
+
+
+STD_ROM_PICK(Gtmrb)
+STD_ROM_FN(Gtmrb)
+
+static struct BurnRomInfo GtmroRomDesc[] = {
+	// possible prototype
+	{ "u514.bin",   		0x080000, 0x2e857685, BRF_ESS | BRF_PRG }, //  0 68000 Program Code
+	{ "u513.bin",   		0x080000, 0xd5003870, BRF_ESS | BRF_PRG }, //  1	
+	
+	{ "mmd0x0.u124", 	  	0x020000, 0xe1f6159e, BRF_PRG | BRF_OPT }, //  2 MCU Code
+
+	{ "mm200-e.bin", 		0x100000, 0xeb104408, BRF_GRA },	   	   //  3 Sprites
+	{ "mm200-o.bin", 		0x100000, 0xb6d04e7c, BRF_GRA },	 	   //  4
+	{ "mm201-e.bin", 		0x100000, 0xb8c64e14, BRF_GRA },	 	   //  5
+	{ "mm201-o.bin", 		0x100000, 0x3ecd6c0a, BRF_GRA },	 	   //  6
+	{ "mm202-e.bin", 		0x100000, 0xf0fd5688, BRF_GRA },	       //  7	
+	{ "mm202-o.bin", 		0x100000, 0xe0fe1b2b, BRF_GRA },	       //  8	
+	{ "mm203-e.bin",    	0x100000, 0xb9001f28, BRF_GRA },	       //  9	
+	{ "mm203-o.bin",    	0x100000, 0x2ed6227d, BRF_GRA },	       // 10	
+	
+	{ "mm300-e.u53", 		0x100000, 0xf9ee708d, BRF_GRA },	       // 11 Tiles (scrambled)
+	{ "mm300-o.u54", 		0x100000, 0x76299353, BRF_GRA },	       // 12 
+
+	{ "mm-100-401-e0.bin", 	0x100000, 0xb9cbfbee, BRF_SND },		   // 13 Samples
+};
+
+
+STD_ROM_PICK(Gtmro)
+STD_ROM_FN(Gtmro)
 
 static struct BurnRomInfo GtmreRomDesc[] = {
 	{ "gmmu2.bin",         	0x080000, 0x36dc4aa9, BRF_ESS | BRF_PRG }, //  0 68000 Program Code
@@ -1449,18 +1530,18 @@ STD_ROM_PICK(Mgcrystlo)
 STD_ROM_FN(Mgcrystlo)
 
 static struct BurnRomInfo MgcrystljRomDesc[] = { 
-	{ "mc100j02.u18",      	0x020000, 0xafe5882d, BRF_ESS | BRF_PRG }, //  0 68000 Program Code /* Labeled as MC100J/U18-02 */
-	{ "mc101j02.u19",      	0x040000, 0x60da5492, BRF_ESS | BRF_PRG }, //  1 					/* Labeled as MC101J/U19-02 */
+	{ "kaneko__mc100-u18j-02.u18",		0x020000, 0xafe5882d, BRF_ESS | BRF_PRG }, //  0 68000 Program Code /* Labeled as MC100J/U18-02 */
+	{ "kaneko__mc101-u19j-02.u19",		0x040000, 0x60da5492, BRF_ESS | BRF_PRG }, //  1 					/* Labeled as MC101J/U19-02 */
 	
-	{ "mc000.u38",         	0x100000, 0x28acf6f4, BRF_GRA },		   //  2 Sprites			
-	{ "mc001.u37",         	0x080000, 0x005bc43d, BRF_GRA },		   //  3 
-	{ "mc002e02.u36",      	0x020000, 0x27ac1056, BRF_GRA },		   //  4 					/* Labeled as MC002J/U36-02, but same as MC002E/U36-02 */
+	{ "kaneko__mc-000_0001.u38",		0x100000, 0x28acf6f4, BRF_GRA },		   //  2 Sprites			
+	{ "kaneko__mc-001_0002_r44.u37",	0x080000, 0x005bc43d, BRF_GRA },		   //  3 
+	{ "kaneko__mc002j-u36-02.u36",		0x020000, 0x27ac1056, BRF_GRA },		   //  4 					/* Labeled as MC002J/U36-02, but same as MC002E/U36-02 */
 	
-	{ "mc010.u04",         	0x100000, 0x85072772, BRF_GRA },		   //  5 Tiles (scrambled)
+	{ "kaneko__mc-010_0003.u04",		0x100000, 0x85072772, BRF_GRA },		   //  5 Tiles (scrambled)
 	
-	{ "mc020.u34",         	0x100000, 0x1ea92ff1, BRF_GRA },		   //  6 Tiles (scrambled) (Layers 2 & 3)
+	{ "kaneko__mc-020_0004.u34",		0x100000, 0x1ea92ff1, BRF_GRA },		   //  6 Tiles (scrambled) (Layers 2 & 3)
 
-	{ "mc030.u32",         	0x040000, 0xc165962e, BRF_SND },		   //  7 Samples
+	{ "kaneko__mc-030_0005_t99.u32",	0x040000, 0xc165962e, BRF_SND },		   //  7 Samples
 };
 
 
@@ -1673,6 +1754,16 @@ static void Kaneko16DecodeBg15Bitmaps()
 	}
 }
 
+INT32 spritepriomask[4] = { 2, 3, 5, 7 }; // Default for Wingforc
+
+static void Kaneko16SpritePrio(INT32 pri0, INT32 pri1, INT32 pri2, INT32 pri3)
+{
+	spritepriomask[0] = pri0;
+	spritepriomask[1] = pri1;
+	spritepriomask[2] = pri2;
+	spritepriomask[3] = pri3;
+}
+
 /*==============================================================================================
 Unscramble Tile/Sound ROM Functions
 ===============================================================================================*/
@@ -1816,8 +1907,12 @@ static INT32 BlazeonMemIndex()
 {
 	UINT8 *Next; Next = Mem;
 
-	Kaneko16Rom           = Next; Next += 0x080000;
+	Kaneko16Rom           = Next; Next += 0x100000;
 	Kaneko16Z80Rom        = Next; Next += 0x020000;
+
+	MSM6295ROM            = Next; Next += 0x040000;
+	MSM6295ROMData        = Next; Next += 0x0c0000;
+	DrvPrioBitmap         = Next; Next += 320 * 256;
 
 	RamStart = Next;
 
@@ -2921,6 +3016,45 @@ static void GtmrevoMCURun()
 	}
 }
 
+static void GtmroMCURun()
+{
+	UINT16 *MCURam = (UINT16*)Kaneko16MCURam;
+	UINT16 *NVRam = (UINT16*)Kaneko16NVRam;
+
+	UINT16 MCUCommand = MCURam[0x10/2];
+	UINT16 MCUOffset = MCURam[0x12/2] >> 1;
+	
+	switch (MCUCommand >> 8) {
+		case 0x02: {
+			memcpy(MCURam + MCUOffset, NVRam, 128);
+			return;
+		}
+		
+		case 0x03: {
+			MCURam[MCUOffset + 0] = 0xff00 - (Kaneko16Dip[0] << 8);
+			return;
+		}
+		
+		case 0x04: {
+			/* MCU writes the string 'TOYBOX1994-" ú[GS]žW' to shared ram  - [GS] = ASCII Group Separator */
+			MCURam[MCUOffset + 0] = 0x544f;
+			MCURam[MCUOffset + 1] = 0x5942;
+			MCURam[MCUOffset + 2] = 0x4f58;
+			MCURam[MCUOffset + 3] = 0x3139;
+			MCURam[MCUOffset + 4] = 0x3934;
+			MCURam[MCUOffset + 5] = 0x9300;
+			MCURam[MCUOffset + 6] = 0xfa1d;
+			MCURam[MCUOffset + 7] = 0x9e57;
+			return;
+		}
+		
+		case 0x42: {
+			memcpy(NVRam, MCURam + MCUOffset, 128);
+			return;
+		}
+	}
+}
+
 static void ToyboxMCUComWrite(INT32 which, UINT16 data)
 {
 	ToyboxMCUCom[which] = data;
@@ -2981,6 +3115,24 @@ static INT32 BlazeonDoReset()
 	ZetClose();
 	
 	BurnYM2151Reset();
+	
+	Kaneko16SoundLatch = 0;
+	
+	return nRet;
+}
+
+static INT32 WingforcDoReset()
+{
+	INT32 nRet = Kaneko16DoReset();
+	
+	ZetOpen(0);
+	ZetReset();
+	ZetClose();
+	
+	BurnYM2151Reset();
+
+	MSM6295Reset(0);
+	MSM6295Bank0 = 0;
 	
 	Kaneko16SoundLatch = 0;
 	
@@ -3924,6 +4076,10 @@ UINT8 __fastcall Kaneko16Z80PortRead(UINT16 a)
 		case 0x06: {
 			return Kaneko16SoundLatch;
 		}
+
+		case 0x0a: {
+			return MSM6295ReadStatus(0);
+		}
 	}
 
 	return 0;
@@ -3938,9 +4094,17 @@ void __fastcall Kaneko16Z80PortWrite(UINT16 a, UINT8 d)
 			BurnYM2151SelectRegister(d);
 			return;
 		}
-		
 		case 0x03: {
 			BurnYM2151WriteRegister(d);
+			return;
+		}
+		case 0x0a: {
+			MSM6295Command(0, d);
+			return;
+		}
+		case 0x0c: {
+			MSM6295Bank0 = d & 0x7;
+			memcpy(MSM6295ROM + 0x0000000, MSM6295ROMData + (0x40000 * (d & 0x07)), 0x40000);
 			return;
 		}
 	}
@@ -4436,7 +4600,8 @@ static INT32 BlazeonInit()
 	Kaneko16VideoInit();
 	Kaneko16SpriteRamSize = 0x1000;
 	Kaneko16SpriteXOffset = 0x10000 - 0x680;
-	
+	Kaneko16SpritePrio(1, 2, 8, 8);
+
 	// Allocate and Blank all required memory
 	Mem = NULL;
 	BlazeonMemIndex();
@@ -4506,6 +4671,119 @@ static INT32 BlazeonInit()
 	
 	// Reset the driver
 	BlazeonDoReset();
+	
+	return 0;
+}
+
+static INT32 WingforcInit()
+{
+	INT32 nRet = 0, nLen;
+	
+	Kaneko16NumSprites = 0x4000;
+	Kaneko16NumTiles = 0x4000;
+	Kaneko16NumTiles2 = 0;
+	
+	Kaneko16VideoInit();
+	Kaneko16SpriteRamSize = 0x1000;
+	Kaneko16SpriteXOffset = 0x10000 - 0x680;
+	Kaneko16SpritePrio(2, 3, 5, 7);
+	
+	// Allocate and Blank all required memory
+	Mem = NULL;
+	BlazeonMemIndex();
+	nLen = MemEnd - (UINT8 *)0;
+	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	memset(Mem, 0, nLen);
+	BlazeonMemIndex();
+
+	Kaneko16TempGfx = (UINT8*)BurnMalloc(0x400000);
+	
+	// Load and byte-swap 68000 Program roms
+	nRet = BurnLoadRom(Kaneko16Rom + 0x00001, 0, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16Rom + 0x00000, 1, 2); if (nRet != 0) return 1;
+	
+	// Load and Decode Sprite Roms
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0000000,  2, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0000000,  3, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0080000,  4, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0080000,  5, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0100000,  6, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0100000,  7, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0180000,  8, 1); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0180000,  9, 1); if (nRet != 0) return 1;
+	GfxDecode(Kaneko16NumSprites, 4, 16, 16, FourBppPlaneOffsets, FourBppXOffsets, FourBppYOffsets, 0x400, Kaneko16TempGfx, Kaneko16Sprites);
+	
+	// Load and Decode Tile Roms
+	memset(Kaneko16TempGfx, 0, 0x400000);
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0000000,10, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0000001,11, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0100000,12, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x0100001,13, 2); if (nRet != 0) return 1;
+	UnscrambleTiles(0x200000);
+	GfxDecode(Kaneko16NumTiles, 4, 16, 16, FourBppPlaneOffsets, FourBppXOffsets, FourBppYOffsets, 0x400, Kaneko16TempGfx, Kaneko16Tiles);
+
+	
+	// Load Z80 Rom
+	nRet = BurnLoadRom(Kaneko16Z80Rom, 14, 1); if (nRet != 0) return 1;
+
+	// Load & un-derange Sample Rom
+	memset(Kaneko16TempGfx, 0, 0x80000);
+	nRet = BurnLoadRom(Kaneko16TempGfx, 15, 1); if (nRet != 0) return 1;
+
+	memcpy(MSM6295ROMData + 0x00000, Kaneko16TempGfx + 0x00000, 0x20000);
+	memcpy(MSM6295ROMData + 0x20000, Kaneko16TempGfx + 0x20000, 0x20000);
+	memcpy(MSM6295ROMData + 0x40000, Kaneko16TempGfx + 0x00000, 0x20000);
+	memcpy(MSM6295ROMData + 0x60000, Kaneko16TempGfx + 0x40000, 0x20000);
+	memcpy(MSM6295ROMData + 0x80000, Kaneko16TempGfx + 0x00000, 0x20000);
+	memcpy(MSM6295ROMData + 0xa0000, Kaneko16TempGfx + 0x60000, 0x20000);
+	BurnFree(Kaneko16TempGfx);
+
+	// Setup 68k emulation
+	SekInit(0, 0x68000);
+	SekOpen(0);
+	SekMapMemory(Kaneko16Rom          , 0x000000, 0x0fffff, MAP_ROM);
+	SekMapMemory(Kaneko16Ram          , 0x300000, 0x30ffff, MAP_RAM);
+	SekMapMemory(Kaneko16PaletteRam   , 0x500000, 0x500fff, MAP_RAM);
+	SekMapMemory(Kaneko16Video1Ram    , 0x600000, 0x600fff, MAP_RAM);
+	SekMapMemory(Kaneko16Video0Ram    , 0x601000, 0x601fff, MAP_RAM);
+	SekMapMemory(Kaneko16VScrl1Ram    , 0x602000, 0x602fff, MAP_RAM);
+	SekMapMemory(Kaneko16VScrl0Ram    , 0x603000, 0x603fff, MAP_RAM);
+	SekMapMemory(Kaneko16SpriteRam    , 0x700000, 0x700fff, MAP_RAM);
+	SekMapMemory((UINT8*)Kaneko16Layer0Regs    , 0x800000, 0x80000f, MAP_WRITE);
+	SekMapMemory((UINT8*)Kaneko16SpriteRegs + 2, 0x900002, 0x90001f, MAP_WRITE);
+	SekSetReadByteHandler(0, BlazeonReadByte);
+	SekSetReadWordHandler(0, BlazeonReadWord);
+	SekSetWriteByteHandler(0, BlazeonWriteByte);
+	SekSetWriteWordHandler(0, BlazeonWriteWord);
+	SekClose();
+	
+	// Setup the Z80 emulation
+	ZetInit(0);
+	ZetOpen(0);
+	ZetMapArea(0x0000, 0xbfff, 0, Kaneko16Z80Rom         );
+	ZetMapArea(0x0000, 0xbfff, 2, Kaneko16Z80Rom         );
+	ZetMapArea(0xc000, 0xdfff, 0, Kaneko16Z80Ram         );
+	ZetMapArea(0xc000, 0xdfff, 1, Kaneko16Z80Ram         );
+	ZetMapArea(0xc000, 0xdfff, 2, Kaneko16Z80Ram         );
+	ZetSetInHandler(Kaneko16Z80PortRead);
+	ZetSetOutHandler(Kaneko16Z80PortWrite);
+	ZetClose();
+
+//	BurnSetRefreshRate(59.1854); // hmm, this causes clicks in audio. let's just give it the cycles/per frame it wants instead. (see WingforcFrame())
+
+	// Setup the YM2151 emulation
+	BurnYM2151Init(4000000);
+	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_1, 0.40, BURN_SND_ROUTE_LEFT);
+	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.40, BURN_SND_ROUTE_RIGHT);
+
+	// Setup the OKIM6295 emulation
+	MSM6295Init(0, (16000000 / 16) / 132, 1);
+	MSM6295SetRoute(0, 0.55, BURN_SND_ROUTE_BOTH);
+	
+	Kaneko16FrameRender = BlazeonFrameRender;
+	
+	// Reset the driver
+	WingforcDoReset();
 	
 	return 0;
 }
@@ -4810,6 +5088,68 @@ static INT32 GtmrInit()
 	ExpandSampleBanks();
 	
 	ToyboxMCURun = GtmrMCURun;
+	Kaneko16FrameRender = GtmrFrameRender;
+		
+	nRet = GtmrMachineInit(); if (nRet != 0) return 1;
+
+	// Reset the driver
+	GtmrDoReset();
+
+	return 0;
+}
+
+static INT32 GtmroInit()
+{
+	INT32 nRet = 0, nLen;
+	
+	Gtmr = 1;
+	
+	Kaneko16NumSprites = 0x8400;
+	Kaneko16NumTiles = 0x4000;
+	Kaneko16NumTiles2 = 0x4000;
+	
+	Kaneko16VideoInit();
+	Kaneko16ParseSprite = Kaneko16ParseSpriteType1;
+	
+	// Allocate and Blank all required memory
+	Mem = NULL;
+	GtmrMemIndex();
+	nLen = MemEnd - (UINT8 *)0;
+	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	memset(Mem, 0, nLen);
+	GtmrMemIndex();
+
+	Kaneko16TempGfx = (UINT8*)BurnMalloc(0x840000);
+	
+	// Load and byte-swap 68000 Program roms
+	nRet = BurnLoadRom(Kaneko16Rom + 0x00001, 0, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16Rom + 0x00000, 1, 2); if (nRet != 0) return 1;
+	
+	// Load and Decode Sprite Roms
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x000000,  3, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x000001,  4, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x200000,  5, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x200001,  6, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x400000,  7, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x400001,  8, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x600000,  9, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x600001, 10, 2); if (nRet != 0) return 1;
+	GfxDecode(Kaneko16NumSprites, 8, 16, 16, EightBppPlaneOffsets, EightBppXOffsets, EightBppYOffsets, 0x800, Kaneko16TempGfx, Kaneko16Sprites);
+	
+	// Load and Decode Tile Roms
+	memset(Kaneko16TempGfx, 0, 0x800000);
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x000000, 11, 2); if (nRet != 0) return 1;
+	nRet = BurnLoadRom(Kaneko16TempGfx + 0x000001, 12, 2); if (nRet != 0) return 1;
+	UnscrambleTiles(0x200000);
+	GfxDecode(Kaneko16NumTiles, 4, 16, 16, FourBppPlaneOffsets, FourBppXOffsets, FourBppYOffsets, 0x400, Kaneko16TempGfx, Kaneko16Tiles);
+	BurnFree(Kaneko16TempGfx);
+	memcpy(Kaneko16Tiles2, Kaneko16Tiles, Kaneko16NumTiles * 16 * 16);
+
+	// Load Sample Rom
+	nRet = BurnLoadRom(MSM6295ROMData, 13, 1); if (nRet != 0) return 1;
+	ExpandSampleBanks();
+	
+	ToyboxMCURun = GtmroMCURun;
 	Kaneko16FrameRender = GtmrFrameRender;
 		
 	nRet = GtmrMachineInit(); if (nRet != 0) return 1;
@@ -5379,6 +5719,15 @@ static INT32 BlazeonExit()
 	return Kaneko16Exit();
 }
 
+static INT32 WingforcExit()
+{
+	ZetExit();
+	BurnYM2151Exit();
+	MSM6295Exit(0);
+	
+	return Kaneko16Exit();
+}
+
 static INT32 GtmrMachineExit()
 {
 	MSM6295Exit(0);
@@ -5651,6 +6000,180 @@ static void Kaneko16RenderSprites(INT32 PriorityDraw)
 	}
 }
 
+static void Kaneko16RenderSprite_Wingforc(UINT32 Code, UINT32 Colour, INT32 FlipX, INT32 FlipY, INT32 sx, INT32 sy, INT32 priority)
+{
+	UINT8 *SourceBase = Kaneko16Sprites + ((Code % Kaneko16NumSprites) * 256);
+	
+	INT32 SpriteScreenHeight = ((1 << 16) * 16 + 0x8000) >> 16;
+	INT32 SpriteScreenWidth = ((1 << 16) * 16 + 0x8000) >> 16;
+	
+	if (Kaneko168BppSprites) {
+		Colour = 0x100 * (Colour % 0x40);
+	} else {
+		Colour = 0x10 * (Colour % 0x40);
+	}
+	
+	if (SpriteScreenHeight && SpriteScreenWidth) {
+		INT32 dx = (16 << 16) / SpriteScreenWidth;
+		INT32 dy = (16 << 16) / SpriteScreenHeight;
+		
+		INT32 ex = sx + SpriteScreenWidth;
+		INT32 ey = sy + SpriteScreenHeight;
+		
+		INT32 xIndexBase;
+		INT32 yIndex;
+		
+		if (FlipX) {
+			xIndexBase = (SpriteScreenWidth - 1) * dx;
+			dx = -dx;
+		} else {
+			xIndexBase = 0;
+		}
+		
+		if (FlipY) {
+			yIndex = (SpriteScreenHeight - 1) * dy;
+			dy = -dy;
+		} else {
+			yIndex = 0;
+		}
+		
+		if (sx < 0) {
+			INT32 Pixels = 0 - sx;
+			sx += Pixels;
+			xIndexBase += Pixels * dx;
+		}
+		
+		if (sy < 0) {
+			INT32 Pixels = 0 - sy;
+			sy += Pixels;
+			yIndex += Pixels * dy;
+		}
+		
+		if (ex > nScreenWidth + 1) {
+			INT32 Pixels = ex - nScreenWidth - 1;
+			ex -= Pixels;
+		}
+		
+		if (ey > nScreenHeight + 1) {
+			INT32 Pixels = ey - nScreenHeight - 1;
+			ey -= Pixels;	
+		}
+		
+		if (ex > sx) {
+			INT32 y;
+			
+			for (y = sy; y < ey; y++) {
+				UINT8 *Source = SourceBase + ((yIndex >> 16) * 16);
+				UINT16* pPixel = pTransDraw + (y * nScreenWidth);
+				UINT8 *pri = DrvPrioBitmap + (y * nScreenWidth);
+
+				if (y < 0 || y > (nScreenHeight - 1)) continue;
+				
+				INT32 x, xIndex = xIndexBase;
+				for (x = sx; x <ex; x++) {
+					INT32 c = Source[xIndex >> 16];
+					if (c != 0) {
+						// If we haven't drawn a sprite here yet, do so.
+						if (!(pri[x] & 0x10))
+						{
+							if (pri[x] < priority) {
+								if (x >= 0 && x < nScreenWidth) pPixel[x] = (c | Colour | Kaneko16SpritesColourOffset) & Kaneko16SpritesColourMask;
+							}
+							// Mark that we (tried to) draw a sprite.
+							pri[x] |= 0x10;
+						}
+					}
+					xIndex += dx;
+				}
+				
+				yIndex += dy;
+			}
+		}
+	}
+}
+
+static void Kaneko16RenderSprites_Wingforc()
+{
+	struct tempsprite *s = spritelist.first_sprite;
+	
+	INT32 i = 0;
+	INT32 x = 0;
+	INT32 y = 0;
+	INT32 Colour = 0;
+	INT32 Code = 0;
+	INT32 Priority = 0;
+	INT32 xOffs = 0;
+	INT32 yOffs = 0;
+	INT32 FlipX = 0;
+	INT32 FlipY = 0;
+	
+	while (1) {
+		INT32 Flags;
+		
+		Flags = Kaneko16ParseSprite(i, s);
+		
+		if (Flags == -1) break;
+		
+		if (Flags & USE_LATCHED_CODE) {
+			s->code = ++Code;
+		} else {
+			Code = s->code;
+		}
+		
+		if (Flags & USE_LATCHED_COLOUR) {
+			s->color = Colour;
+			s->priority = Priority;
+			s->xoffs = xOffs;
+			s->yoffs = yOffs;
+			if (Kaneko16SpriteFlipType == 0) {
+				s->flipx = FlipX;
+				s->flipy = FlipY;
+			}
+		} else {
+			Colour = s->color;
+			Priority = s->priority;
+			xOffs = s->xoffs;
+			yOffs = s->yoffs;
+			if (Kaneko16SpriteFlipType == 0) {
+				FlipX = s->flipx;
+				FlipY = s->flipy;
+			}
+		}
+
+		if (Kaneko16SpriteFlipType == 1) {
+			FlipX = s->flipx;
+			FlipY = s->flipy;
+		}
+
+		if (Flags & USE_LATCHED_XY)
+		{
+			s->x += x;
+			s->y += y;
+		}
+		
+		x = s->x;
+		y = s->y;
+		
+		s->x = s->xoffs + s->x;
+		s->y = s->yoffs + s->y;
+		
+		s->x += Kaneko16SpriteXOffset;
+				
+		s->x = ((s->x & 0x7fc0) - (s->x & 0x8000)) / 0x40;
+		s->y = ((s->y & 0x7fc0) - (s->y & 0x8000)) / 0x40;
+		
+		i++;
+		s++;
+	}
+	
+	for (s--; s >= spritelist.first_sprite; s--) {
+		INT32 curr_pri = s->priority;
+
+		UINT32 primask = spritepriomask[curr_pri];
+		Kaneko16RenderSprite_Wingforc(s->code, s->color, s->flipx, s->flipy, s->x, s->y, primask);
+	}
+}
+
 #undef USE_LATCHED_XY
 #undef USE_LATCHED_CODE
 #undef USE_LATCHED_COLOUR
@@ -5773,8 +6296,7 @@ static void Kaneko16QueueTilesLayer(INT32 Layer)
 			
 			TileIndex = ((my * 32) + mx) * 2;
 			
-			Code = VRAM[TileIndex + 1];
-			if (Code >= numTiles) continue;
+			Code = VRAM[TileIndex + 1] & (numTiles - 1);
 			Attr = VRAM[TileIndex + 0];
 			Priority = (Attr >> 8) & 7;
 			Colour = (Attr >> 2) & 0x3f;
@@ -5802,9 +6324,46 @@ static void Kaneko16RenderLayerQueue(INT32 Layer, INT32 Priority)
 {
 	for (INT32 i = 0; i < LayerQueueSize[Layer]; i++) {
 		if (LayerQueuePriority[Layer][i] == Priority) {
-			UINT16* pPixel = pTransDraw + ((LayerQueueXY[Layer][i] >> 9) * nScreenWidth) + (LayerQueueXY[Layer][i] & 0x1ff);
+			INT32 x = (LayerQueueXY[Layer][i] & 0x1ff);
+			INT32 y = (LayerQueueXY[Layer][i] >> 9);
+			UINT16* pPixel = pTransDraw + (y * nScreenWidth) + x;
 			pPixel[0] = LayerQueueColour[Layer][i] | Kaneko16LayersColourOffset;
+
+			if (DrvPrioBitmap) {
+				UINT8 *pri = DrvPrioBitmap + (y * nScreenWidth);
+				pri[x] = Priority;
+			}
 		}
+	}
+}
+
+static void RenderTileCPMP(INT32 code, INT32 color, INT32 sx, INT32 sy, INT32 flipx, INT32 flipy, INT32 width, INT32 height, INT32 offset, INT32 priority, UINT8 *gfx)
+{
+	UINT16 *dest = pTransDraw;
+
+	INT32 flip = 0;
+	if (flipy) flip |= (height - 1) * width;
+	if (flipx) flip |= width - 1;
+
+	gfx += code * width * height;
+
+	for (INT32 y = 0; y < height; y++, sy++) {
+		if (sy < 0 || sy >= nScreenHeight) continue;
+
+		for (INT32 x = 0; x < width; x++, sx++) {
+			if (sx < 0 || sx >= nScreenWidth) continue;
+
+			INT32 pxl = gfx[((y * width) + x) ^ flip];
+			if (!pxl) continue; // transparency
+
+			dest[sy * nScreenWidth + sx] = pxl | (color << 4) | offset;
+
+			if (DrvPrioBitmap) {
+				UINT8 *pri = DrvPrioBitmap + (sy * nScreenWidth);
+				pri[sx] = priority;
+			}
+		}
+		sx -= width;
 	}
 }
 
@@ -5818,7 +6377,7 @@ static void Kaneko16RenderTileLayer(INT32 Layer, INT32 PriorityDraw, INT32 xScro
 	INT32 yScrollReg = 0;
 	INT32 xOffs = 0;
 	INT32 numTiles = 0;
-	
+
 	switch (Layer) {
 		case 0: {
 			VRAM = (UINT16*)Kaneko16Video0Ram;
@@ -5863,10 +6422,7 @@ static void Kaneko16RenderTileLayer(INT32 Layer, INT32 PriorityDraw, INT32 xScro
 
 	for (my = 0; my < 32; my++) {
 		for (mx = 0; mx < 32; mx++) {
-			Code = VRAM[TileIndex + 1];
-						
-			if (Code >= numTiles) continue;
-			
+			Code = VRAM[TileIndex + 1] & (numTiles - 1);
 			Attr = VRAM[TileIndex + 0];
 			Colour = (Attr >> 2) & 0x3f;
 			Flip = Attr & 3;
@@ -5885,6 +6441,11 @@ static void Kaneko16RenderTileLayer(INT32 Layer, INT32 PriorityDraw, INT32 xScro
 				x -= Kaneko16TilesXOffset + xOffs;
 				y += Kaneko16TilesYOffset;
 							
+				if (Flip == 0) RenderTileCPMP(Code, Colour, x, y, 0, 0, 16, 16, Kaneko16LayersColourOffset, Priority, TILEDATA);
+				if (Flip == 1) RenderTileCPMP(Code, Colour, x, y, 0, 1, 16, 16, Kaneko16LayersColourOffset, Priority, TILEDATA);
+				if (Flip == 2) RenderTileCPMP(Code, Colour, x, y, 1, 0, 16, 16, Kaneko16LayersColourOffset, Priority, TILEDATA);
+				if (Flip == 3) RenderTileCPMP(Code, Colour, x, y, 1, 1, 16, 16, Kaneko16LayersColourOffset, Priority, TILEDATA);
+#if 0
 				if (x > 0 && x < (nScreenWidth - 16) && y > 0 && y < (nScreenHeight - 16)) {
 					if (Flip == 0) Render16x16Tile_Mask(pTransDraw, Code, x, y, Colour, 4, 0, Kaneko16LayersColourOffset, TILEDATA);
 					if (Flip == 1) Render16x16Tile_Mask_FlipY(pTransDraw, Code, x, y, Colour, 4, 0, Kaneko16LayersColourOffset, TILEDATA);
@@ -5896,6 +6457,7 @@ static void Kaneko16RenderTileLayer(INT32 Layer, INT32 PriorityDraw, INT32 xScro
 					if (Flip == 2) Render16x16Tile_Mask_FlipX_Clip(pTransDraw, Code, x, y, Colour, 4, 0, Kaneko16LayersColourOffset, TILEDATA);
 					if (Flip == 3) Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, Code, x, y, Colour, 4, 0, Kaneko16LayersColourOffset, TILEDATA);
 				}
+#endif
 			}
 			
 			TileIndex += 2;
@@ -6050,7 +6612,7 @@ static void BerlwallFrameRender()
 	BurnTransferCopy(Kaneko16Palette);
 }
 
-static void BlazeonFrameRender()
+static void BlazeonFrameRender() // and Wingforc
 {
 	INT32 i;
 	INT32 Layer0Enabled = 0;
@@ -6067,6 +6629,7 @@ static void BlazeonFrameRender()
 	
 	BurnTransferClear();
 	Kaneko16CalcPalette(0x0800);
+	memset(DrvPrioBitmap, 0, 320 * 232);
 	
 	if (Kaneko16Layer0Regs[4] & 0x800) {
 		HANDLE_VSCROLL(0)
@@ -6079,12 +6642,9 @@ static void BlazeonFrameRender()
 	for (i = 0; i < 8; i++) {
 		if (Layer0Enabled) { if (vScroll0Enabled) { Kaneko16RenderLayerQueue(0, i); } else { Kaneko16RenderTileLayer(0, i, xScroll0); }}
 		if (Layer1Enabled) { if (vScroll1Enabled) { Kaneko16RenderLayerQueue(1, i); } else { Kaneko16RenderTileLayer(1, i, xScroll1); }}
-	
-		if (i == 0) Kaneko16RenderSprites(0);
-		if (i == 1) Kaneko16RenderSprites(1);
-		if (i == 7) Kaneko16RenderSprites(2);
-		if (i == 7) Kaneko16RenderSprites(3);
 	}
+
+	if (nSpriteEnable & 1) Kaneko16RenderSprites_Wingforc();
 	
 	BurnTransferCopy(Kaneko16Palette);
 }
@@ -6173,15 +6733,15 @@ static void BloodwarFrameRender()
 	}
 	
 	for (i = 0; i < 8; i++) {
-		if (Layer0Enabled) { if (vScroll0Enabled) { Kaneko16RenderLayerQueue(0, i); } else { Kaneko16RenderTileLayer(0, i, xScroll0); }}
-		if (Layer1Enabled) { if (vScroll1Enabled) { Kaneko16RenderLayerQueue(1, i); } else { Kaneko16RenderTileLayer(1, i, xScroll1); }}
-		if (Layer2Enabled) { if (vScroll2Enabled) { Kaneko16RenderLayerQueue(2, i); } else { Kaneko16RenderTileLayer(2, i, xScroll2); }}
-		if (Layer3Enabled) { if (vScroll3Enabled) { Kaneko16RenderLayerQueue(3, i); } else { Kaneko16RenderTileLayer(3, i, xScroll3); }}
+		if (nBurnLayer & 1) if (Layer0Enabled) { if (vScroll0Enabled) { Kaneko16RenderLayerQueue(0, i); } else { Kaneko16RenderTileLayer(0, i, xScroll0); }}
+		if (nBurnLayer & 2) if (Layer1Enabled) { if (vScroll1Enabled) { Kaneko16RenderLayerQueue(1, i); } else { Kaneko16RenderTileLayer(1, i, xScroll1); }}
+		if (nBurnLayer & 4) if (Layer2Enabled) { if (vScroll2Enabled) { Kaneko16RenderLayerQueue(2, i); } else { Kaneko16RenderTileLayer(2, i, xScroll2); }}
+		if (nBurnLayer & 8) if (Layer3Enabled) { if (vScroll3Enabled) { Kaneko16RenderLayerQueue(3, i); } else { Kaneko16RenderTileLayer(3, i, xScroll3); }}
 	
-		if (i == 1) Kaneko16RenderSprites(0);
-		if (i == 2) Kaneko16RenderSprites(1);
-		if (i == 4) Kaneko16RenderSprites(2);
-		if (i == 6) Kaneko16RenderSprites(3);
+		if (nSpriteEnable & 1) if (i == 1) Kaneko16RenderSprites(0);
+		if (nSpriteEnable & 2) if (i == 2) Kaneko16RenderSprites(1);
+		if (nSpriteEnable & 4) if (i == 4) Kaneko16RenderSprites(2);
+		if (nSpriteEnable & 8) if (i == 6) Kaneko16RenderSprites(3);
 	}
 	
 	BurnTransferCopy(Kaneko16Palette);
@@ -6471,7 +7031,70 @@ static INT32 BlazeonFrame()
 			BurnYM2151Render(pSoundBuf, nSegmentLength);
 			ZetClose();
 		}
+	}
 
+	if (pBurnDraw) Kaneko16FrameRender();
+	
+	return 0;
+}
+
+static INT32 WingforcFrame()
+{
+	INT32 nInterleave = 256;
+	nSoundBufferPos = 0;
+		
+	if (Kaneko16Reset) WingforcDoReset();
+
+	Kaneko16MakeInputs();
+
+	nCyclesTotal[0] = ((UINT64)16000000 * (UINT64)10000) / 591854;
+	nCyclesTotal[1] = ((UINT64)4000000 * (UINT64)10000) / 591854;
+	nCyclesDone[0] = nCyclesDone[1] = 0;
+
+	for (INT32 i = 0; i < nInterleave; i++) {
+		INT32 nCurrentCPU, nNext;
+
+		nCurrentCPU = 0;
+		SekOpen(nCurrentCPU);
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
+		if (i == 144) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
+		if (i == 64) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 224) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
+		SekClose();
+		
+		// Run Z80
+		nCurrentCPU = 1;
+		ZetOpen(0);
+		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
+		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
+		nCyclesSegment = ZetRun(nCyclesSegment);
+		nCyclesDone[nCurrentCPU] += nCyclesSegment;
+		ZetClose();
+
+		// Render Sound Segment
+		if (pBurnSoundOut) {
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			ZetOpen(0);
+			BurnYM2151Render(pSoundBuf, nSegmentLength);
+			ZetClose();
+			nSoundBufferPos += nSegmentLength;
+		}
+	}
+	
+	// Make sure the buffer is entirely filled.
+	if (pBurnSoundOut) {
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+
+		if (nSegmentLength) {
+			ZetOpen(0);
+			BurnYM2151Render(pSoundBuf, nSegmentLength);
+			ZetClose();
+		}
+		MSM6295Render(0, pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) Kaneko16FrameRender();
@@ -6580,7 +7203,7 @@ static INT32 Kaneko16Scan(INT32 nAction,INT32 *pnMin)
 	
 	if (nAction & ACB_MEMORY_RAM) {
 		memset(&ba, 0, sizeof(ba));
-    		ba.Data	  = RamStart;
+		ba.Data	  = RamStart;
 		ba.nLen	  = RamEnd-RamStart;
 		ba.szName = "All Ram";
 		BurnAcb(&ba);
@@ -6589,10 +7212,6 @@ static INT32 Kaneko16Scan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
 				
-		SCAN_VAR(nCyclesDone);
-		SCAN_VAR(nCyclesSegment);
-		SCAN_VAR(Kaneko16Dip);
-		SCAN_VAR(Kaneko16Input);
 		SCAN_VAR(Kaneko16SoundLatch);
 		SCAN_VAR(Kaneko16SpriteFlipX);
 		SCAN_VAR(Kaneko16SpriteFlipY);
@@ -6620,8 +7239,27 @@ static INT32 BlazeonScan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
 		BurnYM2151Scan(nAction);
+	}
+	
+	return Kaneko16Scan(nAction, pnMin);;
+}
+
+static INT32 WingforcScan(INT32 nAction,INT32 *pnMin)
+{
+	if (pnMin != NULL) {
+		*pnMin =  0x029672;
+	}
+	
+	if (nAction & ACB_DRIVER_DATA) {
+		ZetScan(nAction);
+		BurnYM2151Scan(nAction);
+		MSM6295Scan(0, nAction);
 		
-		SCAN_VAR(nSoundBufferPos);
+		SCAN_VAR(MSM6295Bank0);
+	}
+
+	if (nAction & ACB_WRITE) {
+		memcpy(MSM6295ROM + 0x0000000, MSM6295ROMData  + (0x40000 * MSM6295Bank0),0x40000);
 	}
 	
 	return Kaneko16Scan(nAction, pnMin);;
@@ -6637,7 +7275,6 @@ static INT32 ExplbrkrScan(INT32 nAction,INT32 *pnMin)
 		AY8910Scan(nAction, pnMin);
 		MSM6295Scan(0, nAction);
 		SCAN_VAR(MSM6295Bank0);
-		SCAN_VAR(nSoundBufferPos);
 	}
 	
 	if (nAction & ACB_WRITE) {
@@ -6679,13 +7316,13 @@ static INT32 ShogwarrScan(INT32 nAction,INT32 *pnMin)
 
 	if (nAction & ACB_DRIVER_DATA) {
 		memset(&ba, 0, sizeof(ba));
-    		ba.Data	  = &m_calc3;
+		ba.Data	  = &m_calc3;
 		ba.nLen	  = sizeof (m_calc3);
 		ba.szName = "Calc3 Data";
 		BurnAcb(&ba);
 
 		memset(&ba, 0, sizeof(ba));
-    		ba.Data	  = &m_hit3;
+		ba.Data	  = &m_hit3;
 		ba.nLen	  = sizeof (m_hit3);
 		ba.szName = "Hit2 Data";
 		BurnAcb(&ba);
@@ -6766,6 +7403,16 @@ struct BurnDriver BurnDrvBlazeon = {
 	NULL, 0x1000, 320, 232, 4, 3
 };
 
+struct BurnDriver BurnDrvWingforc = {
+	"wingforc", NULL, NULL, NULL, "1993",
+	"Wing Force (Japan, prototype)\0", NULL, "Atlus", "Kaneko16",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_KANEKO16, GBF_HORSHOOT, 0,
+	NULL, WingforcRomInfo, WingforcRomName, NULL, NULL, BlazeonInputInfo, BlazeonDIPInfo,
+	WingforcInit, WingforcExit, WingforcFrame, NULL, WingforcScan,
+	NULL, 0x1000, 224, 320, 3, 4
+};
+
 struct BurnDriver BurnDrvBloodwar = {
 	"bloodwar", NULL, NULL, NULL, "1994",
 	"Blood Warrior\0", NULL, "Kaneko", "Kaneko16",
@@ -6833,6 +7480,26 @@ struct BurnDriver BurnDrvGtmra = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KANEKO16, GBF_RACING, 0,
 	NULL, GtmraRomInfo, GtmraRomName, NULL, NULL, GtmrInputInfo, GtmrDIPInfo,
 	GtmrInit, GtmrMachineExit, GtmrFrame, NULL, GtmrScan,
+	NULL, 0x10000, 320, 240, 4, 3
+};
+
+struct BurnDriver BurnDrvGtmrb = {
+	"gtmrb", "gtmr", NULL, NULL, "1994",
+	"1000 Miglia: Great 1000 Miles Rally (94/05/26)\0", NULL, "Kaneko", "Kaneko16",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KANEKO16, GBF_RACING, 0,
+	NULL, GtmrbRomInfo, GtmrbRomName, NULL, NULL, GtmrInputInfo, GtmrDIPInfo,
+	GtmrInit, GtmrMachineExit, GtmrFrame, NULL, GtmrScan,
+	NULL, 0x10000, 320, 240, 4, 3
+};
+
+struct BurnDriver BurnDrvGtmro = {
+	"gtmro", "gtmr", NULL, NULL, "1994",
+	"1000 Miglia: Great 1000 Miles Rally (94/05/10)\0", NULL, "Kaneko", "Kaneko16",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KANEKO16, GBF_RACING, 0,
+	NULL, GtmroRomInfo, GtmroRomName, NULL, NULL, GtmrInputInfo, GtmrDIPInfo,
+	GtmroInit, GtmrMachineExit, GtmrFrame, NULL, GtmrScan,
 	NULL, 0x10000, 320, 240, 4, 3
 };
 

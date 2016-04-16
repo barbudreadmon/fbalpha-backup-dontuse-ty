@@ -4675,6 +4675,68 @@ static struct BurnRomInfo RingdestRomDesc[] = {
 STD_ROM_PICK(Ringdest)
 STD_ROM_FN(Ringdest)
 
+static struct BurnRomInfo RingdestaRomDesc[] = {
+	{ "smba.03a",      0x080000, 0xd3744dfd, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smba.04a",      0x080000, 0xf32d5b4f, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smba.05a",      0x080000, 0x1016454f, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smba.06a",      0x080000, 0x94b420cd, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smb.07",        0x080000, 0xb9a11577, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smb.08",        0x080000, 0xf931b76b, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+
+	{ "smb.13m",       0x200000, 0xd9b2d1de, CPS2_GFX | BRF_GRA },
+	{ "smb.15m",       0x200000, 0x9a766d92, CPS2_GFX | BRF_GRA },
+	{ "smb.17m",       0x200000, 0x51800f0f, CPS2_GFX | BRF_GRA },
+	{ "smb.19m",       0x200000, 0x35757e96, CPS2_GFX | BRF_GRA },
+	{ "smb.14m",       0x200000, 0xe5bfd0e7, CPS2_GFX | BRF_GRA },
+	{ "smb.16m",       0x200000, 0xc56c0866, CPS2_GFX | BRF_GRA },
+	{ "smb.18m",       0x200000, 0x4ded3910, CPS2_GFX | BRF_GRA },
+	{ "smb.20m",       0x200000, 0x26ea1ec5, CPS2_GFX | BRF_GRA },
+	{ "smb.21m",       0x080000, 0x0a08c5fc, CPS2_GFX | BRF_GRA },
+	{ "smb.23m",       0x080000, 0x0911b6c4, CPS2_GFX | BRF_GRA },
+	{ "smb.25m",       0x080000, 0x82d6c4ec, CPS2_GFX | BRF_GRA },
+	{ "smb.27m",       0x080000, 0x9b48678b, CPS2_GFX | BRF_GRA },
+
+	{ "smb.01",        0x020000, 0x0abc229a, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+	{ "smb.02",        0x020000, 0xd051679a, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+
+	{ "smb.11m",       0x200000, 0xc56935f9, CPS2_QSND | BRF_SND },
+	{ "smb.12m",       0x200000, 0x955b0782, CPS2_QSND | BRF_SND },
+};
+
+STD_ROM_PICK(Ringdesta)
+STD_ROM_FN(Ringdesta)
+
+static struct BurnRomInfo RingdesthRomDesc[] = {
+	{ "smbh.03b",      0x080000, 0x2e316584, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smbh.04b",      0x080000, 0x9950a23a, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smbh.05b",      0x080000, 0x41e0b3fc, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smbh.06b",      0x080000, 0x89c80007, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smbh.07b",      0x080000, 0xb9a11577, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "smbh.08b",      0x080000, 0xf931b76b, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+
+	{ "smb.13m",       0x200000, 0xd9b2d1de, CPS2_GFX | BRF_GRA },
+	{ "smb.15m",       0x200000, 0x9a766d92, CPS2_GFX | BRF_GRA },
+	{ "smb.17m",       0x200000, 0x51800f0f, CPS2_GFX | BRF_GRA },
+	{ "smb.19m",       0x200000, 0x35757e96, CPS2_GFX | BRF_GRA },
+	{ "smb.14m",       0x200000, 0xe5bfd0e7, CPS2_GFX | BRF_GRA },
+	{ "smb.16m",       0x200000, 0xc56c0866, CPS2_GFX | BRF_GRA },
+	{ "smb.18m",       0x200000, 0x4ded3910, CPS2_GFX | BRF_GRA },
+	{ "smb.20m",       0x200000, 0x26ea1ec5, CPS2_GFX | BRF_GRA },
+	{ "smb.21m",       0x080000, 0x0a08c5fc, CPS2_GFX | BRF_GRA },
+	{ "smb.23m",       0x080000, 0x0911b6c4, CPS2_GFX | BRF_GRA },
+	{ "smb.25m",       0x080000, 0x82d6c4ec, CPS2_GFX | BRF_GRA },
+	{ "smb.27m",       0x080000, 0x9b48678b, CPS2_GFX | BRF_GRA },
+
+	{ "smb.01",        0x020000, 0x0abc229a, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+	{ "smb.02",        0x020000, 0xd051679a, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+
+	{ "smb.11m",       0x200000, 0xc56935f9, CPS2_QSND | BRF_SND },
+	{ "smb.12m",       0x200000, 0x955b0782, CPS2_QSND | BRF_SND },
+};
+
+STD_ROM_PICK(Ringdesth)
+STD_ROM_FN(Ringdesth)
+
 static struct BurnRomInfo SmbombRomDesc[] = {
 	{ "smbj.03a",      0x080000, 0x1c5613de, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "smbj.04a",      0x080000, 0x29071ed7, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
@@ -4736,37 +4798,6 @@ static struct BurnRomInfo Smbombr1RomDesc[] = {
 
 STD_ROM_PICK(Smbombr1)
 STD_ROM_FN(Smbombr1)
-
-static struct BurnRomInfo RingdestaRomDesc[] = {
-	{ "smba.03a",      0x080000, 0xd3744dfd, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "smba.04a",      0x080000, 0xf32d5b4f, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "smba.05a",      0x080000, 0x1016454f, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "smba.06a",      0x080000, 0x94b420cd, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "smb.07",        0x080000, 0xb9a11577, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "smb.08",        0x080000, 0xf931b76b, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-
-	{ "smb.13m",       0x200000, 0xd9b2d1de, CPS2_GFX | BRF_GRA },
-	{ "smb.15m",       0x200000, 0x9a766d92, CPS2_GFX | BRF_GRA },
-	{ "smb.17m",       0x200000, 0x51800f0f, CPS2_GFX | BRF_GRA },
-	{ "smb.19m",       0x200000, 0x35757e96, CPS2_GFX | BRF_GRA },
-	{ "smb.14m",       0x200000, 0xe5bfd0e7, CPS2_GFX | BRF_GRA },
-	{ "smb.16m",       0x200000, 0xc56c0866, CPS2_GFX | BRF_GRA },
-	{ "smb.18m",       0x200000, 0x4ded3910, CPS2_GFX | BRF_GRA },
-	{ "smb.20m",       0x200000, 0x26ea1ec5, CPS2_GFX | BRF_GRA },
-	{ "smb.21m",       0x080000, 0x0a08c5fc, CPS2_GFX | BRF_GRA },
-	{ "smb.23m",       0x080000, 0x0911b6c4, CPS2_GFX | BRF_GRA },
-	{ "smb.25m",       0x080000, 0x82d6c4ec, CPS2_GFX | BRF_GRA },
-	{ "smb.27m",       0x080000, 0x9b48678b, CPS2_GFX | BRF_GRA },
-
-	{ "smb.01",        0x020000, 0x0abc229a, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
-	{ "smb.02",        0x020000, 0xd051679a, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
-
-	{ "smb.11m",       0x200000, 0xc56935f9, CPS2_QSND | BRF_SND },
-	{ "smb.12m",       0x200000, 0x955b0782, CPS2_QSND | BRF_SND },
-};
-
-STD_ROM_PICK(Ringdesta)
-STD_ROM_FN(Ringdesta)
 
 static struct BurnRomInfo SfaRomDesc[] = {
 	{ "sfze.03d",      0x080000, 0xebf2054d, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
@@ -6453,6 +6484,38 @@ static struct BurnRomInfo Ssf2taRomDesc[] = {
 
 STD_ROM_PICK(Ssf2ta)
 STD_ROM_FN(Ssf2ta)
+
+static struct BurnRomInfo Ssf2thRomDesc[] = {
+	{ "sfxh.03c",      0x080000, 0xfbe80dfe, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "sfxh.04a",      0x080000, 0xef9dd4b1, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "sfxh.05",       0x080000, 0x09e56ecc, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "sfxh.06a",      0x080000, 0xe6f210be, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "sfxh.07",       0x080000, 0x900ba1a4, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "sfxh.08",       0x080000, 0xc15f0424, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "sfxh.09",       0x080000, 0x5b92b3f9, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+
+	{ "sfx.13m",       0x200000, 0xcf94d275, CPS2_GFX | BRF_GRA },
+	{ "sfx.15m",       0x200000, 0x5eb703af, CPS2_GFX | BRF_GRA },
+	{ "sfx.17m",       0x200000, 0xffa60e0f, CPS2_GFX | BRF_GRA },
+	{ "sfx.19m",       0x200000, 0x34e825c5, CPS2_GFX | BRF_GRA },
+	{ "sfx.14m",       0x100000, 0xb7cc32e7, CPS2_GFX | BRF_GRA },
+	{ "sfx.16m",       0x100000, 0x8376ad18, CPS2_GFX | BRF_GRA },
+	{ "sfx.18m",       0x100000, 0xf5b1b336, CPS2_GFX | BRF_GRA },
+	{ "sfx.20m",       0x100000, 0x459d5c6b, CPS2_GFX | BRF_GRA },
+	{ "sfx.21m",       0x100000, 0xe32854af, CPS2_GFX | BRF_GRA },
+	{ "sfx.23m",       0x100000, 0x760f2927, CPS2_GFX | BRF_GRA },
+	{ "sfx.25m",       0x100000, 0x1ee90208, CPS2_GFX | BRF_GRA },
+	{ "sfx.27m",       0x100000, 0xf814400f, CPS2_GFX | BRF_GRA },
+
+	{ "sfx.01",        0x020000, 0xb47b8835, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+	{ "sfx.02",        0x020000, 0x0022633f, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+
+	{ "sfx.11m",       0x200000, 0x9bdbd476, CPS2_QSND | BRF_SND },
+	{ "sfx.12m",       0x200000, 0xa05e3aab, CPS2_QSND | BRF_SND },
+};
+
+STD_ROM_PICK(Ssf2th)
+STD_ROM_FN(Ssf2th)
 
 static struct BurnRomInfo Ssf2tuRomDesc[] = {
 	{ "sfxu.03e",      0x080000, 0xd6ff689e, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
@@ -9152,6 +9215,16 @@ struct BurnDriver BurnDrvCpsRingdesta = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvCpsRingdesth = {
+	"ringdesth", "ringdest", NULL, NULL, "1994",
+	"Ring of Destruction - slammasters II (940902 Hispanic)\0", NULL, "Capcom", "CPS2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
+	NULL, RingdesthRomInfo, RingdesthRomName, NULL, NULL, RingdestInputInfo, NULL,
+	Cps2Init, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvCpsSfa = {
 	"sfa", NULL, NULL, NULL, "1995",
 	"Street Fighter Alpha - warriors' dreams (950727 Euro)\0", NULL, "Capcom", "CPS2",
@@ -9778,6 +9851,16 @@ struct BurnDriver BurnDrvCpsSsf2t = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, FBF_SF,
 	NULL, Ssf2tRomInfo, Ssf2tRomName, NULL, NULL, Cps2FightingInputInfo, NULL,
+	Ssf2tInit, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvCpsSsf2th = {
+	"ssf2th", "ssf2t", NULL, NULL, "1994",
+	"Super Street Fighter II Turbo (super street fighter 2 X 940223 Hispanic)\0", NULL, "Capcom", "CPS2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, FBF_SF,
+	NULL, Ssf2thRomInfo, Ssf2thRomName, NULL, NULL, Cps2FightingInputInfo, NULL,
 	Ssf2tInit, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
@@ -12094,6 +12177,35 @@ struct BurnDriver BurnDrvCpsProgearjbl = {
 	L"\u30D7\u30ED\u30AE\u30A2\u306E\u5D50 (Progear No Arashi 010117 Japan, decrypted set)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_CAPCOM_CPS2 | HARDWARE_CAPCOM_CPS2_SIMM, GBF_HORSHOOT, 0,
 	NULL, ProgearjblRomInfo, ProgearjblRomName, NULL, NULL, ProgearInputInfo, NULL,
+	PhoenixInit, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
+	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
+};
+
+// Halfway To Hell: Progear Red Label (2016-1-17 Red label ver)
+static struct BurnRomInfo HalfwayRomDesc[] = {
+	{ "halfway.03",    0x080000, 0x55ce8d4a, CPS2_PRG_68K | BRF_ESS | BRF_PRG }, 
+	{ "tohell.04",     0x080000, 0x71060b9e, CPS2_PRG_68K | BRF_ESS | BRF_PRG }, 
+
+	{ "redlabel.13m",  0x400000, 0x5194c198,  CPS2_GFX | BRF_GRA },
+	{ "redlabel.15m",  0x400000, 0xb794e83f,  CPS2_GFX | BRF_GRA },
+	{ "redlabel.17m",  0x400000, 0x87f22918,  CPS2_GFX | BRF_GRA },
+	{ "redlabel.19m",  0x400000, 0x65ffb45b,  CPS2_GFX | BRF_GRA },
+
+	{ "pga.01",        0x020000, 0xbdbfa992, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+
+	{ "redlabel.11m",  0x400000, 0x33ebf625, CPS2_QSND | BRF_SND },
+	{ "redlabel.12m",  0x400000, 0x47f25cf4, CPS2_QSND | BRF_SND },	
+};
+
+STD_ROM_PICK(Halfway)
+STD_ROM_FN(Halfway)
+
+struct BurnDriver BurnDrvCpsHalfway = {
+	"halfway", "progear", NULL, NULL, "2016",
+	"Halfway To Hell: Progear Red Label (2016-1-17 Red label ver)\0", NULL, "The Halfway House", "CPS2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_CAPCOM_CPS2 | HARDWARE_CAPCOM_CPS2_SIMM, GBF_HORSHOOT, 0,
+	NULL, HalfwayRomInfo, HalfwayRomName, NULL, NULL, ProgearInputInfo, NULL,
 	PhoenixInit, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };

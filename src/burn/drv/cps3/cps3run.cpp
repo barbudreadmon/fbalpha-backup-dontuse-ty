@@ -22,7 +22,6 @@ Port to FBA by OopsWare
 
 #define	BE_GFX		1
 //#define	FAST_BOOT	1
-#define SPEED_HACK	1		// Default should be 1, if not FPS would drop.
 
 static UINT8 *Mem = NULL, *MemEnd = NULL;
 static UINT8 *RamStart, *RamEnd;
@@ -1050,11 +1049,7 @@ static INT32 Cps3Reset()
 		}
 	}
 	
-	// Patch the EEPROM is not needed for sfiii2 and cause some issues if it's done on it.
-	// Normally this is only needed for sfiii but I have nothing to know what the current game is
-	// without adding a new property in the driver
-	if (!cps3_isSpecial)
-	{
+	if (!cps3_isSpecial) {
 		if (cps3_dip & 0x80) {
 			EEPROM[0x11] = 0x100 + (EEPROM[0x11] & 0xff);
 			EEPROM[0x29] = 0x100 + (EEPROM[0x29] & 0xff);
@@ -1063,7 +1058,6 @@ static INT32 Cps3Reset()
 			EEPROM[0x29] = 0x000 + (EEPROM[0x29] & 0xff);
 		}
 	}
-
 
 	cps3_current_eeprom_read = 0;	
 	cps3SndReset();	
@@ -1155,7 +1149,7 @@ INT32 cps3Init()
 		Sh2Init(1);
 		Sh2Open(0);
 
-#ifdef PROFILE_PERFORMANCE
+#if defined USE_SPEEDHACKS
 		cps3speedhack = 1;
 #endif
 
@@ -1229,7 +1223,7 @@ INT32 cps3Init()
 		Sh2SetWriteWordHandler(4, cps3VidWriteWord);
 		Sh2SetWriteLongHandler(4, cps3VidWriteLong);
 
-#ifdef SPEED_HACK
+#if defined USE_SPEEDHACKS
 		// install speedup read handler
 		Sh2MapHandler(5,			0x02000000 | (cps3_speedup_ram_address & 0x030000),
 							0x0200ffff | (cps3_speedup_ram_address & 0x030000), MAP_READ);

@@ -51,17 +51,6 @@ FBA_GENERATED_DIR = $(MAIN_FBA_DIR)/dep/generated
 FBA_SCRIPTS_DIR = $(MAIN_FBA_DIR)/dep/scripts
 GRIFFIN_DIR = griffin-libretro
 
-profile := accuracy
-ifeq ($(profile),accuracy)
-	PROFFLAGS := -DPROFILE_ACCURACY
-else ifeq ($(profile),balanced)
-	PROFFLAGS := -DPROFILE_BALANCED
-else ifeq ($(profile),performance)
-	PROFFLAGS := -DPROFILE_PERFORMANCE
-else
-	$(error unknown profile.)
-endif
-
 EXTERNAL_ZLIB = 0
 
 TARGET_NAME := fba
@@ -288,6 +277,8 @@ BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_CPU_DIR)/nec/v25instr.c \
 	$(FBA_CPU_DIR)/nec/necinstr.c \
 	$(FBA_CPU_DIR)/mips3/mips3_dasm.cpp \
+	$(FBA_CPU_DIR)/tms34010/tms34010_dasm.cpp \
+	$(FBA_CPU_DIR)/tms34010/tms34010_newdasm.cpp \
 	$(FBA_BURN_DIR)/drv/capcom/ctv_make.cpp \
 	$(FBA_BURN_DIR)/drv/pgm/pgm_sprite_create.cpp \
 	$(FBA_INTERFACE_DIR)/audio/aud_interface.cpp
@@ -408,6 +399,7 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/s2650 \
 	$(FBA_CPU_DIR)/sh2 \
 	$(FBA_CPU_DIR)/tlcs90 \
+	$(FBA_CPU_DIR)/tms34010 \
 	$(FBA_CPU_DIR)/z80
 
 FBA_LIB_DIRS := $(FBA_LIB_DIR)/zlib
@@ -587,6 +579,12 @@ src/cpu/mips3_intf.o: src/cpu/mips3_intf.cpp
 	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
 
 src/cpu/mips3/%.o: src/cpu/mips3/%.cpp
+	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
+
+src/cpu/tms34010_intf.o: src/cpu/tms34010_intf.cpp
+	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
+
+src/cpu/tms34010/%.o: src/cpu/tms34010/%.cpp
 	$(CXX) $(CXXFLAGS) -std=gnu++0x $(INCFLAGS) -c $^ -o $@
 
 src/burner/libretro/libretro.o: src/burner/libretro/libretro.cpp

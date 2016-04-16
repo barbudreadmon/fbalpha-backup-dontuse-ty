@@ -28,6 +28,7 @@ typedef struct
 	UINT8	irq_state;			/* irq line state */
 	UINT8	after_ei;			/* are we in the EI shadow? */
 	INT32 cycles_left;
+	INT32 hold_irq;
 	const struct z80_irq_daisy_chain *daisy;
 	int		(*irq_callback)(int irqline);
 } Z80_Regs;
@@ -92,6 +93,7 @@ int ActiveZ80GetDE();
 int ActiveZ80GetHL();
 int ActiveZ80GetI();
 int ActiveZ80GetPrevPC();
+void ActiveZ80SetIRQHold();
 
 #endif
 

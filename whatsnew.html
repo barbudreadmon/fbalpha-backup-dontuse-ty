@@ -105,6 +105,154 @@
 <a href="http://neosource.1emu.net/forums">http://neosource.1emu.net/forums</a></p>
 
 
+<h3>v0.2.97.38</h3>
+<h2>Fixes and new features</h2>
+<ul>
+<!-- fixes and features -->
+<li>Fixed BurnSamplesSetLoop() in the sample core [dink]</li>
+<li>Added the Toki devlopers' debug mode to Toki [dink]</li>
+<li>Added several behind-the-scene improvements to the Galaga/Dig-Dug driver [dink]</li>
+<li>Fixed a crash-situation with the Namco sound-core that only seemed to affect 64bit systems [dink, Gab75]</li>
+<li>Capcom CPS3 is now friendly towards slower/embedded systems (Raspberry Pi etc.) [dink]</li>
+<li>Fixed Capcom's The Speed Rumber: broken Boot-up messages, random slowdowns, screen priority issues [dink]</li>
+<li>Fixed music in SD Gundam Psycho Salamander [dink]</li>
+<li>Fixed extra buttons in Olds [iq_132]</li>
+<li>Added default rom paths for SMS &amp; GameGear systems [dink]</li>
+<li>Fixed music in Haunted Castle [dink, SNK_Dude]</li>
+<li>Fixed display of total sets in game selection dialog [Barry]</li>
+<li>Fixed missing tiles in Sand Scorpion due to incorrect 2-D pointer indexing in kaneko_tmap.cpp, possibly improving other games that use this. [dink]</li>
+<li>Fixed missing music in Pass level 3+ [dink]</li>
+<li>Fixed music tempo in Nostradamus [dink]</li>
+<li>Tidy up makefiles and fix for non C++11 compilers [Barry]</li>
+<li>Fixed Skyarmy, sometimes the bridge-piece chinook (heli w/2 props) doesn`t deliver the pieces when at home base. [dink]</li>
+<li>Fixed Oki MSM6295 banking in Shadow Force [dink]</li>
+<li>Fixed a crash issue when using savestates in Taito's Master of Weapon [dink]</li>
+<li>Fixed music in Knuckle Bash 2 [dink]</li>
+<li>Fixed Oops: forgot to mark Air Duel's parent as Working. [dink]</li>
+<li>Fixed missing sprites in ZigZagb [dink, Zazzone]</li>
+<li>Fixed endgame boss &amp; stage 6 boss in Nostradamus [dink, Haze]</li>
+<li>Fixed doorway/scene transitions in Tiger Road [iq_132]</li>
+<li>Fixed graphics issues in Varia Metal [iq_132, dink]</li>
+<li>Added unicode titles and service dips to several Toaplan games [BisonSAS]</li>
+<li>Fixed the analog speed setting in config/games/game.ini was getting clobbered [dink]</li>
+<li>Fixed sprite priority issues in Blood Brothers, most notably in the mine-level [dink]</li>
+<li>Fixed music updated palette handling in Mysterious Stones [dink]</li>
+<li>Fixed the bitmap layer alignment in Chak 'n Pop [dink]</li>
+<li>Added the breakable-background fix to 64th Street [Haze]</li>
+<li>Fixed PCM sounds in Rohga / Wolf Fang [dink]</li>
+<li>Fixed crash in Shadow force in the Laboratory level when the bridge breaks apart [dink, Pityesz]</li>
+<li>Fixed clicking noise when a replayed input ends [dink]</li>
+<li>Fixed many Megadrive games: The Chaos Engine, Ooze, Rock 'n Roll Racing, Outrunners, Buck Rogers, Dragon Slayer I & II, Krusty's Super Funhouse, S.S. Lucifer, The Earth Defense, Super Mario Bros. and Battle City, Klax, Feng Shen Ying Jie Chuan (Chi), Tiny Toon Adventures 3, Back to the Future part III (USA), Mickey Mania and possibly others. [dink]</li>
+<li>Mega Megadrive Overhaul pt.2: [dink]</li> 
+	<ul>
+        <li>Added support for mid-frame palette changes (For water effects in Sonic, Rocket Knight Adventures, Burning Force scrolls now..etc.)</li>
+        <li>Fixed audio glitches in Doom Troopers and Battle Squadron</li>
+        <li>Fixed Mickey Mania Moose level</li>
+        <li>Fixed Sonic 3D jittery SEGA logo</li>
+        <li>Fixed flickering in Ayrton Senna's Super Monaco GP II and Gunstar Heroes</li>
+        </ul>
+<li>Enabled Hi-Score saving in most classic/pre-90's Capcom games [dink]</li>
+<li>Added 3x-sized avi output, for 720p/60hz Youtube video uploads [dink, Barry]</li>
+<li>New Rotary-button feature for Midnight Resistance, Heavy Barrel, Ikari/Victory Road and other games in the new SNK 3xZ80 driver, Ikari III, SAR Search and Rescue and Jackal [dink]</li>
+        <ul>
+        <li>When this button is pressed: rotary direction becomes joystick direction</li>
+        </ul>
+<li>Fixed some screen-related quirks in the legendary classic: Ambush [dink]</li>
+<li>Fixed Donkey Kong III save states [dink]</li>
+<li>Fixed sample engine broken since the last version of FBAlpha [dink]</li>
+<li>Fixed graphics and timing issues in Gradius III [dink]</li>
+<li>Fixed some issues with the cheat engine - some cheats would not disable [dink]</li>
+<li>Fixed coin inputs for Kamen Riders [dink, Gab75]</li>
+<li>Fixed music in Guardians / Denjin Makai II [dink]</li>
+<li>Fixed music in The Punisher (change cps1 qsound cpu to proper 8mhz) [dink]</li>
+<li>Fixed music in Karnov's Revenge [dink]</li>
+<li>Updated lzma lib. to 15.14 [Barry]</li>
+<li>Updated the libpng library to v1.6.21 [Barry]</li>
+<!-- clones and updated romsets in drivers -->
+</ul>
+<h2>Clones and updated romsets in existing drivers</h2>
+<ul>
+<li>Sync. romsets with current MAME [Barry, JacKc]</li>
+<li>Added clone of Sengoku Ace (Japan, set 2) [Alex Cmaylo, JacKc]</li>
+<li>Added clone of Final Fight US [Coolmod, JacKc]</li>
+<li>Added clone of Rolling Thunder (rev 3, alternate?) [caius, JacKc]</li>
+<li>Added clone of 1943 (US) [caius, The Dumping Union, JacKc]</li>
+<li>Added clone of Out Run (deluxe sitdown) (Enhanced Edition v1.0.3) [JacKc]</li>
+<li>Added clone of Out Run (sitdown/upright, Rev B) (Enhanced Edition v1.1.0) [JacKc]</li>
+<li>Added clone of Lethal Enforcers (ver EAA, 09/09/92 09:44) [caius, JacKc]</li>
+<li>Added clone of Orius (ver UAA) / clone of Xexex [Ryan Holtz, Smitdogg, The Dumping Union, JacKc]</li>
+<li>Added clone of Super Street Fighter II Turbo (Hispanic 940223) [Artemio Urbina, JacKc]</li>
+<li>Added clone of Ninja-Kid II / NinjaKun Ashura no Shou (set 4) [system11, JacKc]</li>
+<li>Added clone of Ring of Destruction: Slammasters II (Hispanic 940902) [Raul Delgado, JacKc]</li>
+<li>Added clone of Miss World 96 Nude (alt) [system11, JacKc]</li>
+<li>Added clone of Double Dragon II - The Revenge (US, bootleg) [system11, JacKc]</li>
+<li>Added clone of Pirates (set 2) [caius, JacKc]</li>
+<li>Added clone of Street Fighter II' - Champion Edition (920313 'Taiwan' bootleg with PAL) [rtw, Smitdogg, The Dumping Union, JacKc]</li>
+<li>Added clone of Strider (USA, B-Board 90629B-3, Street Fighter II conversion) [system11, JacKc]</li>
+<li>Added clone of Sangokushi III Gaiden: Kakou-On's Revenge DX (hack) [system11, JacKc]</li>
+<li>Added clone of Multi Game '96 (Italy) [system11, JacKc]</li>
+<li>Added clone of Halfway To Hell: Progear Red label (2016-1-17 Red Label Ver) [The Halfway House, JacKc]</li>
+<li>Added clone of Multi Champ (World, older) [f205v, JacKc]</li>
+<li>Added clone of 1000 Miglia: Great 1000 Miles Rally (94/05/26) [caius, JacKc]</li>
+<li>Added clone of 64th. Street - A Detective Story (Japan, set 2) [Corrado Tomaselli, JacKc]</li>
+<li>Added clone of Donkey Kong - Arcade Rainbow (hack) [John Kowlski, JacKc]</li>
+<li>Added clone of Block Block (World 911219 Joystick) [caius, The Dumping Union, JacKc]</li>
+<li>Added clone of The King of Fighters '98 (Anniversary Edition 2016, EGHT hack) [EGCG 2016, JacKc]</li>
+<li>Added clone of The King of Fighters '98 (Combo) to 2016/03/21 version [Ivex, JacKc]</li>
+<li>Added clone of Armed Police Batrider - A Version (Hong Kong) (Mon Dec 22 1997) [Trap15, JacKc]</li>
+<li>Added clone of Batsugun (Korean PCB) [Alex Cmaylo, iq_132]</li>
+<li>Added clone of Last Resort (prototype) [Chris Ransley, JacKc]</li>
+<li>Added clone of Moon Cresta (SegaSA / Sonic) [Roselson (from AUMAP), JacKc]</li>
+<li>Added clone of Major Title 2 (World, alt sound CPU) [Mathieu Patard, JacKc]</li>
+<li>Added clone of Pac-Man (SegaSA / Sonic) [A.R.P.A., JacKc]</li>
+<li>Added clone of Come Come (Petaco SA bootleg of Puck Man) [Manuel Giron, JacKc]</li>
+<li>Added clone of Come-Cocos (Ms. Pac-Man) ('Made in Greece' Herle SA bootleg) [Heckler, JacKc]</li>
+<li>Added clone of My Hero (bootleg, 315-5132 encryption) [Andrew Welburn, JacKc]</li>
+<li>Added clone of Toki (US, prototype?) [Kevin Eshbach, JacKc]</li>
+<li>Added clone of Super Bishi Bashi Championship (ver KAB, 3 Players) [Skate, JacKc]</li>
+<li>Added clone of Majestic Twelve - The Space Invaders Part IV (US) [Artemio Urbina, The Dumping Union, JacKc]</li>
+<li>Added clone of Major Title 2 (World, set 2) [Porchy, JacKc]</li>
+<li>Added clone of Atomic Robo-kid (Japan) [Alex Cmaylo, JacKc]</li>
+<li>Added clone of Beast Busters (Japan, Version 2) [ShouTime, JacKc]</li>
+<li>Added clone of Mystic Warriors (ver AAB) [Bill D / The Dumping Union, JacKc]</li>
+<li>Added clone of Raiden DX (Japan, set 2) [Alex Cmaylo, JacKc]</li>
+<li>Updated the NeoGeo driver with the latest Unibios [JacKc]</li>
+<!-- new game additions to existing drivers -->
+</ul>
+<h2>New additions to existing drivers</h2>
+<ul>
+<li>Added Fix-it Felix Jr. to the Megadrive driver [dink]</li>
+<li>Added Waimanu: Scary Monsters Saga to SMS driver [dink]</li>
+<li>Added Wing Force to the Kaneko16 driver [dink]</li>
+<li>Added MegaCart support to the Colecovision driver [dink]</li>
+<li>Added Princess Quest (MegaCart), Digger and Quest for the Golden Chalice to the Colecovision driver [dink]</li>
+<li>Added T*GunII, Chase and Papi CommandoMD to the Megadrive driver [dink]</li>
+<li>Added Big's Fishing Derby and Thunderbolt II to the Megadrive driver [dink]</li>
+<li>Added FatalSmarties to the Megadrive driver [dink]</li>
+<li>Added '96 Flag Rally to 1945kiii driver [dink]</li>
+<li>Added Ozma Wars to the Space Invaders driver [iq_132]</li>
+<li>Added Fire Ball (FM Work) to the Legendary Wings driver [iq_132]</li>
+<li>Added Unknown Neo-Geo Vs. Fighter (prototype) [Brian Hargrove, JacKc] to the NeoGeo driver</li>
+<!-- new drivers -->
+</ul>
+<h2>New drivers</h2>
+<ul>
+<li>Added driver for Appoooh [vbt]</li>
+<li>Added driver for Cabal [iq_132, dink]</li>
+<li>Added driver for Fighting Roller [iq_132]</li>
+<li>Added driver for Battle Lane [iq_132]</li>
+<li>Added driver for Alligator Hunt and Maniac Square on Gaelco CG-1V/GAE1-based hardware [iq_132, dink]</li>
+<li>Added driver for Ikari Warriors, Victory Road, TNK3, Guerilla War, Chopper I, Bermuda Triangle, Psycho Soldier, Athena, ASO/Alpha Mission, Fighting Golf, Jumping Cross, HAL21, Vanguard II, Mad Crasher and Marvin's Maze on SNK 3xZ80 hardware [iq_132, dink]</li>
+<li>Added driver for Main Event and Canvas Croquis [iq_132]</li>
+<li>Added driver for Joyful Road / Munch Mobile [iq_132]</li>
+<li>Added driver for Himeshikibu and Android [iq_132]</li>
+<li>Added driver for Beast Busters and Mechanized Attack [iq_132]</li>
+<li>Added driver for Safari Rally [iq_132]</li>
+<li>Added driver for Mr. Jong and Crazy Blocks [vbt]</li>
+<li>Added driver for Lasso, Chameleon, Wai Wai Jockey Gate-In and Pinbo [iq_132]</li>
+</ul>
+
+
 <h3>v0.2.97.37</h3>
 <ul>
 <li>Added clone of Contra (US / Asia, set 3) [system11, iq_132, JacKc]</li>
@@ -175,7 +323,7 @@
 <li>Added driver for Konami's Jackal [iq_132, dink]</li>
 <li>Fixed music, add savestate support and fix crash on exit in Dynamite Duke [dink]</li>
 <li>Added driver for Taito's Super Rider [iq_132, dink]</li>
-<li>Added System 2 support to the Sega System 1 driver [dink, vbt]</li>
+<li>Added System 2 support to the Sega System 1 driver [vbt, dink]</li>
 <li>Fixed sound/music in Regulus [dink]</li>
 <li>Fixed sound/music in Driftout [dink]</li>
 <li>Added new NeoGeo BIOS and fixed various issues in the NeoGeo BIOS [Barry]</li>
@@ -186,6 +334,25 @@
 <li>Improved analog controls in Forgotten Worlds [dink]</li>
 <li>Added Moggy Master and Geki oko Punpun to the Master System driver [dink]</li>
 <li>Added clone of Karate Blazers (World, set 2) [caius, JacKc]</li>
+<li>Added Tr-606 drumkit support to Kid Niki, Horizon, Spelunker and Spelunker II. Grab the public domain/royalty-free drumkit @ http://sharesend.com/32ux720g and throw it in "fba dir"\support\samples [dink]</li>
+<li>Fixed Kabuki-Z graphics issues making the game playable [dink]</li>
+<li>Fixed Kozure Ookami &amp; Terra Force and is now fully playable. Also: Added color lookup-table feature to the sprite engine, which improves these games as well as Legion &amp; Armed F. [dink]</li>
+<li>Added Raiders5, Nova2001 &amp; Ninja Kun to the Penguin-Kun Wars driver [vbt w/help from dink &amp; iq_132]</li>
+<li>Added Dig-Dug to the Galaga driver [dink]</li>
+<li>Added Pack 'n Bang Bang to the Kaneko16 driver [dink]</li>
+<li>Added driver for Sky Kid Deluxe, Hopping Mappy, The Return of Ishtar, Genpei ToumaDen, Rolling Thunder &amp; Wonder Momo on Namcos86 hardware [iq_132]</li>
+<li>Improved the sound/music in Finalizer [dink]</li>
+<li>Fixed coin insertion issues in Raiden 2 / DX [dink]</li>
+<li>Fixed player color in Spark Man [gamez fan]</li>
+<li>Fixed palette issue with Congo Bongo [dink]</li>
+<li>Enabled High score saving for a lot of classic games [dink]</li>
+<li>Updated the PGM sound-core (ICS2115) thus improving sound and music on all PGM-based games [iq_132]</li>
+<li>Added port of the Pokey sound-core to FBA and hooked it up to Atari Tetris [dink]</li>
+<li>Added driver for Bomb Bee, Cutie Q, Gee Bee, Kaitei Takara Sagashi, Navarone, and SOS [dink]</li>
+<li>Added driver for Mouser [vbt]</li>
+<li>Added driver for Toki no Senshi - Chrono Soldier [vbt]</li>
+<li>Added driver for UFO Senshi Yohko Chan [dink]</li>
+<li>Added driver for Wonder Boy in Monster Land [vbt]</li>
 <li>Added support for downloading localisation templates from the FB Alpha web-site into FB Alpha [Barry]</li>
 <li>Fixed issue with Dip Switches (increased max from 4 to 8) [Barry]</li>
 <li>Added compiling support for GCC 5.1.0 [Barry]</li>

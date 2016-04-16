@@ -18,7 +18,7 @@
 //	Zero Team	1x YM2151 + 2x M6295
 //
 // 	Cross Shooter	1x YM2151 + ?
-//	Cabal		1x YM2151 + adpcm -- not implemented
+//	Cabal		1x YM2151 + adpcm
 //
 
 #include "burnint.h"
@@ -44,6 +44,24 @@ INT32 seibu_coin_input;
 static INT32 seibu_sndcpu_frequency;
 static INT32 seibu_snd_type;
 static INT32 is_sdgndmps = 0;
+
+// ADPCM related
+static UINT16 adpcmcurrent[2];
+static UINT8 adpcmnibble[2];
+static UINT16 adpcmend[2];
+static UINT8 adpcmplaying[2];
+static INT32 adpcmfrequency[2];
+static INT32 adpcmsignal[2];
+static INT32 adpcmstep[2];
+
+static INT32 diff_lookup[49*16];
+static const INT32 index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
+
+static void adpcm_init(); // forward
+static void adpcm_reset(); // forward
+
+UINT8 *SeibuADPCMData[2];
+INT32 SeibuADPCMDataLen[2];
 
 enum
 {
@@ -123,7 +141,7 @@ void seibu_main_word_write(INT32 offset, UINT8 data)
 			break;
 
 		case 4:
-			if (is_sdgndmps) update_irq_lines(RST10_ASSERT);
+			//if (is_sdgndmps) update_irq_lines(RST10_ASSERT);
 			update_irq_lines(RST18_ASSERT);
 			break;
 
@@ -171,7 +189,8 @@ void __fastcall seibu_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x4001:
-			update_irq_lines(VECTOR_INIT);
+			if (!is_sdgndmps)
+				update_irq_lines(VECTOR_INIT);
 		return;
 
 		case 0x4002:
@@ -182,9 +201,25 @@ void __fastcall seibu_sound_write(UINT16 address, UINT8 data)
 			update_irq_lines(RST18_CLEAR);
 		return;
 
+		case 0x4005:
+			adpcmcurrent[0] = data << 8;
+			adpcmnibble[0] = 4;
+		return;
+
+		case 0x4006:
+			adpcmend[0] = data << 8;
+		return;
+
 		case 0x4007:
-		case 0x401a: // raiden2
 			seibu_z80_bank(data);
+		return;
+
+		case 0x401a: // raiden2
+			if ((seibu_snd_type & 8) == 0) {
+				seibu_z80_bank(data);
+			} else { // Cabal ADPCM
+				if (data < 2) adpcmplaying[0] = data;
+			}
 		return;
 
 		case 0x4008:
@@ -231,11 +266,20 @@ void __fastcall seibu_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x6000:
-			MSM6295Command(0, data);
+			if ((seibu_snd_type & 8) == 0) MSM6295Command(0, data);
 		return;
 
 		case 0x6002:
 			if (seibu_snd_type & 4) MSM6295Command(1, data);
+		return;
+
+		case 0x6005:
+			adpcmcurrent[1] = data << 8;
+			adpcmnibble[1] = 4;
+		return;
+
+		case 0x6006:
+			adpcmend[1] = data << 8;
 		return;
 
 		// type 2
@@ -243,6 +287,11 @@ void __fastcall seibu_sound_write(UINT16 address, UINT8 data)
 		case 0x6009:
 			if (seibu_snd_type == 2) BurnYM2203Write(1, address & 1, data);
 		return;
+
+		case 0x601a:
+			if (data < 2) adpcmplaying[1] = data;
+		return;
+
 	}
 }
 
@@ -269,7 +318,7 @@ UINT8 __fastcall seibu_sound_read(UINT16 address)
 			return 0;
 
 		case 0x4009: {
-			if ((seibu_snd_type&3)==1) return BurnYM2151ReadStatus();		
+			if ((seibu_snd_type&3)==1) return BurnYM2151ReadStatus();
 			if ((seibu_snd_type&3) < 2) return 0;
 			return BurnYM2203Read(0, 1);
 		}
@@ -285,7 +334,7 @@ UINT8 __fastcall seibu_sound_read(UINT16 address)
 			return seibu_coin_input;
 
 		case 0x6000:
-			return MSM6295ReadStatus(0);
+			return (((seibu_snd_type & 8) == 0) ? MSM6295ReadStatus(0) : 0);
 
 		case 0x6002:
 			if (seibu_snd_type & 4) return MSM6295ReadStatus(1);
@@ -389,7 +438,7 @@ void seibu_sound_reset()
 		break;
 	}
 
-	MSM6295Reset(0);
+	if ((seibu_snd_type & 8) == 0) MSM6295Reset(0);
 	if (seibu_snd_type & 4) MSM6295Reset(1);
 
 	memset (main2sub, 0, 2);
@@ -398,7 +447,9 @@ void seibu_sound_reset()
 	sub2main_pending = 0;
 
 	seibu_coin_input = 0;
-	//SeibuSoundBank = 0;
+	//SeibuSoundBank = 0; // set w/ seibu_z80_bank();
+
+	adpcm_reset();
 }
 
 void seibu_sound_init(INT32 type, INT32 len, INT32 freq0 /*cpu*/, INT32 freq1 /*ym*/, INT32 freq2 /*oki*/)
@@ -445,11 +496,18 @@ void seibu_sound_init(INT32 type, INT32 len, INT32 freq0 /*cpu*/, INT32 freq1 /*
 		break;
 	}
 
-	MSM6295Init(0, freq2, 1);
-	MSM6295SetRoute(0, 0.40, BURN_SND_ROUTE_BOTH);
-	if (seibu_snd_type & 4) {
-		MSM6295Init(1, freq2, 1);
-		MSM6295SetRoute(1, 0.40, BURN_SND_ROUTE_BOTH);
+	if ((seibu_snd_type & 8) == 0) {
+		MSM6295Init(0, freq2, 1);
+		MSM6295SetRoute(0, 0.40, BURN_SND_ROUTE_BOTH);
+
+		if (seibu_snd_type & 4) {
+			MSM6295Init(1, freq2, 1);
+			MSM6295SetRoute(1, 0.40, BURN_SND_ROUTE_BOTH);
+		}
+	} else {
+		adpcmfrequency[0] = freq2;
+		adpcmfrequency[1] = freq2;
+		adpcm_init();
 	}
 
 	// init kludge for sdgndmps
@@ -481,7 +539,7 @@ void seibu_sound_exit()
 
 	ZetExit();
 
-	MSM6295Exit(0);
+	if ((seibu_snd_type & 8) == 0) MSM6295Exit(0);
 	if (seibu_snd_type & 4) MSM6295Exit(1);
 
 	MSM6295ROM = NULL;
@@ -493,6 +551,98 @@ void seibu_sound_exit()
 	is_sdgndmps = 0;
 	
 	DebugDev_SeibuSndInitted = 0;
+}
+
+static void adpcm_init()
+{
+	/* nibble to bit map */
+	static const INT32 nbl2bit[16][4] =
+	{
+		{ 1, 0, 0, 0}, { 1, 0, 0, 1}, { 1, 0, 1, 0}, { 1, 0, 1, 1},
+		{ 1, 1, 0, 0}, { 1, 1, 0, 1}, { 1, 1, 1, 0}, { 1, 1, 1, 1},
+		{-1, 0, 0, 0}, {-1, 0, 0, 1}, {-1, 0, 1, 0}, {-1, 0, 1, 1},
+		{-1, 1, 0, 0}, {-1, 1, 0, 1}, {-1, 1, 1, 0}, {-1, 1, 1, 1}
+	};
+
+	INT32 step, nib;
+
+	/* loop over all possible steps */
+	for (step = 0; step <= 48; step++)
+	{
+		/* compute the step value */
+		INT32 stepval = (INT32)(floor (16.0 * pow (11.0 / 10.0, (double)step)));
+
+		/* loop over all nibbles and compute the difference */
+		for (nib = 0; nib < 16; nib++)
+		{
+			diff_lookup[step*16 + nib] = nbl2bit[nib][0] *
+				(stepval   * nbl2bit[nib][1] +
+				 stepval/2 * nbl2bit[nib][2] +
+				 stepval/4 * nbl2bit[nib][3] +
+				 stepval/8);
+		}
+	}
+
+	adpcm_reset();
+}
+
+static void adpcm_reset()
+{
+	for (INT32 i = 0; i < 2; i++) {
+		adpcmcurrent[i] = 0;
+		adpcmnibble[i] = 0;
+		adpcmend[i] = 0;
+		adpcmplaying[i] = 0;
+		adpcmsignal[i] = -2;
+		adpcmstep[i] = 0;
+	}
+}
+
+static INT32 adpcm_clock(INT32 chip, UINT8 nibble)
+{
+	adpcmsignal[chip] += diff_lookup[adpcmstep[chip] * 16 + (nibble & 15)];
+
+	if (adpcmsignal[chip] > 2047)
+		adpcmsignal[chip] = 2047;
+	else if (adpcmsignal[chip] < -2048)
+		adpcmsignal[chip] = -2048;
+
+	adpcmstep[chip] += index_shift[nibble & 7];
+	if (adpcmstep[chip] > 48)
+		adpcmstep[chip] = 48;
+	else if (adpcmstep[chip] < 0)
+		adpcmstep[chip] = 0;
+
+	return adpcmsignal[chip];
+}
+
+static void adpcm_update(INT32 chip, INT16 *pbuf, INT32 samples)
+{
+	UINT8 *adpcmrom = SeibuADPCMData[chip];
+	INT32 val, samp, i;
+
+	while (adpcmplaying[chip] && samples > 0)
+	{
+		val = (adpcmrom[adpcmcurrent[chip]] >> adpcmnibble[chip]) & 0xf;
+
+		adpcmnibble[chip] ^= 4;
+		if (adpcmnibble[chip] == 4)
+		{
+			adpcmcurrent[chip]++;
+			if (adpcmcurrent[chip] >= adpcmend[chip])
+				adpcmplaying[chip] = 0;
+		}
+
+		samp = ((adpcm_clock(chip, val) << 4));
+
+		for (i = 0; (i < 6) && (samples > 0); i++) { // slow it down
+			*pbuf = BURN_SND_CLIP(*pbuf + samp);
+			pbuf++;
+			*pbuf = BURN_SND_CLIP(*pbuf + samp);
+			pbuf++;
+			samples--;
+		}
+	}
 }
 
 void seibu_sound_update(INT16 *pbuf, INT32 nLen)
@@ -516,11 +666,22 @@ void seibu_sound_update(INT16 *pbuf, INT32 nLen)
 		break;
 	}
 
-	MSM6295Render(0, pbuf, nLen);
+	if ((seibu_snd_type & 8) == 0) {
+		MSM6295Render(0, pbuf, nLen);
 
-	if (seibu_snd_type & 4) 
-		MSM6295Render(1, pbuf, nLen);
+		if (seibu_snd_type & 4) 
+			MSM6295Render(1, pbuf, nLen);
+	}
+}
 
+void seibu_sound_update_cabal(INT16 *pbuf, INT32 nLen)
+{
+#if defined FBA_DEBUG
+	if (!DebugDev_SeibuSndInitted) bprintf(PRINT_ERROR, _T("seibu_sound_update called without init\n"));
+#endif
+
+	adpcm_update(0, pbuf, nLen);
+	adpcm_update(1, pbuf, nLen);
 }
 
 void seibu_sound_scan(INT32 *pnMin, INT32 nAction)
@@ -550,9 +711,11 @@ void seibu_sound_scan(INT32 *pnMin, INT32 nAction)
 		}
 		ZetClose();
 		
-		MSM6295Scan(0, nAction);
-		if (seibu_snd_type & 4) {
-			MSM6295Scan(1, nAction);
+		if ((seibu_snd_type & 8) == 0) {
+			MSM6295Scan(0, nAction);
+			if (seibu_snd_type & 4) {
+				MSM6295Scan(1, nAction);
+			}
 		}
 
 		SCAN_VAR(main2sub[0]);
@@ -564,6 +727,11 @@ void seibu_sound_scan(INT32 *pnMin, INT32 nAction)
 		SCAN_VAR(SeibuSoundBank);
 		SCAN_VAR(irq1);
 		SCAN_VAR(irq2);
+
+		SCAN_VAR(adpcmcurrent);
+		SCAN_VAR(adpcmnibble);
+		SCAN_VAR(adpcmend);
+		SCAN_VAR(adpcmplaying);
 	}
 
 	if (nAction & ACB_WRITE)

@@ -3324,6 +3324,20 @@ static void take_interrupt(void)
 //	else
 //		irq_vector = (*Z80.irq_callback)(0);
 
+	/* "hold_irq" assures that an irq request (with CPU_IRQSTATUS_HOLD) gets
+	   acknowleged.  This is designed to get around the following 2 problems:
+
+	   1) Requests made with CPU_IRQSTATUS_AUTO might get skipped in
+	   circumstances where IRQs are disabled at the moment it was requested.
+
+	   2) Requests made with CPU_IRQSTATUS_ACK might cause more than 1 irq to
+	   get taken if is held in the _ACK state for too long(!) - dink jan.2016
+	*/
+	if (Z80.hold_irq) {
+		Z80.hold_irq = 0;
+		Z80.irq_state = 0;
+	}
+
 //	LOG(("Z80 #%d single int. irq_vector $%02x\n", cpu_getactivecpu(), irq_vector));
 
 	/* Interrupt mode 2. Call [Z80.i:databyte] */
@@ -3473,6 +3487,7 @@ void Z80Init()
 
 	/* Reset registers to their initial values */
 	memset(&Z80, 0, sizeof(Z80));
+	Z80.hold_irq = 0;
 //	Z80.daisy = config;
 //	Z80.irq_callback = irqcallback;
 	IX = IY = 0xffff; /* IX and IY are FFFF after a reset! */
@@ -3485,6 +3500,7 @@ void Z80Reset()
 	//int (*irq_callback)(int irqline);
 
 	memset(&Z80, 0, sizeof(Z80));
+	Z80.hold_irq = 0;
 
 	PC = 0x0000;
 	I = 0;
@@ -3494,6 +3510,8 @@ void Z80Reset()
 	Z80.nmi_pending = FALSE;
 	Z80.irq_state = Z80_CLEAR_LINE;
 	Z80.after_ei = FALSE;
+	IFF1 = 0;
+	IFF2 = 0;
 
 	Z80Vector = 0xff;
 
@@ -3670,6 +3688,11 @@ int ActiveZ80GetI()
 int ActiveZ80GetPrevPC()
 {
 	return Z80.prvpc.d;
+}
+
+void ActiveZ80SetIRQHold()
+{
+	Z80.hold_irq = 1;
 }
 
 #if 0

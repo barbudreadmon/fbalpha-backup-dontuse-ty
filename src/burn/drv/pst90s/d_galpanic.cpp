@@ -628,6 +628,26 @@ STD_ROM_PICK(Missw96b)
 STD_ROM_FN(Missw96b)
 
 // Rom information
+static struct BurnRomInfo Missw96cRomDesc[] = {
+	{ "10_PROG2.UE17",   	0x080000, 0x36a7beb6, BRF_ESS | BRF_PRG }, // 68000 code
+	{ "6_PROG1.UD17",   	0x080000, 0xe70b562f, BRF_ESS | BRF_PRG },
+	{ "9_IM1-B.UE16B",   	0x080000, 0xeedc24f8, BRF_ESS | BRF_PRG },
+	{ "5_IM1-A.UE16A",		0x080000, 0xbb0eb7d7, BRF_ESS | BRF_PRG },
+	{ "8_IM2-B.UE15B",   	0x080000, 0x68dd67b2, BRF_ESS | BRF_PRG },
+	{ "4_IM2-A.UE15A",		0x080000, 0x2b39ec56, BRF_ESS | BRF_PRG },
+	{ "7_IM3_B.UE14B", 		0x080000, 0x7fd5ca2c, BRF_ESS | BRF_PRG },
+	{ "3_IM3-A.UE14A",		0x080000, 0x4ba5dab7, BRF_ESS | BRF_PRG },
+
+	{ "20_OBJ1.U5",   		0x080000, 0x3983152f, BRF_GRA },			  // graphics
+
+	{ "1_MUSIC1.UB6",   	0x080000, 0xe78a659e, BRF_SND },			  // PCM
+	{ "2_MUSIC2.UC6",   	0x080000, 0x60fa0c00, BRF_SND },
+};
+
+STD_ROM_PICK(Missw96c)
+STD_ROM_FN(Missw96c)
+
+// Rom information
 static struct BurnRomInfo Missmw96RomDesc[] = {
 	{ "mmw96_10.bin",  		0x080000, 0x45ed1cd9, BRF_ESS | BRF_PRG }, // 68000 code
 	{ "mmw96_06.bin",  		0x080000, 0x52ec9e5d, BRF_ESS | BRF_PRG },
@@ -2226,6 +2246,16 @@ struct BurnDriver BurnDrvMissw96b = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_16BIT_ONLY | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_POST90S, GBF_PUZZLE, 0,
 	NULL, Missw96bRomInfo, Missw96bRomName, NULL, NULL, GalpanicInputInfo, Missw96DIPInfo,
+	Missw96Init, GalpanicExit, ComadFrame, ComadDraw, GalpanicScan, &RecalcBgPalette, 0x400,
+	256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvMissw96c = {
+	"missw96c", "missw96", NULL, NULL, "1996",
+	"Miss World '96 (Nude) (set 4)\0", NULL, "Comad", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_16BIT_ONLY | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_POST90S, GBF_PUZZLE, 0,
+	NULL, Missw96cRomInfo, Missw96cRomName, NULL, NULL, GalpanicInputInfo, Missw96DIPInfo,
 	Missw96Init, GalpanicExit, ComadFrame, ComadDraw, GalpanicScan, &RecalcBgPalette, 0x400,
 	256, 224, 4, 3
 };

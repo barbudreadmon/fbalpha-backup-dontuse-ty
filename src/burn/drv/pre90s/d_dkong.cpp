@@ -764,9 +764,6 @@ void __fastcall dkong3_main_write(UINT16 address, UINT8 data)
 		case 0x7d80:
 			if (data & 1) {
 				sound_cpu_in_reset = 0;
-			} else {
-				sound_cpu_in_reset = 1;
-
 				M6502Open(0);
 				M6502Reset();
 				M6502Close();
@@ -774,6 +771,8 @@ void __fastcall dkong3_main_write(UINT16 address, UINT8 data)
 				M6502Open(1);
 				M6502Reset();
 				M6502Close();
+			} else {
+				sound_cpu_in_reset = 1;
 			}
 		return;
 
@@ -1150,41 +1149,60 @@ static void __fastcall i8039_sound_write_port(UINT32 port, UINT8 data)
 
 static void dkong3_sound0_write(UINT16 a, UINT8 d)
 {
-//bprintf (0, _T("s0: %4.4x, %2.2x, %d\n"), a, d, M6502GetActive());
-	if ((a & 0xffe0) == 0x4000) {
-		nesapuWrite(0, a & 0x1f, d);
+	if (a <= 0x1ff) {
+		DrvSndRAM0[a] = d;
+		return;
+	}
+
+	if (a >= 0x4000 && a <= 0x4017) {
+		nesapuWrite(0, a - 0x4000, d);
 		return;
 	}
 }
 
 static UINT8 dkong3_sound0_read(UINT16 a)
 {
-	if ((a & 0xffe0) == 0x4000) {
-		if ((a & 0xfffe) == 0x4016) {
-			return soundlatch[a & 1];
-		}
-
-		return nesapuRead(0, a & 0x1f);
+	if (a <= 0x1ff) {
+		return DrvSndRAM0[a];
+	}
+	if (a >= 0xe000) {
+		return DrvSndROM0[a - 0xe000];
+	}
+	switch (a) {
+		case 0x4016: return soundlatch[0];
+		case 0x4017: return soundlatch[1];
+	}
+	if (a >= 0x4000 && a <= 0x4015) {
+		return nesapuRead(0, a - 0x4000);
 	}
 
 	return 0;
 }
 
-static void dkong3_sound1_write(UINT16 a, UINT8 /*d*/)
+static void dkong3_sound1_write(UINT16 a, UINT8 d)
 {
-//bprintf (0, _T("s1: %4.4x, %2.2x, %d\n"), a, d, M6502GetActive());
-	if ((a & 0xffe0) == 0x4000) {
-	//	nesapuWrite(1, a & 0x1f, d);
+	if (a <= 0x1ff) {
+		DrvSndRAM1[a] = d;
+		return;
+	}
+	if (a >= 0x4000 && a <= 0x4017) {
+		nesapuWrite(1, a - 0x4000, d);
 		return;
 	}
 }
 
 static UINT8 dkong3_sound1_read(UINT16 a)
 {
-	if ((a & 0xffe0) == 0x4000) {
+	if (a <= 0x1ff) {
+		return DrvSndRAM1[a];
+	}
+	if (a >= 0xe000) {
+		return DrvSndROM1[a - 0xe000];
+	}
+	if (a >= 0x4000 && a <= 0x4017) {
 		if (a == 0x4016) return soundlatch[2];
 
-		return nesapuRead(1, a & 0x1f);
+		return nesapuRead(1, a - 0x4000);
 	}
 
 	return 0;
@@ -1255,7 +1273,7 @@ static INT32 MemIndex()
 	DrvSndRAM0		= Next; Next += 0x000200;
 	DrvSndRAM1		= Next; Next += 0x000200;
 
-	soundlatch		= Next; Next += 0x000003;
+	soundlatch		= Next; Next += 0x000005;
 	gfx_bank		= Next; Next += 0x000001;
 	sprite_bank		= Next; Next += 0x000001;
 	palette_bank		= Next; Next += 0x000001;
@@ -1465,7 +1483,7 @@ static INT32 Dkong3DoReset()
 	M6502Reset();
 	M6502Close();
 
-//	nesapuReset(); // necessary?
+	nesapuReset(); // necessary?
 
 	sound_cpu_in_reset = 0;
 
@@ -1539,21 +1557,29 @@ static INT32 Dkong3Init()
 
 	M6502Init(0, TYPE_N2A03);
 	M6502Open(0);
-	M6502MapMemory(DrvSndRAM0, 0x0000, 0x01ff, MAP_RAM);
-	M6502MapMemory(DrvSndROM0, 0xe000, 0xffff, MAP_ROM);
+	//M6502MapMemory(DrvSndRAM0, 0x0000, 0x01ff, MAP_RAM); // handled below
+	//M6502MapMemory(DrvSndROM0, 0xe000, 0xffff, MAP_ROM);
+	M6502SetWriteMemIndexHandler(dkong3_sound0_write);
+	M6502SetReadMemIndexHandler(dkong3_sound0_read);
+	M6502SetReadOpArgHandler(dkong3_sound0_read);
+	M6502SetReadOpHandler(dkong3_sound0_read);
 	M6502SetWriteHandler(dkong3_sound0_write);
 	M6502SetReadHandler(dkong3_sound0_read);
 	M6502Close();
 
 	M6502Init(1, TYPE_N2A03);
 	M6502Open(1);
-	M6502MapMemory(DrvSndRAM1, 0x0000, 0x01ff, MAP_RAM);
-	M6502MapMemory(DrvSndROM1, 0xe000, 0xffff, MAP_ROM);
+	//M6502MapMemory(DrvSndRAM1, 0x0000, 0x01ff, MAP_RAM); // handled below
+	//M6502MapMemory(DrvSndROM1, 0xe000, 0xffff, MAP_ROM);
+	M6502SetWriteMemIndexHandler(dkong3_sound1_write);
+	M6502SetReadMemIndexHandler(dkong3_sound1_read);
+	M6502SetReadOpArgHandler(dkong3_sound1_read);
+	M6502SetReadOpHandler(dkong3_sound1_read);
 	M6502SetWriteHandler(dkong3_sound1_write);
 	M6502SetReadHandler(dkong3_sound1_read);
 	M6502Close();
 
-	nesapuInit(0, 1789773, dkong3_nesapu_sync, 1);
+	nesapuInit(0, 1789773, dkong3_nesapu_sync, 0);
 	nesapuSetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH);
 
 	nesapuInit(1, 1789773, dkong3_nesapu_sync, 1);
@@ -1908,37 +1934,26 @@ static INT32 Dkong3Frame()
 		}
 	}
 
-	INT32 nInterleave = 100; // ?
+	INT32 nInterleave = 400; // ?
 
 	for (INT32 i = 0; i < nInterleave; i++) {
 		ZetOpen(0);
 		ZetRun(4000000 / 60 / nInterleave);
-		if (i == (nInterleave - 10) && *nmi_mask) ZetNmi();
+		if (i == (nInterleave - 1) && *nmi_mask) ZetNmi();
 		ZetClose();
 
 		M6502Open(0);
-		if (sound_cpu_in_reset)
-		{
-			M6502Idle(1789773 / 60 / nInterleave);
-		} else {
-			M6502Run(1789773 / 60 / nInterleave);
-			if (i == (nInterleave - 10)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
-		}
+		M6502Run(1789773 / 60 / nInterleave);
+		if (i == (nInterleave - 1)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		M6502Close();
 
 		M6502Open(1);
-		if (sound_cpu_in_reset)
-		{
-			M6502Idle(1789773 / 60 / nInterleave);
-		} else {
-			M6502Run(1789773 / 60 / nInterleave);
-			if (i == (nInterleave - 10)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
-		}
+		M6502Run(1789773 / 60 / nInterleave);
+		if (i == (nInterleave - 1)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		M6502Close();
 	}
 
 	if (pBurnSoundOut) {
-		memset (pBurnSoundOut,0,nBurnSoundLen*4);
 		nesapuUpdate(0, pBurnSoundOut, nBurnSoundLen);
 		nesapuUpdate(1, pBurnSoundOut, nBurnSoundLen);
 	}
@@ -2087,31 +2102,69 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ba.szName = "All Ram";
 		BurnAcb(&ba);
 	}
+
+	if (nAction & ACB_DRIVER_DATA) {
+
+		if (s2650_protection) {
+			s2650Scan(nAction);
+		} else {
+			ZetScan(nAction);
+		}
+		i8257Scan();
+		I8039Scan(nAction, pnMin);
+		BurnSampleScan(nAction, pnMin);
+		DACScan(nAction, pnMin);
+
+		SCAN_VAR(vblank);
+		SCAN_VAR(s2650_protection);
+		SCAN_VAR(dkongjr_walk);
+		SCAN_VAR(page);
+		SCAN_VAR(mcustatus);
+		SCAN_VAR(p);
+		SCAN_VAR(t);
+
+		DrvRecalc = 1;
+
+		if (nAction & ACB_WRITE) {
+		}
+	}
+
+	return 0;
+}
+
+static INT32 Dkong3Scan(INT32 nAction, INT32 *pnMin)
+{
+	struct BurnArea ba;
+	
+	if (pnMin != NULL) {			// Return minimum compatible version
+		*pnMin = 0x029719;
+	}
+
+	if (nAction & ACB_MEMORY_RAM) {
+		memset(&ba, 0, sizeof(ba));
+		ba.Data	  = AllRam;
+		ba.nLen	  = RamEnd-AllRam;
+		ba.szName = "All Ram";
+		BurnAcb(&ba);
+	}
 	
 	if (nAction & ACB_DRIVER_DATA) {
 
-            if (s2650_protection) {
-                s2650Scan(nAction);
-            } else {
-                ZetScan(nAction);
-            }
-            i8257Scan();
-            I8039Scan(nAction, pnMin);
-            BurnSampleScan(nAction, pnMin);
-            DACScan(nAction, pnMin);
+		ZetScan(nAction);
+		M6502Scan(nAction);
 
-            SCAN_VAR(vblank);
-            SCAN_VAR(s2650_protection);
-            SCAN_VAR(dkongjr_walk);
-            SCAN_VAR(page);
-            SCAN_VAR(mcustatus);
-            SCAN_VAR(p);
-            SCAN_VAR(t);
+		SCAN_VAR(vblank);
+		SCAN_VAR(s2650_protection);
+		SCAN_VAR(dkongjr_walk);
+		SCAN_VAR(page);
+		SCAN_VAR(mcustatus);
+		SCAN_VAR(p);
+		SCAN_VAR(t);
 
-            DrvRecalc = 1;
+		DrvRecalc = 1;
 
-            if (nAction & ACB_WRITE) {
-            }
+		if (nAction & ACB_WRITE) {
+		}
 	}
 
 	return 0;
@@ -2137,7 +2190,7 @@ static struct BurnRomInfo radarscp1RomDesc[] = {
 	{ "trs01_5h",		0x1000, 0x51b8263d, 1 }, //  2
 	{ "trs01_5k",		0x1000, 0x1f0101f7, 1 }, //  3
 
-	{ "trs015aa.bin",	0x0800, 0x5166554c, 2 }, //  4 soundcpu
+	{ "trs-s__5a.5a",	0x0800, 0x5166554c, 2 }, //  4 soundcpu
 
 	{ "trs01v3f",		0x0800, 0xf095330e, 4 }, //  5 gfx1
 	{ "trs01v3g",		0x0800, 0x15a316f0, 4 }, //  6
@@ -2155,7 +2208,7 @@ static struct BurnRomInfo radarscp1RomDesc[] = {
 
 	{ "trs01e3k.bin",	0x0100, 0x6c6f989c, 7 }, // 15 gfx4
 
-	{ "trs014ha.bin",	0x0800, 0xd1f1b48c, 3 }, // 16 m58819 speech
+	{ "trs-s__4h.4h",	0x0800, 0xd1f1b48c, 3 }, // 16 m58819 speech
 
 	{ "trs01v1d.bin",	0x0100, 0x1b828315, 8 }, // 17 unused proms
 };
@@ -2510,7 +2563,7 @@ struct BurnDriver BurnDrvDkongf = {
 
 
 // Donkey Kong - Pauline Edition (hack, rev 5)
-// "Pauline Edition" hack, by Clay Cowgill based on Mike Mika's NES version
+// "Pauline Edition" hack (rev 5, 4-22-2013), by Clay Cowgill based on Mike Mika's NES version
 
 static struct BurnRomInfo dkongpeRomDesc[] = {
 	{ "c_5et_g.bin",	0x1000, 0xba70b88b, 1 }, //  0 maincpu
@@ -2538,11 +2591,50 @@ STD_ROM_PICK(dkongpe)
 STD_ROM_FN(dkongpe)
 
 struct BurnDriver BurnDrvDkongpe = {
-	"dkongpe", "dkong", NULL, "dkong", "2004",
+	"dkongpe", "dkong", NULL, "dkong", "2013",
 	"Donkey Kong - Pauline Edition (hack, rev 5)\0", NULL, "hack (Clay Cowgill)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, dkongpeRomInfo, dkongpeRomName, DkongSampleInfo, DkongSampleName, DkongInputInfo, DkongfDIPInfo,
+	dkongInit, DrvExit, DrvFrame, dkongDraw, DrvScan, &DrvRecalc, 0x100,
+	224, 256, 3, 4
+};
+
+
+// Donkey Kong - Arcade Rainbow (hack)
+// 6-29-2015 John Kowalski
+
+static struct BurnRomInfo dkrainbowRomDesc[] = {
+	{ "c_5et_g.bin",	0x1000, 0xba70b88b, 1 }, //  0 maincpu
+	{ "c_5ct_g.bin",	0x1000, 0x5ec461ec, 1 }, //  1
+	{ "c_5bt_g.bin",	0x1000, 0x1c97d324, 1 }, //  2
+	{ "c_5at_g.bin",	0x1000, 0xb9005ac0, 1 }, //  3
+
+	{ "s_3i_b.bin",		0x0800, 0x45a4ed06, 2 }, //  4 soundcpu
+	{ "s_3j_b.bin",		0x0800, 0x4743fe92, 2 }, //  5
+
+	{ "v_5h_b.bin",		0x0800, 0x12c8c95d, 3 }, //  6 gfx1
+	{ "v_3pt.bin",		0x0800, 0x15e9c5e9, 3 }, //  7
+
+	{ "l_4m_b.bin",		0x0800, 0x59f8054d, 4 }, //  8 gfx2
+	{ "l_4n_b.bin",		0x0800, 0x672e4714, 4 }, //  9
+	{ "l_4r_b.bin",		0x0800, 0xfeaa59ee, 4 }, // 10
+	{ "l_4s_b.bin",		0x0800, 0x20f2ef7e, 4 }, // 11
+
+	{ "dkr_c-2k.bpr",	0x0100, 0xc0dce2f5, 5 }, // 12 proms
+	{ "dkr_c-2j.bpr",	0x0100, 0x03c3153f, 5 }, // 13
+	{ "dkr_v-5e.bpr",	0x0100, 0xd9f3005a, 5 }, // 14
+};
+
+STD_ROM_PICK(dkrainbow)
+STD_ROM_FN(dkrainbow)
+
+struct BurnDriver BurnDrvDkrainbow = {
+	"dkrainbow", "dkong", NULL, "dkong", "2015",
+	"Donkey Kong - Arcade Rainbow (hack)\0", NULL, "hack (john Kowalski)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, dkrainbowRomInfo, dkrainbowRomName, DkongSampleInfo, DkongSampleName, DkongInputInfo, DkongfDIPInfo,
 	dkongInit, DrvExit, DrvFrame, dkongDraw, DrvScan, &DrvRecalc, 0x100,
 	224, 256, 3, 4
 };
@@ -3174,7 +3266,7 @@ struct BurnDriver BurnDrvDkong3 = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, dkong3RomInfo, dkong3RomName, NULL, NULL, Dkong3InputInfo, Dkong3DIPInfo,
-	Dkong3Init, Dkong3Exit, Dkong3Frame, dkongDraw, DrvScan, &DrvRecalc, 0x100,
+	Dkong3Init, Dkong3Exit, Dkong3Frame, dkongDraw, Dkong3Scan, &DrvRecalc, 0x100,
 	224, 256, 3, 4
 };
 
@@ -3215,7 +3307,7 @@ struct BurnDriver BurnDrvDkong3j = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, dkong3jRomInfo, dkong3jRomName, NULL, NULL, Dkong3InputInfo, Dkong3DIPInfo,
-	Dkong3Init, Dkong3Exit, DrvFrame, dkongDraw, DrvScan, &DrvRecalc, 0x100,
+	Dkong3Init, Dkong3Exit, DrvFrame, dkongDraw, Dkong3Scan, &DrvRecalc, 0x100,
 	224, 256, 3, 4
 };
 

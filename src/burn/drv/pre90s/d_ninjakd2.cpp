@@ -2167,6 +2167,45 @@ struct BurnDriver BurnDrvNinjakd2b = {
 };
 
 
+// Ninja-Kid II / NinjaKun Ashura no Shou (set 4)
+// close to set 3
+
+static struct BurnRomInfo ninjakd2cRomDesc[] = {
+	{ "1.3U",			0x08000, 0x06096412, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "2.3T",			0x08000, 0x9ed9a994, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "nk2_04.rom",		0x08000, 0xe7692a77, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "5.3M",			0x08000, 0x800d4951, 1 | BRF_PRG | BRF_ESS }, //  4
+
+	{ "nk2_06.rom",		0x10000, 0xd3a18a79, 2 | BRF_PRG | BRF_ESS }, //  5 Z80 #1 Code (mc8123 encrypted)
+
+	{ "nk2_12.rom",		0x08000, 0xdb5657a9, 3 | BRF_GRA },           //  6 Foreground Tiles
+
+	{ "nk2_08.rom",		0x10000, 0x1b79c50a, 4 | BRF_GRA },           //  7 Sprite Tiles
+	{ "nk2_07.rom",		0x10000, 0x0be5cd13, 4 | BRF_GRA },           //  8
+
+	{ "nk2_11.rom",		0x10000, 0x41a714b3, 5 | BRF_GRA },           //  9 Background Tiles
+	{ "nk2_10.rom",		0x10000, 0xc913c4ab, 5 | BRF_GRA },           // 10
+
+	{ "nk2_09.rom",		0x10000, 0xc1d2d170, 6 | BRF_GRA },           // 11 Samples (8 bit unsigned)
+	
+	{ "ninjakd2.key",	0x02000, 0xec25318f, 7 | BRF_PRG | BRF_ESS }, // 12 mc8123 key
+};
+
+STD_ROM_PICK(ninjakd2c)
+STD_ROM_FN(ninjakd2c)
+
+struct BurnDriver BurnDrvNinjakd2c = {
+	"ninjakd2c", "ninjakd2", NULL, NULL, "1987",
+	"Ninja-Kid II / NinjaKun Ashura no Shou (set 4)\0", NULL, "UPL", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SCRFIGHT, 0,
+	NULL, ninjakd2cRomInfo, ninjakd2cRomName, NULL, NULL, DrvInputInfo, RdactionDIPInfo,
+	Ninjakd2Init, DrvExit, DrvFrame, Ninjakd2Draw, DrvScan, &DrvRecalc, 0x300,
+	256, 192, 4, 3
+};
+
+
 // Rad Action / NinjaKun Ashura no Shou
 
 static struct BurnRomInfo rdactionRomDesc[] = {
@@ -2316,7 +2355,7 @@ struct BurnDriver BurnDrvArkarea = {
 };
 
 
-// Atomic Robo-kid
+// Atomic Robo-kid (World, Type-2)
 
 static struct BurnRomInfo robokidRomDesc[] = {
 	{ "robokid1.18j",	0x10000, 0x378c21fc, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -2356,6 +2395,8 @@ static struct BurnRomInfo robokidRomDesc[] = {
 	{ "robokid.16a",	0x10000, 0x4e340815, 7 | BRF_GRA },           // 28
 	{ "robokid.17a",	0x10000, 0xf0863106, 7 | BRF_GRA },           // 29
 	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30
+	
+	{ "prom82s129.cpu",	0x00100, 0x4dd96f67, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(robokid)
@@ -2363,7 +2404,7 @@ STD_ROM_FN(robokid)
 
 struct BurnDriver BurnDrvRobokid = {
 	"robokid", NULL, NULL, NULL, "1988",
-	"Atomic Robo-kid\0", NULL, "UPL", "Miscellaneous",
+	"Atomic Robo-kid (World, Type-2)\0", NULL, "UPL", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, robokidRomInfo, robokidRomName, NULL, NULL, DrvInputInfo, RobokidDIPInfo,
@@ -2372,11 +2413,11 @@ struct BurnDriver BurnDrvRobokid = {
 };
 
 
-// Atomic Robo-kid (Japan, set 1)
+// Atomic Robo-kid (Japan, Type-2, set 1)
 
 static struct BurnRomInfo robokidjRomDesc[] = {
-	{ "1.29",		0x10000, 0x59a1e2ec, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "2.30",		0x10000, 0xe3f73476, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "1.29",			0x10000, 0x59a1e2ec, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "2.30",			0x10000, 0xe3f73476, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "robokid3.15k",	0x10000, 0x05295ec3, 1 | BRF_PRG | BRF_ESS }, //  2
 	{ "robokid4.12k",	0x10000, 0x3bc3977f, 1 | BRF_PRG | BRF_ESS }, //  3
 
@@ -2412,6 +2453,8 @@ static struct BurnRomInfo robokidjRomDesc[] = {
 	{ "robokid.16a",	0x10000, 0x4e340815, 7 | BRF_GRA },           // 28
 	{ "robokid.17a",	0x10000, 0xf0863106, 7 | BRF_GRA },           // 29
 	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30
+	
+	{ "prom82s129.cpu",	0x00100, 0x4dd96f67, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(robokidj)
@@ -2419,7 +2462,7 @@ STD_ROM_FN(robokidj)
 
 struct BurnDriver BurnDrvRobokidj = {
 	"robokidj", "robokid", NULL, NULL, "1988",
-	"Atomic Robo-kid (Japan, set 1)\0", NULL, "UPL", "Miscellaneous",
+	"Atomic Robo-kid (Japan, Type-2, set 1)\0", NULL, "UPL", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, robokidjRomInfo, robokidjRomName, NULL, NULL, DrvInputInfo, RobokidjDIPInfo,
@@ -2428,7 +2471,7 @@ struct BurnDriver BurnDrvRobokidj = {
 };
 
 
-// Atomic Robo-kid (Japan, set 2)
+// Atomic Robo-kid (Japan, Type-2, set 2)
 
 static struct BurnRomInfo robokidj2RomDesc[] = {
 	{ "1_rom29.18j",	0x10000, 0x969fb951, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -2468,6 +2511,8 @@ static struct BurnRomInfo robokidj2RomDesc[] = {
 	{ "robokid.16a",	0x10000, 0x4e340815, 7 | BRF_GRA },           // 28
 	{ "robokid.17a",	0x10000, 0xf0863106, 7 | BRF_GRA },           // 29
 	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30
+	
+	{ "prom82s129.cpu",	0x00100, 0x4dd96f67, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(robokidj2)
@@ -2475,10 +2520,68 @@ STD_ROM_FN(robokidj2)
 
 struct BurnDriver BurnDrvRobokidj2 = {
 	"robokidj2", "robokid", NULL, NULL, "1988",
-	"Atomic Robo-kid (Japan, set 2)\0", NULL, "UPL", "Miscellaneous",
+	"Atomic Robo-kid (Japan, Type-2, set 2)\0", NULL, "UPL", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, robokidj2RomInfo, robokidj2RomName, NULL, NULL, DrvInputInfo, RobokidjDIPInfo,
+	RobokidInit, DrvExit, DrvFrame, RobokidDraw, RobokidScan, &DrvRecalc, 0x400,
+	256, 192, 4, 3
+};
+
+
+// Atomic Robo-kid (Japan)
+
+static struct BurnRomInfo robokidj3RomDesc[] = {
+	{ "robokid1.18j",	0x10000, 0x77a9332a, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "robokid2.18k",	0x10000, 0x715ecee4, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "robokid3.15k",	0x10000, 0xce12fa86, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "robokid4.12k",	0x10000, 0x97e86600, 1 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "robokid.k7",		0x10000, 0xf490a2e9, 2 | BRF_PRG | BRF_ESS }, //  4 Z80 #1 Code
+
+	{ "robokid.b9",		0x08000, 0xfac59c3f, 3 | BRF_GRA },           //  5 Foreground Tiles
+
+	{ "robokid.15f",	0x10000, 0xba61f5ab, 4 | BRF_GRA },           //  6 Sprite Tiles
+	{ "robokid.16f",	0x10000, 0xd9b399ce, 4 | BRF_GRA },           //  7
+	{ "robokid.17f",	0x10000, 0xafe432b9, 4 | BRF_GRA },           //  8
+	{ "robokid.18f",	0x10000, 0xa0aa2a84, 4 | BRF_GRA },           //  9
+
+	{ "robokid.19c",	0x10000, 0x02220421, 5 | BRF_GRA },           // 10 Background Layer 0 Tiles
+	{ "robokid.20c",	0x10000, 0x02d59bc2, 5 | BRF_GRA },           // 11
+	{ "robokid.17d",	0x10000, 0x2fa29b99, 5 | BRF_GRA },           // 12
+	{ "robokid.18d",	0x10000, 0xae15ce02, 5 | BRF_GRA },           // 13
+	{ "robokid.19d",	0x10000, 0x784b089e, 5 | BRF_GRA },           // 14
+	{ "robokid.20d",	0x10000, 0xb0b395ed, 5 | BRF_GRA },           // 15
+	{ "robokid.19f",	0x10000, 0x0f9071c6, 5 | BRF_GRA },           // 16
+
+	{ "robokid.12c",	0x10000, 0x0ab45f94, 6 | BRF_GRA },           // 17 Background Layer 1 Tiles
+	{ "robokid.14c",	0x10000, 0x029bbd4a, 6 | BRF_GRA },           // 18
+	{ "robokid.15c",	0x10000, 0x7de67ebb, 6 | BRF_GRA },           // 19
+	{ "robokid.16c",	0x10000, 0x53c0e582, 6 | BRF_GRA },           // 20
+	{ "robokid.17c",	0x10000, 0x0cae5a1e, 6 | BRF_GRA },           // 21
+	{ "robokid.18c",	0x10000, 0x56ac7c8a, 6 | BRF_GRA },           // 22
+	{ "robokid.15d",	0x10000, 0xcd632a4d, 6 | BRF_GRA },           // 23
+	{ "robokid.16d",	0x10000, 0x18d92b2b, 6 | BRF_GRA },           // 24
+
+	{ "robokid.12a",	0x10000, 0xe64d1c10, 7 | BRF_GRA },           // 25 Background Layer 2 Tiles
+	{ "robokid.14a",	0x10000, 0x8f9371e4, 7 | BRF_GRA },           // 26
+	{ "robokid.15a",	0x10000, 0x469204e7, 7 | BRF_GRA },           // 27
+	{ "robokid.16a",	0x10000, 0x4e340815, 7 | BRF_GRA },           // 28
+	{ "robokid.17a",	0x10000, 0xf0863106, 7 | BRF_GRA },           // 29
+	{ "robokid.18a",	0x10000, 0xfdff7441, 7 | BRF_GRA },           // 30
+	
+	{ "prom82s129.cpu",	0x00100, 0x4dd96f67, 0 | BRF_OPT },
+};
+
+STD_ROM_PICK(robokidj3)
+STD_ROM_FN(robokidj3)
+
+struct BurnDriver BurnDrvRobokidj3 = {
+	"robokidj3", "robokid", NULL, NULL, "1988",
+	"Atomic Robo-kid (Japan)\0", NULL, "UPL", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	NULL, robokidj3RomInfo, robokidj3RomName, NULL, NULL, DrvInputInfo, RobokidjDIPInfo,
 	RobokidInit, DrvExit, DrvFrame, RobokidDraw, RobokidScan, &DrvRecalc, 0x400,
 	256, 192, 4, 3
 };

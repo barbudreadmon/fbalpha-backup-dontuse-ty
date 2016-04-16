@@ -2006,7 +2006,7 @@ static void majtitle_draw_sprites()
 
 static void dodrawline(INT32 start, INT32 finish)
 {
-#if defined PROFILE_PERFORMANCE
+#if defined USE_SPEEDHACKS
 	if(!pBurnDraw) return;
 #endif
 	if (*video_enable) return;
@@ -3014,7 +3014,7 @@ struct BurnDriver BurnDrvAirduel = {
 	"airduel", NULL, NULL, NULL, "1990",
 	"Air Duel (World, M82-A-A + M82-B-A)\0", NULL, "Irem", "M82",
 	NULL, NULL, NULL, NULL,
-	BDF_ORIENTATION_VERTICAL, 2, HARDWARE_IREM_M72, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_IREM_M72, GBF_VERSHOOT, 0,
 	NULL, airduelRomInfo, airduelRomName, NULL, NULL, CommonInputInfo, AirduelDIPInfo,
 	airduelInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 384, 3, 4
@@ -3522,7 +3522,11 @@ static INT32 cosmccopInit()
 {
 	Clock_16mhz = 1;
 
-	return DrvInit(hharryu_main_cpu_map, sound_rom_map, NULL, Z80_REAL_NMI, 2);
+	INT32 rc = DrvInit(hharryu_main_cpu_map, sound_rom_map, NULL, Z80_REAL_NMI, 2);
+
+	m72_irq_base = 0x60; // Cosmic Cop doesn't write to port 0x42, set it manually.
+
+	return rc;
 }
 
 struct BurnDriver BurnDrvCosmccop = {
