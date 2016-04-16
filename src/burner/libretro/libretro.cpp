@@ -7,7 +7,7 @@
 
 #include "cd/cd_interface.h"
 
-#define FBA_VERSION "v0.2.97.37"
+#define FBA_VERSION "v0.2.97.38"
 
 #ifdef _WIN32
    char slash = '\\';
