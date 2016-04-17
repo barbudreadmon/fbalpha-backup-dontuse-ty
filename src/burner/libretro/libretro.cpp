@@ -284,6 +284,7 @@ void set_neo_system_bios()
 
 char g_rom_dir[1024];
 char g_save_dir[1024];
+char g_system_dir[1024];
 static bool driver_inited;
 
 void retro_get_system_info(struct retro_system_info *info)
@@ -1469,6 +1470,19 @@ bool retro_load_game(const struct retro_game_info *info)
       // ... otherwise use rom directory
       strncpy(g_save_dir, g_rom_dir, sizeof(g_save_dir));
       log_cb(RETRO_LOG_ERROR, "Save dir not defined => use roms dir %s\n", g_save_dir);
+   }
+
+   // If system directory is defined use it, ...
+   if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir)
+   {
+      strncpy(g_system_dir, dir, sizeof(g_system_dir));
+      log_cb(RETRO_LOG_INFO, "Setting system dir to %s\n", g_system_dir);
+   }
+   else
+   {
+      // ... otherwise use rom directory
+      strncpy(g_system_dir, g_rom_dir, sizeof(g_system_dir));
+      log_cb(RETRO_LOG_ERROR, "System dir not defined => use roms dir %s\n", g_system_dir);
    }
 
    unsigned i = BurnDrvGetIndexByName(basename);
