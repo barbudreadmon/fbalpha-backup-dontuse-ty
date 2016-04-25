@@ -192,23 +192,24 @@ static struct RomBiosInfo aes_bioses[] = {
 };
 
 static struct RomBiosInfo uni_bioses[] = {
-   {"uni-bios_3_1.rom",  0x0c58093f, 0x0f, "Universe BIOS ver. 3.1"         ,  1 },
-   {"uni-bios_3_0.rom",  0xa97c89a9, 0x10, "Universe BIOS ver. 3.0"         ,  2 },
-   {"uni-bios_2_3.rom",  0x27664eb5, 0x11, "Universe BIOS ver. 2.3"         ,  3 },
-   {"uni-bios_2_3o.rom", 0x601720ae, 0x12, "Universe BIOS ver. 2.3 (alt)"   ,  4 },
-   {"uni-bios_2_2.rom",  0x2d50996a, 0x13, "Universe BIOS ver. 2.2"         ,  5 },
-   {"uni-bios_2_1.rom",  0x8dabf76b, 0x14, "Universe BIOS ver. 2.1"         ,  6 },
-   {"uni-bios_2_0.rom",  0x0c12c2ad, 0x15, "Universe BIOS ver. 2.0"         ,  7 },
-   {"uni-bios_1_3.rom",  0xb24b44a0, 0x16, "Universe BIOS ver. 1.3"         ,  8 },
-   {"uni-bios_1_2.rom",  0x4fa698e9, 0x17, "Universe BIOS ver. 1.2"         ,  9 },
-   {"uni-bios_1_2o.rom", 0xe19d3ce9, 0x18, "Universe BIOS ver. 1.2 (alt)"   , 10 },
-   {"uni-bios_1_1.rom",  0x5dda0d84, 0x19, "Universe BIOS ver. 1.1"         , 11 },
-   {"uni-bios_1_0.rom",  0x0ce453a0, 0x1a, "Universe BIOS ver. 1.0"         , 12 },
+   {"uni-bios_3_2.rom",  0xa4e8b9b3, 0x0f, "Universe BIOS ver. 3.2"         ,  1 },
+   {"uni-bios_3_1.rom",  0x0c58093f, 0x10, "Universe BIOS ver. 3.1"         ,  2 },
+   {"uni-bios_3_0.rom",  0xa97c89a9, 0x11, "Universe BIOS ver. 3.0"         ,  3 },
+   {"uni-bios_2_3.rom",  0x27664eb5, 0x12, "Universe BIOS ver. 2.3"         ,  4 },
+   {"uni-bios_2_3o.rom", 0x601720ae, 0x13, "Universe BIOS ver. 2.3 (alt)"   ,  5 },
+   {"uni-bios_2_2.rom",  0x2d50996a, 0x14, "Universe BIOS ver. 2.2"         ,  6 },
+   {"uni-bios_2_1.rom",  0x8dabf76b, 0x15, "Universe BIOS ver. 2.1"         ,  7 },
+   {"uni-bios_2_0.rom",  0x0c12c2ad, 0x16, "Universe BIOS ver. 2.0"         ,  8 },
+   {"uni-bios_1_3.rom",  0xb24b44a0, 0x17, "Universe BIOS ver. 1.3"         ,  9 },
+   {"uni-bios_1_2.rom",  0x4fa698e9, 0x18, "Universe BIOS ver. 1.2"         , 10 },
+   {"uni-bios_1_2o.rom", 0xe19d3ce9, 0x19, "Universe BIOS ver. 1.2 (alt)"   , 11 },
+   {"uni-bios_1_1.rom",  0x5dda0d84, 0x1a, "Universe BIOS ver. 1.1"         , 12 },
+   {"uni-bios_1_0.rom",  0x0ce453a0, 0x1b, "Universe BIOS ver. 1.0"         , 13 },
    {NULL, 0, 0, NULL, 0 }
 };
 
 static struct RomBiosInfo unknown_bioses[] = {
-   {"neopen.sp1",        0xcb915e76, 0x1b, "NeoOpen BIOS v0.1 beta"         ,  1 },
+   {"neopen.sp1",        0xcb915e76, 0x1c, "NeoOpen BIOS v0.1 beta"         ,  1 },
    {NULL, 0, 0, NULL, 0 }
 };
 
@@ -1133,7 +1134,7 @@ static void check_variables(void)
    }
 }
 
-void retro_run()
+void retro_run(void)
 {
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
@@ -1380,39 +1381,14 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
 
    VidRecalcPal();
+   
+   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
 
-#ifdef FRONTEND_SUPPORTS_RGB565
-   if(nBurnBpp == 4)
-   {
-      enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
-
-      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
-         log_cb(RETRO_LOG_INFO, "Frontend supports XRGB888 - will use that instead of XRGB1555.\n");
-   }
-   else
-   {
-      enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
-
-      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
-         log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
-   }
-#endif
+   if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt) && log_cb)
+       log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
 
    return true;
 }
-
-#if defined(FRONTEND_SUPPORTS_RGB565)
-static unsigned int HighCol16(int r, int g, int b, int  /* i */)
-{
-   return (((r << 8) & 0xf800) | ((g << 3) & 0x07e0) | ((b >> 3) & 0x001f));
-}
-#else
-static unsigned int HighCol15(int r, int g, int b, int  /* i */)
-{
-   return (((r << 7) & 0x7c00) | ((g << 2) & 0x03e0) | ((b >> 3) & 0x001f));
-}
-#endif
-
 
 static void init_video()
 {
