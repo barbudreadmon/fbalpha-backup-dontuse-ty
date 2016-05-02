@@ -1,6 +1,9 @@
 # fba-libretro
 
-Build your sets with dats from the dats directory, fba dats are NOT mame dats.
+## Roms
+Use clrmamepro (which run fine on linux with wine and macos with crossover) to build valid romsets with dats from the dats directory.
+fba dats are NOT mame dats.
+Don't report issues if you didn't build a valid romset.
 
 ## Samples
 
