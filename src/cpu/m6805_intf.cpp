@@ -5,7 +5,7 @@ static INT32 ADDRESS_MAX;
 static INT32 ADDRESS_MASK;
 static INT32 PAGE;
 
-// PAGE_MASK1 and PAGE_SHIFT1 are also defined in the Android NDK!
+// PAGE_MASK and PAGE_SHIFT are also defined in the Android NDK!
 // Dirty hack: appending '1' to variables below
 static INT32 PAGE_MASK1;
 static INT32 PAGE_SHIFT1;
