@@ -196,7 +196,7 @@ else ifeq ($(platform), rpi2)
 	CC = gcc
 	CXX = g++
 else ifneq (,$(findstring armv,$(platform)))
-	TARGET := $(TARGET_NAME)_libretro.so
+	TARGET := fb_alpha_libretro_android.so
 	fpic := -fPIC
 	SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(LIBRETRO_DIR)/link.T
 ifneq (,$(findstring cortexa8,$(platform)))
@@ -216,8 +216,9 @@ else ifneq (,$(findstring hardfloat,$(platform)))
 endif
 	ENDIANNESS_DEFINES := -DLSB_FIRST
 	CFLAGS += -DARM
-	CC = gcc
-	CXX = g++
+	PLATFORM_DEFINES += -DANDROID -Dlog2\(x\)=\(log\(x\)/1.4426950408889634\)
+	CC = arm-linux-androideabi-gcc
+	CXX = arm-linux-androideabi-g++
 else ifeq ($(platform), emscripten)
 	TARGET := $(TARGET_NAME)_libretro_emscripten.bc
 	PLATFORM_DEFINES := -DUSE_FILE32API

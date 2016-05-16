@@ -4,8 +4,11 @@
 static INT32 ADDRESS_MAX;
 static INT32 ADDRESS_MASK;
 static INT32 PAGE;
-static INT32 PAGE_MASK;
-static INT32 PAGE_SHIFT;
+
+// PAGE_MASK1 and PAGE_SHIFT1 are also defined in the Android NDK!
+// Dirty hack: appending '1' to variables below
+static INT32 PAGE_MASK1;
+static INT32 PAGE_SHIFT1;
 
 #define READ		0
 #define WRITE		1
@@ -52,8 +55,8 @@ void m6805Write(UINT16 address, UINT8 data)
 {
 	address &= ADDRESS_MASK;
 
-	if (mem[WRITE][address >> PAGE_SHIFT] != NULL) {
-		mem[WRITE][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[WRITE][address >> PAGE_SHIFT1] != NULL) {
+		mem[WRITE][address >> PAGE_SHIFT1][address & PAGE_MASK1] = data;
 		return;
 	}
 
@@ -69,8 +72,8 @@ UINT8 m6805Read(UINT16 address)
 {
 	address &= ADDRESS_MASK;
 
-	if (mem[READ][address >> PAGE_SHIFT] != NULL) {
-		return mem[READ][address >> PAGE_SHIFT][address & PAGE_MASK];
+	if (mem[READ][address >> PAGE_SHIFT1] != NULL) {
+		return mem[READ][address >> PAGE_SHIFT1][address & PAGE_MASK1];
 	}
 
 	if (m6805ReadFunction != NULL) {
@@ -84,8 +87,8 @@ UINT8 m6805Fetch(UINT16 address)
 {
 	address &= ADDRESS_MASK;
 
-	if (mem[FETCH][address >> PAGE_SHIFT] != NULL) {
-		return mem[FETCH][address >> PAGE_SHIFT][address & PAGE_MASK];
+	if (mem[FETCH][address >> PAGE_SHIFT1] != NULL) {
+		return mem[FETCH][address >> PAGE_SHIFT1][address & PAGE_MASK1];
 	}
 
 	return m6805Read(address);
@@ -99,16 +102,16 @@ static void m6805_write_rom(UINT32 address, UINT8 data)
 
 	address &= ADDRESS_MASK;
 
-	if (mem[READ][address >> PAGE_SHIFT] != NULL) {
-		mem[READ][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[READ][address >> PAGE_SHIFT1] != NULL) {
+		mem[READ][address >> PAGE_SHIFT1][address & PAGE_MASK1] = data;
 	}
 
-	if (mem[WRITE][address >> PAGE_SHIFT] != NULL) {
-		mem[WRITE][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[WRITE][address >> PAGE_SHIFT1] != NULL) {
+		mem[WRITE][address >> PAGE_SHIFT1][address & PAGE_MASK1] = data;
 	}
 
-	if (mem[FETCH][address >> PAGE_SHIFT] != NULL) {
-		mem[FETCH][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[FETCH][address >> PAGE_SHIFT1] != NULL) {
+		mem[FETCH][address >> PAGE_SHIFT1][address & PAGE_MASK1] = data;
 	}
 
 	if (m6805WriteFunction != NULL) {
@@ -152,9 +155,9 @@ void m6805Init(INT32 num, INT32 max)
 	ADDRESS_MAX  = max;
 	ADDRESS_MASK = ADDRESS_MAX - 1;
 	PAGE	     = ADDRESS_MAX / 0x100;
-	PAGE_MASK    = PAGE - 1;
-	PAGE_SHIFT   = 0;
-	for (PAGE_SHIFT = 0; (1 << PAGE_SHIFT) < PAGE; PAGE_SHIFT++) {}
+	PAGE_MASK1    = PAGE - 1;
+	PAGE_SHIFT1   = 0;
+	for (PAGE_SHIFT1 = 0; (1 << PAGE_SHIFT1) < PAGE; PAGE_SHIFT1++) {}
 
 	memset (mem[0], 0, PAGE * sizeof(UINT8 *));
 	memset (mem[1], 0, PAGE * sizeof(UINT8 *));
@@ -173,8 +176,8 @@ void m6805Exit()
 	ADDRESS_MAX	= 0;
 	ADDRESS_MASK	= 0;
 	PAGE		= 0;
-	PAGE_MASK	= 0;
-	PAGE_SHIFT	= 0;
+	PAGE_MASK1	= 0;
+	PAGE_SHIFT1	= 0;
 	
 	DebugCPU_M6805Initted = 0;
 }
