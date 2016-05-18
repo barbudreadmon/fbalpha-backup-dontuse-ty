@@ -193,8 +193,6 @@ else ifeq ($(platform), rpi2)
 	HAVE_NEON = 1
 	ENDIANNESS_DEFINES := -DLSB_FIRST
 	CFLAGS += -DARM
-	CC = gcc
-	CXX = g++
 else ifneq (,$(findstring armv,$(platform)))
 	TARGET := $(TARGET_NAME)_libretro.so
 	fpic := -fPIC
@@ -216,8 +214,11 @@ else ifneq (,$(findstring hardfloat,$(platform)))
 endif
 	ENDIANNESS_DEFINES := -DLSB_FIRST
 	CFLAGS += -DARM
-	CC = gcc
-	CXX = g++
+ifneq (,$(findstring android,$(platform)))
+	CC = arm-linux-androideabi-gcc
+	CXX = arm-linux-androideabi-g++
+	PLATFORM_DEFINES += -DANDROID -Dlog2\(x\)=\(log\(x\)/1.4426950408889634\)
+endif
 else ifeq ($(platform), emscripten)
 	TARGET := $(TARGET_NAME)_libretro_emscripten.bc
 	PLATFORM_DEFINES := -DUSE_FILE32API

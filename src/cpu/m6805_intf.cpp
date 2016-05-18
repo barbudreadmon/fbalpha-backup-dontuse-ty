@@ -3,9 +3,9 @@
 
 static INT32 ADDRESS_MAX;
 static INT32 ADDRESS_MASK;
-static INT32 PAGE;
-static INT32 PAGE_MASK;
-static INT32 PAGE_SHIFT;
+static INT32 M6805_PAGE;
+static INT32 M6805_PAGE_MASK;
+static INT32 M6805_PAGE_SHIFT;
 
 #define READ		0
 #define WRITE		1
@@ -22,11 +22,11 @@ void m6805MapMemory(UINT8 *ptr, INT32 nStart, INT32 nEnd, INT32 nType)
 	if (!DebugCPU_M6805Initted) bprintf(PRINT_ERROR, _T("m6805MapMemory called without init\n"));
 #endif
 
-	for (INT32 i = nStart / PAGE; i < (nEnd / PAGE) + 1; i++)
+	for (INT32 i = nStart / M6805_PAGE; i < (nEnd / M6805_PAGE) + 1; i++)
 	{
-		if (nType & (1 <<  READ)) mem[ READ][i] = ptr + ((i * PAGE) - nStart);
-		if (nType & (1 << WRITE)) mem[WRITE][i] = ptr + ((i * PAGE) - nStart);
-		if (nType & (1 << FETCH)) mem[FETCH][i] = ptr + ((i * PAGE) - nStart);
+		if (nType & (1 <<  READ)) mem[ READ][i] = ptr + ((i * M6805_PAGE) - nStart);
+		if (nType & (1 << WRITE)) mem[WRITE][i] = ptr + ((i * M6805_PAGE) - nStart);
+		if (nType & (1 << FETCH)) mem[FETCH][i] = ptr + ((i * M6805_PAGE) - nStart);
 	}
 }
 
@@ -52,8 +52,8 @@ void m6805Write(UINT16 address, UINT8 data)
 {
 	address &= ADDRESS_MASK;
 
-	if (mem[WRITE][address >> PAGE_SHIFT] != NULL) {
-		mem[WRITE][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[WRITE][address >> M6805_PAGE_SHIFT] != NULL) {
+		mem[WRITE][address >> M6805_PAGE_SHIFT][address & M6805_PAGE_MASK] = data;
 		return;
 	}
 
@@ -69,8 +69,8 @@ UINT8 m6805Read(UINT16 address)
 {
 	address &= ADDRESS_MASK;
 
-	if (mem[READ][address >> PAGE_SHIFT] != NULL) {
-		return mem[READ][address >> PAGE_SHIFT][address & PAGE_MASK];
+	if (mem[READ][address >> M6805_PAGE_SHIFT] != NULL) {
+		return mem[READ][address >> M6805_PAGE_SHIFT][address & M6805_PAGE_MASK];
 	}
 
 	if (m6805ReadFunction != NULL) {
@@ -84,8 +84,8 @@ UINT8 m6805Fetch(UINT16 address)
 {
 	address &= ADDRESS_MASK;
 
-	if (mem[FETCH][address >> PAGE_SHIFT] != NULL) {
-		return mem[FETCH][address >> PAGE_SHIFT][address & PAGE_MASK];
+	if (mem[FETCH][address >> M6805_PAGE_SHIFT] != NULL) {
+		return mem[FETCH][address >> M6805_PAGE_SHIFT][address & M6805_PAGE_MASK];
 	}
 
 	return m6805Read(address);
@@ -99,16 +99,16 @@ static void m6805_write_rom(UINT32 address, UINT8 data)
 
 	address &= ADDRESS_MASK;
 
-	if (mem[READ][address >> PAGE_SHIFT] != NULL) {
-		mem[READ][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[READ][address >> M6805_PAGE_SHIFT] != NULL) {
+		mem[READ][address >> M6805_PAGE_SHIFT][address & M6805_PAGE_MASK] = data;
 	}
 
-	if (mem[WRITE][address >> PAGE_SHIFT] != NULL) {
-		mem[WRITE][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[WRITE][address >> M6805_PAGE_SHIFT] != NULL) {
+		mem[WRITE][address >> M6805_PAGE_SHIFT][address & M6805_PAGE_MASK] = data;
 	}
 
-	if (mem[FETCH][address >> PAGE_SHIFT] != NULL) {
-		mem[FETCH][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
+	if (mem[FETCH][address >> M6805_PAGE_SHIFT] != NULL) {
+		mem[FETCH][address >> M6805_PAGE_SHIFT][address & M6805_PAGE_MASK] = data;
 	}
 
 	if (m6805WriteFunction != NULL) {
@@ -151,14 +151,14 @@ void m6805Init(INT32 num, INT32 max)
 	
 	ADDRESS_MAX  = max;
 	ADDRESS_MASK = ADDRESS_MAX - 1;
-	PAGE	     = ADDRESS_MAX / 0x100;
-	PAGE_MASK    = PAGE - 1;
-	PAGE_SHIFT   = 0;
-	for (PAGE_SHIFT = 0; (1 << PAGE_SHIFT) < PAGE; PAGE_SHIFT++) {}
+	M6805_PAGE	     = ADDRESS_MAX / 0x100;
+	M6805_PAGE_MASK    = M6805_PAGE - 1;
+	M6805_PAGE_SHIFT   = 0;
+	for (M6805_PAGE_SHIFT = 0; (1 << M6805_PAGE_SHIFT) < M6805_PAGE; M6805_PAGE_SHIFT++) {}
 
-	memset (mem[0], 0, PAGE * sizeof(UINT8 *));
-	memset (mem[1], 0, PAGE * sizeof(UINT8 *));
-	memset (mem[2], 0, PAGE * sizeof(UINT8 *));
+	memset (mem[0], 0, M6805_PAGE * sizeof(UINT8 *));
+	memset (mem[1], 0, M6805_PAGE * sizeof(UINT8 *));
+	memset (mem[2], 0, M6805_PAGE * sizeof(UINT8 *));
 
 	for (INT32 i = 0; i < num; i++)
 		CpuCheatRegister(i, &M6805CheatCpuConfig);
@@ -172,9 +172,9 @@ void m6805Exit()
 
 	ADDRESS_MAX	= 0;
 	ADDRESS_MASK	= 0;
-	PAGE		= 0;
-	PAGE_MASK	= 0;
-	PAGE_SHIFT	= 0;
+	M6805_PAGE		= 0;
+	M6805_PAGE_MASK	= 0;
+	M6805_PAGE_SHIFT	= 0;
 	
 	DebugCPU_M6805Initted = 0;
 }

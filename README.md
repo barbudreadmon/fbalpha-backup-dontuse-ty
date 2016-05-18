@@ -17,4 +17,3 @@ Use this command to build :
 ## Known bugs
 
 - Irem m72/m92/m107 games and a few others based on the same nec v30 cpu (arm only ?)
-- Ironclad neogeo

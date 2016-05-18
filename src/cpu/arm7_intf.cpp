@@ -5,12 +5,12 @@
 
 #define MAX_MEMORY	0x80000000 // more than good enough for pgm
 #define MAX_MEMORY_AND	(MAX_MEMORY - 1)
-#define PAGE_SIZE	0x00001000 // 400 would be better...
-#define PAGE_COUNT	(MAX_MEMORY/PAGE_SIZE)
-#define PAGE_SHIFT	12	// 0x1000 -> 12 bits
-#define PAGE_BYTE_AND	0x00fff	// 0x1000 - 1 (byte align)
-#define PAGE_WORD_AND	0x00ffe	// 0x1000 - 2 (word align)
-#define PAGE_LONG_AND	0x00ffc // 0x1000 - 4 (ignore last 4 bytes, long align)
+#define ARM7_PAGE_SIZE	0x00001000 // 400 would be better...
+#define ARM7_PAGE_COUNT	(MAX_MEMORY/ARM7_PAGE_SIZE)
+#define ARM7_PAGE_SHIFT	12	// 0x1000 -> 12 bits
+#define ARM7_PAGE_BYTE_AND	0x00fff	// 0x1000 - 1 (byte align)
+#define ARM7_PAGE_WORD_AND	0x00ffe	// 0x1000 - 2 (word align)
+#define ARM7_PAGE_LONG_AND	0x00ffc // 0x1000 - 4 (ignore last 4 bytes, long align)
 
 #define READ	0
 #define WRITE	1
@@ -60,14 +60,14 @@ void Arm7MapMemory(UINT8 *src, UINT32 start, UINT32 finish, INT32 type)
 	if (start >= MAX_MEMORY || finish >= MAX_MEMORY) bprintf (PRINT_ERROR, _T("Arm7MapMemory memory range unsupported 0x%8.8x-0x%8.8x\n"), start, finish);
 #endif
 
-	UINT32 len = (finish-start) >> PAGE_SHIFT;
+	UINT32 len = (finish-start) >> ARM7_PAGE_SHIFT;
 
 	for (UINT32 i = 0; i < len+1; i++)
 	{
-		UINT32 offset = i + (start >> PAGE_SHIFT);
-		if (type & (1 <<  READ)) membase[ READ][offset] = src + (i << PAGE_SHIFT);
-		if (type & (1 << WRITE)) membase[WRITE][offset] = src + (i << PAGE_SHIFT);
-		if (type & (1 << FETCH)) membase[FETCH][offset] = src + (i << PAGE_SHIFT);
+		UINT32 offset = i + (start >> ARM7_PAGE_SHIFT);
+		if (type & (1 <<  READ)) membase[ READ][offset] = src + (i << ARM7_PAGE_SHIFT);
+		if (type & (1 << WRITE)) membase[WRITE][offset] = src + (i << ARM7_PAGE_SHIFT);
+		if (type & (1 << FETCH)) membase[FETCH][offset] = src + (i << ARM7_PAGE_SHIFT);
 	}
 }
 
@@ -137,8 +137,8 @@ void Arm7WriteByte(UINT32 addr, UINT8 data)
 	bprintf (PRINT_NORMAL, _T("%5.5x, %2.2x wb\n"), addr, data);
 #endif
 
-	if (membase[WRITE][addr >> PAGE_SHIFT] != NULL) {
-		membase[WRITE][addr >> PAGE_SHIFT][addr & PAGE_BYTE_AND] = data;
+	if (membase[WRITE][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		membase[WRITE][addr >> ARM7_PAGE_SHIFT][addr & ARM7_PAGE_BYTE_AND] = data;
 		return;
 	}
 
@@ -159,8 +159,8 @@ void Arm7WriteWord(UINT32 addr, UINT16 data)
 	bprintf (PRINT_NORMAL, _T("%5.5x, %8.8x wd\n"), addr, data);
 #endif
 
-	if (membase[WRITE][addr >> PAGE_SHIFT] != NULL) {
-		*((UINT16*)(membase[WRITE][addr >> PAGE_SHIFT] + (addr & PAGE_WORD_AND))) = data;
+	if (membase[WRITE][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		*((UINT16*)(membase[WRITE][addr >> ARM7_PAGE_SHIFT] + (addr & ARM7_PAGE_WORD_AND))) = data;
 		return;
 	}
 
@@ -181,8 +181,8 @@ void Arm7WriteLong(UINT32 addr, UINT32 data)
 	bprintf (PRINT_NORMAL, _T("%5.5x, %8.8x wd\n"), addr, data);
 #endif
 
-	if (membase[WRITE][addr >> PAGE_SHIFT] != NULL) {
-		*((UINT32*)(membase[WRITE][addr >> PAGE_SHIFT] + (addr & PAGE_LONG_AND))) = data;
+	if (membase[WRITE][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		*((UINT32*)(membase[WRITE][addr >> ARM7_PAGE_SHIFT] + (addr & ARM7_PAGE_LONG_AND))) = data;
 		return;
 	}
 
@@ -204,8 +204,8 @@ UINT8 Arm7ReadByte(UINT32 addr)
 	bprintf (PRINT_NORMAL, _T("%5.5x, rb\n"), addr);
 #endif
 
-	if (membase[ READ][addr >> PAGE_SHIFT] != NULL) {
-		return membase[READ][addr >> PAGE_SHIFT][addr & PAGE_BYTE_AND];
+	if (membase[ READ][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		return membase[READ][addr >> ARM7_PAGE_SHIFT][addr & ARM7_PAGE_BYTE_AND];
 	}
 
 	if (pReadByteHandler) {
@@ -227,8 +227,8 @@ UINT16 Arm7ReadWord(UINT32 addr)
 	bprintf (PRINT_NORMAL, _T("%5.5x, rl\n"), addr);
 #endif
 
-	if (membase[ READ][addr >> PAGE_SHIFT] != NULL) {
-		return *((UINT16*)(membase[ READ][addr >> PAGE_SHIFT] + (addr & PAGE_WORD_AND)));
+	if (membase[ READ][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		return *((UINT16*)(membase[ READ][addr >> ARM7_PAGE_SHIFT] + (addr & ARM7_PAGE_WORD_AND)));
 	}
 
 	if (pReadWordHandler) {
@@ -250,8 +250,8 @@ UINT32 Arm7ReadLong(UINT32 addr)
 	bprintf (PRINT_NORMAL, _T("%5.5x, rl\n"), addr);
 #endif
 
-	if (membase[ READ][addr >> PAGE_SHIFT] != NULL) {
-		return *((UINT32*)(membase[ READ][addr >> PAGE_SHIFT] + (addr & PAGE_LONG_AND)));
+	if (membase[ READ][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		return *((UINT32*)(membase[ READ][addr >> ARM7_PAGE_SHIFT] + (addr & ARM7_PAGE_LONG_AND)));
 	}
 
 	if (pReadLongHandler) {
@@ -278,8 +278,8 @@ UINT16 Arm7FetchWord(UINT32 addr)
 		Arm7RunEnd();
 	}
 
-	if (membase[FETCH][addr >> PAGE_SHIFT] != NULL) {
-		return *((UINT16*)(membase[FETCH][addr >> PAGE_SHIFT] + (addr & PAGE_WORD_AND)));
+	if (membase[FETCH][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		return *((UINT16*)(membase[FETCH][addr >> ARM7_PAGE_SHIFT] + (addr & ARM7_PAGE_WORD_AND)));
 	}
 
 	// good enough for now...
@@ -307,8 +307,8 @@ UINT32 Arm7FetchLong(UINT32 addr)
 		Arm7RunEnd();
 	}
 
-	if (membase[FETCH][addr >> PAGE_SHIFT] != NULL) {
-		return *((UINT32*)(membase[FETCH][addr >> PAGE_SHIFT] + (addr & PAGE_LONG_AND)));
+	if (membase[FETCH][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		return *((UINT32*)(membase[FETCH][addr >> ARM7_PAGE_SHIFT] + (addr & ARM7_PAGE_LONG_AND)));
 	}
 
 	// good enough for now...
@@ -356,12 +356,12 @@ static void Arm7_write_rom_byte(UINT32 addr, UINT8 data)
 	addr &= MAX_MEMORY_AND;
 
 	// write to rom & ram
-	if (membase[WRITE][addr >> PAGE_SHIFT] != NULL) {
-		membase[WRITE][addr >> PAGE_SHIFT][addr & PAGE_BYTE_AND] = data;
+	if (membase[WRITE][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		membase[WRITE][addr >> ARM7_PAGE_SHIFT][addr & ARM7_PAGE_BYTE_AND] = data;
 	}
 
-	if (membase[READ][addr >> PAGE_SHIFT] != NULL) {
-		membase[READ][addr >> PAGE_SHIFT][addr & PAGE_BYTE_AND] = data;
+	if (membase[READ][addr >> ARM7_PAGE_SHIFT] != NULL) {
+		membase[READ][addr >> ARM7_PAGE_SHIFT][addr & ARM7_PAGE_BYTE_AND] = data;
 	}
 
 	if (pWriteByteHandler) {
@@ -390,7 +390,7 @@ void Arm7Init( INT32 nCPU ) // only one cpu supported
 	DebugCPU_ARM7Initted = 1;
 	
 	for (INT32 i = 0; i < 3; i++) {
-		membase[i] = (UINT8**)malloc(PAGE_COUNT * sizeof(UINT8*));
+		membase[i] = (UINT8**)malloc(ARM7_PAGE_COUNT * sizeof(UINT8*));
 	}
 
 	CpuCheatRegister(nCPU, &Arm7CheatCpuConfig);

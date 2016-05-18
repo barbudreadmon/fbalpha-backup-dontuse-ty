@@ -3,8 +3,8 @@
 
 #define ADDRESS_MAX	0x8000
 #define ADDRESS_MASK	0x7fff
-#define PAGE		0x0100
-#define PAGE_MASK	0x00ff
+#define S2650_PAGE		0x0100
+#define S2650_PAGE_MASK	0x00ff
 
 #define READ		0
 #define WRITE		1
@@ -20,7 +20,7 @@ struct s2650_handler
 	UINT8 (*s2650ReadPort)(UINT16 port);
 	void (*s2650WritePort)(UINT16 port, UINT8 data);
 	
-	UINT8 *mem[3][ADDRESS_MAX / PAGE];
+	UINT8 *mem[3][ADDRESS_MAX / S2650_PAGE];
 };
 
 struct s2650_handler sHandler[MAX_S2650];
@@ -42,11 +42,11 @@ void s2650MapMemory(UINT8 *ptr, INT32 nStart, INT32 nEnd, INT32 nType)
 	if (nActiveS2650 == -1) bprintf(PRINT_ERROR, _T("s2650MapMemory called when no CPU open\n"));
 #endif
 
-	for (INT32 i = nStart / PAGE; i < (nEnd / PAGE) + 1; i++)
+	for (INT32 i = nStart / S2650_PAGE; i < (nEnd / S2650_PAGE) + 1; i++)
 	{
-		if (nType & (1 <<  READ)) sPointer->mem[ READ][i] = ptr + ((i * PAGE) - nStart);
-		if (nType & (1 << WRITE)) sPointer->mem[WRITE][i] = ptr + ((i * PAGE) - nStart);
-		if (nType & (1 << FETCH)) sPointer->mem[FETCH][i] = ptr + ((i * PAGE) - nStart);
+		if (nType & (1 <<  READ)) sPointer->mem[ READ][i] = ptr + ((i * S2650_PAGE) - nStart);
+		if (nType & (1 << WRITE)) sPointer->mem[WRITE][i] = ptr + ((i * S2650_PAGE) - nStart);
+		if (nType & (1 << FETCH)) sPointer->mem[FETCH][i] = ptr + ((i * S2650_PAGE) - nStart);
 	}
 }
 
@@ -94,8 +94,8 @@ void s2650Write(UINT16 address, UINT8 data)
 {
 	address &= ADDRESS_MASK;
 
-	if (sPointer->mem[WRITE][address / PAGE] != NULL) {
-		sPointer->mem[WRITE][address / PAGE][address & PAGE_MASK] = data;
+	if (sPointer->mem[WRITE][address / S2650_PAGE] != NULL) {
+		sPointer->mem[WRITE][address / S2650_PAGE][address & S2650_PAGE_MASK] = data;
 		return;
 	}
 
@@ -111,8 +111,8 @@ UINT8 s2650Read(UINT16 address)
 {
 	address &= ADDRESS_MASK;
 
-	if (sPointer->mem[READ][address / PAGE] != NULL) {
-		return sPointer->mem[READ][address / PAGE][address & PAGE_MASK];
+	if (sPointer->mem[READ][address / S2650_PAGE] != NULL) {
+		return sPointer->mem[READ][address / S2650_PAGE][address & S2650_PAGE_MASK];
 	}
 
 	if (sPointer->s2650Read != NULL) {
@@ -126,8 +126,8 @@ UINT8 s2650Fetch(UINT16 address)
 {
 	address &= ADDRESS_MASK;
 
-	if (sPointer->mem[FETCH][address / PAGE] != NULL) {
-		return sPointer->mem[FETCH][address / PAGE][address & PAGE_MASK];
+	if (sPointer->mem[FETCH][address / S2650_PAGE] != NULL) {
+		return sPointer->mem[FETCH][address / S2650_PAGE][address & S2650_PAGE_MASK];
 	}
 
 	return s2650Read(address);
@@ -161,16 +161,16 @@ static void s2650WriteROM(UINT32 address, UINT8 data)
 
 	address &= ADDRESS_MASK;
 
-	if (sPointer->mem[READ][address / PAGE] != NULL) {
-		sPointer->mem[READ][address / PAGE][address & PAGE_MASK] = data;
+	if (sPointer->mem[READ][address / S2650_PAGE] != NULL) {
+		sPointer->mem[READ][address / S2650_PAGE][address & S2650_PAGE_MASK] = data;
 	}
 
-	if (sPointer->mem[WRITE][address / PAGE] != NULL) {
-		sPointer->mem[WRITE][address / PAGE][address & PAGE_MASK] = data;
+	if (sPointer->mem[WRITE][address / S2650_PAGE] != NULL) {
+		sPointer->mem[WRITE][address / S2650_PAGE][address & S2650_PAGE_MASK] = data;
 	}
 
-	if (sPointer->mem[FETCH][address / PAGE] != NULL) {
-		sPointer->mem[FETCH][address / PAGE][address & PAGE_MASK] = data;
+	if (sPointer->mem[FETCH][address / S2650_PAGE] != NULL) {
+		sPointer->mem[FETCH][address / S2650_PAGE][address & S2650_PAGE_MASK] = data;
 	}
 
 	if (sPointer->s2650Write != NULL) {
