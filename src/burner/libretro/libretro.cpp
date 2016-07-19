@@ -1510,33 +1510,34 @@ bool retro_load_game(const struct retro_game_info *info)
    }
 
    unsigned i = BurnDrvGetIndexByName(basename);
-   if (!(i < nBurnDrvCount))
+   if (i < nBurnDrvCount)
    {
-      log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
-      return false;
+      int32_t width, height;
+      const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
+      is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
+
+      set_environment();
+      check_variables();
+
+      pBurnSoundOut = g_audio_buf;
+      nBurnSoundRate = AUDIO_SAMPLERATE;
+      nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
+
+      if (!fba_init(i, basename))
+         goto error;
+
+      driver_inited = true;
+
+      BurnDrvGetFullSize(&width, &height);
+
+      g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+
+      return true;
    }
 
-   const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
-   is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
-   
-   set_environment();
-   check_variables();
-
-   pBurnSoundOut = g_audio_buf;
-   nBurnSoundRate = AUDIO_SAMPLERATE;
-   nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
-
-   if (!fba_init(i, basename))
-      return false;
-
-   driver_inited = true;
-
-   int32_t width, height;
-   BurnDrvGetFullSize(&width, &height);
-
-   g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
-
-   return true;
+error:
+   log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
+   return false;
 }
 
 bool retro_load_game_special(unsigned, const struct retro_game_info*, size_t) { return false; }
