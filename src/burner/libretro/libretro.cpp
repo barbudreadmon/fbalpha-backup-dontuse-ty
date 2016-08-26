@@ -1512,7 +1512,7 @@ bool retro_load_game(const struct retro_game_info *info)
    unsigned i = BurnDrvGetIndexByName(basename);
    if (i < nBurnDrvCount)
    {
-      int32_t width, height;
+      INT32 width, height;
       const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
       is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
 

@@ -2,6 +2,8 @@
 //            Refer to the "license.txt" file for more info
 
 // Burner emulation library
+#ifndef _BURNH_H
+#define _BURNH_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -596,3 +598,4 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
  } // End of extern "C"
 #endif
 
+#endif
