@@ -151,6 +151,18 @@ else ifeq ($(platform), psl1ght)
 	PLATFORM_DEFINES += -D__CELLOS_LV2__
 	EXTERNAL_ZLIB = 1
 	STATIC_LINKING = 1
+else ifeq ($(platform), vita)
+  TARGET := $(TARGET_NAME)_libretro_vita.a
+  CC = arm-vita-eabi-gcc$(EXE_EXT)
+  CC_AS = arm-vita-eabi-gcc$(EXE_EXT)
+  CXX = arm-vita-eabi-g++$(EXE_EXT)
+  AR = arm-vita-eabi-ar$(EXE_EXT)
+  PLATFORM_DEFINES += -DVITA
+	ENDIANNESS_DEFINES := -DLSB_FIRST
+  CFLAGS += -O3 -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive
+  CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+  EXTERNAL_ZLIB = 1
+  STATIC_LINKING = 1
 else ifeq ($(platform), xenon)
 	TARGET := $(TARGET_NAME)_libretro_xenon360.a
 	CC = xenon-gcc$(EXE_EXT)
@@ -296,10 +308,10 @@ BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 #BURN_BLACKLIST += $(FBA_BURN_DIR)/drv/capcom/ctv.cpp
 #endif
 
-ifeq ($(EXTERNAL_ZLIB), 1)
-	BURN_BLACKLIST += $(FBA_BURNER_DIR)/unzip.c \
-		$(FBA_BURNER_DIR)/ioapi.c	
-endif
+#ifeq ($(EXTERNAL_ZLIB), 1)
+#	BURN_BLACKLIST += $(FBA_BURNER_DIR)/unzip.c \
+#		$(FBA_BURNER_DIR)/ioapi.c	
+#endif
 
 ifeq ($(HAVE_GRIFFIN), 1)
 GRIFFIN_CXXSRCFILES := $(GRIFFIN_DIR)/cps12.cpp $(GRIFFIN_DIR)/cps3.cpp $(GRIFFIN_DIR)/neogeo.cpp $(GRIFFIN_DIR)/pgm.cpp $(GRIFFIN_DIR)/snes.cpp $(GRIFFIN_DIR)/galaxian.cpp $(GRIFFIN_DIR)/cpu-m68k.cpp
