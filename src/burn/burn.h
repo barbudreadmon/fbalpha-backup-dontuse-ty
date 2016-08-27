@@ -100,12 +100,6 @@ extern INT32 (__cdecl *BurnExtCartridgeSetupCallback)(BurnCartrigeCommand nComma
 
 // ---------------------------------------------------------------------------
 
-#if defined(FRONTEND_SUPPORTS_RGB565)
-#define BurnHighCol(r, g, b, i) ((((r) << 8) & 0xf800) | (((g) << 3) & 0x07e0) | (((b) >> 3) & 0x001f))
-#else
-#define BurnHighCol(r, g, b, i) (((((r) << 7) & 0x7c00) | (((g) << 2) & 0x03e0) | (((b) >> 3) & 0x001f)))
-#endif
-
 extern UINT32 nCurrentFrame;
 
 inline static INT32 GetCurrentFrame() {

@@ -1179,7 +1179,7 @@ static void check_variables(void)
    }
 }
 
-void retro_run(void)
+void retro_run()
 {
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
@@ -1427,13 +1427,37 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
    VidRecalcPal();
    
-   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
+#ifdef FRONTEND_SUPPORTS_RGB565
+   if(nBurnBpp == 4)
+   {		
+      enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;		
 
-   if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt) && log_cb)
-       log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
+      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))		
+         log_cb(RETRO_LOG_INFO, "Frontend supports XRGB888 - will use that instead of XRGB1555.\n");		
+   }		
+   else		
+   {		
+      enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;		
+
+      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))		
+         log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");		
+   }		
+#endif
 
    return true;
 }
+
+#if defined(FRONTEND_SUPPORTS_RGB565)		
+static unsigned int HighCol16(int r, int g, int b, int  /* i */)		
+{		
+   return (((r << 8) & 0xf800) | ((g << 3) & 0x07e0) | ((b >> 3) & 0x001f));		
+}		
+#else		
+static unsigned int HighCol15(int r, int g, int b, int  /* i */)		
+{		
+   return (((r << 7) & 0x7c00) | ((g << 2) & 0x03e0) | ((b >> 3) & 0x001f));		
+}		
+#endif
 
 static void init_video()
 {

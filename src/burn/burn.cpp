@@ -818,6 +818,10 @@ INT32 BurnByteswap(UINT8* pMem, INT32 nLen)
 // Application-defined rom loading function:
 INT32 (__cdecl *BurnExtLoadRom)(UINT8 *Dest, INT32 *pnWrote, INT32 i) = NULL;
 
+// Application-defined colour conversion function		
+static UINT32 __cdecl BurnHighColFiller(INT32, INT32, INT32, INT32) { return (UINT32)(~0); }		
+UINT32 (__cdecl *BurnHighCol) (INT32 r, INT32 g, INT32 b, INT32 i) = BurnHighColFiller;
+
 // ----------------------------------------------------------------------------
 // Savestate support
 
