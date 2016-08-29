@@ -1,7 +1,7 @@
 #ifndef _BIND_MAP_H_
 #define _BIND_MAP_H_
 
-#define BIND_MAP_COUNT 304
+#define BIND_MAP_COUNT 305
 #define PTR_INCR ((incr++ % 3 == 2) ? counter++ : counter)
 
 // Ref GamcPlayer() in ../gamc.cpp

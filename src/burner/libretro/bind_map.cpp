@@ -20,6 +20,10 @@ unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_co
 
    /* Universal controls */
 
+   bind_map[PTR_INCR].bii_name = "Coin";
+   bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
+   bind_map[PTR_INCR].nCode[1] = 0;
+
    bind_map[PTR_INCR].bii_name = "Coin 1";
    bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
    bind_map[PTR_INCR].nCode[1] = 0;
