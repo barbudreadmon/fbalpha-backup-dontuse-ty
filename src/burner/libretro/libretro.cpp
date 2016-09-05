@@ -868,13 +868,11 @@ static bool open_archive()
 #endif
 
       if (ZipOpen(path) != 0)
-      {
-         log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s\n", path);
-         return false;
-      }
+         log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+      else
+         g_find_list_path.push_back(path);
+      
       ZipClose();
-
-      g_find_list_path.push_back(path);
    }
 
    for (unsigned z = 0; z < g_find_list_path.size(); z++)
