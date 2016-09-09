@@ -6,6 +6,9 @@
 #include <cstring>
 #include "mips3.h"
 #include "mipsdef.h"
+#include <cstdio>
+
+using namespace std;
 
 namespace mips
 {
