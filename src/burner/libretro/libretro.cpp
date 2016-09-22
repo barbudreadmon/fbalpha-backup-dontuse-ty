@@ -2560,6 +2560,9 @@ static void init_macro_input_descriptors()
          offset_player_x = 3;
       }
 
+      // set the port for the macro
+      keybinds[macro_option->pgi->Macro.Switch.nCode][1] = port;
+
       char* description = macro_option->friendly_name + offset_player_x;
 
       macro_input_descriptors.push_back((retro_input_descriptor){ port, device, index, id, description });
