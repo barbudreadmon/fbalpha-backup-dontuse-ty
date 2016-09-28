@@ -103,7 +103,8 @@ static unsigned int BurnDrvGetIndexByName(const char* name);
 
 static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 static bool gamepad_controls = true;
-static bool newgen_controls = false;
+static bool newgen_controls_p1 = false;
+static bool newgen_controls_p2 = false;
 static bool core_aspect_par = false;
 
 #define STAT_NOFIND  0
@@ -154,7 +155,8 @@ static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-
 
 // Neo Geo core options
 static const struct retro_variable var_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; MVS|AES|UNIBIOS|DIPSWITCH" };
-static const struct retro_variable var_neogeo_controls = { "fba-neogeo-controls", "Neo Geo gamepad scheme; classic|newgen" };
+static const struct retro_variable var_neogeo_controls_p1 = { "fba-neogeo-controls-p1", "Neo Geo P1 gamepad scheme; classic|newgen" };
+static const struct retro_variable var_neogeo_controls_p2 = { "fba-neogeo-controls-p2", "Neo Geo P2 gamepad scheme; classic|newgen" };
 
 void retro_set_environment(retro_environment_t cb)
 {
@@ -621,7 +623,8 @@ static void set_environment()
       if (allow_neogeo_mode)
          vars_systems.push_back(&var_neogeo_mode);
       
-      vars_systems.push_back(&var_neogeo_controls);
+      vars_systems.push_back(&var_neogeo_controls_p1);
+      vars_systems.push_back(&var_neogeo_controls_p2);
    }
 
    int nbr_vars = vars_systems.size();
@@ -1150,13 +1153,22 @@ static void check_variables(void)
 
    if (is_neogeo_game)
    {
-      var.key = var_neogeo_controls.key;
+      var.key = var_neogeo_controls_p1.key;
       if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
       {
          if (strcmp(var.value, "newgen") == 0)
-            newgen_controls = true;
+            newgen_controls_p1 = true;
          else
-            newgen_controls = false;
+            newgen_controls_p1 = false;
+      }
+      
+      var.key = var_neogeo_controls_p2.key;
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+      {
+         if (strcmp(var.value, "newgen") == 0)
+            newgen_controls_p2 = true;
+         else
+            newgen_controls_p2 = false;
       }
       
       if (allow_neogeo_mode)
@@ -1211,7 +1223,8 @@ void retro_run()
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
    {
       bool old_gamepad_controls = gamepad_controls;
-      bool old_newgen_controls = newgen_controls;
+      bool old_newgen_controls_p1 = newgen_controls_p1;
+      bool old_newgen_controls_p2 = newgen_controls_p2;
       bool old_core_aspect_par = core_aspect_par;
       neo_geo_modes old_g_opt_neo_geo_mode = g_opt_neo_geo_mode;
 
@@ -1224,7 +1237,7 @@ void retro_run()
       bool reinit_input_performed = false;
       // reinitialise input if user changed the control scheme
       if (old_gamepad_controls != gamepad_controls ||
-          old_newgen_controls != newgen_controls)
+          old_newgen_controls_p1 != newgen_controls_p1 || old_newgen_controls_p2 != newgen_controls_p2)
       {
          init_input();
          reinit_input_performed = true;
@@ -1665,7 +1678,7 @@ static bool init_input(void)
       keybinds[i][0] = 0xff;
 
    key_map bind_map[BIND_MAP_COUNT];
-   unsigned counter = init_bind_map(bind_map, gamepad_controls, newgen_controls);
+   unsigned counter = init_bind_map(bind_map, gamepad_controls, newgen_controls_p1, newgen_controls_p2);
 
    bool is_avsp =   (parentrom && strcmp(parentrom, "avsp") == 0   || strcmp(drvname, "avsp") == 0);
    bool is_armwar = (parentrom && strcmp(parentrom, "armwar") == 0 || strcmp(drvname, "armwar") == 0);
@@ -1720,10 +1733,20 @@ static bool init_input(void)
          {
             value_found = true;
             // set the retro device id
-            if (gamepad_controls == false)
-               keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-            else
-               keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
+            if (port == 1 || port != 2) // port != 2 is to configure the P3 and P4 like the P1 (TODO it would be good to make the handling of gamepad_controls dynamic regarding the number of players of the game
+            {
+               if (gamepad_controls == false)
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
+               else
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
+            }
+            if (port == 2)
+            {
+               if (gamepad_controls == false)
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
+               else
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
+            }
          }
          else if(strcmp(bii.szName, bind_map[j].bii_name) == 0)
          {

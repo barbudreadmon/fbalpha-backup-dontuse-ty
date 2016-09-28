@@ -11,6 +11,6 @@ struct key_map
    unsigned nCode[2];    // nCode[0] = RETRO_DEVICE_ID_XXXX from libretro.h, nCode[1] = port number from 0 to n
 };
 
-unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_controls);
+unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_controls_p1, bool newgen_controls_p2);
 
 #endif
