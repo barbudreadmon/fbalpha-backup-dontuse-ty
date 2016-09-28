@@ -2,7 +2,7 @@
 
 #include "libretro.h"
 
-unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_controls)
+unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_controls_p1, bool newgen_controls_p2)
 {
    unsigned counter = 0;
    unsigned incr = 0;
@@ -1589,7 +1589,7 @@ unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_co
       bind_map[PTR_INCR].nCode[1] = 0;
 
       /* Neo Geo default mapping */
-      if (newgen_controls == false)
+      if (newgen_controls_p1 == false)
       {
          /* Official neogeo mapping */
          bind_map[PTR_INCR].bii_name = "P1 Button A";
@@ -1607,7 +1607,9 @@ unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_co
          bind_map[PTR_INCR].bii_name = "P1 Button D";
          bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_X;
          bind_map[PTR_INCR].nCode[1] = 0;
-
+      }      
+      if (newgen_controls_p2 == false)
+      {
          bind_map[PTR_INCR].bii_name = "P2 Button A";
          bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_B;
          bind_map[PTR_INCR].nCode[1] = 1;
@@ -1625,7 +1627,7 @@ unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_co
          bind_map[PTR_INCR].nCode[1] = 1;
       }
       /* NewGen neogeo mapping from DC, PS, Xbox, ... remakes */
-      else
+      if (newgen_controls_p1)
       {
          bind_map[PTR_INCR].bii_name = "P1 Button A";
          bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
@@ -1642,7 +1644,9 @@ unsigned init_bind_map(key_map bind_map[], bool gamepad_controls, bool newgen_co
          bind_map[PTR_INCR].bii_name = "P1 Button D";
          bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_A;
          bind_map[PTR_INCR].nCode[1] = 0;
-
+      }      
+      if (newgen_controls_p2)
+      {
          bind_map[PTR_INCR].bii_name = "P2 Button A";
          bind_map[PTR_INCR].nCode[0] = RETRO_DEVICE_ID_JOYPAD_Y;
          bind_map[PTR_INCR].nCode[1] = 1;
