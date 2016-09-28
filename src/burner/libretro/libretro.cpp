@@ -105,6 +105,8 @@ static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 static bool gamepad_controls = true;
 static bool newgen_controls_p1 = false;
 static bool newgen_controls_p2 = false;
+static bool remap_lr_p1 = false;
+static bool remap_lr_p2 = false;
 static bool core_aspect_par = false;
 
 #define STAT_NOFIND  0
@@ -157,6 +159,8 @@ static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-
 static const struct retro_variable var_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; MVS|AES|UNIBIOS|DIPSWITCH" };
 static const struct retro_variable var_neogeo_controls_p1 = { "fba-neogeo-controls-p1", "Neo Geo P1 gamepad scheme; classic|newgen" };
 static const struct retro_variable var_neogeo_controls_p2 = { "fba-neogeo-controls-p2", "Neo Geo P2 gamepad scheme; classic|newgen" };
+static const struct retro_variable var_remap_lr_p1 = { "fba-remap-lr-p1", "Remap L/R to R1/R2 P1; off|on" };
+static const struct retro_variable var_remap_lr_p2 = { "fba-remap-lr-p2", "Remap L/R to R1/R2 P2; off|on" };
 
 void retro_set_environment(retro_environment_t cb)
 {
@@ -611,6 +615,10 @@ static void set_environment()
    vars_systems.push_back(&var_fba_aspect);
    vars_systems.push_back(&var_fba_cpu_speed_adjust);
    vars_systems.push_back(&var_fba_controls);
+
+   // Add the remap L/R to R1/R2 options
+   vars_systems.push_back(&var_remap_lr_p1);
+   vars_systems.push_back(&var_remap_lr_p2);
 
    if (pgi_diag)
    {
@@ -1091,6 +1099,24 @@ static void check_variables(void)
          core_aspect_par = false;
    }
 
+   var.key = var_remap_lr_p1.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+      if (strcmp(var.value, "on") == 0)
+         remap_lr_p1 = true;
+      else
+         remap_lr_p1 = false;
+   }
+
+   var.key = var_remap_lr_p2.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+      if (strcmp(var.value, "on") == 0)
+         remap_lr_p2 = true;
+      else
+         remap_lr_p2 = false;
+   }
+
    if (pgi_diag)
    {
       var.key = var_fba_diagnostic_input.key;
@@ -1225,6 +1251,8 @@ void retro_run()
       bool old_gamepad_controls = gamepad_controls;
       bool old_newgen_controls_p1 = newgen_controls_p1;
       bool old_newgen_controls_p2 = newgen_controls_p2;
+      bool old_remap_lr_p1 = remap_lr_p1;
+      bool old_remap_lr_p2 = remap_lr_p2;
       bool old_core_aspect_par = core_aspect_par;
       neo_geo_modes old_g_opt_neo_geo_mode = g_opt_neo_geo_mode;
 
@@ -1237,7 +1265,10 @@ void retro_run()
       bool reinit_input_performed = false;
       // reinitialise input if user changed the control scheme
       if (old_gamepad_controls != gamepad_controls ||
-          old_newgen_controls_p1 != newgen_controls_p1 || old_newgen_controls_p2 != newgen_controls_p2)
+          old_newgen_controls_p1 != newgen_controls_p1 ||
+          old_newgen_controls_p2 != newgen_controls_p2 ||
+          old_remap_lr_p1 != remap_lr_p1 ||
+          old_remap_lr_p2 != remap_lr_p2)
       {
          init_input();
          reinit_input_performed = true;
@@ -1678,7 +1709,7 @@ static bool init_input(void)
       keybinds[i][0] = 0xff;
 
    key_map bind_map[BIND_MAP_COUNT];
-   unsigned counter = init_bind_map(bind_map, gamepad_controls, newgen_controls_p1, newgen_controls_p2);
+   unsigned counter = init_bind_map(bind_map, gamepad_controls, newgen_controls_p1, newgen_controls_p2, remap_lr_p1, remap_lr_p2);
 
    bool is_avsp =   (parentrom && strcmp(parentrom, "avsp") == 0   || strcmp(drvname, "avsp") == 0);
    bool is_armwar = (parentrom && strcmp(parentrom, "armwar") == 0 || strcmp(drvname, "armwar") == 0);
