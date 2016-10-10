@@ -1,4 +1,4 @@
-DEBUG = 1
+DEBUG = 0
 LIBRETRO_OPTIMIZATIONS = 1
 FRONTEND_SUPPORTS_RGB565 = 1
 HAVE_GRIFFIN = 0
@@ -489,8 +489,8 @@ else ifeq ($(platform), emscripten)
 	CFLAGS += -O2 -DNDEBUG
 	CXXFLAGS += -O2 -DNDEBUG
 else
-	CFLAGS += -O3 -DNDEBUG
-	CXXFLAGS += -O3 -DNDEBUG
+	CFLAGS += -O2 -DNDEBUG
+	CXXFLAGS += -O2 -DNDEBUG
 endif
 
 ifeq ($(platform), sncps3)
