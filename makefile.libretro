@@ -485,9 +485,6 @@ endif
 ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -g -DFBA_DEBUG
 	CXXFLAGS += -O0 -g -DFBA_DEBUG
-else ifeq ($(platform), emscripten)
-	CFLAGS += -O2 -DNDEBUG
-	CXXFLAGS += -O2 -DNDEBUG
 else
 	CFLAGS += -O2 -DNDEBUG
 	CXXFLAGS += -O2 -DNDEBUG
