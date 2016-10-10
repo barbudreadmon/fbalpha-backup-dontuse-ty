@@ -920,7 +920,7 @@ static bool open_archive()
 
          if (index < 0)
          {
-            int index = find_rom_by_name(rom_name, list, count);
+            index = find_rom_by_name(rom_name, list, count);
             bad_crc = true;
          }
 
