@@ -740,7 +740,9 @@ static void ForceFrameStep()
    pBurnSoundOut = g_audio_buf;
    nBurnSoundRate = AUDIO_SAMPLERATE;
    //nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
+   nFramesEmulated++;
    nCurrentFrame++;
+   nFramesRendered++;
 
    BurnDrvFrame();
 }
