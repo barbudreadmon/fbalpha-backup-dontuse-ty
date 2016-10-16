@@ -36,10 +36,14 @@ typedef struct { int x, y, width, height; } RECT;
 #define __cdecl
 #endif
 
-#undef __fastcall
+#ifndef FASTCALL
+ #undef __fastcall
+ #define __fastcall
+#endif
+
 #undef _fastcall
-#define __fastcall			/*what does this correspond to?*/
 #define _fastcall			/*same as above - what does this correspond to?*/
+
 #define ANSIToTCHAR(str, foo, bar) (str)
 
 /* for Windows / Xbox 360 (below VS2010) - typedefs for missing stdint.h types such as uintptr_t?*/
