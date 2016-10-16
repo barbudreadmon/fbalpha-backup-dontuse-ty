@@ -116,9 +116,11 @@
 //typedef UINT8 unsigned char
 //typedef UINT16 unsigned short
 //typedef UINT32 unsigned int
-#define INT8 char
-#define INT16 short
-#define INT32 int
+#ifdef _WIN32
+ #define INT8 char
+ #define INT16 short
+ #define INT32 int
+#endif
 #define INPUT_LINE_NMI	0x20 // nmi
 
 #define NEC_INLINE
