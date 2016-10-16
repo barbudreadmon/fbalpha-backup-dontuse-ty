@@ -353,11 +353,11 @@ STD_ROM_PICK(Drvw)
 STD_ROM_FN(Drvw)
 
 static struct BurnRomInfo DrvhRomDesc[] = {
-	{ "42-3.bin",      0x04000, 0xec70785f, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
-	{ "42-4.bin",      0x04000, 0xcc11355f, BRF_ESS | BRF_PRG }, //	 1
-	{ "42-5.bin",      0x04000, 0x42746d75, BRF_ESS | BRF_PRG }, //	 2
-	{ "srb-06.m6",     0x02000, 0x466f8248, BRF_ESS | BRF_PRG }, //	 3
-	{ "srb-07.m7",     0x04000, 0x0d31038c, BRF_ESS | BRF_PRG }, //	 4
+	{ "Supercharger_1942_#3.m3", 0x04000, 0xec70785f, BRF_ESS | BRF_PRG }, //  0  Z80 #1 Program Code
+	{ "Supercharger_1942_#4.m4", 0x04000, 0xcc11355f, BRF_ESS | BRF_PRG }, //  1
+	{ "Supercharger_1942_#5.m5", 0x04000, 0x42746d75, BRF_ESS | BRF_PRG }, //  2
+	{ "srb-06.m6",     			 0x02000, 0x466f8248, BRF_ESS | BRF_PRG }, //  3
+	{ "srb-07.m7",     			 0x04000, 0x0d31038c, BRF_ESS | BRF_PRG }, //  4
 	
 	{ "sr-01.c11",     0x04000, 0xbd87f06b, BRF_ESS | BRF_PRG }, //  5	Z80 #2 Program 
 	
@@ -389,6 +389,46 @@ static struct BurnRomInfo DrvhRomDesc[] = {
 
 STD_ROM_PICK(Drvh)
 STD_ROM_FN(Drvh)
+
+// 1942 (C64 Music)
+
+static struct BurnRomInfo Drvc64RomDesc[] = {
+	{ "srb-03.m3",	0x4000, 0xd9dafcc3, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "srb-04.m4",	0x4000, 0xda0cf924, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "srb-05.m5",	0x4000, 0xd102911c, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "srb-06.m6",	0x2000, 0x466f8248, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "srb-07.m7",	0x4000, 0x0d31038c, 1 | BRF_PRG | BRF_ESS }, //  4
+
+	{ "sr-01.c11",	0x4000, 0x4ee7ab6b, 2 | BRF_PRG | BRF_ESS }, //  5 audiocpu
+
+	{ "sr-02.f2",	0x2000, 0x6ebca191, 3 | BRF_GRA },           //  6 gfx1
+
+	{ "sr-08.a1",	0x2000, 0x3884d9eb, 4 | BRF_GRA },           //  7 gfx2
+	{ "sr-09.a2",	0x2000, 0x999cf6e0, 4 | BRF_GRA },           //  8
+	{ "sr-10.a3",	0x2000, 0x8edb273a, 4 | BRF_GRA },           //  9
+	{ "sr-11.a4",	0x2000, 0x3a2726c3, 4 | BRF_GRA },           // 10
+	{ "sr-12.a5",	0x2000, 0x1bd3d8bb, 4 | BRF_GRA },           // 11
+	{ "sr-13.a6",	0x2000, 0x658f02c4, 4 | BRF_GRA },           // 12
+
+	{ "sr-14.l1",	0x4000, 0x2528bec6, 5 | BRF_GRA },           // 13 gfx3
+	{ "sr-15.l2",	0x4000, 0xf89287aa, 5 | BRF_GRA },           // 14
+	{ "sr-16.n1",	0x4000, 0x024418f8, 5 | BRF_GRA },           // 15
+	{ "sr-17.n2",	0x4000, 0xe2c7e489, 5 | BRF_GRA },           // 16
+
+	{ "sb-5.e8",	0x0100, 0x93ab8153, 6 | BRF_GRA },           // 17 proms
+	{ "sb-6.e9",	0x0100, 0x8ab44f7d, 6 | BRF_GRA },           // 18
+	{ "sb-7.e10",	0x0100, 0xf4ade9a4, 6 | BRF_GRA },           // 19
+	{ "sb-0.f1",	0x0100, 0x6047d91b, 6 | BRF_GRA },           // 20
+	{ "sb-4.d6",	0x0100, 0x4858968d, 6 | BRF_GRA },           // 21
+	{ "sb-8.k3",	0x0100, 0xf6fad943, 6 | BRF_GRA },           // 22
+	{ "sb-2.d1",	0x0100, 0x8bb8b3df, 6 | BRF_GRA },           // 23
+	{ "sb-3.d2",	0x0100, 0x3b0c99af, 6 | BRF_GRA },           // 24
+	{ "sb-1.k6",	0x0100, 0x712ac508, 6 | BRF_GRA },           // 25
+	{ "sb-9.m11",	0x0100, 0x4921635c, 6 | BRF_GRA },           // 26
+};
+
+STD_ROM_PICK(Drvc64)
+STD_ROM_FN(Drvc64)
 
 static INT32 MemIndex()
 {
@@ -1099,11 +1139,21 @@ struct BurnDriver BurnDrvNineteen42w = {
 };
 
 struct BurnDriver BurnDrvNineteen42h = {
-	"1942h", "1942", NULL, NULL, "1984",
-	"42 (Screamware bootleg, hack)\0", NULL, "Capcom", "Miscellaneous",
+	"1942h", "1942", NULL, NULL, "1991",
+	"Supercharger 1942\0", NULL, "hack (Two Bit Score)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
 	NULL, DrvhRomInfo, DrvhRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
+	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
+	NULL, 0x600, 224, 256, 3, 4
+};
+
+struct BurnDriver BurnDrvNineteen42c64 = {
+	"1942c64", "1942", NULL, NULL, "2015",
+	"1942 (C64 Music)\0", NULL, "hack by Minwah", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	NULL, Drvc64RomInfo, Drvc64RomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, NULL, DrvScan,
 	NULL, 0x600, 224, 256, 3, 4
 };

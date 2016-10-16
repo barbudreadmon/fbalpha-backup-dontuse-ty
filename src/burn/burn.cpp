@@ -22,8 +22,6 @@ UINT32 nBurnDrvSelect[8] = { ~0U, ~0U, ~0U, ~0U, ~0U, ~0U, ~0U, ~0U }; // Which 
 									
 bool bBurnUseMMX;
 #if defined BUILD_A68K
-bool bBurnUseASMCPUEmulation = true;
-#else
 bool bBurnUseASMCPUEmulation = false;
 #endif
 
@@ -590,6 +588,11 @@ extern "C" INT32 BurnDrvInit()
 
 		bprintf(PRINT_IMPORTANT, _T("*** Starting emulation of %s - %s.\n"), BurnDrvGetText(DRV_NAME), BurnDrvGetText(DRV_FULLNAME));
 
+#ifdef BUILD_A68K
+		if (bBurnUseASMCPUEmulation)
+			bprintf(PRINT_ERROR, _T("*** WARNING: Assembly MC68000 core is enabled for this session!\n"));
+#endif
+
 		// Then print the alternative titles
 
 		if (nName > 1) {
@@ -818,8 +821,8 @@ INT32 BurnByteswap(UINT8* pMem, INT32 nLen)
 // Application-defined rom loading function:
 INT32 (__cdecl *BurnExtLoadRom)(UINT8 *Dest, INT32 *pnWrote, INT32 i) = NULL;
 
-// Application-defined colour conversion function		
-static UINT32 __cdecl BurnHighColFiller(INT32, INT32, INT32, INT32) { return (UINT32)(~0); }		
+// Application-defined colour conversion function
+static UINT32 __cdecl BurnHighColFiller(INT32, INT32, INT32, INT32) { return (UINT32)(~0); }
 UINT32 (__cdecl *BurnHighCol) (INT32 r, INT32 g, INT32 b, INT32 i) = BurnHighColFiller;
 
 // ----------------------------------------------------------------------------

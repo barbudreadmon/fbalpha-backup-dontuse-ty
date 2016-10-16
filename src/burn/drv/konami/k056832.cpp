@@ -310,7 +310,7 @@ void K056832WordWrite(INT32 offset, UINT16 data)
 
 void K056832ByteWrite(INT32 offset, UINT8 data)
 {
-	UINT8 *regs = (UINT8*)k056832Regs;
+	UINT8 *regs = (UINT8*)&k056832Regs;
 	regs[(offset & 0x3f) ^ 1] = data;
 
 	k056832_word_write_update(offset);
@@ -390,7 +390,7 @@ void K056832WritebRegsWord(INT32 offset, UINT16 data)
 
 void K056832WritebRegsByte(INT32 offset, UINT8 data)
 {
-	UINT8 *regs = (UINT8*)k056832Regsb;
+	UINT8 *regs = (UINT8*)&k056832Regsb;
 
 	regs[(offset & 0x1f)^1] = data;
 }
@@ -747,7 +747,11 @@ void K056832Draw(INT32 layer, UINT32 flags, UINT32 priority)
 				*/
 			sdat_start = K056832_PAGE_HEIGHT - 1;
 
-			if (scrollmode == 2) { sdat_start &= ~7; line_starty -= dy & 7; }
+			if (scrollmode == 2) {
+				sdat_start = dy - 8; // fix for Metamorphic Force "Break the Statue"
+				sdat_start &= ~7;
+				line_starty -= dy & 7;
+			}
 		}
 
 		sdat_start += r * K056832_PAGE_HEIGHT;

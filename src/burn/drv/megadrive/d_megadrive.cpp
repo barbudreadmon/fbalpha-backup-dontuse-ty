@@ -41327,3 +41327,57 @@ struct BurnDriver BurnDrvmd_bigfd = {
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
 
+// Sega Master System Brawl
+static struct BurnRomInfo md_smsbrawlRomDesc[] = {
+	{ "SMSBrawl.bin", 0x178e2a, 0x7e4a52f3, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_smsbrawl)
+STD_ROM_FN(md_smsbrawl)
+
+struct BurnDriver BurnDrvmd_smsbrawl = {
+	"md_smsbrawl", NULL, NULL, NULL, "2014",
+	"Sega Master System Brawl\0", NULL, "2014 Bonaf", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_smsbrawlRomInfo, md_smsbrawlRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, NULL, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
+// Bomb on Basic City 2.06
+static struct BurnRomInfo md_bobc206RomDesc[] = {
+	{ "BasicCity206.bin", 0x1160a6, 0x8f4ac700, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_bobc206)
+STD_ROM_FN(md_bobc206)
+
+struct BurnDriver BurnDrvmd_bobc206 = {
+	"md_bobc206", NULL, NULL, NULL, "2016",
+	"Bomb on Basic City 2.06\0", NULL, "2016 Vetea", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_bobc206RomInfo, md_bobc206RomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, NULL, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
+// Mega Q-Bert v1.1
+static struct BurnRomInfo md_megaqbert11RomDesc[] = {
+	{ "Mega Qbert.bin", 0x80000, 0x692a9227, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_megaqbert11)
+STD_ROM_FN(md_megaqbert11)
+
+struct BurnDriver BurnDrvmd_megaqbert11 = {
+	"md_megaqbert11", NULL, NULL, NULL, "2016",
+	"Mega Q-Bert (v1.1)\0", NULL, "2016 Jaklub", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_megaqbert11RomInfo, md_megaqbert11RomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, NULL, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+

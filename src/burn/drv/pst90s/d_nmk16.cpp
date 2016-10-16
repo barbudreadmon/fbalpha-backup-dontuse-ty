@@ -8,6 +8,7 @@
 #include "tlcs90_intf.h"
 #include "seibusnd.h"
 #include "bitswap.h"
+#include "nmk112.h"
 #include "nmk004.h"
 
 #if 0
@@ -63,6 +64,7 @@ static INT32 screen_flip_y = 0;
 static UINT32 nNMK004CpuSpeed;
 static INT32 nNMK004EnableIrq2;
 static INT32 NMK004_enabled = 0;
+static INT32 NMK112_enabled = 0;
 static INT32 macross2_sound_enable;
 static INT32 MSM6295x1_only = 0;
 static INT32 MSM6295x2_only = 0;
@@ -73,6 +75,8 @@ static INT32 Macrossmode = 0; // use macross1 text draw
 static INT32 Strahlmode = 0;
 static INT32 Tdragon2mode = 0; // use draw_sprites_tdragon2()
 static INT32 GunnailMode = 0;
+
+static INT32 mustang_bg_xscroll = 0;
 
 static struct BurnInputInfo CommonInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
@@ -1920,60 +1924,6 @@ static struct BurnDIPInfo DolmenDIPList[]=
 STDDIPINFO(Dolmen)
 
 //------------------------------------------------------------------------------------------------------------
-// NMK112 chip emulation -- probably should be in an external file
-
-#define MAXCHIPS 2
-#define TABLESIZE 0x100
-#define BANKSIZE 0x10000
-
-static UINT8 page_mask;
-static UINT8 current_bank[8];
-static UINT8 *region[2];
-static UINT32   regionlen[2];
-
-void NMK112_okibank_write(INT32 offset, UINT8 data)
-{
-	INT32 chip	=	(offset & 4) >> 2;
-	INT32 banknum	=	offset & 3;
-	INT32 paged	=	(page_mask & (1 << chip));
-
-	UINT8 *rom	=	region[chip];
-	INT32 size	=	regionlen[chip] - 0x40000;
-	INT32 bankaddr	=	(data * BANKSIZE) % size;
-
-	if (current_bank[offset] == data) return;
-	current_bank[offset] = data;
-
-	if ((paged) && (banknum == 0))
-		memcpy (rom + 0x400, rom + 0x40000 + bankaddr+0x400, BANKSIZE-0x400);
-	else
-		memcpy (rom + banknum * BANKSIZE, rom + 0x40000 + bankaddr, BANKSIZE);
-
-	if (paged)
-	{
-		rom += banknum * TABLESIZE;
-		memcpy(rom, rom + 0x40000 + bankaddr, TABLESIZE);
-	}
-}
-
-void NMK112Reset()
-{
-	memset (current_bank, ~0, sizeof(current_bank));
-	NMK112_okibank_write(0, 0);
-	NMK112_okibank_write(4, 0);
-}
-
-void NMK112_init(UINT8 disable_page_mask, UINT8 *rgn0, UINT8 *rgn1, INT32 len0, INT32 len1)
-{
-	region[0]	= rgn0;
-	region[1]	= rgn1;
-	regionlen[0]	= len0;
-	regionlen[1]	= len1;
-	page_mask	= ~disable_page_mask;
-	NMK112Reset();
-}
-
-//------------------------------------------------------------------------------------------------------------
 
 #define STRANGE_RAM_WRITE_BYTE(value)				\
 	if ((address & 0xffff0000) == value) {			\
@@ -2651,6 +2601,19 @@ void __fastcall afega_main_write_word(UINT32 address, UINT16 data)
 			*soundlatch = data & 0xff;
 			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
+
+		case 0x08c000: { // for twin action twinactn background scroll
+			switch (data & 0xff00) {
+				case 0x0000:
+					mustang_bg_xscroll = (mustang_bg_xscroll & 0x00ff) | ((data & 0x00ff)<<8);
+					break;
+
+				case 0x0100:
+					mustang_bg_xscroll = (mustang_bg_xscroll & 0xff00) | (data & 0x00ff);
+					break;
+			}
+			return;
+		}
 	}
 }
 
@@ -3032,6 +2995,19 @@ void __fastcall mustang_main_write_word(UINT32 address, UINT16 data)
 			sync_nmk004();
 			NMK004Write(0, data);
 		return;
+
+		case 0x08c000: {
+			switch (data & 0xff00) {
+				case 0x0000:
+					mustang_bg_xscroll = (mustang_bg_xscroll & 0x00ff) | ((data & 0x00ff)<<8);
+					break;
+
+				case 0x0100:
+					mustang_bg_xscroll = (mustang_bg_xscroll & 0xff00) | (data & 0x00ff);
+					break;
+			}
+			return;
+		}
 	}
 }
 
@@ -3920,14 +3896,8 @@ inline static double Macross2GetTime()
 
 static void MSM6295SetInitialBanks(INT32 chips)
 {
-	INT32 len = DrvSndROM1 - DrvSndROM0;
-
-	for (INT32 i = 0; i < chips; i++) {
-		for (INT32 nChannel = 0; nChannel < 4; nChannel++) {
-			MSM6295SampleInfo[i][nChannel] = MSM6295ROM + (i * len) + (nChannel << 8);
-			MSM6295SampleData[i][nChannel] = MSM6295ROM + (i * len) + (nChannel << 16);
-		}
-	}
+	if (chips > 0) MSM6295SetBank(0, DrvSndROM0, 0, 0x3ffff);
+	if (chips > 1) MSM6295SetBank(1, DrvSndROM1, 0, 0x3ffff);
 }
 
 static INT32 DrvDoReset()
@@ -4284,7 +4254,8 @@ static INT32 BjtwinInit(INT32 (*pLoadCallback)())
         MSM6295x2_only = 1;
         no_z80 = 1;
 
-	NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x140000, 0x140000);
+	NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x100000, 0x100000);
+	NMK112_enabled = 1;
 
 	GenericTilesInit();
 
@@ -4316,11 +4287,9 @@ static INT32 Macross2Init()
 		if (BurnLoadRom(DrvGfxROM2 + 0x200000,  5, 1)) return 1;
 		BurnByteswap(DrvGfxROM2, 0x400000);
 
-		if (BurnLoadRom(DrvSndROM0 + 0x040000,  6, 1)) return 1;
-		memcpy (DrvSndROM0, DrvSndROM0 + 0x40000, 0x40000);
+		if (BurnLoadRom(DrvSndROM0 + 0x000000,  6, 1)) return 1;
 
-		if (BurnLoadRom(DrvSndROM1 + 0x040000,  7, 1)) return 1;
-		memcpy (DrvSndROM1, DrvSndROM1 + 0x40000, 0x40000);
+		if (BurnLoadRom(DrvSndROM1 + 0x000000,  7, 1)) return 1;
 
 		DrvGfxDecode(0x20000, 0x200000, 0x400000);
 	}
@@ -4378,8 +4347,10 @@ static INT32 Macross2Init()
 	if (Tdragon2mode) {
 		NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x200000, 0x200000);
 	} else {
-		NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x240000, 0x140000);
+		NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x200000, 0x100000);
 	}
+
+	NMK112_enabled = 1;
 
 	GenericTilesInit();
 
@@ -4588,6 +4559,7 @@ static INT32 DrvExit()
 	MSM6295Exit(0);
 	MSM6295Exit(1);
 	MSM6295ROM = NULL;
+	NMK112_enabled = 0;
 	Tharriermode = 0;
 	Macrossmode = 0;
 	Strahlmode = 0;
@@ -4642,6 +4614,7 @@ static INT32 BjtwinExit()
 	MSM6295ROM = NULL;
 	MSM6295x2_only = 0;
 	no_z80 = 0;
+	NMK112_enabled = 0;
 
 	return CommonExit();
 }
@@ -4654,6 +4627,7 @@ static INT32 NMK004Exit()
 	no_z80 = 0;
 	NMK004_enabled = 0;
 	GunnailMode = 0;
+	mustang_bg_xscroll = 0;
 
 	return CommonExit();
 }
@@ -4703,7 +4677,7 @@ static void draw_sprites(INT32 flip, INT32 coloff, INT32 coland, INT32 priority)
 
 			INT32 delta = 16;
 
-			if (pri != priority)
+			if (priority != -1 && pri != priority)
 				continue;
 
 			if (*flipscreen)
@@ -5031,17 +5005,21 @@ static inline void common_draw(INT32 spriteflip, INT32 bgscrollx, INT32 bgscroll
 {
 	DrvPaletteRecalc();
 
-	draw_macross_background(DrvBgRAM0, bgscrollx, bgscrolly, 0, 0);
+	if (nBurnLayer & 1) draw_macross_background(DrvBgRAM0, bgscrollx, bgscrolly, 0, 0);
 
-	draw_sprites(spriteflip, 0x100, 0x0f, 3);
-	draw_sprites(spriteflip, 0x100, 0x0f, 2);
-	draw_sprites(spriteflip, 0x100, 0x0f, 1);
-	draw_sprites(spriteflip, 0x100, 0x0f, 0);
+	if (spriteflip == -1) {
+		if (nSpriteEnable & 1) draw_sprites(0, 0x100, 0x0f, -1); // order-based
+	} else { // priority-based
+		if (nSpriteEnable & 1) draw_sprites(spriteflip, 0x100, 0x0f, 3);
+		if (nSpriteEnable & 2) draw_sprites(spriteflip, 0x100, 0x0f, 2);
+		if (nSpriteEnable & 4) draw_sprites(spriteflip, 0x100, 0x0f, 1);
+		if (nSpriteEnable & 8) draw_sprites(spriteflip, 0x100, 0x0f, 0);
+	}
 
 	if (Tharriermode || Macrossmode) { // Tharrier and Macross 1
-		draw_tharriermacross1_text_layer(txscrollx, txscrolly, wide, tx_coloff);
+		if (nBurnLayer & 2) draw_tharriermacross1_text_layer(txscrollx, txscrolly, wide, tx_coloff);
 	} else { // Macross 2 and all the rest...
-		draw_macross_text_layer(txscrollx, txscrolly, wide, tx_coloff);
+		if (nBurnLayer & 2) draw_macross_text_layer(txscrollx, txscrolly, wide, tx_coloff);
 	}
 
 	draw_screen_yflip();
@@ -5075,6 +5053,17 @@ static INT32 MacrossDraw()
 	INT32 scrolly = ((BURN_ENDIAN_SWAP_INT16(scroll[2]) & 0x01) << 8) | (BURN_ENDIAN_SWAP_INT16(scroll[3]) & 0xff);
 
 	common_draw(0, scrollx, scrolly, 0, 0, 0x200, 0);
+
+	return 0;
+}
+
+static INT32 MustangDraw()
+{
+	//UINT16 *scroll = (UINT16*)DrvScrollRAM;
+	INT32 scrollx = mustang_bg_xscroll; //((BURN_ENDIAN_SWAP_INT16(scroll[0]) & 0x0f) << 8) | (BURN_ENDIAN_SWAP_INT16(scroll[1]) & 0xff);
+	INT32 scrolly = 0; //((BURN_ENDIAN_SWAP_INT16(scroll[2]) & 0x01) << 8) | (BURN_ENDIAN_SWAP_INT16(scroll[3]) & 0xff);
+
+	common_draw(-1, scrollx, scrolly, 0, 0, 0x200, 1);
 
 	return 0;
 }
@@ -5470,7 +5459,11 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
             SCAN_VAR(macross2_sound_enable);
             if (NMK004_enabled) {
                 NMK004Scan(nAction, pnMin);
-            }
+			}
+
+			if (NMK112_enabled) {
+				NMK112_Scan(nAction);
+			}
 
         }
 	
@@ -5840,7 +5833,7 @@ static INT32 NMK004Frame()
 
 		nCyclesDone[0] += SekRun(nSegment);
 
-		if (i == 238) { // 241 in MAME (see i == 235 comment)
+		if (i == 237) { // 241 in MAME (see i == 235 comment)
 			if (Strahlmode) {
 				memcpy (DrvSprBuf2, Drv68KRAM + 0xf000, 0x1000);
 			} else {
@@ -6472,12 +6465,6 @@ struct BurnDriver BurnDrvMacross2g = {
 	384, 224, 4, 3
 };
 
-static INT32 Tdragon2Init()
-{
-	Tdragon2mode = 1;
-	return Macross2Init();
-}
-
 // Thunder Dragon 2 (9th Nov. 1993)
 
 static struct BurnRomInfo tdragon2RomDesc[] = {
@@ -6502,6 +6489,12 @@ static struct BurnRomInfo tdragon2RomDesc[] = {
 
 STD_ROM_PICK(tdragon2)
 STD_ROM_FN(tdragon2)
+
+static INT32 Tdragon2Init()
+{
+	Tdragon2mode = 1;
+	return Macross2Init();
+}
 
 struct BurnDriver BurnDrvTdragon2 = {
 	"tdragon2", NULL, NULL, NULL, "1993",
@@ -7692,7 +7685,7 @@ static void Twinactn68kInit()
 	SekOpen(0);
 	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
 	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	//SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
 	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
 	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
 	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
@@ -7751,7 +7744,7 @@ struct BurnDriver BurnDrvTwinactn = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_HORSHOOT, 0,
 	NULL, twinactnRomInfo, twinactnRomName, NULL, NULL, CommonInputInfo, TwinactnDIPInfo,
-	TwinactnInit, MSM6295x1Exit, SsmissinFrame, MacrossDraw, DrvScan, NULL, 0x400,
+	TwinactnInit, MSM6295x1Exit, SsmissinFrame, MustangDraw, DrvScan, NULL, 0x400,
 	256, 224, 4, 3
 };
 
@@ -7862,9 +7855,9 @@ static INT32 SabotenbLoadCallback()
 	if (BurnLoadRom(DrvGfxROM2 + 0x000000,  4, 1)) return 1;
 	BurnByteswap(DrvGfxROM2, 0x200000);
 
-	if (BurnLoadRom(DrvSndROM0 + 0x040000,  5, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM0 + 0x000000,  5, 1)) return 1;
 
-	if (BurnLoadRom(DrvSndROM1 + 0x040000,  6, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM1 + 0x000000,  6, 1)) return 1;
 
 	decode_gfx(0x200000, 0x200000);
 
@@ -7955,9 +7948,9 @@ static INT32 CactusLoadCallback()
 	if (BurnLoadRom(DrvGfxROM2 + 0x000001,  5, 2)) return 1;
 	if (BurnLoadRom(DrvGfxROM2 + 0x000000,  6, 2)) return 1;
 
-	if (BurnLoadRom(DrvSndROM0 + 0x040000,  7, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM0 + 0x000000,  7, 1)) return 1;
 
-	if (BurnLoadRom(DrvSndROM1 + 0x040000,  8, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM1 + 0x000000,  8, 1)) return 1;
 
 	decode_gfx(0x200000, 0x200000);
 
@@ -8017,9 +8010,9 @@ static INT32 BjtwinLoadCallback()
 	if (BurnLoadRom(DrvGfxROM2 + 0x000000,  4, 1)) return 1;
 	BurnByteswap(DrvGfxROM2, 0x100000);
 
-	if (BurnLoadRom(DrvSndROM0 + 0x040000,  5, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM0 + 0x000000,  5, 1)) return 1;
 
-	if (BurnLoadRom(DrvSndROM1 + 0x040000,  6, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM1 + 0x000000,  6, 1)) return 1;
 
 	decode_gfx(0x100000, 0x100000);
 
@@ -8110,9 +8103,9 @@ static INT32 NouryokuLoadCallback()
 	if (BurnLoadRom(DrvGfxROM2 + 0x000000,  4, 1)) return 1;
 	BurnByteswap(DrvGfxROM2, 0x200000);
 
-	if (BurnLoadRom(DrvSndROM0 + 0x040000,  5, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM0 + 0x000000,  5, 1)) return 1;
 
-	if (BurnLoadRom(DrvSndROM1 + 0x040000,  6, 1)) return 1;
+	if (BurnLoadRom(DrvSndROM1 + 0x000000,  6, 1)) return 1;
 
 	decode_gfx(0x200000, 0x200000);
 
@@ -8191,7 +8184,7 @@ static INT32 MustangLoadCallback()
 	SekOpen(0);
 	SekMapMemory(Drv68KROM,		0x000000, 0x03ffff, MAP_ROM);
 	SekMapMemory(DrvPalRAM,		0x088000, 0x0887ff, MAP_RAM);
-	SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
+	//SekMapMemory(DrvScrollRAM,	0x08c000, 0x08c3ff, MAP_WRITE);
 	SekMapMemory(DrvBgRAM0,		0x090000, 0x093fff, MAP_RAM);
 	SekMapMemory(DrvTxRAM,		0x09c000, 0x09c7ff, MAP_RAM);
 	SekMapMemory(Drv68KRAM,		0x0f0000, 0x0fffff, MAP_ROM);
@@ -8215,7 +8208,7 @@ struct BurnDriver BurnDrvMustang = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_HORSHOOT, 0,
 	NULL, mustangRomInfo, mustangRomName, NULL, NULL, CommonInputInfo, MustangDIPInfo,
-	MustangInit, NMK004Exit, NMK004Frame, MacrossDraw, DrvScan, NULL, 0x400,
+	MustangInit, NMK004Exit, NMK004Frame, MustangDraw, DrvScan, NULL, 0x400,
 	256, 224, 4, 3
 };
 
@@ -8252,7 +8245,7 @@ struct BurnDriver BurnDrvMustangs = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_HORSHOOT, 0,
 	NULL, mustangsRomInfo, mustangsRomName, NULL, NULL, CommonInputInfo, MustangDIPInfo,
-	MustangInit, NMK004Exit, NMK004Frame, MacrossDraw, DrvScan, NULL, 0x400,
+	MustangInit, NMK004Exit, NMK004Frame, MustangDraw, DrvScan, NULL, 0x400,
 	256, 224, 4, 3
 };
 
@@ -8312,7 +8305,7 @@ struct BurnDriver BurnDrvMustangb = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_HORSHOOT, 0,
 	NULL, mustangbRomInfo, mustangbRomName, NULL, NULL, CommonInputInfo, MustangDIPInfo,
-	MustangbInit, SeibuSoundExit, SeibuSoundFrame, MacrossDraw, DrvScan, NULL, 0x400,
+	MustangbInit, SeibuSoundExit, SeibuSoundFrame, MustangDraw, DrvScan, NULL, 0x400,
 	256, 224, 4, 3
 };
 
@@ -8390,7 +8383,7 @@ struct BurnDriver BurnDrvMustangb2 = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_HORSHOOT, 0,
 	NULL, mustangb2RomInfo, mustangb2RomName, NULL, NULL, CommonInputInfo, MustangDIPInfo,
-	Mustangb2Init, SeibuSoundExit, SeibuSoundFrame, MacrossDraw, DrvScan, NULL, 0x400,
+	Mustangb2Init, SeibuSoundExit, SeibuSoundFrame, MustangDraw, DrvScan, NULL, 0x400,
 	256, 224, 4, 3
 };
 
@@ -9906,11 +9899,11 @@ static INT32 RapheroInit()
 		if (BurnLoadRom(DrvGfxROM2 + 0x400000,  6, 1)) return 1;
 		BurnByteswap(DrvGfxROM2, 0x600000);
 
-		if (BurnLoadRom(DrvSndROM0 + 0x040000,  7, 1)) return 1;
-		if (BurnLoadRom(DrvSndROM0 + 0x240000,  8, 1)) return 1;
+		if (BurnLoadRom(DrvSndROM0 + 0x000000,  7, 1)) return 1;
+		if (BurnLoadRom(DrvSndROM0 + 0x200000,  8, 1)) return 1;
 
-		if (BurnLoadRom(DrvSndROM1 + 0x040000,  9, 1)) return 1;
-		if (BurnLoadRom(DrvSndROM1 + 0x240000, 10, 1)) return 1;
+		if (BurnLoadRom(DrvSndROM1 + 0x000000,  9, 1)) return 1;
+		if (BurnLoadRom(DrvSndROM1 + 0x200000, 10, 1)) return 1;
 
 		DrvGfxDecode(0x20000, 0x200000, 0x600000);
 		memset (DrvGfxROM2 + 0xc00000, 0x0f, 0x400000);
@@ -9955,7 +9948,9 @@ static INT32 RapheroInit()
 	MSM6295SetRoute(0, 0.10, BURN_SND_ROUTE_BOTH);
 	MSM6295SetRoute(1, 0.10, BURN_SND_ROUTE_BOTH);
 
-	NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x440000, 0x440000);
+	NMK112_init(0, DrvSndROM0, DrvSndROM1, 0x400000, 0x400000);
+
+	NMK112_enabled = 1;
 
 	no_z80 = 1;
 
@@ -9974,6 +9969,7 @@ static INT32 RapheroExit()
 	MSM6295ROM = NULL;
 
 	NMK004_enabled = 0;
+	NMK112_enabled = 0;
 
 	tlcs90Exit();
 

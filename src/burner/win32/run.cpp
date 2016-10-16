@@ -26,6 +26,7 @@ static int nNormalFrac = 0;					// Extra fraction we did
 
 static bool bAppDoStep = 0;
 static bool bAppDoFast = 0;
+static bool bAppDoFasttoggled = 0;
 static int nFastSpeed = 6;
 
 // For System Macros (below)
@@ -148,10 +149,7 @@ static int RunFrame(int bDraw, int bPause)
 			if (nReplayStatus == 2) {
 				GetInput(false);				// Update burner inputs, but not game inputs
 				if (ReplayInput()) {			// Read input from file
-					bAltPause = 1;
-					bRunPause = 1;
-					// clear audio buffer here. -dink
-					AudBlankSound();
+					SetPauseMode(1);            // Replay has finished
 					MenuEnableItems();
 					InputSetCooperativeLevel(false, false);
 					return 0;
@@ -219,7 +217,17 @@ static int RunGetNextSound(int bDraw)
 
 	if (bAppDoFast) {									// do more frames
 		for (int i = 0; i < nFastSpeed; i++) {
+#ifdef INCLUDE_AVI_RECORDING
+			if (nAviStatus) {
+				// Render frame with sound
+				pBurnSoundOut = nAudNextSound;
+				RunFrame(bDraw, 0);
+			} else {
+				RunFrame(0, 0);
+			}
+#else
 			RunFrame(0, 0);
+#endif
 		}
 	}
 
@@ -293,7 +301,17 @@ int RunIdle()
 
 	if (bAppDoFast) {									// do more frames
 		for (int i = 0; i < nFastSpeed; i++) {
+#ifdef INCLUDE_AVI_RECORDING
+			if (nAviStatus) {
+				// Render frame with sound
+				pBurnSoundOut = nAudNextSound;
+				RunFrame(1, 0);
+			} else {
+				RunFrame(0, 0);
+			}
+#else
 			RunFrame(0, 0);
+#endif
 		}
 	}
 
@@ -337,7 +355,26 @@ static int RunExit()
 	nNormalLast = 0;
 	// Stop sound if it was playing
 	AudSoundStop();
+
+	bAppDoFast = 0;
+	bAppDoFasttoggled = 0;
+
 	return 0;
+}
+
+// Keyboard callback function, a way to provide a driver with shifted/unshifted ASCII data from the keyboard.  see drv/msx/d_msx.cpp for usage
+void (*cBurnerKeyCallback)(UINT8 code, UINT8 KeyType, UINT8 down) = NULL;
+
+static void BurnerHandlerKeyCallback(MSG *Msg, INT32 KeyDown, INT32 KeyType)
+{
+	INT32 shifted = (GetAsyncKeyState(VK_SHIFT) & 0x80000000) ? 0xf0 : 0;
+	INT32 scancode = (Msg->lParam >> 16) & 0xFF;
+	UINT8 keyboardState[256];
+	GetKeyboardState(keyboardState);
+	char charvalue[2];
+	if (ToAsciiEx(Msg->wParam, scancode, keyboardState, (LPWORD)&charvalue[0], 0, GetKeyboardLayout(0)) == 1) {
+		cBurnerKeyCallback(charvalue[0], shifted|KeyType, KeyDown);
+	}
 }
 
 // The main message loop
@@ -405,10 +442,11 @@ int RunMessageLoop()
 							
               				// 'Silence' & 'Sound Restored' Code (added by CaptainCPS-X) 
 							case 'S': {
-								TCHAR buffer[15];
+								TCHAR buffer[60];
 								bMute = !bMute;
 
 								if (bMute) {
+									nOldAudVolume = nAudVolume;
 									nAudVolume = 0;// mute sound
 									_stprintf(buffer, FBALoadStringEx(hAppInst, IDS_SOUND_MUTE, true), nAudVolume / 100);
 								} else {
@@ -426,7 +464,7 @@ int RunMessageLoop()
 							case VK_OEM_PLUS: {
 								if (bMute) break; // if mute, not do this
 								nOldAudVolume = nAudVolume;
-								TCHAR buffer[15];
+								TCHAR buffer[60];
 
 								nAudVolume += 100;
 								if (GetAsyncKeyState(VK_CONTROL) & 0x80000000) {
@@ -447,7 +485,7 @@ int RunMessageLoop()
 							case VK_OEM_MINUS: {
 								if (bMute) break; // if mute, not do this
 							  	nOldAudVolume = nAudVolume;
-								TCHAR buffer[15];
+								TCHAR buffer[60];
 
 								nAudVolume -= 100;
 								if (GetAsyncKeyState(VK_CONTROL) & 0x80000000) {
@@ -470,6 +508,10 @@ int RunMessageLoop()
 							}
 						}
 					} else {
+
+						if (cBurnerKeyCallback)
+							BurnerHandlerKeyCallback(&Msg, (Msg.message == WM_KEYDOWN) ? 1 : 0, 0);
+
 						switch (Msg.wParam) {
 
 #if defined (FBA_DEBUG)
@@ -534,6 +576,11 @@ int RunMessageLoop()
 										bAppDoFast = 1;
 									}
 								}
+
+								if ((GetAsyncKeyState(VK_SHIFT) & 0x80000000) && !GetAsyncKeyState(VK_CONTROL)) { // Shift-F1: toggles FFWD state
+									bAppDoFast = !bAppDoFast;
+									bAppDoFasttoggled = bAppDoFast;
+								}
 								break;
 							}
 							case VK_BACK: {
@@ -558,11 +605,17 @@ int RunMessageLoop()
 					}
 				} else {
 					if (Msg.message == WM_SYSKEYUP || Msg.message == WM_KEYUP) {
+
+						if (cBurnerKeyCallback)
+							BurnerHandlerKeyCallback(&Msg, (Msg.message == WM_KEYDOWN) ? 1 : 0, 0);
+
 						switch (Msg.wParam) {
 							case VK_MENU:
 								continue;
 							case VK_F1:
-								bAppDoFast = 0;
+								if (!bAppDoFasttoggled)
+									bAppDoFast = 0;
+								bAppDoFasttoggled = 0;
 								break;
 						}
 					}

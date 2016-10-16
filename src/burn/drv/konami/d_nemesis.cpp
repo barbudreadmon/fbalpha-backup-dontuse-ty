@@ -71,6 +71,7 @@ static UINT8 DrvDips[4];
 static UINT8 DrvReset;
 static UINT16 DrvInputs[4];
 static INT32 DrvAnalogPort0 = 0;
+static INT16 DrvDial1;
 
 static INT32 ay8910_enable = 0;
 static INT32 ym2151_enable = 0;
@@ -81,6 +82,9 @@ static INT32 k051649_enable = 0;
 static INT32 vlm5030_enable = 0;
 static INT32 rcflt_enable = 0;
 static INT32 hcrash_mode = 0;
+static INT32 gearboxmode = 0;
+static INT32 gearshifter = 0;
+
 
 #define A(a, b, c, d) {a, b, (UINT8*)(c), d}
 
@@ -1135,7 +1139,7 @@ static struct BurnDIPInfo KonamigtDIPList[]=
 	{0,    0xfe, 0,       3, "Color Settings"	},
 	{0x0a, 0x01, 0x03, 0x00, "Proper Colors (Dark)"	},
 	{0x0a, 0x01, 0x03, 0x01, "Light Colors"		},
-	{0x17, 0x01, 0x03, 0x02, "MAMEUIFx Colors (Mid)"},
+	{0x0a, 0x01, 0x03, 0x02, "MAMEUIFx Colors (Mid)"},
 };
 
 STDDIPINFO(Konamigt)
@@ -1222,9 +1226,8 @@ static UINT8 konamigt_read_wheel()
 {
 	UINT8 Temp = 0x7f + (DrvAnalogPort0 >> 4);
 	UINT8 Temp2 = 0;
-	if (Temp < 0x01) Temp = 0x01;
-	if (Temp > 0xfe) Temp = 0xfe;
-	Temp2 = scalerange(Temp, 0x3f, 0xbe, 0x25, 0x50); // konami gt scalings
+
+	Temp2 = scalerange(Temp, 0x3f, 0xc0, 0x00, 0x7f); // konami gt scalings
 	//bprintf(0, _T("Port0-temp[%X] scaled[%X]\n"), Temp, Temp2); // debug, do not remove.
 	return Temp2;
 }
@@ -1236,7 +1239,7 @@ static UINT16 konamigt_read_analog(int /*Offset*/)
 	if (DrvInputs[3] & 0x20) nRet |= 0x0300; // break
 	if (DrvInputs[3] & 0x40) nRet |= 0xf000; // accel
 
-	nRet |= konamigt_read_wheel();
+	nRet |= DrvDial1 & 0x7f;
 
 	return nRet;
 }
@@ -2154,6 +2157,8 @@ static INT32 DrvDoReset()
 
 	watchdog = 0;
 	selected_ip = 0;
+	gearshifter = 0;
+	DrvDial1 = 0x3f;
 
 	return 0;
 }
@@ -2272,7 +2277,7 @@ static void SalamandSoundInit()
 
 	if (DrvVLMROM[1] || DrvVLMROM[2]) {
 		vlm5030Init(0,  3579545, salamand_vlm_sync, DrvVLMROM, 0x4000, 1);
-		vlm5030SetAllRoutes(0, (hcrash_mode) ? 0.60 : 2.50, BURN_SND_ROUTE_BOTH);
+		vlm5030SetAllRoutes(0, (hcrash_mode) ? 0.80 : 2.50, BURN_SND_ROUTE_BOTH);
 		vlm5030_enable = 1;
 	}
 
@@ -2431,6 +2436,8 @@ static INT32 KonamigtInit()
 
 	DrvDoReset();
 
+	gearboxmode = 1;
+
 	return 0;
 }
 
@@ -2571,7 +2578,9 @@ static INT32 HcrashInit()
 
 		if (BurnLoadRom(DrvZ80ROM + 0x000000,  4, 1)) return 1;
 
-		if (BurnLoadRom(DrvVLMROM + 0x000000,  5, 1)) return 1;
+		if (BurnLoadRom(DrvVLMROM + 0x004000,  5, 1)) return 1;
+		memmove(DrvVLMROM, DrvVLMROM + 0x08000, 0x4000);
+		memset(DrvVLMROM + 0x08000, 0, 0x4000);
 
 		if (BurnLoadRom(K007232ROM + 0x00000,  6, 1)) return 1;
 	}
@@ -2745,6 +2754,8 @@ static INT32 Rf2_gx400Init()
 
 	DrvDoReset();
 
+	gearboxmode = 1;
+
 	return 0;
 }
 
@@ -2901,6 +2912,7 @@ static INT32 DrvExit()
 	k051649_enable = 0;
 	vlm5030_enable = 0;
 	hcrash_mode = 0;
+	gearboxmode = 0;
 
 	return 0;
 }
@@ -3152,6 +3164,41 @@ static INT32 NemesisFrame()
 	return 0;
 }
 
+static UINT8 shift_update(UINT8 shifter_input) // rf2 / konamigt
+{
+	{ // gear shifter stuff
+		static UINT8 prevshift = 0;
+
+		if (prevshift != shifter_input && shifter_input) {
+			gearshifter = !gearshifter;
+		}
+
+		prevshift = shifter_input;
+	}
+	return (gearshifter) ? 0x10 : 0x00;
+}
+
+static void spinner_update()
+{ // spinner calculation stuff. (wheel) for rf2 / konamigt & hcrash
+	UINT8 INCREMENT = 0x02;
+	UINT8 target = konamigt_read_wheel();
+	if (DrvDial1+INCREMENT < target) { // go "right" in blocks of "INCREMENT"
+		DrvDial1 += INCREMENT;
+	}
+	else
+	if (DrvDial1 < target) { // take care of remainder
+		DrvDial1++;
+	}
+
+	if (DrvDial1-INCREMENT > target) { // go "left" in blocks of "INCREMENT"
+		DrvDial1 -= INCREMENT;
+	}
+	else
+	if (DrvDial1 > target) { // take care of remainder
+		DrvDial1--;
+	}
+}
+
 static INT32 KonamigtFrame()
 {
 	watchdog++;
@@ -3171,7 +3218,12 @@ static INT32 KonamigtFrame()
 			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 			DrvInputs[3] ^= (DrvJoy4[i] & 1) << i;
 		}
+
+		DrvInputs[1] = DrvInputs[1] & ~0x10;
+		DrvInputs[1] |= shift_update(DrvJoy2[4]);
 	}
+
+	spinner_update();
 
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 9216000 / 60, 3579545 / 60 };
@@ -3309,6 +3361,9 @@ static INT32 HcrashFrame()
 			DrvInputs[2] |= 1 << i;
 			DrvInputs[3] ^= (DrvJoy4[i] & 1) << i;
 		}
+
+		spinner_update();
+
 	}
 
 	INT32 nSoundBufferPos = 0;
@@ -3461,6 +3516,13 @@ static INT32 Gx400Frame()
 			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 			DrvInputs[3] ^= (DrvJoy4[i] & 1) << i;
 		}
+
+		if (gearboxmode) { // rf2
+			DrvInputs[1] = DrvInputs[1] & ~0x10;
+			DrvInputs[1] |= shift_update(DrvJoy2[4]);
+
+			spinner_update();
+		}
 	}
 
 	INT32 nInterleave = 256;
@@ -3607,6 +3669,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		if (vlm5030_enable) vlm5030Scan(nAction);
 
 		SCAN_VAR(selected_ip);
+		SCAN_VAR(DrvDial1);
+		SCAN_VAR(gearshifter);
 	}
 
 	if (nAction & ACB_WRITE) {

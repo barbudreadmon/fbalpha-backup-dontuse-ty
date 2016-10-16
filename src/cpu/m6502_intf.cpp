@@ -231,7 +231,7 @@ INT32 M6502GetActive()
 {
 #if defined FBA_DEBUG
 	if (!DebugCPU_M6502Initted) bprintf(PRINT_ERROR, _T("M6502GetActive called without init\n"));
-	if (nActiveCPU == -1) bprintf(PRINT_ERROR, _T("M6502GetActive called with no CPU open\n"));
+	//if (nActiveCPU == -1) bprintf(PRINT_ERROR, _T("M6502GetActive called with no CPU open\n"));
 #endif
 
 	return nActiveCPU;
@@ -266,6 +266,11 @@ void M6502SetIRQLine(INT32 vector, INT32 status)
 		pCurrentCPU->execute(0);
 		pCurrentCPU->set_irq_line(vector, 0);
 		pCurrentCPU->execute(0);
+	}
+
+	if (status == CPU_IRQSTATUS_HOLD) {
+		m6502_set_irq_hold();
+		pCurrentCPU->set_irq_line(vector, 1);
 	}
 }
 
@@ -551,6 +556,16 @@ UINT32 M6502GetPC(INT32)
 #endif
 
 	return m6502_get_pc();
+}
+
+UINT32 M6502GetPrevPC(INT32)
+{
+#if defined FBA_DEBUG
+	if (!DebugCPU_M6502Initted) bprintf(PRINT_ERROR, _T("M6502GetPrevPC called without init\n"));
+	if (nActiveCPU == -1) bprintf(PRINT_ERROR, _T("M6502GetPrevPC called with no CPU open\n"));
+#endif
+
+	return m6502_get_prev_pc();
 }
 
 INT32 M6502Scan(INT32 nAction)

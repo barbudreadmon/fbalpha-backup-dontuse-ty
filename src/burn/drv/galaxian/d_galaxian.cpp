@@ -574,6 +574,27 @@ static struct BurnInputInfo DkongjrmInputList[] =
 
 STDINPUTINFO(Dkongjrm)
 
+static struct BurnInputInfo DonightInputList[] =
+{
+	{"Coin 1"            , BIT_DIGITAL   , GalInputPort0 + 0, "p1 coin"   },
+	{"Start 1"           , BIT_DIGITAL   , GalInputPort1 + 0, "p1 start"  },
+	{"Coin 2"            , BIT_DIGITAL   , GalInputPort0 + 1, "p2 coin"   },
+	{"Start 2"           , BIT_DIGITAL   , GalInputPort1 + 1, "p2 start"  },
+
+	{"Up"                , BIT_DIGITAL   , GalInputPort1 + 2, "p1 up"   },
+	{"Down"              , BIT_DIGITAL   , GalInputPort1 + 3, "p1 down"  },
+	{"Left"              , BIT_DIGITAL   , GalInputPort0 + 2, "p1 left"   },
+	{"Right"             , BIT_DIGITAL   , GalInputPort0 + 3, "p1 right"  },
+	{"Fire 1"            , BIT_DIGITAL   , GalInputPort0 + 4, "p1 fire 1" },
+	
+	{"Reset"             , BIT_DIGITAL   , &GalReset        , "reset"     },
+	{"Service"           , BIT_DIGITAL   , GalInputPort0 + 7, "service"   },
+	{"Dip 1"             , BIT_DIPSWITCH , GalDip + 0       , "dip"       },
+	{"Dip 2"             , BIT_DIPSWITCH , GalDip + 1       , "dip"       },
+};
+
+STDINPUTINFO(Donight)
+
 static struct BurnInputInfo DrivfrcgInputList[] =
 {
 	{"Coin 1"            , BIT_DIGITAL   , GalInputPort0 + 0, "p1 coin"   },
@@ -3099,6 +3120,27 @@ static struct BurnDIPInfo DkongjrmDIPList[]=
 };
 
 STDDIPINFO(Dkongjrm)
+
+static struct BurnDIPInfo DonightDIPList[]=
+{
+	// Default Values
+	{0x0b, 0xff, 0xff, 0x00, NULL                     },
+	{0x0c, 0xff, 0xff, 0x00, NULL                     },
+	
+	// Dip 1
+	{0   , 0xfe, 0   , 2   , "Service Mode"           },
+	{0x0b, 0x01, 0x40, 0x00, "Off"                    },
+	{0x0b, 0x01, 0x40, 0x40, "On"                     },
+	
+	// Dip 2
+	{0   , 0xfe, 0   , 4   , "Coinage"                },
+	{0x0c, 0x01, 0xc0, 0x40, "2 Coins 1 Play"         },
+	{0x0c, 0x01, 0xc0, 0x00, "1 Coin  1 Play"         },
+	{0x0c, 0x01, 0xc0, 0x80, "1 Coin  2 Plays"        },
+	{0x0c, 0x01, 0xc0, 0xc0, "Freeplay"               },
+};
+
+STDDIPINFO(Donight)
 
 static struct BurnDIPInfo DrivfrcgDIPList[]=
 {
@@ -6342,6 +6384,22 @@ static struct BurnRomInfo GalaxianiRomDesc[] = {
 STD_ROM_PICK(Galaxiani)
 STD_ROM_FN(Galaxiani)
 
+static struct BurnRomInfo DonightRomDesc[] = {
+	{ "galmidw.u",     0x00800, 0x197493a6, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "galmidw.v",     0x00800, 0xb8ee84cf, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "galmidw.w",     0x00800, 0x76879d31, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "galmidw.y",     0x00800, 0xd6d5e47e, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "7l",            0x00800, 0x34913886, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	
+	{ "1h.bin",        0x00800, 0xf880af4b, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "1k.bin",        0x00800, 0x40fd608a, BRF_GRA | GAL_ROM_TILES_SHARED },
+	
+	{ "6l.bpr",        0x00020, 0x77f95861, BRF_GRA | GAL_ROM_PROM },
+};
+
+STD_ROM_PICK(Donight)
+STD_ROM_FN(Donight)
+
 struct BurnDriver BurnDrvGalaxian = {
 	"galaxian", NULL, NULL, NULL, "1979",
 	"Galaxian (Namco set 1)\0", NULL, "Namco", "Galaxian",
@@ -6398,6 +6456,16 @@ struct BurnDriver BurnDrvGalaxiani = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_GALAXIAN, GBF_VERSHOOT, 0,
 	NULL, GalaxianiRomInfo, GalaxianiRomName, NULL, NULL, GalaxianInputInfo, SupergDIPInfo,
+	GalInit, GalExit, GalFrame, NULL, GalScan,
+	NULL, 392, 224, 256, 3, 4
+};
+
+struct BurnDriver BurnDrvDonight = {
+	"donight", NULL, NULL, NULL, "2013",
+	"Mr.Do's Nightmare (hack by Krazy Ivan)\0", NULL, "Krazy Ivan", "Galaxian",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_GALAXIAN, GBF_VERSHOOT, 0,
+	NULL, DonightRomInfo, DonightRomName, NULL, NULL, DonightInputInfo, DonightDIPInfo,
 	GalInit, GalExit, GalFrame, NULL, GalScan,
 	NULL, 392, 224, 256, 3, 4
 };
@@ -10604,21 +10672,17 @@ STD_ROM_PICK(Moonal2)
 STD_ROM_FN(Moonal2)
 
 static struct BurnRomInfo Moonal2bRomDesc[] = {
-	{ "ali1",          0x00400, 0x0dcecab4, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ali2",          0x00400, 0xc6ee75a7, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "md-2",          0x00800, 0x8318b187, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ali5",          0x00400, 0x6f3cf61d, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ali6",          0x00400, 0xe169d432, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ali7",          0x00400, 0x41f64b73, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ali8",          0x00400, 0xf72ee876, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ali9",          0x00400, 0xb7fb763c, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "ali10",         0x00400, 0xb1059179, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
-	{ "md-6",          0x00800, 0x9cc973e0, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "md-1.a",        0x00800, 0xd41fd873, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "md-2.b",        0x00800, 0x8318b187, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "md-3.d",        0x00800, 0xb2170d3b, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "md-4.g",        0x00800, 0xbaa4d0bf, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "md-5.h",        0x00800, 0x61afb53c, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "md-6.f",        0x00800, 0x9cc973e0, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	
-	{ "ali13.1h",      0x00800, 0xa1287bf6, BRF_GRA | GAL_ROM_TILES_SHARED },
-	{ "ali12.1k",      0x00800, 0x528f1481, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "md-13.h1",      0x00800, 0xa1287bf6, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "md-12.k1",      0x00800, 0x528f1481, BRF_GRA | GAL_ROM_TILES_SHARED },
 	
-	{ "6l.bpr",        0x00020, 0xc3ac9467, BRF_GRA | GAL_ROM_PROM },
+	{ "6331.l6",       0x00020, 0xc3ac9467, BRF_GRA | GAL_ROM_PROM },
 };
 
 STD_ROM_PICK(Moonal2b)

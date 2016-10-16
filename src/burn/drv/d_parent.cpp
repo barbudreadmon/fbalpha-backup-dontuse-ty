@@ -55,42 +55,6 @@ struct BurnDriver BurnDrvBagman = {
 	NULL, 0, 224, 256, 3, 4
 };
 
-static struct BurnRomInfo CkongRomDesc[] = {
-	{ "falcon7",            0x01000, 0x2171cac3, BRF_ESS | BRF_PRG },
-	{ "falcon8",            0x01000, 0x88b83ff7, BRF_ESS | BRF_PRG },
-	{ "falcon9",            0x01000, 0xcff2af47, BRF_ESS | BRF_PRG },
-	{ "falcon10",           0x01000, 0x6b2ecf23, BRF_ESS | BRF_PRG },
-	{ "falcon11",           0x01000, 0x327dcadf, BRF_ESS | BRF_PRG },
-	
-	{ "falcon6",            0x01000, 0xa8916dc8, BRF_GRA },
-	{ "falcon5",            0x01000, 0xcd3b5dde, BRF_GRA },
-	{ "falcon4",            0x01000, 0xb62a0367, BRF_GRA },
-	{ "falcon3",            0x01000, 0x61122c5e, BRF_GRA },
-	
-	{ "falcon2",            0x00800, 0xf67c80f1, BRF_GRA },
-	{ "falcon1",            0x00800, 0x80eb517d, BRF_GRA },
-	
-	{ "ck6v.bin",           0x00020, 0x751c3325, BRF_GRA },
-	{ "ck6u.bin",           0x00020, 0xab1940fa, BRF_GRA },
-	{ "ck6t.bin",           0x00020, 0xb4e827a5, BRF_GRA },
-	
-	{ "falcon13",           0x01000, 0x5f0bcdfb, BRF_SND },
-	{ "falcon12",           0x01000, 0x9003ffbd, BRF_SND },
-};
-
-STD_ROM_PICK(Ckong)
-STD_ROM_FN(Ckong)
-
-struct BurnDriver BurnDrvCkong = {
-	"ckong", NULL, NULL, NULL, "1981",
-	"Crazy Kong Part II (set 1)\0", "Parent set for working drivers", "Falcon", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	0, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
-	NULL, CkongRomInfo, CkongRomName, NULL, NULL, ParentInputInfo, NULL,
-	ParentInit, ParentExit, NULL, NULL, NULL,
-	NULL, 0, 224, 256, 3, 4
-};
-
 static struct BurnRomInfo DockmanRomDesc[] = {
 	{ "pe1.19",             0x01000, 0xeef2ec54, BRF_ESS | BRF_PRG },
 	{ "pe2.18",             0x01000, 0xbc48d16b, BRF_ESS | BRF_PRG },
@@ -258,38 +222,6 @@ struct BurnDriver BurnDrvHuncholy = {
 	NULL, HuncholyRomInfo, HuncholyRomName, NULL, NULL, ParentInputInfo, NULL,
 	ParentInit, ParentExit, NULL, NULL, NULL,
 	NULL, 0, 224, 256, 3, 4
-};
-
-static struct BurnRomInfo PhoenixRomDesc[] = {
-	{ "ic45",               0x00800, 0x9f68086b, BRF_ESS | BRF_PRG },
-	{ "ic46",               0x00800, 0x273a4a82, BRF_ESS | BRF_PRG },
-	{ "ic47",               0x00800, 0x3d4284b9, BRF_ESS | BRF_PRG },
-	{ "ic48",               0x00800, 0xcb5d9915, BRF_ESS | BRF_PRG },
-	{ "h5-ic49.5a",         0x00800, 0xa105e4e7, BRF_ESS | BRF_PRG },
-	{ "h6-ic50.6a",         0x00800, 0xac5e9ec1, BRF_ESS | BRF_PRG },
-	{ "h7-ic51.7a",         0x00800, 0x2eab35b4, BRF_ESS | BRF_PRG },
-	{ "h8-ic52.8a",         0x00800, 0xaff8e9c5, BRF_ESS | BRF_PRG },
-	
-	{ "ic23.3d",            0x00800, 0x3c7e623f, BRF_GRA },
-	{ "ic24.4d",            0x00800, 0x59916d3b, BRF_GRA },
-	{ "b1-ic39.3b",         0x00800, 0x53413e8f, BRF_GRA },
-	{ "b2-ic40.4b",         0x00800, 0x0be2ba91, BRF_GRA },
-	
-	{ "mmi6301.ic40",       0x00100, 0x79350b25, BRF_GRA },
-	{ "mmi6301.ic41",       0x00100, 0xe176b768, BRF_GRA },
-};
-
-STD_ROM_PICK(Phoenix)
-STD_ROM_FN(Phoenix)
-
-struct BurnDriver BurnDrvPhoenix = {
-	"phoenix", NULL, NULL, NULL, "1980",
-	"Phoenix (Amstar)\0", "Parent set for working drivers", "Amstar", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	0, 2, HARDWARE_MISC_PRE90S, GBF_VERSHOOT, 0,
-	NULL, PhoenixRomInfo, PhoenixRomName, NULL, NULL, ParentInputInfo, NULL,
-	ParentInit, ParentExit, NULL, NULL, NULL,
-	NULL, 0, 208, 256, 3, 4
 };
 
 static struct BurnRomInfo ThepitRomDesc[] = {

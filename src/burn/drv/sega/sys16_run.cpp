@@ -138,7 +138,9 @@ UINT32 System16ClockSpeed = 0;
 
 INT32 System16YM2413IRQInterval;
 
+#ifdef BUILD_A68K
 static bool bUseAsm68KCoreOldValue = false;
+#endif
 
 static UINT8 N7751Command;
 static UINT32 N7751RomAddress;
@@ -1834,6 +1836,7 @@ INT32 System16Init()
 	}
 	
 	if ((BurnDrvGetHardwareCode() & HARDWARE_SEGA_FD1094_ENC) || (BurnDrvGetHardwareCode() & HARDWARE_SEGA_FD1094_ENC_CPU2)) {
+#ifdef BUILD_A68K
 		// Make sure we use Musashi
 		if (bBurnUseASMCPUEmulation) {
 #if 1 && defined FBA_DEBUG
@@ -1842,6 +1845,7 @@ INT32 System16Init()
 			bUseAsm68KCoreOldValue = bBurnUseASMCPUEmulation;
 			bBurnUseASMCPUEmulation = false;
 		}
+#endif
 		
 		if (BurnDrvGetHardwareCode() & HARDWARE_SEGA_FD1094_ENC) fd1094_driver_init(0);
 		if (BurnDrvGetHardwareCode() & HARDWARE_SEGA_FD1094_ENC_CPU2) fd1094_driver_init(1);
@@ -2177,6 +2181,7 @@ INT32 System16Init()
 		SekMapMemory(System16PaletteRam    , 0x120000, 0x121fff, MAP_RAM);
 		SekMapMemory(System16SpriteRam     , 0x130000, 0x130fff, MAP_RAM);
 		SekMapMemory(System16Rom2          , 0x200000, 0x23ffff, MAP_READ);
+		SekMapMemory(System16Rom2          , 0x200000, 0x23ffff, MAP_FETCH);
 		SekMapMemory(System16Ram           , 0x260000, 0x267fff, MAP_RAM);
 		SekMapMemory(System16RoadRam       , 0x280000, 0x280fff, MAP_RAM);
 		SekSetResetCallback(OutrunResetCallback);
@@ -2611,6 +2616,7 @@ INT32 System16Exit()
  	if ((BurnDrvGetHardwareCode() & HARDWARE_SEGA_FD1094_ENC) || (BurnDrvGetHardwareCode() & HARDWARE_SEGA_FD1094_ENC_CPU2)) {
 		fd1094_exit();
 		
+#ifdef BUILD_A68K
 		// Switch back CPU core if needed
 		if (bUseAsm68KCoreOldValue) {
 #if 1 && defined FBA_DEBUG
@@ -2619,6 +2625,7 @@ INT32 System16Exit()
 			bUseAsm68KCoreOldValue = false;
 			bBurnUseASMCPUEmulation = true;
 		}
+#endif
 	}
 	
 	return 0;
@@ -3037,7 +3044,7 @@ INT32 HangonYM2203Frame()
 
 INT32 OutrunFrame()
 {
-	INT32 nInterleave = 10, i;
+	INT32 nInterleave = 100, i;
 
 	if (System16Reset) System16DoReset();
 
@@ -3066,7 +3073,7 @@ INT32 OutrunFrame()
 		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
 		nCyclesSegment = nNext - nSystem16CyclesDone[nCurrentCPU];
 		nSystem16CyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
-		if (i == 2 || i == 6 || i == 8) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
+		if (i == 20 || i == 60 || i == 80) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run 68000 #2

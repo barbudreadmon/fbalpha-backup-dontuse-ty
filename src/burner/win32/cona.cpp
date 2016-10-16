@@ -70,7 +70,9 @@ int ConfigAppLoad()
 		VAR(nIniVersion);
 
 		// Emulation
+#ifdef BUILD_A68K
 		VAR(bBurnUseASMCPUEmulation);
+#endif
 
 		// Video
 		VAR(nVidDepth); VAR(nVidRefresh);
@@ -184,6 +186,7 @@ int ConfigAppLoad()
 		VAR(nSelDlgWidth);
 		VAR(nSelDlgHeight);
 		VAR(nLoadMenuShowX);
+		VAR(nLoadMenuShowY);
 		VAR(nLoadMenuBoardTypeFilter);
 		VAR(nLoadMenuGenreFilter);
 		VAR(nLoadMenuFamilyFilter);
@@ -328,11 +331,15 @@ int ConfigAppSave()
 	// We can't use the macros for this!
 	_ftprintf(h, _T("nIniVersion 0x%06X"), nBurnVer);
 
+#ifdef BUILD_A68K
 	_ftprintf(h, _T("\n\n\n"));
 	_ftprintf(h, _T("// --- emulation --------------------------------------------------------------\n"));
 
 	_ftprintf(h, _T("\n// If non-zero, use A68K for MC68000 emulation\n"));
+
+	bBurnUseASMCPUEmulation = 0; // Assembly MC68000 emulation only availble on a per-session basis.  Causes too many problems in a non-debug setting.
 	VAR(bBurnUseASMCPUEmulation);
+#endif
 
 	_ftprintf(h, _T("\n\n\n"));
 	_ftprintf(h, _T("// --- Video ------------------------------------------------------------------\n"));
@@ -533,6 +540,7 @@ int ConfigAppSave()
 	
 	_ftprintf(h, _T("\n// Load game dialog options\n"));
 	VAR(nLoadMenuShowX);
+	VAR(nLoadMenuShowY);
 	
 	_ftprintf(h, _T("\n// Load game dialog board type filter options\n"));
 	VAR(nLoadMenuBoardTypeFilter);
@@ -621,7 +629,7 @@ int ConfigAppSave()
 	VAR(bBurnUseBlend);
 	
 #ifdef INCLUDE_AVI_RECORDING
-	_ftprintf(h, _T("\n// If non-zero, enable 3x pixel output for the AVI writer.\n"));
+	_ftprintf(h, _T("\n// If non-zero, enable 1x - 3x pixel output for the AVI writer.\n"));
 	VAR(nAvi3x);
 #endif
 	

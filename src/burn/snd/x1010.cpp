@@ -59,45 +59,54 @@ void x1010_sound_update()
 	memset(pSoundBuf, 0, nBurnSoundLen * sizeof(INT16) * 2);
 
 	X1_010_CHANNEL	*reg;
-	int		ch, i, volL, volR, freq;
-	register INT8 *start, *end, data;
-	register UINT8 *env;
-	register UINT32 smp_offs, smp_step, env_offs, env_step, delta;
+	INT32 ch, i, volL, volR, freq, mempos;
+	INT8 *start, *end, data;
+	UINT8 *env;
+	UINT32 smp_offs, smp_step, env_offs, env_step, delta;
 
 	for( ch = 0; ch < SETA_NUM_CHANNELS; ch++ ) {
 		reg = (X1_010_CHANNEL *) & (x1_010_chip->reg[ch * sizeof(X1_010_CHANNEL)]);
 		if( reg->status & 1 ) {	// Key On
 			INT16 *bufL = pSoundBuf + 0;
 			INT16 *bufR = pSoundBuf + 1;
+
 			if( (reg->status & 2) == 0 ) { // PCM sampling
 				start    = (INT8*)( reg->start * 0x1000 + X1010SNDROM );
+				mempos   = reg->start * 0x1000; // used only for bounds checking
 				end      = (INT8*)((0x100 - reg->end) * 0x1000 + X1010SNDROM );
 				volL     = ((reg->volume >> 4) & 0xf) * VOL_BASE;
 				volR     = ((reg->volume >> 0) & 0xf) * VOL_BASE;
 				smp_offs = x1_010_chip->smp_offset[ch];
 				freq     = reg->frequency & 0x1f;
+				if (!volL) volL = volR;       // dink aug.17,2016: fix missing samples in ms gundam
+				if (!volR) volR = volL;
 				// Meta Fox does not write the frequency register. Ever
 				if( freq == 0 ) freq = 4;
 				// Special handling for Arbalester -dink
 				if( X1010_Arbalester_Mode && ch==0x0f && reg->start != 0xc0 && reg->start != 0xc8 )
 					freq = 8;
 
-				//smp_step = (unsigned int)((float)x1_010->base_clock / 8192.0
-				//			* freq * (1 << FREQ_BASE_BITS) / (float)x1_010->rate );
 				smp_step = (UINT32)((float)x1_010_chip->rate / (float)nBurnSoundRate / 8.0 * freq * (1 << FREQ_BASE_BITS) );
-
-//				if( smp_offs == 0 ) {
-//					bprintf(PRINT_ERROR, _T("Play sample %06X - %06X, channel %X volume %d freq %X step %X offset %X\n"),
-//							reg->start, reg->end, ch, volL, freq, smp_step, smp_offs);
-//				}
-
+#if 0
+				if( smp_offs == 0 ) {
+					bprintf(PRINT_ERROR, _T("Play sample %06X - %06X, channel %X volumeL %d volumeR %d freq %X step %X offset %X\n"),
+							reg->start, reg->end, ch, volL, volR, freq, smp_step, smp_offs);
+				}
+#endif
 				for( i = 0; i < nBurnSoundLen; i++ ) {
 					delta = smp_offs >> FREQ_BASE_BITS;
 					// sample ended?
-					if( start + delta >= end ) {
+					if( start + delta >= end) {
 						reg->status &= 0xfe;					// Key off
 						break;
 					}
+
+					if (mempos + delta >= 0xfffff) {            // bounds checking
+						reg->status &= 0xfe;					// Key off
+						bprintf(0, _T("X1-010: Overflow detected (PCM)!\n"));
+						break;
+					}
+
 					data = *(start + delta);
 					
 					INT32 nLeftSample = 0, nRightSample = 0;
@@ -119,8 +128,6 @@ void x1010_sound_update()
 					nLeftSample = BURN_SND_CLIP(nLeftSample);
 					nRightSample = BURN_SND_CLIP(nRightSample);
 					
-					//*bufL += nLeftSample; bufL += 2;;
-					//*bufR += nRightSample; bufR += 2;
 					*bufL = BURN_SND_CLIP(*bufL + nLeftSample); bufL += 2;;
 					*bufR = BURN_SND_CLIP(*bufR + nRightSample); bufR += 2;
 
@@ -130,20 +137,25 @@ void x1010_sound_update()
 
 			} else { // Wave form
 				start    = (INT8*) & (x1_010_chip->reg[reg->volume * 128 + 0x1000]);
+				mempos   = reg->volume * 128 + 0x1000; // used only for bounds checking
 				smp_offs = x1_010_chip->smp_offset[ch];
 				freq     = (reg->pitch_hi << 8) + reg->frequency;
-				//smp_step = (unsigned int)((float)x1_010->base_clock / 128.0 / 1024.0 / 4.0 * freq * (1 << FREQ_BASE_BITS) / (float)x1_010->rate);
 				smp_step = (UINT32)((float)x1_010_chip->rate / (float)nBurnSoundRate / 128.0 / 4.0 * freq * (1 << FREQ_BASE_BITS) );
 
 				env      = (UINT8*) & (x1_010_chip->reg[reg->end * 128]);
 				env_offs = x1_010_chip->env_offset[ch];
-				//env_step = (unsigned int)((float)x1_010->base_clock / 128.0 / 1024.0 / 4.0 * reg->start * (1 << ENV_BASE_BITS) / (float)x1_010->rate);
 				env_step = (UINT32)((float)x1_010_chip->rate / (float)nBurnSoundRate / 128.0 / 4.0 * reg->start * (1 << ENV_BASE_BITS) );
-
-//				if( smp_offs == 0 ) {
-//					bprintf(PRINT_ERROR, _T("Play waveform %X, channel %X volume %X freq %4X step %X offset %X dlta %X\n"),
-//       						reg->volume, ch, reg->end, freq, smp_step, smp_offs, env_offs>>ENV_BASE_BITS );
-//				}
+#if 0
+				if( smp_offs == 0 ) {
+					bprintf(PRINT_ERROR, _T("Play waveform %X, channel %X volume %X freq %4X step %X offset %X dlta %X\n"),
+       						reg->volume, ch, reg->end, freq, smp_step, smp_offs, env_offs>>ENV_BASE_BITS );
+				}
+#endif
+				if (mempos > 0x2000 - 0x80) {            // bounds checking
+					reg->status &= 0xfe;					// Key off
+					bprintf(0, _T("X1-010: Overflow detected (Waveform)!\n"));
+					break;
+				}
 
 				for( i = 0; i < nBurnSoundLen; i++ ) {
 					INT32 vol;
@@ -178,15 +190,13 @@ void x1010_sound_update()
 					nLeftSample = BURN_SND_CLIP(nLeftSample);
 					nRightSample = BURN_SND_CLIP(nRightSample);
 					
-					//*bufL += nLeftSample; bufL += 2;;
-					//*bufR += nRightSample; bufR += 2;
 					*bufL = BURN_SND_CLIP(*bufL + nLeftSample); bufL += 2;;
 					*bufR = BURN_SND_CLIP(*bufR + nRightSample); bufR += 2;
 
 					smp_offs += smp_step;
 					env_offs += env_step;
 				}
-                                //bprintf(0, _T("smp ended i[%X]\n"), i);
+
 				x1_010_chip->smp_offset[ch] = smp_offs;
 				x1_010_chip->env_offset[ch] = env_offs;
 			}
@@ -199,7 +209,9 @@ void x1010_sound_init(UINT32 base_clock, INT32 address)
 	DebugSnd_X1010Initted = 1;
 	
 	x1_010_chip = (struct x1_010_info *) malloc( sizeof(struct x1_010_info) );
-	
+
+	memset(x1_010_chip, 0, sizeof(struct x1_010_info));
+
 	x1_010_chip->base_clock = base_clock;
 	x1_010_chip->rate = x1_010_chip->base_clock / 1024;
 	x1_010_chip->address = address;

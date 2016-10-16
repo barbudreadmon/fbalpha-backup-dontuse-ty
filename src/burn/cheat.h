@@ -19,10 +19,14 @@ struct CheatOption {
 struct CheatInfo {
 	struct CheatInfo* pNext;
 	struct CheatInfo* pPrevious;
-	INT32 nType;									// Cheat type
+	INT32 nType;								// Cheat type
 	INT32 nStatus;								// 0 = Inactive
 	INT32 nCurrent;								// Currently selected option
 	INT32 nDefault;								// Default option
+	INT32 bOneShot;                             // For one-shot cheats, also acts as a frame counter for them.
+	INT32 bWatchMode;                           // Display value on screen
+	INT32 bWaitForModification;                 // Wait for Modification before changing
+	INT32 bModified;                            // Wrote cheat?
 	TCHAR szCheatName[CHEAT_MAX_NAME];
 	struct CheatOption* pOption[CHEAT_MAX_OPTIONS];
 };

@@ -1,4 +1,5 @@
 #include "toaplan.h"
+#include "nmk112.h"
 // Battle Garegga
 
 static UINT8 DrvButton[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -446,17 +447,17 @@ static void drvZ80Bankswitch(INT32 nBank)
 }
 
 // Scan ram
-static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
+static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 
 	if (pnMin) {						// Return minimum compatible version
 		*pnMin = 0x029497;
 	}
-	if (nAction & ACB_VOLATILE) {		// Scan volatile data
 
+	if (nAction & ACB_VOLATILE) {		// Scan volatile data
 		memset(&ba, 0, sizeof(ba));
-    	ba.Data		= RamStart;
+		ba.Data		= RamStart;
 		ba.nLen		= RamEnd-RamStart;
 		ba.szName	= "All Ram";
 		BurnAcb(&ba);
@@ -477,7 +478,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		if (nAction & ACB_WRITE) {
 			INT32 nBank = nCurrentBank;
 			nCurrentBank = -1;
-                        ZetOpen(0);               // March 28, 2014: Fix for crash on savestate load - dink
+			ZetOpen(0);
 			drvZ80Bankswitch(nBank);
 			ZetClose();
 		}
@@ -588,16 +589,9 @@ void __fastcall battlegZ80Write(UINT16 nAddress, UINT8 nValue)
 			break;
 
 		case 0xE006:
-			MSM6295SampleInfo[0][0] = MSM6295ROM + ((nValue & 0x0F) << 16);
-			MSM6295SampleData[0][0] = MSM6295ROM + ((nValue & 0x0F) << 16);
-			MSM6295SampleInfo[0][1] = MSM6295ROM + ((nValue & 0xF0) << 12) + 0x0100;
-			MSM6295SampleData[0][1] = MSM6295ROM + ((nValue & 0xF0) << 12);
-			break;
 		case 0xE008:
-			MSM6295SampleInfo[0][2] = MSM6295ROM + ((nValue & 0x0F) << 16) + 0x0200;
-			MSM6295SampleData[0][2] = MSM6295ROM + ((nValue & 0x0F) << 16);
-			MSM6295SampleInfo[0][3] = MSM6295ROM + ((nValue & 0xF0) << 12) + 0x0300;
-			MSM6295SampleData[0][3] = MSM6295ROM + ((nValue & 0xF0) << 12);
+			NMK112_okibank_write((nAddress - 0xe006) + 0, nValue & 0xf);
+			NMK112_okibank_write((nAddress - 0xe006) + 1, nValue >> 4);
 			break;
 
 		case 0xE00A: {
@@ -754,7 +748,7 @@ static INT32 DrvDoReset()
 {
 	SekOpen(0);
 	nIRQPending = 0;
-    SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
+	SekSetIRQLine(0, CPU_IRQSTATUS_NONE);
 	SekReset();
 	SekClose();
 
@@ -764,6 +758,7 @@ static INT32 DrvDoReset()
 
 	MSM6295Reset(0);
 	BurnYM2151Reset();
+	NMK112Reset();
 
 	HiscoreReset();
 
@@ -809,7 +804,7 @@ static INT32 battlegInit()
 
 	{
 		SekInit(0, 0x68000);										// Allocate 68000
-	    SekOpen(0);
+		SekOpen(0);
 
 		// Map 68000 memory:
 		SekMapMemory(Rom01,			0x000000, 0x0FFFFF, MAP_ROM);	// CPU 0 ROM
@@ -848,6 +843,8 @@ static INT32 battlegInit()
 	BurnYM2151SetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 	MSM6295Init(0, 32000000 / 16 / 132, 1);
 	MSM6295SetRoute(0, 1.00, BURN_SND_ROUTE_BOTH);
+
+	NMK112_init(0, MSM6295ROM, NULL, 0x100000, 0); // only 1
 
 	nToaPalLen = nColCount;
 	ToaPalSrc = RamPal;

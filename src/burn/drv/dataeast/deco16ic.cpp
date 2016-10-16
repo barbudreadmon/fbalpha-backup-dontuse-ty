@@ -1,13 +1,8 @@
 /*
 TO DO!
 
-// why is mutant fight's scrolling off in title?
-// caveman ninja and joe & mac returns is also, in the ending. (savestate attachments in dev thread)
-// side effect: if I get the rowscroll working right, it breaks the ending-text in caveman ninja. o.O
-
 1   Double Wings                MBE     102     52              141             104
 */
-
 
 
 #include "tiles_generic.h"
@@ -26,8 +21,8 @@ static INT32 deco16_pf_bank[4];
 
 static INT32 deco16_pf_gfx_bank[4]; // (1/2) 8x8, 16x16, (2/3) 8x8, 16x16
 
-static UINT16 deco16_scroll_x[4][ 512]; // 512
-static UINT16 deco16_scroll_y[4][1024]; // 1024
+static UINT16 deco16_scroll_x[4][ 512]; // 512  (rowscroll)
+static UINT16 deco16_scroll_y[4][1024]; // 1024 (colscroll)
 
 static INT32 deco16_scroll_rows[4];
 static INT32 deco16_scroll_cols[4];
@@ -37,6 +32,9 @@ static INT32 deco16_enable_colscroll[4];
 
 static INT32 deco16_global_x_offset = 0;
 static INT32 deco16_global_y_offset = 0;
+
+static INT32 deco16_yscroll[4]; // scroll y register
+static INT32 deco16_xscroll[4]; // scroll x register
 
 static INT32 deco16_scroll_offset[4][2][2]; // tmap, size, x, y
 
@@ -56,6 +54,8 @@ UINT8 *deco16_prio_map;
 UINT8 *deco16_sprite_prio_map; // boogwing
 
 INT32 deco16_vblank;
+
+INT32 deco16_music_tempofix; // set after deco16SoundInit(), fixes tempo issues in darkseal, vaportrail, and cbuster
 
 void deco16ProtScan();
 void deco16ProtReset();
@@ -272,7 +272,7 @@ void deco16_draw_layer_by_line(INT32 draw_start, INT32 draw_end, INT32 tmap, UIN
 
 	for (INT32 y = draw_start; y < draw_end; y++)
 	{
-		INT32 xoff = deco16_scroll_x[tmap][((y-deco16_global_y_offset)&0x1ff)/deco16_scroll_rows[tmap]] & wmask;
+		INT32 xoff = deco16_scroll_x[tmap][((y + deco16_yscroll[tmap] + deco16_global_y_offset)&0x1ff)/deco16_scroll_rows[tmap]] & wmask;
 
 		for (INT32 x = 0; x < nScreenWidth + size; x+=size)
 		{
@@ -557,6 +557,9 @@ static void pf_update(INT32 tmap, INT32 scrollx, INT32 scrolly, UINT16 *rowscrol
 	deco16_enable_rowscroll[tmap] = 0;
 	deco16_enable_colscroll[tmap] = 0;
 
+	deco16_yscroll[tmap] = scrolly;
+	deco16_xscroll[tmap] = scrollx;
+
 	if ((control1 & 0x40) == 0x40 && rowscroll != NULL) // row scroll
 	{
 		INT32 size = deco16_layer_size_select[tmap] ? 16 : 8;
@@ -793,6 +796,8 @@ static void deco16_sound_write(UINT32 address, UINT8 data)
 		case 0x1fec00:
 		case 0x1fec01:
 #ifdef ENABLE_HUC6280
+			if (deco16_music_tempofix) return;
+
 			h6280_timer_w(address & 1, data);
 #endif
 		return;
@@ -909,6 +914,8 @@ void deco16SoundInit(UINT8 *rom, UINT8 *ram, INT32 huc_clock, INT32 ym2203, void
 		MSM6295Init(1, msmclk1 / 132, 1);
 		MSM6295SetRoute(1, msmvol1, BURN_SND_ROUTE_BOTH);
 	}
+
+	deco16_music_tempofix = 0;
 }
 
 void deco16SoundExit()
@@ -930,6 +937,7 @@ void deco16SoundExit()
 	deco16_sound_enable[3] = 0;
 
 	deco16_sound_cpuclock = 0;
+	deco16_music_tempofix = 0;
 }
 
 void deco16SoundUpdate(INT16 *buf, INT32 len)

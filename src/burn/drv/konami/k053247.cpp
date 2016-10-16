@@ -158,7 +158,7 @@ void K053247Write(INT32 offset, INT32 data)
 
 void K053247WriteRegsByte(INT32 offset, UINT8 data)
 {
-	UINT8 *regs = (UINT8*)K053247Regs;
+	UINT8 *regs = (UINT8*)&K053247Regs;
 
 	regs[(offset & 0x1f)^1] = data;
 }
@@ -170,12 +170,12 @@ void K053247WriteRegsWord(INT32 offset, UINT16 data)
 
 UINT16 K053247ReadRegs(INT32 offset)
 {
-	return K053247Regs[offset & 7];
+	return K053247Regs[offset & 0xf];
 }
 
 UINT16 K053246ReadRegs(INT32 offset)
 {
-	return K053246Regs[offset & 0xf];
+	return K053246Regs[offset & 7];
 }
 
 UINT8 K053246Read(INT32 offset)
@@ -541,7 +541,15 @@ static inline UINT32 shadow_blend(UINT32 d)
 
 static inline UINT32 highlight_blend(UINT32 d)
 {
-	return (((0xA857A857 + ((d & 0xff00ff) * 0x56)) & 0xff00ff00) + ((0x00A85700 + ((d & 0x00ff00) * 0x56)) & 0x00ff0000)) / 0x100;
+	INT32 r = ((d&0xff0000)+0x220000);
+	if (r > 0xff0000) r = 0xff0000;
+
+	INT32 g = ((d&0x00ff00)+0x002200);
+	if (g > 0x00ff00) g = 0x00ff00;
+
+	INT32 b = ((d&0x0000ff)+0x000022);
+	if (b > 0x0000ff) b = 0x0000ff;
+	return r|g|b;
 }
 
 #define GX_ZBUFW     512
@@ -580,14 +588,15 @@ void zdrawgfxzoom32GP(UINT32 code, UINT32 color, INT32 flipx, INT32 flipy, INT32
 	INT32 dst_skipx, dst_skipy, dst_x, dst_y, dst_lastx, dst_lasty;
 	INT32 src_pitch, dst_pitch;
 
-	INT32 highlight_enable = drawmode >> 4;// for fba
+	INT32 highlight_enable = (drawmode >> 4) && (K053247Flags & 2);// for fba
+	//INT32 highlight_enable = drawmode >> 4;// for fba
 	drawmode &= 0xf;
 
 	// cull illegal and transparent objects
 	if (!scalex || !scaley) return;
 
 	// find shadow pens and cull invisible shadows
-	granularity = shdpen = ((1 << nBpp) - 1);
+	granularity = shdpen = ((1 << nBpp) /*- 1*/);
 	shdpen--;
 
 	if (zcode >= 0)
@@ -1144,7 +1153,7 @@ void k053247_draw_single_sprite_gxcore(UINT8 *gx_objzbuf, UINT8 *gx_shdzbuf, INT
 		if (mirrorx) flipx = 0; // only applies to x mirror, proven
 		mirrory = temp & 0x8000;
 
-		INT32 objset1 = K053247ReadRegs(5);
+		INT32 objset1 = K053246ReadRegs(5);
 		// for Escape Kids (GX975)
 		if ( objset1 & 8 ) // Check only "Bit #3 is '1'?"
 		{

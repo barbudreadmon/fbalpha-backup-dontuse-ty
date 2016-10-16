@@ -226,7 +226,7 @@ void BurnSampleReset()
 		BurnSampleStop(i);
 
 		if (sample_ptr->flags & SAMPLE_AUTOLOOP) {
-			bprintf(0, _T("set loop #%X\n"), i);
+			//bprintf(0, _T("set loop #%X\n"), i);
 			BurnSampleSetLoop(i, true); // this sets the loop flag, from the driver.
 		}
 	}
@@ -258,7 +258,7 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 #endif
 	snprintf(szTempPath, sizeof(szTempPath), "%s%cfba%csamples%c", g_system_dir, slash, slash, slash);
 #else
-	sprintf(szTempPath, _TtoA(SAMPLE_DIRECTORY));
+ 	sprintf(szTempPath, _TtoA(SAMPLE_DIRECTORY));
 #endif
 
 	// test to see if file exists

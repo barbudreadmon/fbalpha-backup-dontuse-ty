@@ -8,7 +8,9 @@
 			background in lava level is too fast. (irq?)
 
 		martial champ
-			why are the sprite positions messed up? protection?
+		1: missing graphics in intro & title screens. On blank screens
+		   disable layer#2 to see what it should look like.
+		2: missing some sounds. (watch the first attract mode)
 
 	unkown bugs.
 		probably a lot! go ahead and fix it!
@@ -907,7 +909,7 @@ static void __fastcall metamrph_main_write_byte(UINT32 address, UINT8 data)
 	}
 
 	if ((address & 0xffffc0) == 0x25c000) {
-		UINT8 *prot = (UINT8*)prot_data;
+		UINT8 *prot = (UINT8*)&prot_data;
 		prot[(address & 0x3f) ^ 1] = data;
 		K055550_word_write(address, data, 0xff << ((address & 1) * 8));
 		return;
@@ -1227,7 +1229,7 @@ static void __fastcall martchmp_main_write_byte(UINT32 address, UINT8 data)
 	}
 
 	if ((address & 0xffffc0) == 0x40e000) {
-		UINT8 *prot = (UINT8*)prot_data;
+		UINT8 *prot = (UINT8*)&prot_data;
 		prot[(address & 0x3f) ^ 1] = data;
 		K053990_word_write(address, data, 0xff << ((address & 1) * 8));
 		return;
@@ -1503,7 +1505,7 @@ static void __fastcall dadandrn_main_write_byte(UINT32 address, UINT8 data)
 	}
 
 	if ((address & 0xffffc0) == 0x680000) {
-		UINT8 *prot = (UINT8*)prot_data;
+		UINT8 *prot = (UINT8*)&prot_data;
 		prot[(address & 0x3f) ^ 1] = data;
 		K055550_word_write(address, data, 0xff << ((address & 1) * 8));
 		return;
@@ -1978,7 +1980,7 @@ static INT32 MystwarrInit()
 	K056832SetLayerOffsets(2,  2-4, 0);
 	K056832SetLayerOffsets(3,  3-4, 0);
 
-	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, mystwarr_sprite_callback, 1);
+	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, mystwarr_sprite_callback, 3);
 	K053247SetSpriteOffset(-24-48, -16-24);
 	K053247SetBpp(5);
 
@@ -2193,7 +2195,7 @@ static INT32 ViostormInit()
 	K056832SetLayerOffsets(2,  2+1, 0);
 	K056832SetLayerOffsets(3,  3+1, 0);
 
-	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, metamrph_sprite_callback, 1);
+	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, metamrph_sprite_callback, 3);
 	K053247SetSpriteOffset(-62-40, -23-16);
 
 	K053250Init(0, DrvGfxROM2, DrvGfxROMExp2, 1); // doesn't exist on this hardware
@@ -2296,8 +2298,8 @@ static INT32 MartchmpInit()
 	K056832SetLayerOffsets(2,  2-4, 0);
 	K056832SetLayerOffsets(3,  3-4, 0);
 
-	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, martchmp_sprite_callback, 1);
-	K053247SetSpriteOffset(-23-58, -16-23);
+	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, martchmp_sprite_callback, 3);
+	K053247SetSpriteOffset((-23-58-9), (-16-23-14));
 	K053247SetBpp(5);
 
 	konamigx_mixer_init(0);
@@ -2327,7 +2329,6 @@ static INT32 MartchmpInit()
 
 	K054539Init(0, 48000, DrvSndROM, 0x400000);
 	K054539SetRoute(0, BURN_SND_K054539_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
-	K054539SetRoute(0, BURN_SND_K054539_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
 	K054539SetRoute(0, BURN_SND_K054539_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
 	K054539_set_gain(0, 0, 1.40);
 	K054539_set_gain(0, 1, 1.40);
@@ -2448,13 +2449,13 @@ static INT32 GaiapolisInit()
 	K056832SetLayerOffsets(0, -2, 0);
 	K056832SetLayerOffsets(1,  0, 0);
 	K056832SetLayerOffsets(2,  2, 0);
-	K056832SetLayerOffsets(3,  3, 0);
+	K056832SetLayerOffsets(3,  2, 0);
 
 	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, gaiapolis_sprite_callback, 1);
-	K053247SetSpriteOffset(-24-79, -16-24);
+	K053247SetSpriteOffset(7+(-24-79), -16-24);
 
 	konamigx_mixer_init(0);
-	K054338_invert_alpha(0); // otherwise alpha blended roz is too light
+//	K054338_invert_alpha(0); // otherwise alpha blended roz is too light - sept.2.2016 - this breaks the "elevator/going down" level
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
@@ -2790,7 +2791,7 @@ static INT32 DrvFrame()
 	SekNewFrame();
 	ZetNewFrame();
 
-	INT32 nInterleave = 60; //nBurnSoundLen / 4;
+	INT32 nInterleave = 60;
 	INT32 nSoundBufferPos = 0;
 	INT32 nCyclesTotal[2] = { 16000000 / 60, 8000000 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
@@ -2837,7 +2838,7 @@ static INT32 DrvFrame()
 				if (i == ((nInterleave *  23) / 256))
 					SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 
-				if (i == ((nInterleave * 247) / 256) && K053246_is_IRQ_enabled())
+				if (i == ((nInterleave *  47) / 256) && K053246_is_IRQ_enabled())
 					SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 			}
 		}
@@ -2854,7 +2855,7 @@ static INT32 DrvFrame()
 		nCyclesDone[1] += nCyclesSegment;
 
 		if ((i % (nInterleave / 8)) == ((nInterleave / 8) - 1)) {// && sound_nmi_enable && sound_control) { // iq_132
-			ZetNmi(); //ZetSetIRQLine(0x20, CPU_IRQSTATUS_ACK);
+			ZetNmi();
 		}
 
 		if (pBurnSoundOut) {
@@ -3396,23 +3397,23 @@ struct BurnDriver BurnDrvViostormj = {
 static struct BurnRomInfo metamrphRomDesc[] = {
 	{ "224eaa01.15h",	0x040000, 0x30962c2b, 1 }, //  0 maincpu
 	{ "224eaa02.15f",	0x040000, 0xe314330a, 1 }, //  1
-	{ "224a03",		0x080000, 0xa5bedb01, 1 }, //  2
-	{ "224a04",		0x080000, 0xada53ba4, 1 }, //  3
+	{ "224a03",			0x080000, 0xa5bedb01, 1 }, //  2
+	{ "224a04",			0x080000, 0xada53ba4, 1 }, //  3
 
-	{ "224a05",		0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
+	{ "224a05",			0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
 
-	{ "224a09",		0x100000, 0x1931afce, 3 }, //  5 gfx1
-	{ "224a08",		0x100000, 0xdc94d53a, 3 }, //  6
+	{ "224a09",			0x100000, 0x1931afce, 3 }, //  5 gfx1
+	{ "224a08",			0x100000, 0xdc94d53a, 3 }, //  6
 
-	{ "224a10",		0x200000, 0x161287f0, 4 }, //  7 gfx2
-	{ "224a11",		0x200000, 0xdf5960e1, 4 }, //  8
-	{ "224a12",		0x200000, 0xca72a4b3, 4 }, //  9
-	{ "224a13",		0x200000, 0x86b58feb, 4 }, // 10
+	{ "224a10",			0x200000, 0x161287f0, 4 }, //  7 gfx2
+	{ "224a11",			0x200000, 0xdf5960e1, 4 }, //  8
+	{ "224a12",			0x200000, 0xca72a4b3, 4 }, //  9
+	{ "224a13",			0x200000, 0x86b58feb, 4 }, // 10
 
-	{ "224a14",		0x040000, 0x3c79b404, 5 }, // 11 k053250_1
+	{ "224a14",			0x040000, 0x3c79b404, 5 }, // 11 k053250_1
 
-	{ "224a06",		0x200000, 0x972f6abe, 6 }, // 12 shared
-	{ "224a07",		0x100000, 0x61b2f97a, 6 }, // 13
+	{ "224a06",			0x200000, 0x972f6abe, 6 }, // 12 shared
+	{ "224a07",			0x100000, 0x61b2f97a, 6 }, // 13
 
 	{ "metamrph.nv",	0x000080, 0x2c51229a, 7 }, // 14 eeprom
 };
@@ -3431,28 +3432,110 @@ struct BurnDriver BurnDrvMetamrph = {
 };
 
 
+// Metamorphic Force (ver EAA - alternate)
+/* alternate set - possibly a bugfix version. Only 2 adjusted bytes causing a swap in commands */
+
+static struct BurnRomInfo metamrpheRomDesc[] = {
+	{ "3.15h",			0x040000, 0x8b9f1ba3, 1 }, //  0 maincpu
+	{ "224eaa02.15f",	0x040000, 0xe314330a, 1 }, //  1
+	{ "224a03",			0x080000, 0xa5bedb01, 1 }, //  2
+	{ "224a04",			0x080000, 0xada53ba4, 1 }, //  3
+
+	{ "224a05",			0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
+
+	{ "224a09",			0x100000, 0x1931afce, 3 }, //  5 gfx1
+	{ "224a08",			0x100000, 0xdc94d53a, 3 }, //  6
+
+	{ "224a10",			0x200000, 0x161287f0, 4 }, //  7 gfx2
+	{ "224a11",			0x200000, 0xdf5960e1, 4 }, //  8
+	{ "224a12",			0x200000, 0xca72a4b3, 4 }, //  9
+	{ "224a13",			0x200000, 0x86b58feb, 4 }, // 10
+
+	{ "224a14",			0x040000, 0x3c79b404, 5 }, // 11 k053250_1
+
+	{ "224a06",			0x200000, 0x972f6abe, 6 }, // 12 shared
+	{ "224a07",			0x100000, 0x61b2f97a, 6 }, // 13
+
+	{ "metamrph.nv",	0x000080, 0x2c51229a, 7 }, // 14 eeprom
+};
+
+STD_ROM_PICK(metamrphe)
+STD_ROM_FN(metamrphe)
+
+struct BurnDriver BurnDrvMetamrphe = {
+	"metamrphe", "metamrph", NULL, NULL, "1993",
+	"Metamorphic Force (ver EAA - alternate)\0", NULL, "Konami", "GX224",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT, 0,
+	NULL, metamrpheRomInfo, metamrpheRomName, NULL, NULL, MetamrphInputInfo, MetamrphDIPInfo,
+	MetamrphInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x0800,
+	288, 224, 4, 3
+};
+
+
+// Metamorphic Force (ver AAA)
+
+static struct BurnRomInfo metamrphaRomDesc[] = {
+	{ "224aaa01.15h",	0x040000, 0x12515518, 1 }, //  0 maincpu
+	{ "224aaa02.15f",	0x040000, 0x04ed41df, 1 }, //  1
+	{ "224a03",			0x080000, 0xa5bedb01, 1 }, //  2
+	{ "224a04",			0x080000, 0xada53ba4, 1 }, //  3
+
+	{ "224a05",			0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
+
+	{ "224a09",			0x100000, 0x1931afce, 3 }, //  5 gfx1
+	{ "224a08",			0x100000, 0xdc94d53a, 3 }, //  6
+
+	{ "224a10",			0x200000, 0x161287f0, 4 }, //  7 gfx2
+	{ "224a11",			0x200000, 0xdf5960e1, 4 }, //  8
+	{ "224a12",			0x200000, 0xca72a4b3, 4 }, //  9
+	{ "224a13",			0x200000, 0x86b58feb, 4 }, // 10
+
+	{ "224a14",			0x040000, 0x3c79b404, 5 }, // 11 k053250_1
+
+	{ "224a06",			0x200000, 0x972f6abe, 6 }, // 12 shared
+	{ "224a07",			0x100000, 0x61b2f97a, 6 }, // 13
+
+	// default eeprom to prevent game booting upside down with error
+	{ "metamrpha.nv",	0x000080, 0x6d34a4f2, 7 }, // 14 eeprom
+};
+
+STD_ROM_PICK(metamrpha)
+STD_ROM_FN(metamrpha)
+
+struct BurnDriver BurnDrvMetamrpha = {
+	"metamrpha", "metamrph", NULL, NULL, "1993",
+	"Metamorphic Force (ver AAA)\0", NULL, "Konami", "GX224",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT, 0,
+	NULL, metamrphaRomInfo, metamrphaRomName, NULL, NULL, MetamrphInputInfo, MetamrphDIPInfo,
+	MetamrphInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x0800,
+	288, 224, 4, 3
+};
+
+
 // Metamorphic Force (ver UAA)
 
 static struct BurnRomInfo metamrphuRomDesc[] = {
 	{ "224uaa01.15h",	0x040000, 0xe1d9b516, 1 }, //  0 maincpu
 	{ "224uaa02.15f",	0x040000, 0x289c926b, 1 }, //  1
-	{ "224a03",		0x080000, 0xa5bedb01, 1 }, //  2
-	{ "224a04",		0x080000, 0xada53ba4, 1 }, //  3
+	{ "224a03",			0x080000, 0xa5bedb01, 1 }, //  2
+	{ "224a04",			0x080000, 0xada53ba4, 1 }, //  3
 
-	{ "224a05",		0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
+	{ "224a05",			0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
 
-	{ "224a09",		0x100000, 0x1931afce, 3 }, //  5 gfx1
-	{ "224a08",		0x100000, 0xdc94d53a, 3 }, //  6
+	{ "224a09",			0x100000, 0x1931afce, 3 }, //  5 gfx1
+	{ "224a08",			0x100000, 0xdc94d53a, 3 }, //  6
 
-	{ "224a10",		0x200000, 0x161287f0, 4 }, //  7 gfx2
-	{ "224a11",		0x200000, 0xdf5960e1, 4 }, //  8
-	{ "224a12",		0x200000, 0xca72a4b3, 4 }, //  9
-	{ "224a13",		0x200000, 0x86b58feb, 4 }, // 10
+	{ "224a10",			0x200000, 0x161287f0, 4 }, //  7 gfx2
+	{ "224a11",			0x200000, 0xdf5960e1, 4 }, //  8
+	{ "224a12",			0x200000, 0xca72a4b3, 4 }, //  9
+	{ "224a13",			0x200000, 0x86b58feb, 4 }, // 10
 
-	{ "224a14",		0x040000, 0x3c79b404, 5 }, // 11 k053250_1
+	{ "224a14",			0x040000, 0x3c79b404, 5 }, // 11 k053250_1
 
-	{ "224a06",		0x200000, 0x972f6abe, 6 }, // 12 shared
-	{ "224a07",		0x100000, 0x61b2f97a, 6 }, // 13
+	{ "224a06",			0x200000, 0x972f6abe, 6 }, // 12 shared
+	{ "224a07",			0x100000, 0x61b2f97a, 6 }, // 13
 
 	{ "metamrphu.nv",	0x000080, 0x1af2f855, 7 }, // 14 eeprom
 };
@@ -3476,23 +3559,23 @@ struct BurnDriver BurnDrvMetamrphu = {
 static struct BurnRomInfo metamrphjRomDesc[] = {
 	{ "224jaa01.15h",	0x040000, 0x558d2602, 1 }, //  0 maincpu
 	{ "224jaa02.15f",	0x040000, 0x9b252ace, 1 }, //  1
-	{ "224a03",		0x080000, 0xa5bedb01, 1 }, //  2
-	{ "224a04",		0x080000, 0xada53ba4, 1 }, //  3
+	{ "224a03",			0x080000, 0xa5bedb01, 1 }, //  2
+	{ "224a04",			0x080000, 0xada53ba4, 1 }, //  3
 
-	{ "224a05",		0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
+	{ "224a05",			0x040000, 0x4b4c985c, 2 }, //  4 soundcpu
 
-	{ "224a09",		0x100000, 0x1931afce, 3 }, //  5 gfx1
-	{ "224a08",		0x100000, 0xdc94d53a, 3 }, //  6
+	{ "224a09",			0x100000, 0x1931afce, 3 }, //  5 gfx1
+	{ "224a08",			0x100000, 0xdc94d53a, 3 }, //  6
 
-	{ "224a10",		0x200000, 0x161287f0, 4 }, //  7 gfx2
-	{ "224a11",		0x200000, 0xdf5960e1, 4 }, //  8
-	{ "224a12",		0x200000, 0xca72a4b3, 4 }, //  9
-	{ "224a13",		0x200000, 0x86b58feb, 4 }, // 10
+	{ "224a10",			0x200000, 0x161287f0, 4 }, //  7 gfx2
+	{ "224a11",			0x200000, 0xdf5960e1, 4 }, //  8
+	{ "224a12",			0x200000, 0xca72a4b3, 4 }, //  9
+	{ "224a13",			0x200000, 0x86b58feb, 4 }, // 10
 
-	{ "224a14",		0x040000, 0x3c79b404, 5 }, // 11 k053250_1
+	{ "224a14",			0x040000, 0x3c79b404, 5 }, // 11 k053250_1
 
-	{ "224a06",		0x200000, 0x972f6abe, 6 }, // 12 shared
-	{ "224a07",		0x100000, 0x61b2f97a, 6 }, // 13
+	{ "224a06",			0x200000, 0x972f6abe, 6 }, // 12 shared
+	{ "224a07",			0x100000, 0x61b2f97a, 6 }, // 13
 
 	{ "metamrphj.nv",	0x000080, 0x30497478, 7 }, // 14 eeprom
 };
@@ -3541,11 +3624,11 @@ static struct BurnRomInfo mtlchampRomDesc[] = {
 STD_ROM_PICK(mtlchamp)
 STD_ROM_FN(mtlchamp)
 
-struct BurnDriverD BurnDrvMtlchamp = {
+struct BurnDriver BurnDrvMtlchamp = {
 	"mtlchamp", NULL, NULL, NULL, "1993",
-	"Martial Champion (ver EAB)\0", NULL, "Konami", "GX234",
+	"Martial Champion (ver EAB)\0", "Missing Graphics on Intro/Title screens", "Konami", "GX234",
 	NULL, NULL, NULL, NULL,
-	0, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, mtlchampRomInfo, mtlchampRomName, NULL, NULL, MartchmpInputInfo, MartchmpDIPInfo,
 	MartchmpInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -3582,11 +3665,11 @@ static struct BurnRomInfo mtlchamp1RomDesc[] = {
 STD_ROM_PICK(mtlchamp1)
 STD_ROM_FN(mtlchamp1)
 
-struct BurnDriverD BurnDrvMtlchamp1 = {
+struct BurnDriver BurnDrvMtlchamp1 = {
 	"mtlchamp1", "mtlchamp", NULL, NULL, "1993",
-	"Martial Champion (ver EAA)\0", NULL, "Konami", "GX234",
+	"Martial Champion (ver EAA)\0", "Missing Graphics on Intro/Title screens", "Konami", "GX234",
 	NULL, NULL, NULL, NULL,
-	BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, mtlchamp1RomInfo, mtlchamp1RomName, NULL, NULL, MartchmpInputInfo, MartchmpDIPInfo,
 	MartchmpInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -3623,11 +3706,11 @@ static struct BurnRomInfo mtlchampaRomDesc[] = {
 STD_ROM_PICK(mtlchampa)
 STD_ROM_FN(mtlchampa)
 
-struct BurnDriverD BurnDrvMtlchampa = {
+struct BurnDriver BurnDrvMtlchampa = {
 	"mtlchampa", "mtlchamp", NULL, NULL, "1993",
-	"Martial Champion (ver AAA)\0", NULL, "Konami", "GX234",
+	"Martial Champion (ver AAA)\0", "Missing Graphics on Intro/Title screens", "Konami", "GX234",
 	NULL, NULL, NULL, NULL,
-	BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, mtlchampaRomInfo, mtlchampaRomName, NULL, NULL, MartchmpInputInfo, MartchmpDIPInfo,
 	MartchmpInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -3664,11 +3747,11 @@ static struct BurnRomInfo mtlchampjRomDesc[] = {
 STD_ROM_PICK(mtlchampj)
 STD_ROM_FN(mtlchampj)
 
-struct BurnDriverD BurnDrvMtlchampj = {
+struct BurnDriver BurnDrvMtlchampj = {
 	"mtlchampj", "mtlchamp", NULL, NULL, "1993",
-	"Martial Champion (ver JAA)\0", NULL, "Konami", "GX234",
+	"Martial Champion (ver JAA)\0", "Missing Graphics on Intro/Title screens", "Konami", "GX234",
 	NULL, NULL, NULL, NULL,
-	BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, mtlchampjRomInfo, mtlchampjRomName, NULL, NULL, MartchmpInputInfo, MartchmpDIPInfo,
 	MartchmpInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -3705,11 +3788,11 @@ static struct BurnRomInfo mtlchampuRomDesc[] = {
 STD_ROM_PICK(mtlchampu)
 STD_ROM_FN(mtlchampu)
 
-struct BurnDriverD BurnDrvMtlchampu = {
+struct BurnDriver BurnDrvMtlchampu = {
 	"mtlchampu", "mtlchamp", NULL, NULL, "1993",
-	"Martial Champion (ver UAE)\0", NULL, "Konami", "GX234",
+	"Martial Champion (ver UAE)\0", "Missing Graphics on Intro/Title screens", "Konami", "GX234",
 	NULL, NULL, NULL, NULL,
-	BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, mtlchampuRomInfo, mtlchampuRomName, NULL, NULL, MartchmpInputInfo, MartchmpDIPInfo,
 	MartchmpInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
@@ -3746,11 +3829,11 @@ static struct BurnRomInfo mtlchampu1RomDesc[] = {
 STD_ROM_PICK(mtlchampu1)
 STD_ROM_FN(mtlchampu1)
 
-struct BurnDriverD BurnDrvMtlchampu1 = {
+struct BurnDriver BurnDrvMtlchampu1 = {
 	"mtlchampu1", "mtlchamp", NULL, NULL, "1993",
-	"Martial Champion (ver UAD)\0", NULL, "Konami", "GX234",
+	"Martial Champion (ver UAD)\0", "Missing Graphics on Intro/Title screens", "Konami", "GX234",
 	NULL, NULL, NULL, NULL,
-	BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_VSFIGHT, 0,
 	NULL, mtlchampu1RomInfo, mtlchampu1RomName, NULL, NULL, MartchmpInputInfo, MartchmpDIPInfo,
 	MartchmpInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3

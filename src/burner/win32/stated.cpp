@@ -1,6 +1,7 @@
 // State dialog module
 #include "burner.h"
 
+extern bool bReplayDontClose;
 int bDrvSaveAll = 0;
 
 static void MakeOfn(TCHAR* pszFilter)
@@ -23,7 +24,7 @@ static void MakeOfn(TCHAR* pszFilter)
 // The automatic save
 int StatedAuto(int bSave)
 {
-	static TCHAR szName[32] = _T("");
+	static TCHAR szName[MAX_PATH] = _T("");
 	int nRet;
 
 	_stprintf(szName, _T("config/games/%s.fs"), BurnDrvGetText(DRV_NAME));
@@ -59,6 +60,19 @@ int StatedLoad(int nSlot)
 	TCHAR szFilter[1024];
 	int nRet;
 	int bOldPause;
+
+	// if rewinding during playback, and readonly is not set,
+	// then transition from decoding to encoding (recording)
+	if(!bReplayReadOnly && nReplayStatus == 2)
+	{
+		nReplayStatus = 1;
+	}
+	if(bReplayReadOnly && nReplayStatus == 1)
+	{
+		bReplayDontClose = 1;
+		StopReplay();
+		nReplayStatus = 2;
+	}
 
 	if (nSlot) {
 		CreateStateName(nSlot);

@@ -181,6 +181,11 @@ void m6502_set_context (void *src)
 	}
 }
 
+void m6502_set_irq_hold()
+{
+	m6502.hold_irq = 1;
+}
+
 M6502_INLINE void m6502_take_irq(void)
 {
 	if( !(P & F_I) )
@@ -195,10 +200,23 @@ M6502_INLINE void m6502_take_irq(void)
 		PCH = RDMEM(EAD+1);
 //		LOG(("M6502#%d takes IRQ ($%04x)\n", cpu_getactivecpu(), PCD));
 		/* call back the cpuintrf to let it clear the line */
+
+		if (m6502.hold_irq) {
+			m6502.hold_irq = 0;
+			m6502.irq_state = M6502_CLEAR_LINE;
+		}
+
 		if (m6502.irq_callback) (*m6502.irq_callback)(0);
 		change_pc(PCD);
 	}
 	m6502.pending_irq = 0;
+}
+
+int m6502_releaseslice()
+{
+	m6502_ICount = 0;
+
+	return 0;
 }
 
 int m6502_execute(int cycles)
@@ -302,6 +320,11 @@ void m6502_set_irq_line(int irqline, int state)
 UINT32 m6502_get_pc()
 {
 	return m6502.pc.d;
+}
+
+UINT32 m6502_get_prev_pc()
+{
+	return m6502.ppc.d;
 }
 
 /****************************************************************************
@@ -418,6 +441,12 @@ M6502_INLINE void m65c02_take_irq(void)
 		//LOG(("M65c02#%d takes IRQ ($%04x)\n", cpu_getactivecpu(), PCD));
 		/* call back the cpuintrf to let it clear the line */
 		if (m6502.irq_callback) (*m6502.irq_callback)(0);
+
+		if (m6502.hold_irq) {
+			m6502.hold_irq = 0;
+			m6502.irq_state = M6502_CLEAR_LINE;
+		}
+
 		change_pc(PCD);
 	}
 	m6502.pending_irq = 0;
@@ -548,6 +577,12 @@ M6502_INLINE void deco16_take_irq(void)
 		//LOG(("M6502#%d takes IRQ ($%04x)\n", cpu_getactivecpu(), PCD));
 		/* call back the cpuintrf to let it clear the line */
 		if (m6502.irq_callback) (*m6502.irq_callback)(0);
+
+		if (m6502.hold_irq) {
+			m6502.hold_irq = 0;
+			m6502.irq_state = M6502_CLEAR_LINE;
+		}
+
 		change_pc(PCD);
 	}
 	m6502.pending_irq = 0;

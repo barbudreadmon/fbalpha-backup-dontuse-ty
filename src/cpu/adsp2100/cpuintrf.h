@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #ifndef INLINE
-#define INLINE inline
+ #define INLINE inline
 #endif
 
 #define logerror(...)

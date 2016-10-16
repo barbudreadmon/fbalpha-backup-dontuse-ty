@@ -12,6 +12,8 @@ static INT32 OldSteer; // Hack to centre the steering in SCI
 static INT32 SciSpriteFrame;
 static INT32 TaitoZINT6timer = 0;
 
+static UINT8 gearshifter; // chasehq, contcirc, sci shifter toggle
+
 static double TaitoZYM2610Route1MasterVol;
 static double TaitoZYM2610Route2MasterVol;
 
@@ -25,7 +27,9 @@ static void RacingbDraw();
 static void SciDraw();
 static void SpacegunDraw();
 
+#ifdef BUILD_A68K
 static bool bUseAsm68KCoreOldValue = false;
+#endif
 
 #define A(a, b, c, d) {a, b, (UINT8*)(c), d}
 
@@ -333,6 +337,20 @@ static void BsharkMakeInputs()
 	if (TC0220IOCInputPort2[7]) TC0220IOCInput[2] -= 0x80;
 }
 
+static UINT8 shift_update(UINT8 shifter_input) // chasehq, contcirc, sci
+{
+	{ // gear shifter stuff
+		static UINT8 prevshift = 0;
+
+		if (prevshift != shifter_input && shifter_input) {
+			gearshifter = !gearshifter;
+		}
+
+		prevshift = shifter_input;
+	}
+	return (gearshifter) ? 0x00 : 0x10;
+}
+
 static void ChasehqMakeInputs()
 {
 	// Reset Inputs
@@ -353,7 +371,7 @@ static void ChasehqMakeInputs()
 	if (TC0220IOCInputPort1[1]) TC0220IOCInput[1] -= 0x02;
 	if (TC0220IOCInputPort1[2]) TC0220IOCInput[1] -= 0x04;
 	if (TC0220IOCInputPort1[3]) TC0220IOCInput[1] -= 0x08;
-	if (TC0220IOCInputPort1[4]) TC0220IOCInput[1] |= 0x10;
+	TC0220IOCInput[1] |= shift_update(TC0220IOCInputPort1[4]);
 	if (TC0220IOCInputPort1[5]) TC0220IOCInput[1] -= 0x20;
 	if (TC0220IOCInputPort1[6]) TC0220IOCInput[1] -= 0x40;
 	if (TC0220IOCInputPort1[7]) TC0220IOCInput[1] -= 0x80;
@@ -379,13 +397,13 @@ static void ContcircMakeInputs()
 	if (TC0220IOCInputPort1[1]) TC0220IOCInput[1] -= 0x02;
 	if (TC0220IOCInputPort1[2]) TC0220IOCInput[1] -= 0x04;
 	if (TC0220IOCInputPort1[3]) TC0220IOCInput[1] -= 0x08;
-	if (TC0220IOCInputPort1[4]) TC0220IOCInput[1] |= 0x10;
+	TC0220IOCInput[1] |= shift_update(TC0220IOCInputPort1[4]);
 	if (TC0220IOCInputPort1[5]) TC0220IOCInput[1] |= 0x20;
 	if (TC0220IOCInputPort1[6]) TC0220IOCInput[1] |= 0x40;
 	if (TC0220IOCInputPort1[7]) TC0220IOCInput[1] |= 0x80;
 }
 
-static void DblaxleMakeInputs()
+static void DblaxleMakeInputs() // and racingb
 {
 	// Reset Inputs
 	TC0510NIOInput[0] = 0xff;
@@ -393,7 +411,7 @@ static void DblaxleMakeInputs()
 	TC0510NIOInput[2] = 0xff;
 
 	if (TC0510NIOInputPort0[0]) TC0510NIOInput[0] -= 0x01;
-	if (TC0510NIOInputPort0[1]) TC0510NIOInput[0] -= 0x02;
+	TC0510NIOInput[0] -= shift_update(TC0510NIOInputPort0[1]) ? 0x02 : 0x00;
 	if (TC0510NIOInputPort0[2]) TC0510NIOInput[0] -= 0x04;
 	if (TC0510NIOInputPort0[3]) TC0510NIOInput[0] -= 0x08;
 	if (TC0510NIOInputPort0[4]) TC0510NIOInput[0] -= 0x10;
@@ -483,7 +501,7 @@ static void SciMakeInputs()
 	if (TC0220IOCInputPort1[1]) TC0220IOCInput[1] -= 0x02;
 	if (TC0220IOCInputPort1[2]) TC0220IOCInput[1] -= 0x04;
 	if (TC0220IOCInputPort1[3]) TC0220IOCInput[1] -= 0x08;
-	if (TC0220IOCInputPort1[4]) TC0220IOCInput[1] |= 0x10;
+	TC0220IOCInput[1] |= shift_update(TC0220IOCInputPort1[4]);
 	if (TC0220IOCInputPort1[5]) TC0220IOCInput[1] -= 0x20;
 	if (TC0220IOCInputPort1[6]) TC0220IOCInput[1] -= 0x40;
 	if (TC0220IOCInputPort1[7]) TC0220IOCInput[1] -= 0x80;
@@ -3292,6 +3310,8 @@ static INT32 TaitoZDoReset()
 
 	SciSpriteFrame = 0;
 	OldSteer = 0;
+
+	gearshifter = 0;
 	
 	return 0;
 }
@@ -4791,6 +4811,7 @@ static void TaitoZZ80Init()
 	TaitoNumZ80s = 1;
 }
 
+#ifdef BUILD_A68K
 static void SwitchToMusashi()
 {
 	if (bBurnUseASMCPUEmulation) {
@@ -4801,6 +4822,7 @@ static void SwitchToMusashi()
 		bBurnUseASMCPUEmulation = false;
 	}
 }
+#endif
 
 static INT32 AquajackInit()
 {
@@ -4848,7 +4870,9 @@ static INT32 AquajackInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 	
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -4943,7 +4967,9 @@ static INT32 BsharkInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 	
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 	
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5045,7 +5071,9 @@ static INT32 ChasehqInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 	
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5140,7 +5168,9 @@ static INT32 ContcircInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 	
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5170,8 +5200,8 @@ static INT32 ContcircInit()
 	
 	BurnYM2610Init(16000000 / 2, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, &TaitoZFMIRQHandler, TaitoZSynchroniseStream, TaitoZGetTime, 0);
 	BurnTimerAttachZet(16000000 / 4);
-	BurnYM2610SetLeftVolume(BURN_SND_YM2610_AY8910_ROUTE, 0.20);
-	BurnYM2610SetRightVolume(BURN_SND_YM2610_AY8910_ROUTE, 0.20);
+	BurnYM2610SetLeftVolume(BURN_SND_YM2610_AY8910_ROUTE, 0.18);
+	BurnYM2610SetRightVolume(BURN_SND_YM2610_AY8910_ROUTE, 0.18);
 	TaitoZYM2610Route1MasterVol = 2.00;
 	TaitoZYM2610Route2MasterVol = 2.00;
 	bYM2610UseSeperateVolumes = 1;
@@ -5234,7 +5264,9 @@ static INT32 DblaxleInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 	
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 	
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5333,8 +5365,10 @@ static INT32 EnforceInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 
+#ifdef BUILD_A68K
 	SwitchToMusashi();
-	
+#endif
+
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
 	SekOpen(0);
@@ -5440,7 +5474,9 @@ static INT32 NightstrInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5534,7 +5570,9 @@ static INT32 RacingbInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 	
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 	
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5633,7 +5671,9 @@ static INT32 SciInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5725,7 +5765,9 @@ static INT32 SpacegunInit()
 	
 	if (TaitoLoadRoms(1)) return 1;
 
+#ifdef BUILD_A68K
 	SwitchToMusashi();
+#endif
 
 	// Setup the 68000 emulation
 	SekInit(0, 0x68000);
@@ -5787,6 +5829,7 @@ static INT32 TaitoZExit()
 	Sci = 0;
 	TaitoZINT6timer = 0;
 	
+#ifdef BUILD_A68K
 	// Switch back CPU core if needed
 	if (bUseAsm68KCoreOldValue) {
 #if 1 && defined FBA_DEBUG
@@ -5795,6 +5838,7 @@ static INT32 TaitoZExit()
 		bUseAsm68KCoreOldValue = false;
 		bBurnUseASMCPUEmulation = true;
 	}
+#endif
 
 	return 0;
 }
@@ -6693,6 +6737,7 @@ static INT32 TaitoZScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(TaitoRoadPalBank);
 		SCAN_VAR(nTaitoCyclesDone);
 		SCAN_VAR(nTaitoCyclesSegment);
+		SCAN_VAR(gearshifter);
 	}
 	
 	if (nAction & ACB_WRITE) {
@@ -6839,7 +6884,7 @@ struct BurnDriver BurnDrvContcircu = {
 
 struct BurnDriver BurnDrvContcircua = {
 	"contcircua", "contcirc", NULL, NULL, "1987",
-	"Continental Circus (US set 2)\0", NULL, "Taito America Corporation", "Taito-Z",
+	"Continental Circus (US set 2)\0", "3D Effect cannot be disabled, use US Set 1 instead!", "Taito America Corporation", "Taito-Z",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_TAITOZ, GBF_RACING, 0,
 	NULL, ContcircuaRomInfo, ContcircuaRomName, NULL, NULL, ContcircInputInfo, ContcircjDIPInfo,
@@ -6849,7 +6894,7 @@ struct BurnDriver BurnDrvContcircua = {
 
 struct BurnDriver BurnDrvContcircj = {
 	"contcircj", "contcirc", NULL, NULL, "1987",
-	"Continental Circus (Japan)\0", NULL, "Taito Corporation", "Taito-Z",
+	"Continental Circus (Japan)\0", "3D Effect cannot be disabled, use World romset instead!", "Taito Corporation", "Taito-Z",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_TAITOZ, GBF_RACING, 0,
 	NULL, ContcircjRomInfo, ContcircjRomName, NULL, NULL, ContcircInputInfo, ContcircjDIPInfo,

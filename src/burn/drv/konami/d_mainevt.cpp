@@ -1,8 +1,6 @@
 // FB Alpha The Main Event / Devastators driver module
 // Based on MAME driver by Bryan McPhail
 
-// Why is The Main Event messed up? Very strange...
-
 #include "tiles_generic.h"
 #include "z80_intf.h"
 #include "hd6309_intf.h"
@@ -581,7 +579,7 @@ UINT8 __fastcall mainevt_sound_read(UINT16 address)
 	return 0;
 }
 
-static void K052109Callback(INT32 layer, INT32 , INT32 *code, INT32 *color, INT32 *flipx, INT32 *priority)
+static void K052109Callback(INT32 layer, INT32 /*bank*/, INT32 *code, INT32 *color, INT32 *flipx, INT32 *priority)
 {
 	INT32 colorbase[3] = { 0, 8, 4 };
 
@@ -625,6 +623,7 @@ static INT32 DrvDoReset()
 
 	HD6309Open(0);
 	HD6309Reset();
+	bankswitch(0);
 	HD6309Close();
 
 	ZetOpen(0);
@@ -707,8 +706,8 @@ static INT32 DrvInit(INT32 type)
 		if (BurnLoadRom(DrvSndROM1 + 0x020000,  9, 1)) return 1;
 		memcpy (DrvSndROM1, DrvSndROM1 + 0x20000, 0x20000);
 
-		K052109GfxDecode(DrvGfxROM0, DrvGfxROMExp0, 0x040000);
-		K051960GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x080000);
+		K052109GfxDecode(DrvGfxROM0, DrvGfxROMExp0, 0x020000 << nGame);
+		K051960GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x100000);
 	}
 
 	HD6309Init(0);
@@ -966,7 +965,7 @@ struct BurnDriverD BurnDrvMainevt = {
 	"mainevt", NULL, NULL, NULL, "1988",
 	"The Main Event (4 Players ver. Y)\0", NULL, "Konami", "GX799",
 	NULL, NULL, NULL, NULL,
-	0, 4, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING, 4, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
 	NULL, mainevtRomInfo, mainevtRomName, NULL, NULL, MainevtInputInfo, MainevtDIPInfo,
 	mainevtInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	288, 224, 4, 3
@@ -1002,7 +1001,7 @@ struct BurnDriverD BurnDrvMainevto = {
 	"mainevto", "mainevt", NULL, NULL, "1988",
 	"The Main Event (4 Players ver. F)\0", NULL, "Konami", "GX799",
 	NULL, NULL, NULL, NULL,
-	BDF_CLONE, 4, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
 	NULL, mainevtoRomInfo, mainevtoRomName, NULL, NULL, MainevtInputInfo, MainevtDIPInfo,
 	mainevtInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	288, 224, 4, 3
@@ -1038,7 +1037,7 @@ struct BurnDriverD BurnDrvMainevt2p = {
 	"mainevt2p", "mainevt", NULL, NULL, "1988",
 	"The Main Event (2 Players ver. X)\0", NULL, "Konami", "GX799",
 	NULL, NULL, NULL, NULL,
-	BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
 	NULL, mainevt2pRomInfo, mainevt2pRomName, NULL, NULL, Mainevt2pInputInfo, Mainevt2pDIPInfo,
 	mainevtInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	288, 224, 4, 3
@@ -1074,7 +1073,7 @@ struct BurnDriverD BurnDrvRingohja = {
 	"ringohja", "mainevt", NULL, NULL, "1988",
 	"Ring no Ohja (Japan 2 Players ver. N)\0", NULL, "Konami", "GX799",
 	L"\u30EA\u30F3\u30B0\u306E \u738B\u8005 (Japan 2 Players ver. N)\0Ring no Ohja\0", NULL, NULL, NULL,
-	BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
 	NULL, ringohjaRomInfo, ringohjaRomName, NULL, NULL, Mainevt2pInputInfo, Mainevt2pDIPInfo,
 	mainevtInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	288, 224, 4, 3

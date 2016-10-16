@@ -28,6 +28,7 @@ static INT32 nCurrentCPU;
 static INT32 nCyclesDone[2];
 static INT32 nCyclesTotal[2];
 static INT32 nCyclesSegment;
+static INT32 nCyclesExtra;
 
 static struct BurnInputInfo guwangeInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL, DrvJoy2 + 0,	"p1 coin"},
@@ -286,6 +287,7 @@ static INT32 DrvDoReset()
 	nUnknownIRQ = 1;
 
 	nIRQPending = 0;
+	nCyclesExtra = 0;
 
 	HiscoreReset();
 
@@ -391,7 +393,8 @@ static INT32 DrvFrame()
 
 		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
 		if (!CheckSleep(nCurrentCPU)) {									// See if this CPU is busywaiting
-			nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
+			nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment+nCyclesExtra);
+			nCyclesExtra = 0;
 		} else {
 			nCyclesDone[nCurrentCPU] += SekIdle(nCyclesSegment);
 		}
@@ -409,6 +412,7 @@ static INT32 DrvFrame()
 			}
 		}
 	}
+	nCyclesExtra = SekTotalCycles() - nCyclesTotal[0];
 
 	SekClose();
 
@@ -479,7 +483,10 @@ static INT32 LoadRoms()
 	BurnLoadRom(CaveSpriteROM + 0x1000001, 5, 2);
 	NibbleSwap3(CaveSpriteROM, 0xC00000);
 
-#if 1
+#if 0
+	// I don't think this is needed anymore, dink aug 14 2016.
+	// note: if enabled-this causes the screen fade-in effect after starting
+	// a game @ the character selection screen to display garbage sprite data.
 	for (INT32 i = 0; i < 0x100000; i++) {
 		UINT16 nValue = rand() & 0x0101;
 		if (nValue & 0x0001) {

@@ -286,6 +286,7 @@ void MenuRemoveTheme();
 
 // sel.cpp
 extern int nLoadMenuShowX;
+extern int nLoadMenuShowY;
 extern int nLoadMenuBoardTypeFilter;
 extern int nLoadMenuGenreFilter;
 extern int nLoadMenuFamilyFilter;
@@ -410,11 +411,15 @@ int KailleraGetInput();
 
 // replay.cpp
 extern int nReplayStatus;
+extern bool bReplayReadOnly;
+extern bool bReplayFrameCounterDisplay;
 int RecordInput();
 int ReplayInput();
 int StartRecord();
 int StartReplay(const TCHAR* szFileName = NULL);
 void StopReplay();
+int FreezeInput(unsigned char** buf, int* size);
+int UnfreezeInput(const unsigned char* buf, int size);
 
 // memcard.cpp
 extern int nMemoryCardStatus;						// & 1 = file selected, & 2 = inserted

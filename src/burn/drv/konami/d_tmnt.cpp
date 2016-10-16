@@ -1119,6 +1119,35 @@ static struct BurnRomInfo TmntuaRomDesc[] = {
 STD_ROM_PICK(Tmntua)
 STD_ROM_FN(Tmntua)
 
+static struct BurnRomInfo TmntubRomDesc[] = {
+	{ "963-h23.j17",        0x020000, 0x718086e1, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
+	{ "963-h24.k17",        0x020000, 0x2f7d66e1, BRF_ESS | BRF_PRG }, //  1
+	{ "963-h21.j15",        0x010000, 0x1944641e, BRF_ESS | BRF_PRG }, //  2
+	{ "963-h22.k15",        0x010000, 0x50ce5512, BRF_ESS | BRF_PRG }, //  3
+	
+	{ "963e20.g13",         0x008000, 0x1692a6d6, BRF_ESS | BRF_PRG }, //  4	Z80 Program 
+	
+	{ "963a28.h27",         0x080000, 0xdb4769a8, BRF_GRA },	       //  5	Tiles
+	{ "963a29.k27",         0x080000, 0x8069cd2e, BRF_GRA },	       //  6
+	
+	{ "963a17.h4",          0x080000, 0xb5239a44, BRF_GRA },	       //  7	Sprites
+	{ "963a18.h6",          0x080000, 0xdd51adef, BRF_GRA },	       //  8
+	{ "963a15.k4",          0x080000, 0x1f324eed, BRF_GRA },	       //  9
+	{ "963a16.k6",          0x080000, 0xd4bd9984, BRF_GRA },	       // 10
+	
+	{ "963a30.g7",          0x000100, 0xabd82680, BRF_GRA },	       // 11	PROMs
+	{ "963a31.g19",         0x000100, 0xf8004a1c, BRF_GRA },	       // 12
+	
+	{ "963a26.c13",         0x020000, 0xe2ac3063, BRF_SND },	       // 13	K007232 Samples
+	
+	{ "963a27.d18",         0x020000, 0x2dfd674b, BRF_SND },	       // 14	UP7759C Samples
+	
+	{ "963a25.d5",          0x080000, 0xfca078c7, BRF_SND },	       // 15	Title Music Sample
+};
+
+STD_ROM_PICK(Tmntub)
+STD_ROM_FN(Tmntub)
+
 static struct BurnRomInfo TmhtRomDesc[] = {
 	{ "963-f23.j17",        0x020000, 0x9cb5e461, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
 	{ "963-f24.k17",        0x020000, 0x2d902fab, BRF_ESS | BRF_PRG }, //  1
@@ -1234,6 +1263,35 @@ static struct BurnRomInfo TmntjRomDesc[] = {
 
 STD_ROM_PICK(Tmntj)
 STD_ROM_FN(Tmntj)
+
+static struct BurnRomInfo TmntaRomDesc[] = {
+	{ "tmnt j17.bin",       0x020000, 0x00819687, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
+	{ "tmnt k17.bin",       0x020000, 0x6930e085, BRF_ESS | BRF_PRG }, //  1
+	{ "tmnt j15.bin",       0x010000, 0xfd1e2e01, BRF_ESS | BRF_PRG }, //  2
+	{ "tmnt k15.bin",       0x010000, 0xb01eea79, BRF_ESS | BRF_PRG }, //  3
+	
+	{ "963e20.g13",         0x008000, 0x1692a6d6, BRF_ESS | BRF_PRG }, //  4	Z80 Program 
+	
+	{ "963a28.h27",         0x080000, 0xdb4769a8, BRF_GRA },	       //  5	Tiles
+	{ "963a29.k27",         0x080000, 0x8069cd2e, BRF_GRA },	       //  6
+	
+	{ "963a17.h4",          0x080000, 0xb5239a44, BRF_GRA },	       //  7	Sprites
+	{ "963a18.h6",          0x080000, 0xdd51adef, BRF_GRA },	       //  8
+	{ "963a15.k4",          0x080000, 0x1f324eed, BRF_GRA },	       //  9
+	{ "963a16.k6",          0x080000, 0xd4bd9984, BRF_GRA },	       // 10
+	
+	{ "963a30.g7",          0x000100, 0xabd82680, BRF_GRA },	       // 11	PROMs
+	{ "963a31.g19",         0x000100, 0xf8004a1c, BRF_GRA },	       // 12
+	
+	{ "963a26.c13",         0x020000, 0xe2ac3063, BRF_SND },	       // 13	K007232 Samples
+	
+	{ "963a27.d18",         0x020000, 0x2dfd674b, BRF_SND },	       // 14	UP7759C Samples
+	
+	{ "963a25.d5",          0x080000, 0xfca078c7, BRF_SND },	       // 15	Title Music Sample
+};
+
+STD_ROM_PICK(Tmnta)
+STD_ROM_FN(Tmnta)
 
 static struct BurnRomInfo Tmht2pRomDesc[] = {
 	{ "963-u23.j17",        0x020000, 0x58bec748, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
@@ -1987,6 +2045,30 @@ static struct BurnRomInfo tmht22peRomDesc[] = {
 
 STD_ROM_PICK(tmht22pe)
 STD_ROM_FN(tmht22pe)
+
+static struct BurnRomInfo tmht24peRomDesc[] = {
+	{ "063eaa02.8e",	0x020000, 0x665a68de, BRF_ESS | BRF_PRG }, //  0 	68000 Program Code
+	{ "063eaa03.8g",	0x020000, 0x7b7fb3af, BRF_ESS | BRF_PRG }, //  1
+	{ "063eaa04.10e",	0x020000, 0x69f38e1d, BRF_ESS | BRF_PRG }, //  2
+	{ "063eaa05.10g",	0x020000, 0x818032af, BRF_ESS | BRF_PRG }, //  3
+
+	{ "063b01.2f",		0x010000, 0x364f548a, BRF_ESS | BRF_PRG }, //  4 	Z80 Code
+
+	{ "063b12.16k",		0x080000, 0xd3283d19, BRF_GRA },           //  5	Tiles
+	{ "063b11.12k",		0x080000, 0x6ebc0c15, BRF_GRA },           //  6
+
+	{ "063b09.7l",		0x100000, 0x2d7a9d2a, BRF_GRA },           //  7	Sprites
+	{ "063b10.7k",		0x080000, 0xf2dd296e, BRF_GRA },           //  8
+	{ "063b07.3l",		0x100000, 0xd9bee7bf, BRF_GRA },           //  9
+	{ "063b08.3k",		0x080000, 0x3b1ae36f, BRF_GRA },           // 10
+
+	{ "063b06.1d",		0x200000, 0x1e510aa5, BRF_SND },           // 11	K053260 Samples
+
+	{ "tmnt2_eaa.nv",  	0x000080, 0x124af18f, BRF_OPT },
+};
+
+STD_ROM_PICK(tmht24pe)
+STD_ROM_FN(tmht24pe)
 
 static struct BurnRomInfo tmnt2aRomDesc[] = {
 	{ "063ada02.8e",	0x020000, 0x4f11b587, BRF_ESS | BRF_PRG }, //  0 	68000 Program Code
@@ -3223,8 +3305,7 @@ static UINT16 ssriders_protection_r()
 			/* collision table */
 			data = -SekReadWord(0x105818);
 			data = ((data / 8 - 4) & 0x1f) * 0x40;
-			data += ((SekReadWord(0x105cb0) +
-						256*K052109Read(0x1a01) + K052109Read(0x1a00) - 6) / 8 + 12) & 0x3f;
+            data += ((SekReadWord(0x105cb0) + SekReadWord(0x1040c8) - 6) / 8 + 12) & 0x3f;
 			return data;
 
 		default:
@@ -5485,6 +5566,15 @@ static void PaletteDim(INT32 dimslayer)
 
 		for (i = ce; i < 2048; i++)
 			BlswhstlCalcPaletteWithContrast(i, brt);
+
+		if (~dim_c & 0x10) {
+			konami_set_highlight_over_sprites_mode(1);
+			konami_set_highlight_mode(1);
+		} else {
+			konami_set_highlight_over_sprites_mode(0);
+			konami_set_highlight_mode(0);
+		}
+
 	} else {
 		BlswhstlCalcPalette();
 	}
@@ -6323,7 +6413,7 @@ static INT32 Thndrx2aScan(INT32 nAction, INT32 *pnMin)
 
 struct BurnDriver BurnDrvTmnt = {
 	"tmnt", NULL, NULL, NULL, "1989",
-	"Teenage Mutant Ninja Turtles (World 4 Players)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Ninja Turtles (World 4 Players, version X)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, TmntRomInfo, TmntRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
@@ -6333,7 +6423,7 @@ struct BurnDriver BurnDrvTmnt = {
 
 struct BurnDriver BurnDrvTmntu = {
 	"tmntu", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Ninja Turtles (US 4 Players, set 1)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Ninja Turtles (US 4 Players, version R)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, TmntuRomInfo, TmntuRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
@@ -6343,7 +6433,7 @@ struct BurnDriver BurnDrvTmntu = {
 
 struct BurnDriver BurnDrvTmntua = {
 	"tmntua", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Ninja Turtles (US 4 Players, set 2)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Ninja Turtles (US 4 Players, version J)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, TmntuaRomInfo, TmntuaRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
@@ -6351,9 +6441,19 @@ struct BurnDriver BurnDrvTmntua = {
 	NULL, 0x400, 304, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvTmntub = {
+	"tmntub", "tmnt", NULL, NULL, "1989",
+	"Teenage Mutant Ninja Turtles (US 4 Players, version H)\0", NULL, "Konami", "GX963",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
+	NULL, TmntubRomInfo, TmntubRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
+	TmntInit, TmntExit, TmntFrame, NULL, TmntScan,
+	NULL, 0x400, 304, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvTmht = {
 	"tmht", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Hero Turtles (UK 4 Players, set 1)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Hero Turtles (UK 4 Players, version F)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, TmhtRomInfo, TmhtRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
@@ -6363,7 +6463,7 @@ struct BurnDriver BurnDrvTmht = {
 
 struct BurnDriver BurnDrvTmhta = {
 	"tmhta", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Hero Turtles (UK 4 Players, set 2)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Hero Turtles (UK 4 Players, version S)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, TmhtaRomInfo, TmhtaRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
@@ -6373,7 +6473,7 @@ struct BurnDriver BurnDrvTmhta = {
 
 struct BurnDriver BurnDrvTmhtb = {
 	"tmhtb", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Hero Turtles (UK 4 Players, set 3)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Hero Turtles (UK 4 Players, version ?)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, TmhtbRomInfo, TmhtbRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
@@ -6383,7 +6483,7 @@ struct BurnDriver BurnDrvTmhtb = {
 
 struct BurnDriver BurnDrvTmntj = {
 	"tmntj", "tmnt", NULL, NULL, "1990",
-	"Teenage Mutant Ninja Turtles (Japan 4 Players)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Ninja Turtles (Japan 4 Players, version 2)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, TmntjRomInfo, TmntjRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
@@ -6391,9 +6491,19 @@ struct BurnDriver BurnDrvTmntj = {
 	NULL, 0x400, 304, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvTmnta = {
+	"tmnta", "tmnt", NULL, NULL, "1990",
+	"Teenage Mutant Ninja Turtles (Asia 4 Players, version ?)\0", NULL, "Konami", "GX963",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
+	NULL, TmntaRomInfo, TmntaRomName, NULL, NULL, TmntInputInfo, TmntDIPInfo,
+	TmntInit, TmntExit, TmntFrame, NULL, TmntScan,
+	NULL, 0x400, 304, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvTmht2p = {
 	"tmht2p", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Hero Turtles (UK 2 Players, set 1)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Hero Turtles (UK 2 Players, version U)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, Tmht2pRomInfo, Tmht2pRomName, NULL, NULL, Tmnt2pInputInfo, Tmnt2pDIPInfo,
@@ -6403,7 +6513,7 @@ struct BurnDriver BurnDrvTmht2p = {
 
 struct BurnDriver BurnDrvTmht2pa = {
 	"tmht2pa", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Hero Turtles (UK 2 Players, set 2)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Hero Turtles (UK 2 Players, version ?)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, Tmht2paRomInfo, Tmht2paRomName, NULL, NULL, Tmnt2pInputInfo, Tmnt2pDIPInfo,
@@ -6413,7 +6523,7 @@ struct BurnDriver BurnDrvTmht2pa = {
 
 struct BurnDriver BurnDrvTmht2pj = {
 	"tmnt2pj", "tmnt", NULL, NULL, "1990",
-	"Teenage Mutant Ninja Turtles (Japan 2 Players)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Ninja Turtles (Japan 2 Players, version 1)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, Tmnt2pjRomInfo, Tmnt2pjRomName, NULL, NULL, Tmnt2pInputInfo, Tmnt2pDIPInfo,
@@ -6423,7 +6533,7 @@ struct BurnDriver BurnDrvTmht2pj = {
 
 struct BurnDriver BurnDrvTmht2po = {
 	"tmnt2po", "tmnt", NULL, NULL, "1989",
-	"Teenage Mutant Ninja Turtles (Oceania 2 Players)\0", NULL, "Konami", "GX963",
+	"Teenage Mutant Ninja Turtles (Oceania 2 Players, version ?)\0", NULL, "Konami", "GX963",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, Tmnt2poRomInfo, Tmnt2poRomName, NULL, NULL, Tmnt2pInputInfo, Tmnt2pDIPInfo,
@@ -6732,6 +6842,16 @@ struct BurnDriver BurnDrvTmht22pe = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
 	NULL, tmht22peRomInfo, tmht22peRomName, NULL, NULL, SsridersInputInfo, NULL,
+	Tmnt2Init, BlswhstlExit, Tmnt2Frame, NULL, SsridersScan,
+	NULL, 0x800, 288, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvTmht24pe = {
+	"tmht24pe", "tmnt2", NULL, NULL, "1991",
+	"Teenage Mutant Hero Turtles - Turtles in Time (4 Players ver. EAA)\0", NULL, "Konami", "GX063",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KONAMI_68K_Z80, GBF_SCRFIGHT, 0,
+	NULL, tmht24peRomInfo, tmht24peRomName, NULL, NULL, SsridersInputInfo, NULL,
 	Tmnt2Init, BlswhstlExit, Tmnt2Frame, NULL, SsridersScan,
 	NULL, 0x800, 288, 224, 4, 3
 };

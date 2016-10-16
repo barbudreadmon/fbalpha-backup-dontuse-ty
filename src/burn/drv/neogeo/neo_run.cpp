@@ -304,7 +304,9 @@ static bool bZ80BIOS;
 
 static INT32 /*nNeoCDCyclesIRQ = 0,*/ nNeoCDCyclesIRQPeriod = 0;
 
+#ifdef BUILD_A68K
 static bool bUseAsm68KCoreOldValue = false;
+#endif
 
 bool IsNeoGeoCD() {
 	return (nNeoSystemType & NEO_SYS_CD);
@@ -638,6 +640,7 @@ static INT32 LoadRoms()
 	if (!strcmp("lresortp", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x200000;
 	if (!strcmp("kotm2p", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x300000;
 	if (!strcmp("sbp", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x800000;
+	if (!strcmp("lasthope", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x600000;
 	
 //	bprintf(PRINT_NORMAL, _T("%x\n"), nYM2610ADPCMASize[nNeoActiveSlot]);
 	
@@ -3708,6 +3711,7 @@ static INT32 neogeoReset()
 	return 0;
 }
 
+#ifdef BUILD_A68K
 static void SwitchToMusashi()
 {
 	if (bBurnUseASMCPUEmulation) {
@@ -3718,6 +3722,7 @@ static void SwitchToMusashi()
 		bBurnUseASMCPUEmulation = false;
 	}
 }
+#endif
 
 static INT32 NeoInitCommon()
 {
@@ -3746,9 +3751,11 @@ static INT32 NeoInitCommon()
 		RAMIndex();													// Index the allocated memory
 	}
 	
+#ifdef BUILD_A68K
 	if (nNeoSystemType & NEO_SYS_CD) {
 		SwitchToMusashi();
 	}
+#endif
 
 	SekInit(0, 0x68000);											// Allocate 68000
     SekOpen(0);
@@ -4253,6 +4260,7 @@ INT32 NeoExit()
 	
 	nNeoCDZ80ProgWriteWordCancelHack = 0;
 	
+#ifdef BUILD_A68K
 	// Switch back CPU core if needed
 	if (nNeoSystemType & NEO_SYS_CD) {
 		if (bUseAsm68KCoreOldValue) {
@@ -4263,6 +4271,7 @@ INT32 NeoExit()
 			bBurnUseASMCPUEmulation = true;
 		}
 	}
+#endif
 
 	recursing = false;
 	

@@ -27,6 +27,7 @@ extern UINT8 *CpsCode; extern UINT32 nCpsCodeLen;		// Program Rom (decrypted)
 extern UINT8 *CpsZRom; extern UINT32 nCpsZRomLen;		// Z80 Roms
 extern          INT8 *CpsQSam; extern UINT32 nCpsQSamLen;		// QSound Sample Roms
 extern UINT8 *CpsAd;   extern UINT32 nCpsAdLen;		// ADPCM Data
+extern UINT8 *CpsKey; extern UINT32 nCpsKeyLen;
 extern UINT32 nCpsGfxScroll[4];								// Offset to Scroll tiles
 extern UINT32 nCpsGfxMask;									// Address mask
 extern UINT8* CpsStar;
@@ -151,6 +152,7 @@ INT32 Cps2LoadTilesGigaman2(UINT8 *Tile, UINT8 *pSrc);
 #define mapper_sfzch		39
 #define mapper_cps2		40
 #define mapper_frog		41
+#define mapper_pokon	42
 extern void SetGfxMapper(INT32 MapperId);
 extern INT32 GfxRomBankMapper(INT32 Type, INT32 Code);
 extern void SetCpsBId(INT32 CpsBId, INT32 bStars);
@@ -492,6 +494,7 @@ INT32 Sf2mdtScanSound(INT32 nAction, INT32 *pnMin);
 #define CPS2_QSND							12
 #define CPS2_QSND_SIMM						13
 #define CPS2_QSND_SIMM_BYTESWAP				14
+#define CPS2_ENCRYPTION_KEY					15
 
 extern INT32 Cps2Volume;
 extern UINT16 Cps2VolumeStates[40];

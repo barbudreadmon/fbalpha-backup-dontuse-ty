@@ -12,6 +12,10 @@
 
 static UINT32 RastanADPCMPos;
 static INT32 RastanADPCMData;
+static INT32 RastanADPCMInReset;
+static UINT32 TopspeedADPCMPos;
+static INT32 TopspeedADPCMData;
+static INT32 TopspeedADPCMInReset;
 static UINT8 OpwolfADPCM_B[0x08];
 static UINT8 OpwolfADPCM_C[0x08];
 static UINT32 OpwolfADPCMPos[2];
@@ -19,6 +23,7 @@ static UINT32 OpwolfADPCMEnd[2];
 static INT32 OpwolfADPCMData[2];
 static INT32 OpWolfGunXOffset;
 static INT32 OpWolfGunYOffset;
+static INT32 bUseGuns = 0;
 
 static UINT8 DariusADPCMCommand;
 static INT32 DariusNmiEnable;
@@ -35,7 +40,13 @@ static UINT16 VolfiedVidMask;
 
 static INT32 RainbowCChipVer = 0;
 
+static UINT8 gearshifter; // Topspeed & clones
+static UINT8 z80ctc_load;
+static INT32 z80ctc_constant;
+static INT32 z80ctc_ctr;
+
 static UINT16 *pTopspeedTempDraw = NULL;
+static UINT16 *DrvPriBmp	= NULL;
 
 static void DariusDraw();
 static void OpwolfDraw();
@@ -179,10 +190,10 @@ static struct BurnInputInfo TopspeedInputList[] =
 	{"Coin 2"            , BIT_DIGITAL   , TC0220IOCInputPort0 + 2, "p2 coin"        },
 
 	A("P1 Steering"      , BIT_ANALOG_REL, &TaitoAnalogPort0      , "p1 x-axis"      ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , TC0220IOCInputPort1 + 7, "p1 fire 1"      },
-	{"P1 Fire 2"         , BIT_DIGITAL   , TC0220IOCInputPort0 + 7, "p1 fire 2"      },
-	{"P1 Fire 3"         , BIT_DIGITAL   , TC0220IOCInputPort1 + 0, "p1 fire 3"      },
-	{"P1 Fire 4"         , BIT_DIGITAL   , TC0220IOCInputPort1 + 4, "p1 fire 4"      },
+	{"P1 Fire 1 (Gas)"   , BIT_DIGITAL   , TC0220IOCInputPort1 + 7, "p1 fire 1"      },
+	{"P1 Fire 2 (Break)" , BIT_DIGITAL   , TC0220IOCInputPort0 + 7, "p1 fire 2"      },
+	{"P1 Fire 3 (Nitro)" , BIT_DIGITAL   , TC0220IOCInputPort1 + 0, "p1 fire 3"      },
+	{"P1 Fire 4 (Gear)"  , BIT_DIGITAL   , TC0220IOCInputPort1 + 4, "p1 fire 4"      },
 	{"P1 Fire 5"         , BIT_DIGITAL   , TC0220IOCInputPort1 + 5, "p1 fire 5"      },
 	{"P1 Fire 6"         , BIT_DIGITAL   , TC0220IOCInputPort0 + 5, "p1 fire 6"      },
 	{"P1 Fire 7"         , BIT_DIGITAL   , TC0220IOCInputPort1 + 6, "p1 fire 7"      },
@@ -433,6 +444,20 @@ static void RastanMakeInputs()
 	if (TaitoInputPort3[7]) TaitoInput[3] |= 0x80;
 }
 
+static UINT8 shift_update(UINT8 shifter_input) // topspeed
+{
+	{ // gear shifter stuff
+		static UINT8 prevshift = 0;
+
+		if (prevshift != shifter_input && shifter_input) {
+			gearshifter = !gearshifter;
+		}
+
+		prevshift = shifter_input;
+	}
+	return (gearshifter) ? 0x00 : 0x10;
+}
+
 static void TopspeedMakeInputs()
 {
 	// Reset Inputs
@@ -453,7 +478,8 @@ static void TopspeedMakeInputs()
 	if (TC0220IOCInputPort1[1]) TC0220IOCInput[1] -= 0x02;
 	if (TC0220IOCInputPort1[2]) TC0220IOCInput[1] -= 0x04;
 	if (TC0220IOCInputPort1[3]) TC0220IOCInput[1] -= 0x08;
-	if (TC0220IOCInputPort1[4]) TC0220IOCInput[1] |= 0x10;
+//	if (TC0220IOCInputPort1[4]) TC0220IOCInput[1] |= 0x10;
+	TC0220IOCInput[1] |= shift_update(TC0220IOCInputPort1[4]);
 	if (TC0220IOCInputPort1[5]) TC0220IOCInput[1] |= 0x20;
 	if (TC0220IOCInputPort1[6]) TC0220IOCInput[1] |= 0x40;
 	if (TC0220IOCInputPort1[7]) TC0220IOCInput[1] |= 0x80;
@@ -467,6 +493,7 @@ static void TopspeedMakeInputs()
 	if (TC0220IOCInputPort2[6]) TC0220IOCInput[2] -= 0x40;
 	if (TC0220IOCInputPort2[7]) TC0220IOCInput[2] -= 0x80;
 }
+
 
 static void VolfiedMakeInputs()
 {
@@ -703,7 +730,7 @@ STDDIPINFO(Dariusj)
 static struct BurnDIPInfo OpwolfDIPList[]=
 {
 	// Default Values
-	{0x0a, 0xff, 0xff, 0xff, NULL                             },
+	{0x0a, 0xff, 0xff, 0xfd, NULL                             },
 	{0x0b, 0xff, 0xff, 0x7f, NULL                             },
 	
 	// Dip 1
@@ -754,7 +781,7 @@ STDDIPINFO(Opwolf)
 static struct BurnDIPInfo OpwolfuDIPList[]=
 {
 	// Default Values
-	{0x0a, 0xff, 0xff, 0xff, NULL                             },
+	{0x0a, 0xff, 0xff, 0xfd, NULL                             },
 	{0x0b, 0xff, 0xff, 0x7f, NULL                             },
 	
 	// Dip 1
@@ -805,7 +832,7 @@ STDDIPINFO(Opwolfu)
 static struct BurnDIPInfo OpwolfbDIPList[]=
 {
 	// Default Values
-	{0x0a, 0xff, 0xff, 0xff, NULL                             },
+	{0x0a, 0xff, 0xff, 0xfd, NULL                             },
 	{0x0b, 0xff, 0xff, 0x7f, NULL                             },
 	
 	// Dip 1
@@ -2338,7 +2365,9 @@ static int MemIndex()
 	TaitoChars                          = Next; Next += TaitoNumChar * TaitoCharWidth * TaitoCharHeight;
 	TaitoCharsB                         = Next; Next += TaitoNumCharB * TaitoCharBWidth * TaitoCharBHeight;
 	TaitoSpritesA                       = Next; Next += TaitoNumSpriteA * TaitoSpriteAWidth * TaitoSpriteAHeight;
-	TaitoPalette                        = (UINT32*)Next; Next += 0x02000 * sizeof(UINT32);
+	TaitoPalette                        = (UINT32*)Next; Next += 0x04000 * sizeof(UINT32);
+
+	DrvPriBmp                           = (UINT16*)Next; Next += 512 * 512;
 
 	TaitoMemEnd                         = Next;
 
@@ -2440,13 +2469,22 @@ static INT32 VolfiedDoReset()
 	return 0;
 }
 
+static void z80ctc_reset();
+
 static INT32 TopspeedDoReset()
 {
 	TaitoDoReset();
-	
+
+	z80ctc_reset();
 	RastanADPCMPos = 0;
 	RastanADPCMData = -1;
-	
+	RastanADPCMInReset = 1;
+	TopspeedADPCMPos = 0;
+	TopspeedADPCMData = -1;
+	TopspeedADPCMInReset = 1;
+	MSM5205SetRoute(0, 0.00, BURN_SND_ROUTE_BOTH); // set by audiocpu
+	MSM5205SetRoute(1, 0.00, BURN_SND_ROUTE_BOTH); // set by audiocpu
+
 	return 0;
 }
 
@@ -3199,6 +3237,11 @@ void __fastcall Topspeed68K1WriteWord(UINT32 a, UINT16 d)
 		// ???
 		return;
 	}
+
+	if (a >= 0x880000 && a <= 0x880007) {
+		// lamps
+		return;
+	}
 	
 	switch (a) {
 		case 0x600002: {
@@ -3276,7 +3319,7 @@ UINT8 __fastcall Topspeed68K2ReadByte(UINT32 a)
 void __fastcall Topspeed68K2WriteByte(UINT32 a, UINT8 d)
 {
 	if (a >= 0x900000 && a <= 0x9003ff) {
-		return;		
+		return;  // cab motor
 	}
 	
 	switch (a) {
@@ -3699,6 +3742,57 @@ void __fastcall DariusZ802WritePort(UINT16 a, UINT8 d)
 	}
 }
 
+static void z80ctc_reset()
+{
+	z80ctc_load = 0;
+	z80ctc_constant = 0;
+	z80ctc_ctr = 0;
+}
+
+static void z80ctc_scan()
+{
+	SCAN_VAR(z80ctc_load);
+	SCAN_VAR(z80ctc_constant);
+	SCAN_VAR(z80ctc_ctr);
+}
+
+static void z80ctc_write(UINT8 data)
+{
+	if (z80ctc_load) {
+		z80ctc_constant = 0xb0 - data;
+		z80ctc_load = 0;
+	}
+
+	if (data == 5) z80ctc_load = 1;
+}
+
+static void TopspeedMSM5205Vck2();
+
+static void z80ctc_execute(INT32 cyc)
+{
+	if (z80ctc_constant == 0) return;
+	// mini-z80ctc emulation
+
+	while (z80ctc_ctr <= 0) {
+		INT32 remainder = 0;
+		if (z80ctc_ctr < 0)
+			remainder = -z80ctc_ctr;
+
+		z80ctc_ctr = 4000000/16/60; // 4mhz, 16 prescale, 1 frame
+		z80ctc_ctr -= remainder;
+		TopspeedMSM5205Vck2();
+	}
+	z80ctc_ctr -= (cyc * z80ctc_constant);
+}
+
+void __fastcall TopspeedZ80WritePort(UINT16 a, UINT8 d)
+{
+	a &= 0xff;
+	if (a==0) {
+		z80ctc_write(d);
+	}
+}
+
 UINT8 __fastcall OpwolfZ80Read(UINT16 a)
 {
 	switch (a) {
@@ -3980,24 +4074,53 @@ void __fastcall TopspeedZ80Write(UINT16 a, UINT8 d)
 			return;
 		}
 		
-		case 0xb000: {
-			RastanADPCMPos = (RastanADPCMPos & 0x00ff) | (d << 8);
+		case 0xb000: { // load
+			RastanADPCMPos = d << 8;
+			return;
+		}
+
+		case 0xb400: { // play
 			MSM5205ResetWrite(0, 0);
+			RastanADPCMInReset = 0;
 			return;
 		}
-		
-		case 0xb800: {
+
+		case 0xb800: { // stop
 			MSM5205ResetWrite(0, 1);
-			RastanADPCMPos &= 0xff00;
+			RastanADPCMData = -1;
+			RastanADPCMInReset = 1;
+			return;
+		}
+
+		case 0xc000: { // load
+			TopspeedADPCMPos = d << 8;
+			return;
+		}
+
+		case 0xc400: { // play
+			MSM5205ResetWrite(1, 0);
+			TopspeedADPCMInReset = 0;
 			return;
 		}
 		
-		case 0xc000:
-		case 0xc400:
-		case 0xc800:
+		case 0xc800: { // stop
+			MSM5205ResetWrite(1, 1);
+			TopspeedADPCMData = -1;
+			TopspeedADPCMInReset = 1;
+			return;
+		}
+
+		case 0xd000: {
+			MSM5205SetRoute(0, (double)((double)d / 256), BURN_SND_ROUTE_BOTH);
+			return;
+		}
+
+		case 0xd200: {
+			MSM5205SetRoute(1, (double)((double)d / 256)-0.20, BURN_SND_ROUTE_BOTH);
+			return;
+		}
+
 		case 0xcc00:
-		case 0xd000:
-		case 0xd200:
 		case 0xd400:
 		case 0xd600: {
 			// ???
@@ -4095,11 +4218,7 @@ void __fastcall OpwolfbCChipSubZ80Write(UINT16 a, UINT8)
 
 static void TaitoYM2151IRQHandler(INT32 Irq)
 {
-	if (Irq) {
-		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
-	} else {
-		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
-	}
+	ZetSetIRQLine(0, (Irq) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static void TaitoYM2203IRQHandler(INT32, INT32 nStatus)
@@ -4183,26 +4302,55 @@ static void RastanMSM5205Vck()
 	}
 }
 
-static void TopspeedBankSwitch(UINT32, UINT32 Data)
+static void TopspeedBankSwitch(UINT32 port, UINT32 Data)
 {
+	if (ZetGetActive() == -1) return;
 	Data &= 3;
 	if (Data != 0) {
 		TaitoZ80Bank = Data - 1;
-	
+
 		ZetMapArea(0x4000, 0x7fff, 0, TaitoZ80Rom1 + 0x4000 + (TaitoZ80Bank * 0x4000));
 		ZetMapArea(0x4000, 0x7fff, 2, TaitoZ80Rom1 + 0x4000 + (TaitoZ80Bank * 0x4000));
-	}
+    }
 }
 
 static void TopspeedMSM5205Vck()
 {
-	if (RastanADPCMData != -1) {
-		MSM5205DataWrite(0, RastanADPCMData & 0x0f);
-		RastanADPCMData = -1;
+	if (!RastanADPCMInReset) {
+		if (RastanADPCMData != -1) {
+			MSM5205DataWrite(0, RastanADPCMData & 0x0f);
+			RastanADPCMData = -1;
+		} else {
+			RastanADPCMData = TaitoMSM5205Rom[RastanADPCMPos];
+			RastanADPCMPos = (RastanADPCMPos + 1) & 0xffff;
+			MSM5205DataWrite(0, RastanADPCMData >> 4);
+		}
+	}
+}
+
+static void TopspeedMSM5205Vck2()
+{
+	MSM5205VCLKWrite(1, 1);
+	UINT16 oldpos = TopspeedADPCMPos;
+
+	if (!TopspeedADPCMInReset) {
+		if (TopspeedADPCMData != -1) {
+			MSM5205DataWrite(1, TopspeedADPCMData & 0x0f);
+			TopspeedADPCMData = -1;
+		} else {
+			TopspeedADPCMData = TaitoMSM5205Rom[0x10000 + TopspeedADPCMPos];
+			TopspeedADPCMPos = (TopspeedADPCMPos + 1) & 0xffff;
+			MSM5205DataWrite(1, (TopspeedADPCMData >> 4) & 0x0f);
+		}
+	}
+
+	if ((oldpos >> 8) == 0x0f && ((TopspeedADPCMPos >> 8) == 0x10))	{
+		TopspeedADPCMPos = 0;
+		MSM5205ResetWrite(1, 1);
+		MSM5205VCLKWrite(1, 0);
+		MSM5205ResetWrite(1, 0);
 	} else {
-		RastanADPCMData = TaitoMSM5205Rom[RastanADPCMPos];
-		RastanADPCMPos = (RastanADPCMPos + 1) & 0x1ffff;
-		MSM5205DataWrite(0, RastanADPCMData >> 4);
+		MSM5205VCLKWrite(1, 0);
 	}
 }
 
@@ -4530,7 +4678,8 @@ static INT32 OpwolfInit()
 	GenericTilesInit();
 	
 	BurnGunInit(1, true);
-	
+	bUseGuns = 1;
+
 	TaitoDrawFunction = OpwolfDraw;
 	TaitoMakeInputsFunction = OpwolfMakeInputs;
 	TaitoIrqLine = 5;
@@ -4648,6 +4797,7 @@ static INT32 OpwolfbInit()
 	GenericTilesInit();
 	
 	BurnGunInit(1, true);
+	bUseGuns = 1;
 	
 	TaitoDrawFunction = OpwolfDraw;
 	TaitoMakeInputsFunction = OpwolfbMakeInputs;
@@ -4980,7 +5130,7 @@ static INT32 TopspeedInit()
 	TaitoNum68Ks = 2;
 	TaitoNumZ80s = 1;
 	TaitoNumYM2151 = 1;
-	TaitoNumMSM5205 = 1;
+	TaitoNumMSM5205 = 2;
 	
 	TaitoLoadRoms(0);
 	
@@ -5009,7 +5159,7 @@ static INT32 TopspeedInit()
 	SekMapMemory(Taito68KRam1           , 0x800000, 0x80ffff, MAP_RAM);
 	SekMapMemory(PC080SNRam[0]          , 0xa00000, 0xa0ffff, MAP_RAM);
 	SekMapMemory(PC080SNRam[1]          , 0xb00000, 0xb0ffff, MAP_RAM);
-	SekMapMemory(TaitoSpriteRam         , 0xd00000, 0xd00fff, MAP_RAM);	
+	SekMapMemory(TaitoSpriteRam         , 0xd00000, 0xd00fff, MAP_RAM);
 	SekMapMemory(TaitoVideoRam          , 0xe00000, 0xe0ffff, MAP_RAM);
 	SekSetReadByteHandler(0, Topspeed68K1ReadByte);
 	SekSetWriteByteHandler(0, Topspeed68K1WriteByte);
@@ -5032,8 +5182,11 @@ static INT32 TopspeedInit()
 	ZetOpen(0);
 	ZetSetReadHandler(TopspeedZ80Read);
 	ZetSetWriteHandler(TopspeedZ80Write);
+	ZetSetOutHandler(TopspeedZ80WritePort);
+
 	ZetMapArea(0x0000, 0x3fff, 0, TaitoZ80Rom1               );
 	ZetMapArea(0x0000, 0x3fff, 2, TaitoZ80Rom1               );
+	TopspeedBankSwitch(0, 1);
 	ZetMapArea(0x8000, 0x8fff, 0, TaitoZ80Ram1               );
 	ZetMapArea(0x8000, 0x8fff, 1, TaitoZ80Ram1               );
 	ZetMapArea(0x8000, 0x8fff, 2, TaitoZ80Ram1               );
@@ -5045,7 +5198,9 @@ static INT32 TopspeedInit()
 	BurnYM2151SetAllRoutes(0.30, BURN_SND_ROUTE_BOTH);
 	
 	MSM5205Init(0, TaitoSynchroniseStream, 384000, TopspeedMSM5205Vck, MSM5205_S48_4B, 1);
-	MSM5205SetRoute(0, 0.60, BURN_SND_ROUTE_BOTH);
+	MSM5205SetRoute(0, 0.00, BURN_SND_ROUTE_BOTH);
+	MSM5205Init(1, TaitoSynchroniseStream, 384000, NULL, MSM5205_SEX_4B, 1);
+	MSM5205SetRoute(1, 0.00, BURN_SND_ROUTE_BOTH);
 	
 	GenericTilesInit();
 	
@@ -5053,8 +5208,8 @@ static INT32 TopspeedInit()
 	TaitoMakeInputsFunction = TopspeedMakeInputs;
 	TaitoIrqLine = 5;
 	
-	nTaitoCyclesTotal[0] = 12000000 / 60;
-	nTaitoCyclesTotal[1] = 12000000 / 60;
+	nTaitoCyclesTotal[0] = 8000000 / 60;
+	nTaitoCyclesTotal[1] = 8000000 / 60;
 	nTaitoCyclesTotal[2] = 4000000 / 60;
 	
 	pTopspeedTempDraw = (UINT16*)BurnMalloc(512 * 512 * sizeof(UINT16));
@@ -5174,6 +5329,7 @@ static INT32 TaitoMiscExit()
 	VolfiedVidMask = 0;
 	
 	RainbowCChipVer = 0;
+	bUseGuns = 0;
 	
 	BurnFree(pTopspeedTempDraw);
 	
@@ -5435,13 +5591,15 @@ static void JumpingDrawSprites()
 	}
 }
 
-static void RenderSpriteZoom(INT32 Code, INT32 sx, INT32 sy, INT32 Colour, INT32 xFlip, INT32 yFlip, INT32 xScale, INT32 yScale, UINT8* pSource)
+static void RenderSpriteZoom(INT32 Code, INT32 sx, INT32 sy, INT32 Colour, INT32 xFlip, INT32 yFlip, INT32 xScale, INT32 yScale, UINT8* pSource, UINT8 priority)
 {
 	UINT8 *SourceBase = pSource + ((Code % TaitoNumSpriteA) * TaitoSpriteAWidth * TaitoSpriteAHeight);
 	
 	INT32 SpriteScreenHeight = (yScale * TaitoSpriteAHeight + 0x8000) >> 16;
 	INT32 SpriteScreenWidth = (xScale * TaitoSpriteAWidth + 0x8000) >> 16;
-	
+	static const INT32 primasks[2] = { 0xff00, 0xfffc };  /* Sprites are over bottom layer or under top layer */
+	INT32 primask = primasks[priority];
+
 	Colour = 0x10 * (Colour % 0x100);
 	
 	if (TaitoFlipScreenX) {
@@ -5500,13 +5658,15 @@ static void RenderSpriteZoom(INT32 Code, INT32 sx, INT32 sy, INT32 Colour, INT32
 			
 			for (y = sy; y < ey; y++) {
 				UINT8 *Source = SourceBase + ((yIndex >> 16) * TaitoSpriteAWidth);
-				UINT16* pPixel = pTransDraw + (y * nScreenWidth);
-				
+				UINT16*pPixel = pTransDraw + (y * nScreenWidth);
+				UINT16*pri = DrvPriBmp + (y * nScreenWidth);
+
 				INT32 x, xIndex = xIndexBase;
 				for (x = sx; x < ex; x++) {
 					INT32 c = Source[xIndex >> 16];
-					if (c != 0) {
+					if (c != 0 && (pri[x] & primask)==0) {
 						pPixel[x] = c | Colour;
+						pri[x] = primask;
 					}
 					xIndex += dx;
 				}
@@ -5526,7 +5686,8 @@ static void TopspeedDrawSprites(INT32 PriorityDraw)
 	UINT8 xFlip, yFlip, Priority, BadChunks;
 	UINT8 j, k, px, py, zx, zy, xZoom, yZoom;
 
-	for (Offset = (0x2c0 / 2) - 4; Offset >= 0; Offset -= 4) {
+	//for (Offset = (0x2c0 / 2) - 4; Offset >= 0; Offset -= 4) {
+	for (Offset = 0; Offset < (0x2c0 / 2) - 4; Offset += 4) {
 		Data = BURN_ENDIAN_SWAP_INT16(SpriteRam[Offset + 2]);
 
 		TileNum = BURN_ENDIAN_SWAP_INT16(SpriteRam[Offset + 3]) & 0xff;
@@ -5539,7 +5700,7 @@ static void TopspeedDrawSprites(INT32 PriorityDraw)
 		yZoom = (BURN_ENDIAN_SWAP_INT16(SpriteRam[Offset]) & 0xfe00) >> 9;
 		Priority = (Data & 0x8000) >> 15;
 		
-		if (Priority != PriorityDraw) continue;
+		//if (Priority != PriorityDraw) continue;
 
 		if (y == 0x180)	continue;
 
@@ -5575,7 +5736,7 @@ static void TopspeedDrawSprites(INT32 PriorityDraw)
 			zx = x + (((k + 1) * xZoom) / 8) - xCur;
 			zy = y + (((j + 1) * yZoom) / 16) - yCur;
 			
-			RenderSpriteZoom(Code, xCur, yCur - 16, Colour, xFlip, yFlip, zx << 12, zy << 13, TaitoSpritesA);
+			RenderSpriteZoom(Code, xCur, yCur - 16, Colour, xFlip, yFlip, zx << 12, zy << 13, TaitoSpritesA, Priority);
 		}
 	}
 }
@@ -5641,12 +5802,14 @@ static void TopspeedDraw()
 {
 	BurnTransferClear();
 	TaitoMiscCalcPalette();
-	PC080SNDrawFgLayer(1, 1, TaitoChars, pTransDraw);
-	TopspeedDrawSprites(1);
-	TopspeedDrawBgLayer(1, TaitoChars, pTopspeedTempDraw, (UINT16*)Taito68KRam1);
-	TopspeedDrawFgLayer(0, TaitoChars, pTopspeedTempDraw, (UINT16*)(Taito68KRam1 + 0x200));
-	TopspeedDrawSprites(0);
-	PC080SNDrawBgLayer(0, 0, TaitoChars, pTransDraw);	
+
+	memset(DrvPriBmp, 0, 512*512);
+
+	if (nBurnLayer & 1) PC080SNDrawFgLayerPrio(1, 1, TaitoChars, pTransDraw, DrvPriBmp, 1);
+	if (nBurnLayer & 2) TopspeedDrawBgLayer(1, TaitoChars, pTopspeedTempDraw, (UINT16*)Taito68KRam1, DrvPriBmp, 4);
+	if (nBurnLayer & 4) TopspeedDrawFgLayer(0, TaitoChars, pTopspeedTempDraw, (UINT16*)(Taito68KRam1 + 0x200), DrvPriBmp, 4);
+	if (nSpriteEnable & 2) TopspeedDrawSprites(0);
+	if (nBurnLayer & 8) PC080SNDrawBgLayerPrio(0, 0, TaitoChars, pTransDraw, DrvPriBmp, 8);
 	BurnTransferCopy(TaitoPalette);
 }
 
@@ -5873,7 +6036,7 @@ static INT32 JumpingFrame()
 
 static INT32 TopspeedFrame()
 {
-	INT32 nInterleave = 10;
+	INT32 nInterleave = 133;
 	if (TaitoNumMSM5205) nInterleave = MSM5205CalcInterleave(0, 4000000);
 	INT32 nSoundBufferPos = 0;
 	
@@ -5885,7 +6048,7 @@ static INT32 TopspeedFrame()
 
 	SekNewFrame();
 	ZetNewFrame();
-		
+
 	for (INT32 i = 0; i < nInterleave; i++) {
 		INT32 nCurrentCPU, nNext;
 
@@ -5895,19 +6058,19 @@ static INT32 TopspeedFrame()
 		nNext = (i + 1) * nTaitoCyclesTotal[nCurrentCPU] / nInterleave;
 		nTaitoCyclesSegment = nNext - nTaitoCyclesDone[nCurrentCPU];
 		nTaitoCyclesDone[nCurrentCPU] += SekRun(nTaitoCyclesSegment);
-		if (i == (nInterleave / 2) && (GetCurrentFrame > 0)) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
-		if (i == (nInterleave - 1)) SekSetIRQLine(TaitoIrqLine, CPU_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 1) && (GetCurrentFrame > 0)) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
+		if (i == (nInterleave - 3)) SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		SekClose();
 		
 		// Run 68000 # 2
-		if ((TaitoCpuACtrl & 0x01)) {
+		if (TaitoCpuACtrl & 0x01) {
 			nCurrentCPU = 1;
 			SekOpen(1);
 			nNext = (i + 1) * nTaitoCyclesTotal[nCurrentCPU] / nInterleave;
 			nTaitoCyclesSegment = nNext - nTaitoCyclesDone[nCurrentCPU];
 			nTaitoCyclesDone[nCurrentCPU] += SekRun(nTaitoCyclesSegment);
-			if (i == (nInterleave / 2) && (GetCurrentFrame > 0)) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
-			if (i == (nInterleave - 1)) SekSetIRQLine(TaitoIrqLine, CPU_IRQSTATUS_AUTO);
+			if (i == (nInterleave - 1) && (GetCurrentFrame > 0)) SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
+			if (i == (nInterleave - 3)) SekSetIRQLine(TaitoIrqLine, CPU_IRQSTATUS_AUTO);
 			SekClose();
 		}
 		
@@ -5919,12 +6082,15 @@ static INT32 TopspeedFrame()
 			nTaitoCyclesSegment = nNext - nTaitoCyclesDone[nCurrentCPU];
 			nTaitoCyclesSegment = ZetRun(nTaitoCyclesSegment);
 			nTaitoCyclesDone[nCurrentCPU] += nTaitoCyclesSegment;
+
+			z80ctc_execute(4000000/16/60/nInterleave);
+
 			if (TaitoNumMSM5205) MSM5205Update();
 			ZetClose();
 		}
 		
 		// Render sound segment
-		if (pBurnSoundOut) {
+	    if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 			if (TaitoNumZ80s >= 1) ZetOpen(0);
@@ -5933,7 +6099,7 @@ static INT32 TopspeedFrame()
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
-	
+
 	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
@@ -5948,6 +6114,7 @@ static INT32 TopspeedFrame()
 	if (pBurnSoundOut) {
 		if (TaitoNumZ80s >= 1) ZetOpen(0);
 		if (TaitoNumMSM5205) MSM5205Render(0, pBurnSoundOut, nBurnSoundLen);
+		if (TaitoNumMSM5205&2) MSM5205Render(1, pBurnSoundOut, nBurnSoundLen);
 		if (TaitoNumZ80s >= 1) ZetClose();
 	}
 	
@@ -5982,7 +6149,7 @@ static INT32 TaitoMiscScan(INT32 nAction, INT32 *pnMin)
 		if (TaitoNumYM2203) BurnYM2203Scan(nAction, pnMin);
 		if (TaitoNumMSM5205) MSM5205Scan(nAction, pnMin);
 		
-		BurnGunScan();
+		if (bUseGuns) BurnGunScan();
 				
 		SCAN_VAR(TaitoInput);
 		SCAN_VAR(TaitoAnalogPort0);
@@ -5991,17 +6158,23 @@ static INT32 TaitoMiscScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(TaitoSoundLatch);
 		SCAN_VAR(RastanADPCMPos);
 		SCAN_VAR(RastanADPCMData);
+		SCAN_VAR(RastanADPCMInReset);
 		SCAN_VAR(OpwolfADPCM_B);
 		SCAN_VAR(OpwolfADPCM_C);
 		SCAN_VAR(OpwolfADPCMPos);
 		SCAN_VAR(OpwolfADPCMEnd);;
 		SCAN_VAR(OpwolfADPCMData);
+		SCAN_VAR(TopspeedADPCMPos);
+		SCAN_VAR(TopspeedADPCMData);
+		SCAN_VAR(TopspeedADPCMInReset);
 		SCAN_VAR(nTaitoCyclesDone);
 		SCAN_VAR(nTaitoCyclesSegment);
 		SCAN_VAR(DariusADPCMCommand);
 		SCAN_VAR(DariusNmiEnable);
 		SCAN_VAR(DariusCoinWord);
 		SCAN_VAR(PC090OJSpriteCtrl);	// for jumping
+		SCAN_VAR(gearshifter);
+		z80ctc_scan();
 	}
 	
 	if (nAction & ACB_WRITE && TaitoZ80Bank) {

@@ -59,6 +59,9 @@
 #define IDR_MENU_AUD_PLUGIN_2				131
 #define IDR_ACCELERATOR                 	150
 
+#define IDD_REPLAYINP                   233
+#define IDD_RECORDINP                   234
+
 #define MENU_MENU_0							2000
 #define MENU_MENU_1							2001
 #define MENU_MENU_2							2002
@@ -180,6 +183,7 @@
 #define IDC_CHECKUNAVAILABLE              	20137
 #define IDC_SYSINFO_LOG_SAVE                20138
 #define IDC_LOCAL_DOWNLOAD_LANG				20139
+#define IDC_SEL_SEARCHTIMER                 20140
 
 #define IDC_DRVCOUNT						20200
 #define IDC_TREE2							20201
@@ -188,6 +192,16 @@
 #define IDC_LAYER3							20204
 #define IDC_LAYER4							20205
 #define IDC_SHOW							20206
+
+#define IDC_LENGTH                      20255
+#define IDC_FRAMES                      20256
+#define IDC_UNDO                        20257
+#define IDC_METADATA                    20258
+#define IDC_READONLY                    20259
+#define IDC_FILENAME                    20260
+#define IDC_BROWSE                      20261
+#define IDC_REPLAYRESET                 20262
+#define IDC_SHOWMOVEMENT                20263
 
 #define IDC_STATIC_SYS                  	20300
 #define IDC_STATIC_OPT                  	20301
@@ -619,7 +633,10 @@
 #define MENU_USEBLEND						10720
 #define MENU_CLRMAME_PRO_XML_SMS_ONLY		10721
 #define MENU_CLRMAME_PRO_XML_GG_ONLY		10722
-#define MENU_AVI3X							10723
+#define MENU_CLRMAME_PRO_XML_MSX_ONLY		10723
+#define MENU_AVI1X							10724
+#define MENU_AVI2X							10725
+#define MENU_AVI3X							10726
 
 #define MENU_BASIC_NORMAL          	    	11001
 #define MENU_BASIC_SCAN                	    11002

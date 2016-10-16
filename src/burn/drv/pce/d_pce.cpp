@@ -5200,9 +5200,9 @@ STD_ROM_FN(pce_soldblad)
 
 struct BurnDriver BurnDrvpce_soldblad = {
 	"pce_soldblad", NULL, NULL, NULL, "1992",
-	"Soldier Blade\0", NULL, "Hudson", "PC Engine",
+	"Soldier Blade\0", "Hangs at first boss", "Hudson", "PC Engine",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 5, HARDWARE_PCENGINE_PCENGINE, GBF_MISC, 0,
+	0, 5, HARDWARE_PCENGINE_PCENGINE, GBF_MISC, 0,
 	PceGetZipName, pce_soldbladRomInfo, pce_soldbladRomName, NULL, NULL, pceInputInfo, pceDIPInfo,
 	PCEInit, PCEExit, PCEFrame, PCEDraw, PCEScan,
 	&PCEPaletteRecalc, 0x400, 512, 240, 4, 3
@@ -7960,9 +7960,9 @@ STD_ROM_FN(tg_soldblad)
 
 struct BurnDriver BurnDrvtg_soldblad = {
 	"tg_soldblad", NULL, NULL, NULL, "1992",
-	"Soldier Blade\0", NULL, "TTI", "TurboGrafx 16",
+	"Soldier Blade\0", "Hangs at first boss", "TTI", "TurboGrafx 16",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 5, HARDWARE_PCENGINE_TG16, GBF_MISC, 0,
+	0, 5, HARDWARE_PCENGINE_TG16, GBF_MISC, 0,
 	TgGetZipName, tg_soldbladRomInfo, tg_soldbladRomName, NULL, NULL, pceInputInfo, pceDIPInfo,
 	TG16Init, PCEExit, PCEFrame, PCEDraw, PCEScan,
 	&PCEPaletteRecalc, 0x400, 512, 240, 4, 3
@@ -8578,11 +8578,30 @@ STD_ROM_PICK(sgx_daimakai1)
 STD_ROM_FN(sgx_daimakai1)
 
 struct BurnDriver BurnDrvsgx_daimakai1 = {
-	"sgx_daimakai1", NULL, NULL, NULL, "1990",
+	"sgx_daimakai1", "sgx_daimakai", NULL, NULL, "1990",
 	"Dai Makaimura (Alt)\0", NULL, "NEC Avenue", "SuperGrafx",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 5, HARDWARE_PCENGINE_SGX, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 5, HARDWARE_PCENGINE_SGX, GBF_MISC, 0,
 	SgxGetZipName, sgx_daimakai1RomInfo, sgx_daimakai1RomName, NULL, NULL, pceInputInfo, pceDIPInfo,
+	SGXInit, PCEExit, PCEFrame, PCEDraw, PCEScan,
+	&PCEPaletteRecalc, 0x400, 512, 240, 4, 3
+};
+
+// Dai Makaimura (Chris Covell's Debug Menu Hack)
+
+static struct BurnRomInfo sgx_daimakaidRomDesc[] = {
+	{ "daimakai mura (japan)[debug].pce", 0x100000, 0xd6722c04, BRF_PRG | BRF_ESS },
+};
+
+STD_ROM_PICK(sgx_daimakaid)
+STD_ROM_FN(sgx_daimakaid)
+
+struct BurnDriver BurnDrvsgx_daimakaid = {
+	"sgx_daimakaid", "sgx_daimakai", NULL, NULL, "1990",
+	"Dai Makaimura (Chris Covell's Debug Menu Hack)\0", NULL, "NEC Avenue", "SuperGrafx",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 5, HARDWARE_PCENGINE_SGX, GBF_MISC, 0,
+	SgxGetZipName, sgx_daimakaidRomInfo, sgx_daimakaidRomName, NULL, NULL, pceInputInfo, pceDIPInfo,
 	SGXInit, PCEExit, PCEFrame, PCEDraw, PCEScan,
 	&PCEPaletteRecalc, 0x400, 512, 240, 4, 3
 };
