@@ -7,7 +7,7 @@ Don't report issues if you didn't build a valid romset.
 
 ## Samples
 
-Samples should be put under <SYSTEM_DIRECTORY>/fba/samples
+Samples should be put under SYSTEM_DIRECTORY/fba/samples
 
 ## Raspberry Pi 2 users
 
