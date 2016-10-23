@@ -1698,177 +1698,7 @@ static const char *print_label(unsigned i)
    }
 }
 
-#ifdef USE_OLD_MAPPING
-static bool init_input(void)
-{
-   // Define nMaxPlayers early; GameInpInit() needs it (normally defined in DoLibInit()).
-   nMaxPlayers = BurnDrvGetMaxPlayers();
-   GameInpInit();
-   GameInpDefault();
-
-   bool has_analog = false;
-   struct GameInp* pgi = GameInp;
-   for (unsigned i = 0; i < nGameInpCount; i++, pgi++)
-   {
-      if (pgi->nType == BIT_ANALOG_REL)
-      {
-         has_analog = true;
-         break;
-      }
-   }
-
-   // Needed for Neo Geo button mappings (and other drivers in future)
-   const char * parentrom  = BurnDrvGetTextA(DRV_PARENT);
-   const char * boardrom   = BurnDrvGetTextA(DRV_BOARDROM);
-   const char * drvname    = BurnDrvGetTextA(DRV_NAME);
-   const char * systemname = BurnDrvGetTextA(DRV_SYSTEM);
-   INT32        genre      = BurnDrvGetGenreFlags();
-   INT32        hardware   = BurnDrvGetHardwareCode();
-
-   log_cb(RETRO_LOG_INFO, "drvname: %s\n", drvname);
-   if (parentrom)
-      log_cb(RETRO_LOG_INFO, "parentrom: %s\n", parentrom);
-   if (boardrom)
-      log_cb(RETRO_LOG_INFO, "boardrom: %s\n", boardrom);
-   if (systemname)
-      log_cb(RETRO_LOG_INFO, "systemname: %s\n", systemname);
-   log_cb(RETRO_LOG_INFO, "genre: %d\n", genre);
-   log_cb(RETRO_LOG_INFO, "hardware: %d\n", hardware);
-   log_cb(RETRO_LOG_INFO, "max players: %d\n", nMaxPlayers);
-   log_cb(RETRO_LOG_INFO, "has_analog: %d\n", has_analog);
-
-   /* initialization */
-   struct BurnInputInfo bii;
-   memset(&bii, 0, sizeof(bii));
-
-   // Bind to nothing.
-   for (unsigned i = 0; i < 0x5000; i++)
-      keybinds[i][0] = 0xff;
-
-   key_map bind_map[BIND_MAP_COUNT];
-   unsigned counter = init_bind_map(bind_map, gamepad_controls, newgen_controls_p1, newgen_controls_p2, remap_lr_p1, remap_lr_p2);
-
-   bool is_avsp =   (parentrom && strcmp(parentrom, "avsp") == 0   || strcmp(drvname, "avsp") == 0);
-   bool is_armwar = (parentrom && strcmp(parentrom, "armwar") == 0 || strcmp(drvname, "armwar") == 0);
-
-   char button_select[15];
-   char button_shot[15];
-
-   pgi = GameInp;
-   pgi_reset = NULL;
-   pgi_diag = NULL;
-
-   normal_input_descriptors.clear();
-
-   for(unsigned int i = 0; i < nGameInpCount; i++, pgi++)
-   {
-      BurnDrvGetInputInfo(&bii, i);
-
-      bool value_found = false;
-
-      // Store the pgi that controls the reset input
-      if (strcmp(bii.szInfo, "reset") == 0)
-      {
-         value_found = true;
-         pgi_reset = pgi;
-         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
-      }
-
-      // Store the pgi that controls the diagnostic input
-      if (strcmp(bii.szInfo, "diag") == 0)
-      {
-         value_found = true;
-         pgi_diag = pgi;
-         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - controlled by core option.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
-      }
-
-      for(int j = 0; j < counter && !value_found; j++)
-      {
-         unsigned port = bind_map[j].nCode[1];
-
-         sprintf(button_select, "P%d Select", port + 1); // => P1 Select
-         sprintf(button_shot,   "P%d Shot",   port + 1); // => P1 Shot
-
-         if (is_neogeo_game && strcmp(bii.szName, button_select) == 0)
-         {
-            value_found = true;
-            // set the retro device id
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
-         }
-         /* Alien vs. Predator and Armored Warriors both use "Px Shot" which usually serves as the shoot button for shmups
-          * To make sure the controls don't overlap with each other if statements are used */
-         else if ((is_avsp || is_armwar) && strcmp(bii.szName, button_shot) == 0)
-         {
-            value_found = true;
-            // set the retro device id
-            if (port == 1 || port != 2) // port != 2 is to configure the P3 and P4 like the P1 (TODO it would be good to make the handling of gamepad_controls dynamic regarding the number of players of the game
-            {
-               if (gamepad_controls == false)
-                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-               else
-                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
-            }
-            if (port == 2)
-            {
-               if (gamepad_controls == false)
-                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-               else
-                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
-            }
-         }
-         else if(strcmp(bii.szName, bind_map[j].bii_name) == 0)
-         {
-            value_found = true;
-            // set the retro device id
-            keybinds[pgi->Input.Switch.nCode][0] = bind_map[j].nCode[0];
-         }
-
-         if (!value_found)
-            continue;
-
-         // set the port index
-         keybinds[pgi->Input.Switch.nCode][1] = port;
-
-         unsigned device = RETRO_DEVICE_JOYPAD;
-         unsigned index = 0;
-         unsigned id = keybinds[pgi->Input.Switch.nCode][0];
-
-         // "P1 XXX" - try to exclude the "P1 " from the szName
-         int offset_player_x = 0;
-         if (strlen(bii.szName) > 3 && bii.szName[0] == 'P' && bii.szName[2] == ' ')
-            offset_player_x = 3;
-
-         char* description = bii.szName + offset_player_x;
-         
-         normal_input_descriptors.push_back((retro_input_descriptor){ port, device, index, id, description });
-
-         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - assigned to key [%-25s] on port %2d.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode, print_label(keybinds[pgi->Input.Switch.nCode][0]), port);
-
-         break;
-      }
-
-      if (!value_found && bii.nType != BIT_DIPSWITCH)
-      {
-         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - WARNING! Button unaccounted.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
-      }
-   }
-
-   init_macro_core_options();
-
-   // Update core option for diagnostic and macro inputs
-   set_environment();
-   // Read the user core option values
-   check_variables();
-   apply_macro_from_variables();
-
-   // Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
-   init_macro_input_descriptors();
-   // The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
-   set_input_descriptors();
-   
-   return has_analog;
-}
-#else
+#ifdef USE_NEW_MAPPING
 static bool init_input(void)
 {
    // Define nMaxPlayers early; GameInpInit() needs it (normally defined in DoLibInit()).
@@ -2045,6 +1875,176 @@ static bool init_input(void)
          value_found = true;
          pgi_diag = pgi;
          log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - controlled by core option.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
+      }
+
+      if (!value_found && bii.nType != BIT_DIPSWITCH)
+      {
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - WARNING! Button unaccounted.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
+      }
+   }
+
+   init_macro_core_options();
+
+   // Update core option for diagnostic and macro inputs
+   set_environment();
+   // Read the user core option values
+   check_variables();
+   apply_macro_from_variables();
+
+   // Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
+   init_macro_input_descriptors();
+   // The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
+   set_input_descriptors();
+   
+   return has_analog;
+}
+#else
+static bool init_input(void)
+{
+   // Define nMaxPlayers early; GameInpInit() needs it (normally defined in DoLibInit()).
+   nMaxPlayers = BurnDrvGetMaxPlayers();
+   GameInpInit();
+   GameInpDefault();
+
+   bool has_analog = false;
+   struct GameInp* pgi = GameInp;
+   for (unsigned i = 0; i < nGameInpCount; i++, pgi++)
+   {
+      if (pgi->nType == BIT_ANALOG_REL)
+      {
+         has_analog = true;
+         break;
+      }
+   }
+
+   // Needed for Neo Geo button mappings (and other drivers in future)
+   const char * parentrom  = BurnDrvGetTextA(DRV_PARENT);
+   const char * boardrom   = BurnDrvGetTextA(DRV_BOARDROM);
+   const char * drvname    = BurnDrvGetTextA(DRV_NAME);
+   const char * systemname = BurnDrvGetTextA(DRV_SYSTEM);
+   INT32        genre      = BurnDrvGetGenreFlags();
+   INT32        hardware   = BurnDrvGetHardwareCode();
+
+   log_cb(RETRO_LOG_INFO, "drvname: %s\n", drvname);
+   if (parentrom)
+      log_cb(RETRO_LOG_INFO, "parentrom: %s\n", parentrom);
+   if (boardrom)
+      log_cb(RETRO_LOG_INFO, "boardrom: %s\n", boardrom);
+   if (systemname)
+      log_cb(RETRO_LOG_INFO, "systemname: %s\n", systemname);
+   log_cb(RETRO_LOG_INFO, "genre: %d\n", genre);
+   log_cb(RETRO_LOG_INFO, "hardware: %d\n", hardware);
+   log_cb(RETRO_LOG_INFO, "max players: %d\n", nMaxPlayers);
+   log_cb(RETRO_LOG_INFO, "has_analog: %d\n", has_analog);
+
+   /* initialization */
+   struct BurnInputInfo bii;
+   memset(&bii, 0, sizeof(bii));
+
+   // Bind to nothing.
+   for (unsigned i = 0; i < 0x5000; i++)
+      keybinds[i][0] = 0xff;
+
+   key_map bind_map[BIND_MAP_COUNT];
+   unsigned counter = init_bind_map(bind_map, gamepad_controls, newgen_controls_p1, newgen_controls_p2, remap_lr_p1, remap_lr_p2);
+
+   bool is_avsp =   (parentrom && strcmp(parentrom, "avsp") == 0   || strcmp(drvname, "avsp") == 0);
+   bool is_armwar = (parentrom && strcmp(parentrom, "armwar") == 0 || strcmp(drvname, "armwar") == 0);
+
+   char button_select[15];
+   char button_shot[15];
+
+   pgi = GameInp;
+   pgi_reset = NULL;
+   pgi_diag = NULL;
+
+   normal_input_descriptors.clear();
+
+   for(unsigned int i = 0; i < nGameInpCount; i++, pgi++)
+   {
+      BurnDrvGetInputInfo(&bii, i);
+
+      bool value_found = false;
+
+      // Store the pgi that controls the reset input
+      if (strcmp(bii.szInfo, "reset") == 0)
+      {
+         value_found = true;
+         pgi_reset = pgi;
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
+      }
+
+      // Store the pgi that controls the diagnostic input
+      if (strcmp(bii.szInfo, "diag") == 0)
+      {
+         value_found = true;
+         pgi_diag = pgi;
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - controlled by core option.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode);
+      }
+
+      for(int j = 0; j < counter && !value_found; j++)
+      {
+         unsigned port = bind_map[j].nCode[1];
+
+         sprintf(button_select, "P%d Select", port + 1); // => P1 Select
+         sprintf(button_shot,   "P%d Shot",   port + 1); // => P1 Shot
+
+         if (is_neogeo_game && strcmp(bii.szName, button_select) == 0)
+         {
+            value_found = true;
+            // set the retro device id
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
+         }
+         /* Alien vs. Predator and Armored Warriors both use "Px Shot" which usually serves as the shoot button for shmups
+          * To make sure the controls don't overlap with each other if statements are used */
+         else if ((is_avsp || is_armwar) && strcmp(bii.szName, button_shot) == 0)
+         {
+            value_found = true;
+            // set the retro device id
+            if (port == 1 || port != 2) // port != 2 is to configure the P3 and P4 like the P1 (TODO it would be good to make the handling of gamepad_controls dynamic regarding the number of players of the game
+            {
+               if (gamepad_controls == false)
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
+               else
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
+            }
+            if (port == 2)
+            {
+               if (gamepad_controls == false)
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
+               else
+                  keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
+            }
+         }
+         else if(strcmp(bii.szName, bind_map[j].bii_name) == 0)
+         {
+            value_found = true;
+            // set the retro device id
+            keybinds[pgi->Input.Switch.nCode][0] = bind_map[j].nCode[0];
+         }
+
+         if (!value_found)
+            continue;
+
+         // set the port index
+         keybinds[pgi->Input.Switch.nCode][1] = port;
+
+         unsigned device = RETRO_DEVICE_JOYPAD;
+         unsigned index = 0;
+         unsigned id = keybinds[pgi->Input.Switch.nCode][0];
+
+         // "P1 XXX" - try to exclude the "P1 " from the szName
+         int offset_player_x = 0;
+         if (strlen(bii.szName) > 3 && bii.szName[0] == 'P' && bii.szName[2] == ' ')
+            offset_player_x = 3;
+
+         char* description = bii.szName + offset_player_x;
+         
+         normal_input_descriptors.push_back((retro_input_descriptor){ port, device, index, id, description });
+
+         log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - assigned to key [%-25s] on port %2d.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode, print_label(keybinds[pgi->Input.Switch.nCode][0]), port);
+
+         break;
       }
 
       if (!value_found && bii.nType != BIT_DIPSWITCH)
