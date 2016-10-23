@@ -152,6 +152,9 @@ static const struct retro_variable var_empty = { NULL, NULL };
 static const struct retro_variable var_fba_aspect = { "fba-aspect", "Core-provided aspect ratio; DAR|PAR" };
 static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" };
 static const struct retro_variable var_fba_controls = { "fba-controls", "Control scheme; gamepad|arcade" };
+#if defined USE_SPEEDHACKS
+static const struct retro_variable var_fba_sh2_mode = { "fba-sh2-mode", "SH2 mode (need 'hard' restart); fast|accurate" };
+#endif
 
 static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-input", "Diagnostic Input; None|Hold Start|Start + A + B|Hold Start + A + B|Start + L + R|Hold Start + L + R|Hold Select|Select + A + B|Hold Select + A + B|Select + L + R|Hold Select + L + R" };
 
@@ -295,6 +298,7 @@ char g_rom_dir[1024];
 char g_save_dir[1024];
 char g_system_dir[1024];
 static bool driver_inited;
+bool sh2speedhack;
 
 void retro_get_system_info(struct retro_system_info *info)
 {
@@ -615,6 +619,7 @@ static void set_environment()
    vars_systems.push_back(&var_fba_aspect);
    vars_systems.push_back(&var_fba_cpu_speed_adjust);
    vars_systems.push_back(&var_fba_controls);
+   vars_systems.push_back(&var_fba_sh2_mode);
 
    // Add the remap L/R to R1/R2 options
    vars_systems.push_back(&var_remap_lr_p1);
@@ -1111,6 +1116,17 @@ static void check_variables(void)
          gamepad_controls = false;
    }
 
+#if defined USE_SPEEDHACKS
+   var.key = var_fba_sh2_mode.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+      if (strcmp(var.value, "fast") == 0)
+         sh2speedhack = true;
+      else
+         sh2speedhack = false;
+   }
+#endif
+
    var.key = var_fba_aspect.key;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
@@ -1265,7 +1281,6 @@ void retro_run()
 
    video_cb(g_fba_frame, width, height, nBurnPitch);
    audio_batch_cb(g_audio_buf, nBurnSoundLen);
-
    bool updated = false;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
    {

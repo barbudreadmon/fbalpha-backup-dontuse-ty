@@ -671,6 +671,13 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	{
 		Sh2Init(1);
 		Sh2Open(0);
+
+#if defined USE_SPEEDHACKS
+#ifdef __LIBRETRO__
+		if(sh2speedhack) cps3speedhack = 1;
+#endif
+#endif
+
 		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
 		Sh2MapMemory(DrvSh2ROM + 0x100000,	0x02000000, 0x020fffff, MAP_ROM);
 		Sh2MapMemory(DrvSprRAM,			0x03000000, 0x0300ffff, MAP_RAM);
@@ -684,6 +691,13 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	} else {
 		Sh2Init(1);
 		Sh2Open(0);
+
+#if defined USE_SPEEDHACKS
+#ifdef __LIBRETRO__
+		if(sh2speedhack) cps3speedhack = 1;
+#endif
+#endif
+
 		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
 		Sh2MapMemory(DrvSprRAM,			0x04000000, 0x0400ffff, MAP_RAM);
 		Sh2MapMemory(DrvPalRAM,			0x04040000, 0x0404ffff, MAP_RAM);

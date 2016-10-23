@@ -993,6 +993,12 @@ static INT32 DrvInit(INT32 bios)
 	Sh2Init(1);
 	Sh2Open(0);
 
+#if defined USE_SPEEDHACKS
+#ifdef __LIBRETRO__
+	if(sh2speedhack) cps3speedhack = 1;
+#endif
+#endif
+
 	Sh2MapMemory(DrvSh2BIOS,		0x00000000, 0x0007ffff, MAP_ROM);
 	Sh2MapMemory(DrvNvRAM,			0x00800000, 0x00801fff, MAP_RAM);
 	Sh2MapMemory(DrvSprRAM,			0x02000000, 0x02003fff, MAP_RAM);
