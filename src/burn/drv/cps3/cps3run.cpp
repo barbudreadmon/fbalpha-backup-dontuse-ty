@@ -1150,11 +1150,7 @@ INT32 cps3Init()
 		Sh2Open(0);
 
 #if defined USE_SPEEDHACKS
-#ifdef __LIBRETRO__
-		if(sh2speedhack) cps3speedhack = 1;
-#else
 		cps3speedhack = 1;
-#endif
 #endif
 
 		// Map sh-2 memory:

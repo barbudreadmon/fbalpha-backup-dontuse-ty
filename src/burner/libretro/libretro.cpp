@@ -153,7 +153,7 @@ static const struct retro_variable var_fba_aspect = { "fba-aspect", "Core-provid
 static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" };
 static const struct retro_variable var_fba_controls = { "fba-controls", "Control scheme; gamepad|arcade" };
 #if defined USE_SPEEDHACKS
-static const struct retro_variable var_fba_sh2_mode = { "fba-sh2-mode", "SH2 mode (need 'hard' restart); fast|accurate" };
+static const struct retro_variable var_fba_sh2_mode = { "fba-sh2-mode", "Psikyo/Kaneko SH2 mode (need 'hard' restart); accurate|fast" };
 #endif
 
 static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-input", "Diagnostic Input; None|Hold Start|Start + A + B|Hold Start + A + B|Start + L + R|Hold Start + L + R|Hold Select|Select + A + B|Hold Select + A + B|Select + L + R|Hold Select + L + R" };
