@@ -1803,39 +1803,110 @@ static bool init_input(void)
          if (strncmp("fire ", szi, 5) == 0) {
             char *szb = szi + 5;
             INT32 nButton = strtol(szb, NULL, 0);
-            switch (nButton) {
-               case 1:
-                  keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? (is_neogeo_game ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_Y : RETRO_DEVICE_ID_JOYPAD_B) : RETRO_DEVICE_ID_JOYPAD_Y) : RETRO_DEVICE_ID_JOYPAD_A);
-                  value_found = true;
-                  break;
-               case 2:
-                  keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? (is_neogeo_game ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_B : RETRO_DEVICE_ID_JOYPAD_A) : RETRO_DEVICE_ID_JOYPAD_B) : RETRO_DEVICE_ID_JOYPAD_B);
-                  value_found = true;
-                  break;
-               case 3:
-                  keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? (is_neogeo_game ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_X : RETRO_DEVICE_ID_JOYPAD_Y) : RETRO_DEVICE_ID_JOYPAD_A) : RETRO_DEVICE_ID_JOYPAD_X);
-                  value_found = true;
-                  break;
-               case 4:
-                  keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? (is_neogeo_game ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_A : RETRO_DEVICE_ID_JOYPAD_X) : RETRO_DEVICE_ID_JOYPAD_X) : RETRO_DEVICE_ID_JOYPAD_Y);
-                  value_found = true;
-                  break;
-               case 5:
-                  keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R2 : RETRO_DEVICE_ID_JOYPAD_R);
-                  value_found = true;
-                  break;
-               case 6:
-                  keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R : RETRO_DEVICE_ID_JOYPAD_L);
-                  value_found = true;
-                  break;
-               case 7:
-                  keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_L2 : RETRO_DEVICE_ID_JOYPAD_R2);
-                  value_found = true;
-                  break;
-               case 8:
-                  keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_L : RETRO_DEVICE_ID_JOYPAD_L2);
-                  value_found = true;
-                  break;
+            if (nFireButtons == 4) {
+               if (is_neogeo_game) {
+                  switch (nButton) {
+                     case 1:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_Y : RETRO_DEVICE_ID_JOYPAD_B) : RETRO_DEVICE_ID_JOYPAD_A);
+                        value_found = true;
+                        break;
+                     case 2:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_B : RETRO_DEVICE_ID_JOYPAD_A) : RETRO_DEVICE_ID_JOYPAD_B);
+                        value_found = true;
+                        break;
+                     case 3:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_X : RETRO_DEVICE_ID_JOYPAD_Y) : RETRO_DEVICE_ID_JOYPAD_X);
+                        value_found = true;
+                        break;
+                     case 4:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? ((newgen_controls_p1 && port == 0) || (newgen_controls_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_A : RETRO_DEVICE_ID_JOYPAD_X) : RETRO_DEVICE_ID_JOYPAD_Y);
+                        value_found = true;
+                        break;
+                  }
+               } else {
+                  switch (nButton) {
+                     case 1:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_Y : RETRO_DEVICE_ID_JOYPAD_A);
+                        value_found = true;
+                        break;
+                     case 2:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_B : RETRO_DEVICE_ID_JOYPAD_B);
+                        value_found = true;
+                        break;
+                     case 3:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_A : RETRO_DEVICE_ID_JOYPAD_X);
+                        value_found = true;
+                        break;
+                     case 4:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_X : RETRO_DEVICE_ID_JOYPAD_Y);
+                        value_found = true;
+                        break;
+                  }
+               }
+            } else {
+               if (bStreetFighterLayout) {
+                  switch (nButton) {
+                     case 1:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_Y : RETRO_DEVICE_ID_JOYPAD_A);
+                        value_found = true;
+                        break;
+                     case 2:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_X : RETRO_DEVICE_ID_JOYPAD_B);
+                        value_found = true;
+                        break;
+                     case 3:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R : RETRO_DEVICE_ID_JOYPAD_L) : RETRO_DEVICE_ID_JOYPAD_X);
+                        value_found = true;
+                        break;
+                     case 4:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_B : RETRO_DEVICE_ID_JOYPAD_Y);
+                        value_found = true;
+                        break;
+                     case 5:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_A : ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R : RETRO_DEVICE_ID_JOYPAD_L));
+                        value_found = true;
+                        break;
+                     case 6:
+                        keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R2 : RETRO_DEVICE_ID_JOYPAD_R);
+                        value_found = true;
+                        break;
+                  }
+               } else {
+                  switch (nButton) {
+                     case 1:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_B : RETRO_DEVICE_ID_JOYPAD_Y);
+                        value_found = true;
+                        break;
+                     case 2:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_A : ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R : RETRO_DEVICE_ID_JOYPAD_L));
+                        value_found = true;
+                        break;
+                     case 3:
+                        keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R2 : RETRO_DEVICE_ID_JOYPAD_R);
+                        value_found = true;
+                        break;
+                     case 4:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_Y : RETRO_DEVICE_ID_JOYPAD_A);
+                        value_found = true;
+                        break;
+                     case 5:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? RETRO_DEVICE_ID_JOYPAD_X : RETRO_DEVICE_ID_JOYPAD_B);
+                        value_found = true;
+                        break;
+                     case 6:
+                        keybinds[pgi->Input.Switch.nCode][0] = (gamepad_controls ? ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_R : RETRO_DEVICE_ID_JOYPAD_L) : RETRO_DEVICE_ID_JOYPAD_X);
+                        value_found = true;
+                        break;
+                     case 7:
+                        keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_L2 : RETRO_DEVICE_ID_JOYPAD_R2);
+                        value_found = true;
+                        break;
+                     case 8:
+                        keybinds[pgi->Input.Switch.nCode][0] = ((remap_lr_p1 && port == 0) || (remap_lr_p2 && port == 1) ? RETRO_DEVICE_ID_JOYPAD_L : RETRO_DEVICE_ID_JOYPAD_L2);
+                        value_found = true;
+                        break;
+                  }
+               }
             }
          }
 
