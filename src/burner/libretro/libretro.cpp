@@ -1,6 +1,9 @@
 #include "libretro.h"
 #include "burner.h"
-#include "bind_map.h"
+
+#ifdef USE_OLD_MAPPING
+	#include "bind_map.h"
+#endif
 
 #include <vector>
 #include <string>
@@ -1698,7 +1701,7 @@ static const char *print_label(unsigned i)
    }
 }
 
-#ifdef USE_NEW_MAPPING
+#ifndef USE_OLD_MAPPING
 static bool init_input(void)
 {
    // Define nMaxPlayers early; GameInpInit() needs it (normally defined in DoLibInit()).
@@ -1803,7 +1806,7 @@ static bool init_input(void)
          if (strncmp("fire ", szi, 5) == 0) {
             char *szb = szi + 5;
             INT32 nButton = strtol(szb, NULL, 0);
-            if (nFireButtons == 4) {
+            if (nFireButtons <= 4) {
                if (is_neogeo_game) {
                   switch (nButton) {
                      case 1:

@@ -5,7 +5,7 @@ HAVE_GRIFFIN = 0
 FASTCALL = 0
 WANT_NEOGEOCD = 0
 USE_SPEEDHACKS = 1
-USE_NEW_MAPPING = 0
+USE_OLD_MAPPING = 0
 EXTERNAL_ZLIB = 0
 
 ifeq ($(platform),)
@@ -151,17 +151,17 @@ else ifeq ($(platform), psl1ght)
 	EXTERNAL_ZLIB = 1
 	STATIC_LINKING = 1
 else ifeq ($(platform), vita)
-  TARGET := $(TARGET_NAME)_libretro_$(platform).a
-  CC = arm-vita-eabi-gcc$(EXE_EXT)
-  CC_AS = arm-vita-eabi-gcc$(EXE_EXT)
-  CXX = arm-vita-eabi-g++$(EXE_EXT)
-  AR = arm-vita-eabi-ar$(EXE_EXT)
-  PLATFORM_DEFINES += -DVITA
+	TARGET := $(TARGET_NAME)_libretro_$(platform).a
+	CC = arm-vita-eabi-gcc$(EXE_EXT)
+	CC_AS = arm-vita-eabi-gcc$(EXE_EXT)
+	CXX = arm-vita-eabi-g++$(EXE_EXT)
+	AR = arm-vita-eabi-ar$(EXE_EXT)
+	PLATFORM_DEFINES += -DVITA
 	ENDIANNESS_DEFINES := -DLSB_FIRST
-  CFLAGS += -O3 -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive
-  CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
-  EXTERNAL_ZLIB = 1
-  STATIC_LINKING = 1
+	CFLAGS += -O2 -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive
+	CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+	EXTERNAL_ZLIB = 1
+	STATIC_LINKING = 1
 else ifeq ($(platform), xenon)
 	TARGET := $(TARGET_NAME)_libretro_xenon360.a
 	CC = xenon-gcc$(EXE_EXT)
@@ -426,8 +426,7 @@ else
 	LDFLAGS += -lz
 endif
 
-SOURCES_CXX := $(GRIFFIN_CXXSRCFILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
-SOURCES_CXX += $(LIBRETRO_DIR)/bind_map.cpp $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp
+SOURCES_CXX := $(GRIFFIN_CXXSRCFILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp))) $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp
 FBA_CXXOBJ := $(SOURCES_CXX:.cpp=.o)
 SOURCES_C := $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
 FBA_COBJ := $(SOURCES_C:.c=.o)
@@ -481,8 +480,10 @@ ifeq ($(USE_SPEEDHACKS), 1)
 	FBA_DEFINES += -DUSE_SPEEDHACKS
 endif
 
-ifeq ($(USE_NEW_MAPPING), 1)
-	FBA_DEFINES += -DUSE_NEW_MAPPING
+ifeq ($(USE_OLD_MAPPING), 1)
+	FBA_DEFINES += -DUSE_OLD_MAPPING
+	SOURCES_CXX += $(LIBRETRO_DIR)/bind_map.cpp
+else
 endif
 
 ifeq ($(WANT_NEOGEOCD), 1)
@@ -537,9 +538,6 @@ all: $(TARGET)
 
 generate-files-clean:
 	rm -rf $(FBA_GENERATED_DIR)/
-	rm -rf $(FBA_CPU_DIR)/m68k/m68kopac.c
-	rm -rf $(FBA_CPU_DIR)/m68k/m68kopdm.c
-	rm -rf $(FBA_CPU_DIR)/m68k/m68kopnz.c
 	rm -rf $(FBA_CPU_DIR)/m68k/m68kops.c
 	rm -rf $(FBA_CPU_DIR)/m68k/m68kops.h
 
