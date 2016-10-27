@@ -526,7 +526,10 @@ static int InpDIPSWInit()
             
             BurnDrvGetDIPInfo(&(dip_value->bdi), k + i + 1);
             dip_value->pgi = pgi_value;
-            strncpy(dip_value->friendly_name, dip_value->bdi.szText, sizeof(dip_value->friendly_name));
+
+            // Dirty fix for issue #99, games are playable, but it is not okay
+            if (dip_value->bdi.szText != NULL)
+               strncpy(dip_value->friendly_name, dip_value->bdi.szText, sizeof(dip_value->friendly_name));
 
             bool is_default_value = (dip_value->pgi->Input.Constant.nConst & dip_value->bdi.nMask) == (dip_value->bdi.nSetting);
 
