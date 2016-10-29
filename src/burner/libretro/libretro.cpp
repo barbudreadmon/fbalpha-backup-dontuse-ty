@@ -527,10 +527,6 @@ static int InpDIPSWInit()
             BurnDrvGetDIPInfo(&(dip_value->bdi), k + i + 1);
             dip_value->pgi = pgi_value;
 
-            // Dirty fix for issue #99, games are playable, but it is not okay
-            if (dip_value->bdi.szText != NULL)
-               strncpy(dip_value->friendly_name, dip_value->bdi.szText, sizeof(dip_value->friendly_name));
-
             bool is_default_value = (dip_value->pgi->Input.Constant.nConst & dip_value->bdi.nMask) == (dip_value->bdi.nSetting);
 
             if (is_default_value)
@@ -541,7 +537,11 @@ static int InpDIPSWInit()
                default_dip_value->pgi = dip_value->pgi;
              
                snprintf(default_dip_value->friendly_name, sizeof(default_dip_value->friendly_name), "%s %s", "(Default)", default_dip_value->bdi.szText);
-            }  
+            }
+            else
+	    {
+               strncpy(dip_value->friendly_name, dip_value->bdi.szText, sizeof(dip_value->friendly_name));
+	    }
 
             l++;
          }
@@ -2879,12 +2879,12 @@ static void init_macro_core_options()
       macro_core_options.push_back(macro_core_option());
       macro_core_option *macro_option = &macro_core_options.back();
 
-      // Clean the macro name to creation the core option name (removing space, equal characters and the special '×' from 3× Punch/Kick)
+      // Clean the macro name to creation the core option name (removing space, equal characters and the special 'Ã—' from 3Ã— Punch/Kick)
       char option_name[strlen(pgi->Macro.szName) + 1]; // + 1 for the '\0' ending
       strcpy(option_name, pgi->Macro.szName);
       str_char_replace(option_name, ' ', '_');
       str_char_replace(option_name, '=', '_');
-      str_char_replace(option_name, '×', 'x'); // Remove the strange '×' from '3× Punch' and '3× Kick' (core options are buggy with it)
+      str_char_replace(option_name, 'Ã—', 'x'); // Remove the strange 'Ã—' from '3Ã— Punch' and '3Ã— Kick' (core options are buggy with it)
 
       macro_option->pgi = pgi;
       strncpy(macro_option->friendly_name, pgi->Macro.szName, sizeof(macro_option->friendly_name));
