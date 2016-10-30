@@ -1730,11 +1730,11 @@ static bool init_input(void)
    GameInpDefault();
    
    // Handle twinstick games (issue #102, not working for now)
-   bool twinstick_game = false;
-   bool up_is_mapped = false;
-   bool down_is_mapped = false;
-   bool left_is_mapped = false;
-   bool right_is_mapped = false;
+   bool twinstick_game[5] = { false, false, false, false, false };
+   bool up_is_mapped[5] = { false, false, false, false, false };
+   bool down_is_mapped[5] = { false, false, false, false, false };
+   bool left_is_mapped[5] = { false, false, false, false, false };
+   bool right_is_mapped[5] = { false, false, false, false, false };
 
    bool has_analog = false;
    struct GameInp* pgi = GameInp;
@@ -1814,42 +1814,42 @@ static bool init_input(void)
          }
          
          if (strncmp("up", szi, 2) == 0) {
-            if( up_is_mapped ) {
+            if( up_is_mapped[port] ) {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
-               twinstick_game = true;
+               twinstick_game[port] = true;
             } else {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_UP;
-               up_is_mapped = true;
+               up_is_mapped[port] = true;
             }
             value_found = true;
          }
          if (strncmp("down", szi, 4) == 0) {
-            if( down_is_mapped ) {
+            if( down_is_mapped[port] ) {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_B;
-               twinstick_game = true;
+               twinstick_game[port] = true;
             } else {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_DOWN;
-               down_is_mapped = true;
+               down_is_mapped[port] = true;
             }
             value_found = true;
          }
          if (strncmp("left", szi, 4) == 0) {
-            if( left_is_mapped ) {
+            if( left_is_mapped[port] ) {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_Y;
-               twinstick_game = true;
+               twinstick_game[port] = true;
             } else {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_LEFT;
-               left_is_mapped = true;
+               left_is_mapped[port] = true;
             }
             value_found = true;
          }
          if (strncmp("right", szi, 5) == 0) {
-            if( right_is_mapped ) {
+            if( right_is_mapped[port] ) {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
-               twinstick_game = true;
+               twinstick_game[port] = true;
             } else {
                keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_RIGHT;
-               right_is_mapped = true;
+               right_is_mapped[port] = true;
             }
             value_found = true;
          }
@@ -1866,7 +1866,7 @@ static bool init_input(void)
          if (strncmp("fire ", szi, 5) == 0) {
             char *szb = szi + 5;
             INT32 nButton = strtol(szb, NULL, 0);
-            if (twinstick_game) {
+            if (twinstick_game[port]) {
                switch (nButton) {
                   case 1:
                      keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_R;
