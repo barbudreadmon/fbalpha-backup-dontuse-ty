@@ -9,6 +9,10 @@ Don't report issues if you didn't build a valid romset.
 
 Samples should be put under SYSTEM_DIRECTORY/fba/samples
 
+## hiscore.dat
+
+Place hiscore.dat from http://highscore.mameworld.info/download.htm (use 'old format hiscore.dat (pre mame v0174)' version) in SAVE_DIRECTORY
+
 ## Raspberry Pi 2 users
 
 Use this command to build :
