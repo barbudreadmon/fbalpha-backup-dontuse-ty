@@ -321,7 +321,8 @@ void retro_get_system_info(struct retro_system_info *info)
 }
 
 /////
-static void poll_input();
+static void InputTick();
+static void InputMake();
 static bool init_input();
 static void check_variables();
 
@@ -1292,7 +1293,7 @@ void retro_run()
    BurnDrvGetVisibleSize(&width, &height);
    pBurnDraw = (uint8_t*)g_fba_frame;
 
-   poll_input();
+   InputMake();
 
    ForceFrameStep();
    
@@ -2232,6 +2233,13 @@ static bool init_input(void)
 //#define DEBUG_INPUT
 //
 
+static inline INT32 CinpState(INT32 nCode)
+{
+   INT32 id = keybinds[nCode][0];
+   UINT32 port = keybinds[nCode][1];
+   return input_cb(port, RETRO_DEVICE_JOYPAD, 0, id);
+}
+
 static inline int CinpJoyAxis(int i, int axis)
 {
    switch(axis)
@@ -2322,61 +2330,81 @@ static bool poll_diag_input()
    return false;
 }
 
-static void poll_input(void)
+static void InputTick()
+{
+	struct GameInp *pgi;
+	UINT32 i;
+
+	for (i = 0, pgi = GameInp; i < nGameInpCount; i++, pgi++) {
+		INT32 nAdd = 0;
+		if ((pgi->nInput &  GIT_GROUP_SLIDER) == 0) {				// not a slider
+			continue;
+		}
+
+		if (pgi->nInput == GIT_KEYSLIDER) {
+			// Get states of the two keys
+			if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))	{
+				nAdd -= 0x100;
+			}
+			if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))	{
+				nAdd += 0x100;
+			}
+		}
+
+		if (pgi->nInput == GIT_JOYSLIDER) {
+			// Get state of the axis
+			nAdd = CinpJoyAxis(pgi->Input.Slider.JoyAxis.nJoy, pgi->Input.Slider.JoyAxis.nAxis);
+			nAdd /= 0x100;
+		}
+
+		// nAdd is now -0x100 to +0x100
+
+		// Change to slider speed
+		nAdd *= pgi->Input.Slider.nSliderSpeed;
+		nAdd /= 0x100;
+
+		if (pgi->Input.Slider.nSliderCenter) {						// Attact to center
+			INT32 v = pgi->Input.Slider.nSliderValue - 0x8000;
+			v *= (pgi->Input.Slider.nSliderCenter - 1);
+			v /= pgi->Input.Slider.nSliderCenter;
+			v += 0x8000;
+			pgi->Input.Slider.nSliderValue = v;
+		}
+
+		pgi->Input.Slider.nSliderValue += nAdd;
+		// Limit slider
+		if (pgi->Input.Slider.nSliderValue < 0x0100) {
+			pgi->Input.Slider.nSliderValue = 0x0100;
+		}
+		if (pgi->Input.Slider.nSliderValue > 0xFF00) {
+			pgi->Input.Slider.nSliderValue = 0xFF00;
+		}
+	}
+}
+
+static void InputMake(void)
 {
    poll_cb();
 
    if (poll_diag_input())
       return;
 
-   struct GameInp* pgi = GameInp;
+   struct GameInp* pgi;
+   UINT32 i;
 
-   for (int i = 0; i < nGameInpCount; i++, pgi++)
+   InputTick();
+
+   for (i = 0, pgi = GameInp; i < nGameInpCount; i++, pgi++)
    {
-      int nAdd = 0;
-
-      if ((pgi->nInput & GIT_GROUP_SLIDER) == 0)                           // not a slider
+      if (pgi->Input.pVal == NULL)
          continue;
 
-      if (pgi->nInput == GIT_KEYSLIDER)
-      {
-         // Get states of the two keys
-         if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
-            nAdd -= 0x100;
-         if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
-            nAdd += 0x100;
-      }
-
-      // nAdd is now -0x100 to +0x100
-
-      // Change to slider speed
-      nAdd *= pgi->Input.Slider.nSliderSpeed;
-      nAdd /= 0x100;
-
-      if (pgi->Input.Slider.nSliderCenter)
-      {                                          // Attact to center
-         int v = pgi->Input.Slider.nSliderValue - 0x8000;
-         v *= (pgi->Input.Slider.nSliderCenter - 1);
-         v /= pgi->Input.Slider.nSliderCenter;
-         v += 0x8000;
-         pgi->Input.Slider.nSliderValue = v;
-      }
-
-      pgi->Input.Slider.nSliderValue += nAdd;
-      // Limit slider
-      if (pgi->Input.Slider.nSliderValue < 0x0100)
-         pgi->Input.Slider.nSliderValue = 0x0100;
-      if (pgi->Input.Slider.nSliderValue > 0xFF00)
-         pgi->Input.Slider.nSliderValue = 0xFF00;
-   }
-
-   pgi = GameInp;
-
-   for (unsigned i = 0; i < nGameInpCount; i++, pgi++)
-   {
       switch (pgi->nInput)
       {
-         case GIT_CONSTANT: // Constant value
+         case 0:                       // Undefined
+            pgi->Input.nVal = 0;
+            break;
+         case GIT_CONSTANT:            // Constant value
             {
                pgi->Input.nVal = pgi->Input.Constant.nConst;
                *(pgi->Input.pVal) = pgi->Input.nVal;
@@ -2385,11 +2413,7 @@ static void poll_input(void)
          case GIT_SWITCH:
             {
                // Digital input
-               INT32 id = keybinds[pgi->Input.Switch.nCode][0];
-               unsigned port = keybinds[pgi->Input.Switch.nCode][1];
-
-               bool state = input_cb(port, RETRO_DEVICE_JOYPAD, 0, id);
-
+               INT32 s = CinpState(pgi->Input.Switch.nCode);
 #if 0
                log_cb(RETRO_LOG_INFO, "GIT_SWITCH: %s, port: %d, pressed: %d.\n", print_label(id), port, state);
 #endif
@@ -2397,7 +2421,7 @@ static void poll_input(void)
                if (pgi->nType & BIT_GROUP_ANALOG)
                {
                   // Set analog controls to full
-                  if (state)
+                  if (s)
                      pgi->Input.nVal = 0xFFFF;
                   else
                      pgi->Input.nVal = 0x0001;
@@ -2410,7 +2434,7 @@ static void poll_input(void)
                else
                {
                   // Binary controls
-                  if (state)
+                  if (s)
                      pgi->Input.nVal = 1;
                   else
                      pgi->Input.nVal = 0;
@@ -2430,7 +2454,7 @@ static void poll_input(void)
                   nSlider >>= 4;
                }
 
-               pgi->Input.nVal = (unsigned short)nSlider;
+               pgi->Input.nVal = (UINT16)nSlider;
 #ifdef LSB_FIRST
                *(pgi->Input.pShortVal) = pgi->Input.nVal;
 #else
