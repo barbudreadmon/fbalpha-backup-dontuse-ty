@@ -113,6 +113,8 @@ static bool remap_lr_p1 = false;
 static bool remap_lr_p2 = false;
 static bool core_aspect_par = false;
 
+extern INT32 EnableHiscores;
+
 #define STAT_NOFIND  0
 #define STAT_OK      1
 #define STAT_CRC     2
@@ -156,6 +158,7 @@ static const struct retro_variable var_empty = { NULL, NULL };
 static const struct retro_variable var_fba_aspect = { "fba-aspect", "Core-provided aspect ratio; DAR|PAR" };
 static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" };
 static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-input", "Diagnostic Input; None|Hold Start|Start + A + B|Hold Start + A + B|Start + L + R|Hold Start + L + R|Hold Select|Select + A + B|Hold Select + A + B|Select + L + R|Hold Select + L + R" };
+static const struct retro_variable var_fba_hiscores = { "fba-hiscores", "Hiscores; enabled|disabled" };
 
 // Neo Geo core options
 static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; MVS|AES|UNIBIOS|DIPSWITCH" };
@@ -632,6 +635,7 @@ static void set_environment()
    vars_systems.push_back(&var_fba_controls_p1);
    vars_systems.push_back(&var_fba_controls_p2);
    vars_systems.push_back(&var_fba_sh2_mode);
+   vars_systems.push_back(&var_fba_hiscores);
 
    // Add the remap L/R to R1/R2 options
    vars_systems.push_back(&var_fba_lr_controls_p1);
@@ -1270,6 +1274,15 @@ static void check_variables(void)
                g_opt_neo_geo_mode = NEO_GEO_MODE_DIPSWITCH;
          }
       }
+   }
+    
+   var.key = var_fba_hiscores.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+      if (strcmp(var.value, "enabled") == 0)
+         EnableHiscores = true;
+      else
+         EnableHiscores = false;
    }
 }
 
