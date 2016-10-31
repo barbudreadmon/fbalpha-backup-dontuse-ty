@@ -283,6 +283,8 @@ BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_BURNER_DIR)/image.cpp \
 	$(FBA_BURNER_DIR)/misc.cpp \
 	$(FBA_BURNER_DIR)/state.cpp \
+	$(FBA_BURNER_DIR)/gami.cpp \
+	$(FBA_BURNER_DIR)/gamc.cpp \
 	$(FBA_CPU_DIR)/h6280/tblh6280.c \
 	$(FBA_CPU_DIR)/m6502/t65sc02.c \
 	$(FBA_CPU_DIR)/m6502/t65c02.c \
@@ -426,7 +428,7 @@ else
 	LDFLAGS += -lz
 endif
 
-SOURCES_CXX := $(GRIFFIN_CXXSRCFILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp))) $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp
+SOURCES_CXX := $(GRIFFIN_CXXSRCFILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp))) $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp $(LIBRETRO_DIR)/gami.cpp $(LIBRETRO_DIR)/gamc.cpp
 FBA_CXXOBJ := $(SOURCES_CXX:.cpp=.o)
 SOURCES_C := $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
 FBA_COBJ := $(SOURCES_C:.c=.o)
