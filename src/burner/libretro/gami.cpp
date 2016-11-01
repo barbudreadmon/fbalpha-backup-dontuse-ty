@@ -174,57 +174,6 @@ static void GameInpInitMacros()
 
 	pgi = GameInp + nGameInpCount;
 
-	{ // Mappable system macros -dink
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System Pause");
-			pgi->Macro.pVal[0] = &macroSystemPause;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System FFWD");
-			pgi->Macro.pVal[0] = &macroSystemFFWD;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System Load State");
-			pgi->Macro.pVal[0] = &macroSystemLoadState;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System Save State");
-			pgi->Macro.pVal[0] = &macroSystemSaveState;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System UNDO State");
-			pgi->Macro.pVal[0] = &macroSystemUNDOState;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-	}
 	{ // Autofire!!!
 			for (INT32 nPlayer = 0; nPlayer < nMaxPlayers; nPlayer++) {
 				for (INT32 i = 0; i < nFireButtons; i++) {
@@ -260,7 +209,7 @@ static void GameInpInitMacros()
 			pgi->nType = BIT_DIGITAL;
 			pgi->Macro.nMode = 0;
 
-			sprintf(pgi->Macro.szName, "P%i 3× Punch", nPlayer + 1);
+			sprintf(pgi->Macro.szName, "P%i 3x Punch", nPlayer + 1);
 			for (INT32 j = 0; j < 3; j++) {
 				BurnDrvGetInputInfo(&bii, nPunchInputs[nPlayer][j]);
 				pgi->Macro.pVal[j] = bii.pVal;
@@ -276,7 +225,7 @@ static void GameInpInitMacros()
 			pgi->nType = BIT_DIGITAL;
 			pgi->Macro.nMode = 0;
 
-			sprintf(pgi->Macro.szName, "P%i 3× Kick", nPlayer + 1);
+			sprintf(pgi->Macro.szName, "P%i 3x Kick", nPlayer + 1);
 			for (INT32 j = 0; j < 3; j++) {
 				BurnDrvGetInputInfo(&bii, nKickInputs[nPlayer][j]);
 				pgi->Macro.pVal[j] = bii.pVal;
