@@ -686,7 +686,7 @@ static struct BurnInputInfo Pzloop2InputList[] = {
 	{"P1 Left"          , BIT_DIGITAL   , CpsInp001+1   , "p1 left"     },
 	{"P1 Right"         , BIT_DIGITAL   , CpsInp001+0   , "p1 right"    },
 	{"P1 Shot"          , BIT_DIGITAL   , CpsInp001+4   , "p1 fire 1"   },
-	A("P1 Paddle"       , BIT_ANALOG_REL, &CpsInpPaddle1, "mouse x-axis"),
+	A("P1 Paddle"       , BIT_ANALOG_REL, &CpsInpPaddle1, "p1 z-axis"),
 
 	{"P2 Coin"          , BIT_DIGITAL   , CpsInp020+5   , "p2 coin"     },
 	{"P2 Start"         , BIT_DIGITAL   , CpsInp020+1   , "p2 start"    },

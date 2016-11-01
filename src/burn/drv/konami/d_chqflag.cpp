@@ -57,7 +57,7 @@ static struct BurnInputInfo ChqflagInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 start"	},
 
-	A("Wheel",          BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
+	A("Wheel",          BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
 	A("Accelerator",    BIT_ANALOG_REL, &DrvAnalogPort1 , "p1 fire 1"),
 
 	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 fire 2"	},

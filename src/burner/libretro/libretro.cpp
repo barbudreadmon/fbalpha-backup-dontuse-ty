@@ -1868,15 +1868,6 @@ static bool init_input(void)
             value_found = true;
          }
 
-         if (strncmp("x-axis", szi, 6) == 0) {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_ANALOG_X;
-            value_found = true;
-         }
-         if (strncmp("y-axis", szi, 6) == 0) {
-            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_ANALOG_Y;
-            value_found = true;
-         }
-
          if (strncmp("fire ", szi, 5) == 0) {
             char *szb = szi + 5;
             INT32 nButton = strtol(szb, NULL, 0);

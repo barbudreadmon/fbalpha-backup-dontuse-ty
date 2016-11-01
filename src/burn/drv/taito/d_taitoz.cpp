@@ -263,11 +263,11 @@ static struct BurnInputInfo SpacegunInputList[] =
 	{"Coin 2"            , BIT_DIGITAL   , TC0220IOCInputPort0 + 2, "p2 coin"   },
 	{"Start 2"           , BIT_DIGITAL   , TC0220IOCInputPort0 + 7, "p2 start"  },
 
-	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0     , "mouse x-axis" ),
-	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1     , "mouse y-axis" ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 0, "mouse button 1" },
-	{"P1 Fire 2"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 2, "mouse button 2" },
-	{"P1 Fire 3"         , BIT_DIGITAL   , TC0220IOCInputPort0 + 0, "p1 fire 1" },
+	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0     , "p1 x-axis" ),
+	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1     , "p1 y-axis" ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 0, "p1 fire 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 2, "p1 fire 2" },
+	{"P1 Fire 3"         , BIT_DIGITAL   , TC0220IOCInputPort0 + 0, "p1 fire 3" },
 	
 	A("P2 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort2     , "p2 x-axis" ),
 	A("P2 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort3     , "p2 y-axis" ),

@@ -248,7 +248,7 @@ static struct BurnInputInfo ponpokoInputList[] = {
 	{"P2 Left",		  BIT_DIGITAL,	DrvJoy2 + 1, "p2 left"},
 	{"P2 Right",	  	  BIT_DIGITAL,	DrvJoy2 + 2, "p2 right"},
 	{"P2 Down",		  BIT_DIGITAL,	DrvJoy2 + 3, "p2 down"},
-	{"P2 button 1",		  BIT_DIGITAL,  DrvJoy2 + 4, "p1 fire 1"},
+	{"P2 button 1",		  BIT_DIGITAL,  DrvJoy2 + 4, "p2 fire 1"},
 
 	{"Reset",		  BIT_DIGITAL,	&DrvReset,   "reset"},
 	{"Service Mode",	  BIT_DIGITAL,	DrvJoy1 + 7, "diag"},
@@ -586,10 +586,10 @@ static struct BurnInputInfo shootbulInputList[] = {
 	{"Coin 3",		BIT_DIGITAL,	DrvJoy1 + 7,	"p3 coin"},
 	{"Start",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 start"},
 
-    A("P1 X Axis",		BIT_ANALOG_REL,	DrvAxis + 0,	"mouse x-axis"),
-    A("P1 Y Axis",		BIT_ANALOG_REL,	DrvAxis + 1,	"mouse y-axis"),
+    A("P1 X Axis",		BIT_ANALOG_REL,	DrvAxis + 0,	"p1 x-axis"),
+    A("P1 Y Axis",		BIT_ANALOG_REL,	DrvAxis + 1,	"p1 y-axis"),
 
-	{"P1 Button A",		BIT_DIGITAL,	DrvJoy2 + 5,	"mouse button 1"},
+	{"P1 Button A",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 1"},
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,		"reset"},
 

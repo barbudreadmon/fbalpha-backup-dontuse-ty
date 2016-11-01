@@ -93,9 +93,9 @@ static struct BurnInputInfo ZeropntInputList[] =
 	{"Coin 2"            , BIT_DIGITAL  , DrvInputPort0 + 1, "p2 coin"   },
 	{"Start 2"           , BIT_DIGITAL  , DrvInputPort0 + 5, "p2 start"  },
 
-	A("P1 Gun X"         , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
-	A("P1 Gun Y"         , BIT_ANALOG_REL, &DrvAnalogPort1 , "mouse y-axis"),
-	{"P1 Fire 1"         , BIT_DIGITAL  , DrvInputPort1 + 0, "mouse button 1" },
+	A("P1 Gun X"         , BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
+	A("P1 Gun Y"         , BIT_ANALOG_REL, &DrvAnalogPort1 , "p1 y-axis"),
+	{"P1 Fire 1"         , BIT_DIGITAL  , DrvInputPort1 + 0, "p1 fire 1" },
 	
 	A("P2 Gun X"         , BIT_ANALOG_REL, &DrvAnalogPort2 , "p2 x-axis"),
 	A("P2 Gun Y"         , BIT_ANALOG_REL, &DrvAnalogPort3 , "p2 y-axis"),

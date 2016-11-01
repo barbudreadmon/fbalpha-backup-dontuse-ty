@@ -195,8 +195,8 @@ static struct BurnInputInfo BangInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 4,	"p1 start"	},
 	{"P1 Button",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 fire 1"	},
-	A("P1 Gun X",    	BIT_ANALOG_REL, &LethalGun0,    "mouse x-axis"	),
-	A("P1 Gun Y",    	BIT_ANALOG_REL, &LethalGun1,    "mouse y-axis"	),
+	A("P1 Gun X",    	BIT_ANALOG_REL, &LethalGun0,    "p1 x-axis"	),
+	A("P1 Gun Y",    	BIT_ANALOG_REL, &LethalGun1,    "p1 y-axis"	),
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 coin"	},
 	{"P2 Start",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 start"	},

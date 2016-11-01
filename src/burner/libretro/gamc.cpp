@@ -185,41 +185,6 @@ INT32 GamcMisc(struct GameInp* pgi, char* szi, INT32 nPlayer)
 				KEY(FBK_5);
 				return 0;
 			}
-
-			// Mouse controls
-			// They are p1 analog controls, so i need to define them only for p1
-			// and i want them to act as standard analog input
-			if (strncmp(szi, "mouse", 5) == 0) {
-
-				if (strcmp(szi, "mouse x-axis") == 0) {
-					pgi->nInput = GIT_JOYSLIDER;
-					pgi->Input.Slider.nSliderValue = 0x8000;
-					pgi->Input.Slider.nSliderSpeed = 0x0E00;
-					pgi->Input.Slider.nSliderCenter = 10;
-					pgi->Input.Slider.JoyAxis.nAxis = 0;
-					pgi->Input.Slider.JoyAxis.nJoy = (UINT8)0;
-					return 0;
-
-				}
-				if (strcmp(szi, "mouse y-axis") == 0) {
-					pgi->nInput = GIT_JOYSLIDER;
-					pgi->Input.Slider.nSliderValue = 0x8000;
-					pgi->Input.Slider.nSliderSpeed = 0x0E00;
-					pgi->Input.Slider.nSliderCenter = 10;
-					pgi->Input.Slider.JoyAxis.nAxis = 1;
-					pgi->Input.Slider.JoyAxis.nJoy = (UINT8)0;
-					return 0;
-				}
-				if (strncmp(szi, "mouse button", 12) == 0) {
-					char* szb = szi + 13;
-					INT32 nButton = strtol(szb, NULL, 0);
-					if (nButton >= 1) {
-						nButton--;
-					}
-					KEY(0x8080 + nButton);
-					return 0;
-				}
-			}
 			break;
 		case 1:
 			if (strcmp(szi, "p2 start") == 0) {

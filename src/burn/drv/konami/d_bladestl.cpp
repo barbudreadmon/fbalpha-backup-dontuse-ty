@@ -60,8 +60,8 @@ static struct BurnInputInfo BladestlInputList[] = {
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 2"	},
 	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 fire 3"	},
 
-	A("P1 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog0,    "mouse x-axis" ),
-	A("P1 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog1,    "mouse y-axis" ),
+	A("P1 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog0,    "p1 x-axis" ),
+	A("P1 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog1,    "p1 y-axis" ),
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 coin"	},
 	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p2 start"	},
@@ -73,8 +73,8 @@ static struct BurnInputInfo BladestlInputList[] = {
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy3 + 6,	"p2 fire 3"	},
 
-	A("P2 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog2,    "mouse x-axis" ),
-	A("P2 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog3,    "mouse y-axis" ),
+	A("P2 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog2,    "p2 x-axis" ),
+	A("P2 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog3,    "p2 y-axis" ),
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},

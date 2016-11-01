@@ -332,7 +332,7 @@ static struct BurnInputInfo KonamigtInputList[] = {
 	{"Brake",		BIT_DIGITAL,	DrvJoy4 + 5,	"p1 fire 2"	},
 	{"Gear Shift",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 3"	},
 
-	A("Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
+	A("Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 2,	"service"	},
@@ -351,7 +351,7 @@ static struct BurnInputInfo HcrashInputList[] = {
 	{"Brake",		BIT_DIGITAL,	DrvJoy4 + 5,	"p1 fire 2"	},
 	{"Jump",		BIT_DIGITAL,	DrvJoy4 + 4,	"p1 fire 3"	},
 
-	A("Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
+	A("Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 2,	"service"	},

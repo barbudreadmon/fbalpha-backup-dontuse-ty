@@ -589,11 +589,11 @@ static struct BurnInputInfo DeerhuntInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 7,	"p1 start"},
 
-	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"mouse x-axis"),
-	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"mouse y-axis"),
+	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"p1 x-axis"),
+	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"p1 y-axis"),
 
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 0,	"mouse button 1"},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 1,	"mouse button 2"},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 fire 1"},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 fire 2"},
 	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy3 + 6,	"p1 fire 3"},
 	{"P1 Button 4",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 fire 4"},
 
@@ -742,11 +742,11 @@ static struct BurnInputInfo WschampInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 7,	"p1 start"},
 
-	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"mouse x-axis"),
-	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"mouse y-axis"),
+	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"p1 x-axis"),
+	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"p1 y-axis"),
 
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 0,	"mouse button 1"},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 1,	"mouse button 2"},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 fire 1"},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 fire 2"},
 	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy3 + 6,	"p1 fire 3"},
 	{"P1 Button 4",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 fire 4"},
 

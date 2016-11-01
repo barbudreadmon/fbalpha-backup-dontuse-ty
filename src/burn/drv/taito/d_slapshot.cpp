@@ -57,10 +57,10 @@ static struct BurnInputInfo Opwolf3InputList[] =
 	{"Coin 3"            , BIT_DIGITAL   , TC0640FIOInputPort1 + 6, "p3 coin"        },
 	{"Coin 4"            , BIT_DIGITAL   , TC0640FIOInputPort1 + 7, "p4 coin"        },
 
-	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0      , "mouse x-axis"   ),
-	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1      , "mouse y-axis"   ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 0, "mouse button 1" },
-	{"P1 Fire 2"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 1, "mouse button 2" },
+	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0      , "p1 x-axis"   ),
+	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1      , "p1 y-axis"   ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 0, "p1 fire 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 1, "p1 fire 2" },
 	
 	A("P2 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort2      , "p2 x-axis"      ),
 	A("P2 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort3      , "p2 y-axis"      ),	

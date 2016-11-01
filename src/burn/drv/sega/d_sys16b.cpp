@@ -450,9 +450,9 @@ static struct BurnInputInfo SdiInputList[] = {
 	{"P1 Down"           , BIT_DIGITAL   , System16InputPort1 + 0, "p1 down"      },
 	{"P1 Left"           , BIT_DIGITAL   , System16InputPort1 + 3, "p1 left"      },
 	{"P1 Right"          , BIT_DIGITAL   , System16InputPort1 + 2, "p1 right"     },
-	A("Target Left/Right", BIT_ANALOG_REL, &System16AnalogPort0,   "mouse x-axis" ),
-	A("Target Up/Down"   , BIT_ANALOG_REL, &System16AnalogPort1,   "mouse y-axis" ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort0 + 6, "mouse button 1"},
+	A("Target Left/Right", BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"    ),
+	A("Target Up/Down"   , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"    ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort0 + 6, "p1 fire 1"    },
 
 	{"P2 Up"             , BIT_DIGITAL   , System16InputPort1 + 5, "p2 up"        },
 	{"P2 Down"           , BIT_DIGITAL   , System16InputPort1 + 4, "p2 down"      },
