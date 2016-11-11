@@ -476,42 +476,56 @@ static int InpDIPSWInit()
          dipswitch_core_option *dip_option = &dipswitch_core_options.back();
          
          // Clean the dipswitch name to creation the core option name (removing space and equal characters)
-         char option_name[strlen(bdi.szText) + 1]; // + 1 for the '\0' ending
-         strcpy(option_name, bdi.szText);
+         char option_name[100];
+
+         // Some dipswitch has no name...
+         if (bdi.szText)
+         {
+            strcpy(option_name, bdi.szText);
+         }
+         else // ... so, to not hang, we will generate a name based on the position of the dip (DIPSWITCH 1, DIPSWITCH 2...)
+         {
+            sprintf(option_name, "DIPSWITCH %d", dipswitch_core_options.size());
+            log_cb(RETRO_LOG_WARN, "Error in %sDIPList : The DIPSWITCH '%d' has no name. '%s' name has been generated\n", drvname, dipswitch_core_options.size(), option_name);
+         }
+         
+         strncpy(dip_option->friendly_name, option_name, sizeof(dip_option->friendly_name));
+         
          str_char_replace(option_name, ' ', '_');
          str_char_replace(option_name, '=', '_');
          
-         strncpy(dip_option->friendly_name, bdi.szText, sizeof(dip_option->friendly_name));
          snprintf(dip_option->option_name, sizeof(dip_option->option_name), "fba-dipswitch-%s-%s", drvname, option_name);
 
-         // Search for duplicate, keep only the first one and sacrify the others
-         bool already_exists = false;
-
-         for (int dup_idx = 0; dup_idx < dipswitch_core_options.size() - 1; dup_idx++) // - 1 to exclude the current one
+         // Search for duplicate name, and add number to make them unique in the core-options file
+         for (int dup_idx = 0, dup_nbr = 1; dup_idx < dipswitch_core_options.size() - 1; dup_idx++) // - 1 to exclude the current one
          {
             if (strcmp(dip_option->option_name, dipswitch_core_options[dup_idx].option_name) == 0)
             {
-               already_exists = true;      
-               break;
+               dup_nbr++;
+               snprintf(dip_option->option_name, sizeof(dip_option->option_name), "fba-dipswitch-%s-%s_%d", drvname, option_name, dup_nbr);
             }
-         }
-         
-         if (already_exists)
-         {
-            dipswitch_core_options.pop_back();
-            continue;
          }
 
          // Reserve space for the default value
          dip_option->values.reserve(bdi.nSetting + 1); // + 1 for default value
          dip_option->values.assign(bdi.nSetting + 1, dipswitch_core_option_value());
 
-         int l = 0;
+         int values_count = 0;
          bool skip_unusable_option = false;
-         for (int k = 0; l < bdi.nSetting; k++)
+         for (int k = 0; values_count < bdi.nSetting; k++)
          {
             BurnDIPInfo bdi_value;
-            BurnDrvGetDIPInfo(&bdi_value, k + i + 1);
+            if (BurnDrvGetDIPInfo(&bdi_value, k + i + 1) != 0)
+            {
+               log_cb(RETRO_LOG_WARN, "Error in %sDIPList for DIPSWITCH '%s': End of the struct was reached too early\n", drvname, dip_option->friendly_name);
+               break;
+            }
+            
+            if (bdi_value.nFlags == 0xFE || bdi_value.nFlags == 0xFD)
+            {
+               log_cb(RETRO_LOG_WARN, "Error in %sDIPList for DIPSWITCH '%s': Start of next DIPSWITCH is too early\n", drvname, dip_option->friendly_name);
+               break;
+            }
             
             struct GameInp *pgi_value = GameInp + bdi_value.nInput + nDIPOffset;
 
@@ -524,12 +538,16 @@ static int InpDIPSWInit()
                
             // Filter away NULL entries
             if (bdi_value.nFlags == 0)
+            {
+               log_cb(RETRO_LOG_WARN, "Error in %sDIPList for DIPSWITCH '%s': the line '%d' is useless\n", drvname, dip_option->friendly_name, k + 1);
                continue;
-
-            dipswitch_core_option_value *dip_value = &dip_option->values[l + 1]; // + 1 to skip the default value
+            }
+            
+            dipswitch_core_option_value *dip_value = &dip_option->values[values_count + 1]; // + 1 to skip the default value
             
             BurnDrvGetDIPInfo(&(dip_value->bdi), k + i + 1);
             dip_value->pgi = pgi_value;
+            strncpy(dip_value->friendly_name, dip_value->bdi.szText, sizeof(dip_value->friendly_name));
 
             bool is_default_value = (dip_value->pgi->Input.Constant.nConst & dip_value->bdi.nMask) == (dip_value->bdi.nSetting);
 
@@ -542,12 +560,15 @@ static int InpDIPSWInit()
              
                snprintf(default_dip_value->friendly_name, sizeof(default_dip_value->friendly_name), "%s %s", "(Default)", default_dip_value->bdi.szText);
             }
-            else
-	    {
-               strncpy(dip_value->friendly_name, dip_value->bdi.szText, sizeof(dip_value->friendly_name));
-	    }
 
-            l++;
+            values_count++;
+         }
+         
+         if (bdi.nSetting > values_count)
+         {
+            // Truncate the list at the values_count found to not have empty values
+            dip_option->values.resize(values_count + 1); // +1 for default value
+            log_cb(RETRO_LOG_WARN, "Error in %sDIPList for DIPSWITCH '%s': '%d' values were intended and only '%d' were found\n", drvname, dip_option->friendly_name, bdi.nSetting, values_count);
          }
          
          // Skip the unusable option by removing it from the list
@@ -556,8 +577,6 @@ static int InpDIPSWInit()
             dipswitch_core_options.pop_back();
             continue;
          }
-
-         dip_option->values.shrink_to_fit();
 
          pgi = GameInp + bdi.nInput + nDIPOffset;
          
