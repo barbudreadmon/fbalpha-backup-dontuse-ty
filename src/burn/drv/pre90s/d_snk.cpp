@@ -79,8 +79,10 @@ static UINT8  DrvJoy1[8];
 static UINT8  DrvJoy2[8];
 static UINT8  DrvJoy3[8];
 static UINT8  DrvJoy4[8];
+static UINT8  DrvJoy5[8];
+static UINT8  DrvJoy6[8];
 static UINT8  DrvDips[3];
-static UINT8  DrvInputs[4];
+static UINT8  DrvInputs[6];
 static UINT8  DrvReset;
 
 static UINT8  DrvFakeInput[6] = {0, 0, 0, 0, 0, 0};
@@ -729,6 +731,7 @@ static struct BurnInputInfo TdfeverInputList[] = {
 };
 
 STDINPUTINFO(Tdfever)
+#endif
 
 static struct BurnInputInfo FsoccerInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"},
@@ -772,7 +775,6 @@ static struct BurnInputInfo FsoccerInputList[] = {
 };
 
 STDINPUTINFO(Fsoccer)
-#endif
 
 #if 0
 static struct BurnDIPInfo TdfeverDIPList[]=
@@ -834,7 +836,7 @@ static struct BurnDIPInfo TdfeverDIPList[]=
 };
 
 STDDIPINFO(Tdfever)
-
+#endif
 
 static struct BurnDIPInfo FsoccerDIPList[]=
 {
@@ -890,7 +892,6 @@ static struct BurnDIPInfo FsoccerDIPList[]=
 };
 
 STDDIPINFO(Fsoccer)
-#endif
 
 static struct BurnDIPInfo PsychosDIPList[]=
 {
@@ -1576,11 +1577,11 @@ static struct BurnDIPInfo Tnk3DIPList[]=
 	{0x18, 0x01, 0x20, 0x20, "Off"		},
 	{0x18, 0x01, 0x20, 0x00, "On"		},
 
-	{0   , 0xfe, 0   ,    0, "Allow Continue"		},
+	{0   , 0xfe, 0   ,    2, "Allow Continue"		},
 	{0x18, 0x01, 0x80, 0x80, "No"		},
 	{0x18, 0x01, 0x80, 0x00, "5 Times"		},
 
-	{0   , 0xfe, 0   ,    2, "Bonus Life"		},
+	{0   , 0xfe, 0   ,    7, "Bonus Life"		},
 	{0x19, 0x01, 0xc1, 0xc1, "20k 60k 60k+"		},
 	{0x19, 0x01, 0xc1, 0x81, "40k 90k 90k+"		},
 	{0x19, 0x01, 0xc1, 0x41, "50k 120k 120k+"		},
@@ -1634,7 +1635,7 @@ static struct BurnDIPInfo IkariDIPList[]=
 	{0x19, 0x01, 0x0c, 0x04, "Freeze"		},
 	{0x19, 0x01, 0x0c, 0x00, "Infinite Lives (Cheat)"		},
 
-	{0   , 0xfe, 0   ,    0, "Allow Continue"		},
+	{0   , 0xfe, 0   ,    2, "Allow Continue"		},
 	{0x19, 0x01, 0x80, 0x80, "No"		},
 	{0x19, 0x01, 0x80, 0x00, "Yes"		},
 
@@ -1807,13 +1808,13 @@ static struct BurnDIPInfo AlphamisDIPList[]=
 	{0x14, 0x01, 0x60, 0x20, "1 Coin  4 Credits"		},
 	{0x14, 0x01, 0x60, 0x60, "1 Coin  6 Credits"		},
 
-	{0   , 0xfe, 0   ,    0, "Difficulty"		},
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
 	{0x15, 0x01, 0x06, 0x06, "Easy"		},
 	{0x15, 0x01, 0x06, 0x04, "Normal"		},
 	{0x15, 0x01, 0x06, 0x02, "Hard"		},
 	{0x15, 0x01, 0x06, 0x00, "Hardest"		},
 
-	{0   , 0xfe, 0   ,    4, "Demo Sounds"		},
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
 	{0x15, 0x01, 0x08, 0x08, "Off"		},
 	{0x15, 0x01, 0x08, 0x00, "On"		},
 
@@ -1825,13 +1826,13 @@ static struct BurnDIPInfo AlphamisDIPList[]=
 	{0x15, 0x01, 0x20, 0x20, "Off"		},
 	{0x15, 0x01, 0x20, 0x00, "On"		},
 
-	{0   , 0xfe, 0   ,    2, "Start Area"		},
+	{0   , 0xfe, 0   ,    4, "Start Area"		},
 	{0x15, 0x01, 0xc0, 0xc0, "1"		},
 	{0x15, 0x01, 0xc0, 0x80, "2"		},
 	{0x15, 0x01, 0xc0, 0x40, "3"		},
 	{0x15, 0x01, 0xc0, 0x00, "4"		},
 
-	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
+	{0   , 0xfe, 0   ,    2, "Bonus Life"		},
 	{0x16, 0x01, 0x01, 0x01, "50k 100k 100k+"		},
 	{0x16, 0x01, 0x01, 0x00, "50k 100k"		},
 };
@@ -3527,12 +3528,12 @@ static UINT8 __fastcall tdfever_main_read(UINT16 address)
 		case 0xc000:
 			return (DrvInputs[0] & ~0x08) | ((sound_status & 0x04) ? 0x08 : 0);
 
-		case 0xc080:
-		case 0xc100:
-		case 0xc180:
-		case 0xc200:
-		case 0xc280:
-		case 0xc300:
+		case 0xc080: return DrvInputs[0];
+		case 0xc100: return DrvInputs[1];
+		case 0xc180: return DrvInputs[2];
+		case 0xc200: return DrvInputs[3];
+		case 0xc280: return DrvInputs[4];
+		case 0xc300: return DrvInputs[5];
 		case 0xc380:
 		case 0xc400:
 		case 0xc480:
@@ -6286,6 +6287,8 @@ static INT32 GwarFrame()
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 			DrvInputs[3] ^= (DrvJoy4[i] & 1) << i;
+			DrvInputs[4] ^= (DrvJoy5[i] & 1) << i;
+			DrvInputs[5] ^= (DrvJoy6[i] & 1) << i;
 		}
 
 		if (game_select == 1) { // psychos
@@ -8917,7 +8920,7 @@ struct BurnDriver BurnDrvFsoccerj = {
 	"fsoccerj", "fsoccer", NULL, NULL, "1988",
 	"Fighting Soccer (Japan)\0", NULL, "SNK", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	/*BDF_GAME_WORKING |*/ BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSMISC, 0,
+	/* |*/ BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSMISC, 0,
 	NULL, fsoccerjRomInfo, fsoccerjRomName, NULL, NULL, ChopperInputInfo, ChopperDIPInfo, //FsoccerInputInfo, FsoccerDIPInfo,
 	TdfeverInit, DrvExit, GwarFrame, FsoccerDraw, DrvScan, &DrvRecalc, 0x400,
 	400, 224, 4, 3
@@ -8962,7 +8965,7 @@ struct BurnDriver BurnDrvFsoccerb = {
 	"Fighting Soccer (Joystick hack bootleg)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSMISC, 0,
-	NULL, fsoccerbRomInfo, fsoccerbRomName, NULL, NULL, ChopperInputInfo, ChopperDIPInfo, //FsoccerbInputInfo, FsoccerbDIPInfo,
+	NULL, fsoccerbRomInfo, fsoccerbRomName, NULL, NULL, FsoccerInputInfo, FsoccerDIPInfo,
 	TdfeverInit, DrvExit, GwarFrame, FsoccerDraw, DrvScan, &DrvRecalc, 0x400,
 	400, 224, 4, 3
 };
@@ -9006,7 +9009,7 @@ struct BurnDriver BurnDrvFsoccerba = {
 	"Fighting Soccer (Joystick hack bootleg, alt)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSMISC, 0,
-	NULL, fsoccerbaRomInfo, fsoccerbaRomName, NULL, NULL, ChopperInputInfo, ChopperDIPInfo, //FsoccerbInputInfo, FsoccerbDIPInfo,
+	NULL, fsoccerbaRomInfo, fsoccerbaRomName, NULL, NULL, FsoccerInputInfo, FsoccerDIPInfo,
 	TdfeverInit, DrvExit, GwarFrame, FsoccerDraw, DrvScan, &DrvRecalc, 0x400,
 	400, 224, 4, 3
 };
