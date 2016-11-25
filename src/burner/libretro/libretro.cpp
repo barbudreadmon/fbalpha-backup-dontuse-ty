@@ -138,8 +138,8 @@ static std::vector<std::string> g_find_list_path;
 static ROMFIND g_find_list[1024];
 static unsigned g_rom_count;
 
-#define AUDIO_SAMPLERATE 32000
-#define AUDIO_SEGMENT_LENGTH 534 // <-- Hardcoded value that corresponds well to 32kHz audio.
+#define AUDIO_SAMPLERATE 44100
+#define AUDIO_SEGMENT_LENGTH 736 // <-- Hardcoded value that corresponds well to 32kHz audio.
 
 static uint32_t *g_fba_frame;
 static int16_t g_audio_buf[AUDIO_SEGMENT_LENGTH * 2];
