@@ -1497,7 +1497,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
    nBurnBpp = 2;
    nFMInterpolation = 3;
-   nInterpolation = 3;
+   nInterpolation = 1;
 
    analog_controls_enabled = init_input();
 
