@@ -230,6 +230,7 @@ LOCAL_C_INCLUDES = $(FBA_BURNER_DIR)/win32 \
 	$(FBA_BURNER_DIR) \
 	$(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/i8039 \
+	$(FBA_CPU_DIR)/i8051 \
 	$(FBA_LIB_DIR)/zlib \
 	$(FBA_BURN_DIR)/drv/capcom \
 	$(FBA_BURN_DIR)/drv/konami \
