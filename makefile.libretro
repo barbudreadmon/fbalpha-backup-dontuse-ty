@@ -541,8 +541,8 @@ ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -g -DFBA_DEBUG
 	CXXFLAGS += -O0 -g -DFBA_DEBUG
 else
-	CFLAGS += -O1 -DNDEBUG
-	CXXFLAGS += -O1 -DNDEBUG
+	CFLAGS += -O2 -DNDEBUG
+	CXXFLAGS += -O2 -DNDEBUG
 endif
 
 ifeq ($(platform), sncps3)
@@ -556,16 +556,15 @@ CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
 LDFLAGS += $(fpic)
 
 CFLAGS += -std=gnu99 \
-	   -fforce-addr -finline-limit=1200 -fthread-jumps \
-	   -fexpensive-optimizations \
+	   -fforce-addr -finline-limit=1200 \
 	   -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
 	   -Wno-sequence-point -Wno-pedantic
 CXXFLAGS += -std=gnu++11 \
-	   -fforce-addr -finline-limit=1200 -fthread-jumps \
-	   -fexpensive-optimizations -fcheck-new \
+	   -fforce-addr -finline-limit=1200 \
+	   -fcheck-new \
 	   -Wall -W -pedantic -Wshadow -Wno-long-long -Wno-write-strings \
 	   -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \
-	   -Wuninitialized -Wpointer-arith -Wno-inline -Wno-address  -Wno-unused-value \
+	   -Wuninitialized -Wpointer-arith -Wno-inline -Wno-address -Wno-unused-value \
 	   -Wno-unused-but-set-variable -Wno-sequence-point -Wno-narrowing -Wno-extra \
 	   -Wno-pedantic
 
