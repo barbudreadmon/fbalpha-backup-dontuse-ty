@@ -1886,7 +1886,65 @@ static bool init_input(void)
             }
             value_found = true;
          }
-
+//retroup: Colecovision NumPad Buttons
+		if (strncmp("numpad 1", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_B;
+            value_found = true;
+         }
+		if (strncmp("numpad 2", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+			keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_UP;
+            value_found = true;
+         }
+		if (strncmp("numpad 3", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_A;
+            value_found = true;
+         }
+		if (strncmp("numpad 4", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_LEFT;
+            value_found = true;
+         }
+		if (strncmp("numpad 5", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_START;
+            value_found = true;
+         }
+		if (strncmp("numpad 6", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_RIGHT;
+            value_found = true;
+         }
+		if (strncmp("numpad 7", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_Y;
+            value_found = true;
+         }
+		if (strncmp("numpad 8", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_DOWN;
+            value_found = true;
+         }
+		if (strncmp("numpad 9", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_X;
+            value_found = true;
+         }
+		if (strncmp("numpad 0", szi, 8) == 0) {
+			nPlayer = nPlayer + 1;
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
+            value_found = true;
+         }
+		if (strncmp("numpad *", szi, 8) == 0) {
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_START;
+            value_found = true;
+         }
+		if (strncmp("numpad #", szi, 8) == 0) {
+            keybinds[pgi->Input.Switch.nCode][0] = RETRO_DEVICE_ID_JOYPAD_SELECT;
+            value_found = true;
+         }
          if (strncmp("fire ", szi, 5) == 0) {
             char *szb = szi + 5;
             INT32 nButton = strtol(szb, NULL, 0);
