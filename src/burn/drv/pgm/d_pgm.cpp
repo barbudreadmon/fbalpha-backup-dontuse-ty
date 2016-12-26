@@ -4832,61 +4832,6 @@ struct BurnDriver BurnDrvPgmdemo = {
 };
 
 
-// Frog Feast (PGM)
-
-static struct BurnRomInfo pgmfrogRomDesc[] = {
-	{ "p0103.rom",    		0x200000, 0xcdec9e8d, 1 | BRF_PRG | BRF_ESS },  //  0 68K Code
-
-	{ "t0100.rom",     		0x400000, 0x8f58b6d8, 2 | BRF_GRA },			//  1 Tile data
-
-	{ "a0100.rom",     		0x400000, 0xdc1eafe6, 3 | BRF_GRA },			//  2 Sprite Color Data
-
-	{ "b0100.rom",     		0x400000, 0x3d44b66f, 4 | BRF_GRA },			//  3 Sprite Masks & Color Indexes
-
-	{ "m0100.rom",     		0x200000, 0x05e2f761, 5 | BRF_SND },			//  4 Samples
-};
-
-STDROMPICKEXT(pgmfrog, pgmfrog, pgm)
-STD_ROM_FN(pgmfrog)
-
-struct BurnDriver BurnDrvPgmfrog = {
-	"pgmfrog", NULL, "pgm", NULL, "2006",
-	"Frog Feast (PGM)\0", NULL, "RasterSoft", "PolyGameMaster",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING  | BDF_HOMEBREW, 4, HARDWARE_IGS_PGM, GBF_MISC, 0,
-	NULL, pgmfrogRomInfo, pgmfrogRomName, NULL, NULL, pgmInputInfo, pgmDIPInfo,
-	pgmInit, pgmExit, pgmFrame, pgmDraw, pgmScan, &nPgmPalRecalc, 0x900,
-	448, 224, 4, 3
-};
-
-
-// P-GeMeni (060123)
-
-static struct BurnRomInfo pgemeniRomDesc[] = {
-	{ "p0103.rom",     		0x200000, 0x6cafa56b, 1 | BRF_PRG | BRF_ESS },  //  0 68K Code
-
-	{ "t0100.rom",     		0x400000, 0x42b979dd, 2 | BRF_GRA },			//  1 Tile data
-
-	{ "a0100.rom",     		0x400000, 0x105d7cee, 3 | BRF_GRA },			//  2 Sprite Color Data
-
-	{ "b0100.rom",     		0x400000, 0xb4127373, 4 | BRF_GRA },			//  3 Sprite Masks & Color Indexes
-
-	{ "m0100.rom",     		0x200000, 0x8d89877e, 5 | BRF_SND },			//  4 Samples
-};
-
-STDROMPICKEXT(pgemeni, pgemeni, pgm)
-STD_ROM_FN(pgemeni)
-
-struct BurnDriver BurnDrvPgemeni = {
-	"pgemeni", NULL, "pgm", NULL, "2006",
-	"P-GeMeni (060123)\0", NULL, "blastar@gmx.net", "PolyGameMaster",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING  | BDF_HOMEBREW, 4, HARDWARE_IGS_PGM, GBF_PUZZLE, 0,
-	NULL, pgemeniRomInfo, pgemeniRomName, NULL, NULL, pgmInputInfo, pgmDIPInfo,
-	pgmInit, pgmExit, pgmFrame, pgmDraw, pgmScan, &nPgmPalRecalc, 0x900,
-	448, 224, 4, 3
-};
-
 
 //-----------------------------------------------------------------------------------------------------------------
 // Bootlegs & hacks

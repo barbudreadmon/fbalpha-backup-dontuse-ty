@@ -181,15 +181,7 @@ static void GameInpInitMacros()
 					pgi->nType = BIT_DIGITAL;
 					pgi->Macro.nMode = 0;
 					pgi->Macro.nSysMacro = 15; // 15 = Auto-Fire mode
-					if ((BurnDrvGetHardwareCode() & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SEGA_MEGADRIVE) {
-						if (i < 3) {
-							sprintf(pgi->Macro.szName, "P%d Auto-Fire Button %c", nPlayer+1, i+'A'); // A,B,C
-						} else {
-							sprintf(pgi->Macro.szName, "P%d Auto-Fire Button %c", nPlayer+1, i+'X'-3); // X,Y,Z
-						}
-					} else {
 						sprintf(pgi->Macro.szName, "P%d Auto-Fire Button %d", nPlayer+1, i+1);
-					}
 					if ((BurnDrvGetHardwareCode() & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
 						BurnDrvGetInputInfo(&bii, nNeogeoButtons[nPlayer][i]);
 					} else {

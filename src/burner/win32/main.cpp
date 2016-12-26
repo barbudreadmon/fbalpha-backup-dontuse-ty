@@ -853,15 +853,7 @@ static void CreateSupportFolders()
 		{_T("support/history/")},
 		{_T("neocdiso/")},
 		// the below are named after the MESS software lists
-		{_T("megadriv/")},
-		{_T("pce/")},
-		{_T("sgx/")},
-		{_T("tg16/")},
-		{_T("sg1000/")},
 		{_T("coleco/")},
-		{_T("sms/")},
-		{_T("gamegear/")},
-		{_T("msx/")},
 	};
 	
 	for(int x = 0; x < 32; x++) {

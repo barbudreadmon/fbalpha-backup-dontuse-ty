@@ -4737,27 +4737,6 @@ static struct BurnRomInfo Cawingb2RomDesc[] = {
 STD_ROM_PICK(Cawingb2)
 STD_ROM_FN(Cawingb2)
 
-static struct BurnRomInfo Cps1demoRomDesc[] = {
-	{ "cd30-36.bin",   0x020000, 0x5eb617d6, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
-	{ "cd35-42.bin",   0x020000, 0x1f1c0a62, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
-	{ "cd31-37.bin",   0x020000, 0x7ee8cdcd, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP }, // sound rom from cps1frog ?
-	{ "cd36-43.bin",   0x020000, 0x7ee8cdcd, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP }, // sound rom from cps1frog ?
-	{ "ff-32m.8h",     0x080000, 0xc747696e, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
-
-	{ "cd05-05m.bin",  0x080000, 0x35dc6153, BRF_GRA | CPS1_TILES },
-	{ "cd07-07m.bin",  0x080000, 0xbaf08a38, BRF_GRA | CPS1_TILES },
-	{ "cd01-01m.bin",  0x080000, 0x3ad8e790, BRF_GRA | CPS1_TILES },
-	{ "cd03-03m.bin",  0x080000, 0xfb5186f3, BRF_GRA | CPS1_TILES },
-
-	{ "ff_09.12b",     0x010000, 0xb8367eb5, BRF_PRG | CPS1_Z80_PROGRAM },
-
-	{ "ff_18.11c",     0x020000, 0x375c66e7, BRF_SND | CPS1_OKIM6295_SAMPLES },
-	{ "ff_19.12c",     0x020000, 0x1ef137f9, BRF_SND | CPS1_OKIM6295_SAMPLES },
-};
-
-STD_ROM_PICK(Cps1demo)
-STD_ROM_FN(Cps1demo)
-
 static struct BurnRomInfo Cworld2jRomDesc[] = {
 	{ "q5_36.12f",     0x020000, 0x38a08099, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
 	{ "q5_42.12h",     0x020000, 0x4d29b3a4, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
@@ -13029,26 +13008,6 @@ static struct BurnRomInfo WofahbRomDesc[] = {
 STD_ROM_PICK(Wofahb)
 STD_ROM_FN(Wofahb)
 
-static struct BurnRomInfo Cps1frogRomDesc[] = {
-	{ "frog30-36.bin", 0x020000, 0x8eb8ddbe, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
-	{ "frog35-42.bin", 0x020000, 0xacb5a988, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
-	{ "frog31-37.bin", 0x020000, 0x154803cc, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
-	{ "frog36-43.bin", 0x020000, 0x154803cc, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_BYTESWAP },
-	{ "frog32-32m.bin",0x080000, 0x75660aac, BRF_ESS | BRF_PRG | CPS1_68K_PROGRAM_NO_BYTESWAP },
-
-	{ "frog05-05m.bin",0x080000, 0x7bbc4b54, BRF_GRA | CPS1_TILES },
-	{ "frog07-07m.bin",0x080000, 0x0beadd80, BRF_GRA | CPS1_TILES },
-	{ "frog01-01m.bin",0x080000, 0xf84d02bb, BRF_GRA | CPS1_TILES },
-	{ "frog03-03m.bin",0x080000, 0xd784a5b0, BRF_GRA | CPS1_TILES },
-
-	{ "frog09-09.bin", 0x010000, 0x3ac7fb5c, BRF_PRG | CPS1_Z80_PROGRAM },
-
-	{ "frog18-18.bin", 0x020000, 0x65d1ef07, BRF_SND | CPS1_OKIM6295_SAMPLES },
-	{ "frog19-19.bin", 0x020000, 0x7ee8cdcd, BRF_SND | CPS1_OKIM6295_SAMPLES },
-};
-
-STD_ROM_PICK(Cps1frog)
-STD_ROM_FN(Cps1frog)
 
 // Game config
 
@@ -13344,8 +13303,6 @@ static const struct GameConfig ConfigTable[] =
 	{ "sfzch"       , CPS_B_21_DEF, mapper_sfzch , 0, NULL                },
 	{ "wofch"       , CPS_B_21_DEF, mapper_sfzch , 0, wof_decode          },
 	{ "wofchdx"     , CPS_B_21_DEF, mapper_sfzch , 0, wof_decode          },
-	{ "cps1demo"    , CPS_B_04    , mapper_sfzch , 0, NULL                },
-	{ "cps1frog"    , CPS_B_04    , mapper_frog  , 0, NULL                },
 	
 	// Not included games
 	{ "pnicku"      , CPS_B_21_DEF, mapper_PKB10B, 0, NULL                },	// IPS
@@ -13955,12 +13912,6 @@ static INT32 Cawingb2Init()
 	return 0;
 }
 
-static INT32 Cps1demoInit()
-{
-	bCpsUpdatePalEveryFrame = 1;
-
-	return DrvInit();
-}
 
 void __fastcall DinopicScrollWrite(UINT32 a, UINT16 d)
 {
@@ -17716,15 +17667,6 @@ struct BurnDriver BurnDrvCpsCawingb2 = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
-struct BurnDriver BurnDrvCpsCps1demo = {
-	"cps1demo", NULL, NULL, NULL, "2000",
-	"Chaos Demo (CPS-1)\0", NULL, "Chaos", "CPS1",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_CAPCOM_CPS1, GBF_MISC, 0,
-	NULL, Cps1demoRomInfo, Cps1demoRomName, NULL, NULL, FfightInputInfo, FfightDIPInfo,
-	Cps1demoInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
-	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
-};
 
 struct BurnDriver BurnDrvCpsCworld2j = {
 	"cworld2j", NULL, NULL, NULL, "1992",
@@ -20266,15 +20208,6 @@ struct BurnDriver BurnDrvCpsWofahb = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
-struct BurnDriver BurnDrvCpsCps1frog = {
-	"cps1frog", NULL, NULL, NULL, "2006",
-	"Frog Feast (CPS-1)\0", NULL, "Rastersoft (Homebrew)", "CPS1",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_CAPCOM_CPS1, GBF_MISC, 0,
-	NULL, Cps1frogRomInfo, Cps1frogRomName, NULL, NULL, FfightInputInfo, FfightDIPInfo,
-	Cps1demoInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
-	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
-};
 
 // Not included games
 
