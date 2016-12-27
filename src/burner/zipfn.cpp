@@ -26,17 +26,7 @@ INT32 ZipOpen(char* szZip)
 	if (szZip == NULL) return 1;
 	
 	char szFileName[MAX_PATH];
-	
-	sprintf(szFileName, "%s.zip", szZip);
-	Zip = unzOpen(szFileName);
-	if (Zip != NULL) {
-		nFileType = ZIPFN_FILETYPE_ZIP;
-		unzGoToFirstFile(Zip);
-		nCurrFile = 0;
-		
-		return 0;
-	}
-	
+
 #ifdef INCLUDE_7Z_SUPPORT
 	sprintf(szFileName, "%s.7z", szZip);
 	_7z_error _7zerr = 	_7z_file_open(szFileName, &_7ZipFile);
@@ -47,6 +37,17 @@ INT32 ZipOpen(char* szZip)
 		return 0;
 	}
 #endif
+	
+	sprintf(szFileName, "%s.zip", szZip);
+	Zip = unzOpen(szFileName);
+	if (Zip != NULL) {
+		nFileType = ZIPFN_FILETYPE_ZIP;
+		unzGoToFirstFile(Zip);
+		nCurrFile = 0;
+		
+		return 0;
+	}
+
 
 	return 1;
 }

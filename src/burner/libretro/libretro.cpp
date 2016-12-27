@@ -317,7 +317,7 @@ void retro_get_system_info(struct retro_system_info *info)
    info->library_version = FBA_VERSION;
    info->need_fullpath = true;
    info->block_extract = true;
-   info->valid_extensions = "iso|zip";
+   info->valid_extensions = "iso|zip|7z";
 }
 
 /////
@@ -919,7 +919,7 @@ static bool open_archive()
       log_cb(RETRO_LOG_INFO, "[FBA] Archive: %s\n", rom_name);
 
       char path[1024];
-#ifdef _XBOX
+#if defined(_XBOX) || defined(_WIN32)
       snprintf(path, sizeof(path), "%s\\%s", g_rom_dir, rom_name);
 #else
       snprintf(path, sizeof(path), "%s/%s", g_rom_dir, rom_name);

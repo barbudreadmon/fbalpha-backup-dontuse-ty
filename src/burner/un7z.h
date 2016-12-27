@@ -55,9 +55,9 @@
 
 #define ARRAY_LENGTH(x)		(sizeof(x) / sizeof(x[0]))
 
-#include "7z.h"
-#include "7zCrc.h"
-#include "7zVersion.h"
+#include "..\dep\libs\lib7z\7z.h"
+#include "..\dep\libs\lib7z\7zCrc.h"
+#include "..\dep\libs\lib7z\7zVersion.h"
 
 
 void *SZipAlloc(void *p, size_t size);

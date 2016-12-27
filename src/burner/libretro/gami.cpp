@@ -103,7 +103,9 @@ static void GameInpInitMacros()
 				nPlayer = bii.szInfo[1] - '1';
 
 			if (nPlayer == 0) {
-				if (strncmp(" fire", bii.szInfo + 2, 5) == 0) {
+                if (HARDWARE_COLECO)
+                    nFireButtons = 8;
+                else if (strncmp(" fire", bii.szInfo + 2, 5) == 0) {
 					nFireButtons++;
 				}
 			}
