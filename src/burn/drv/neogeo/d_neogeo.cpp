@@ -15031,24 +15031,62 @@ struct BurnDriver BurnDrvzintrkcd = {
 
 // Neo Geo 4 player test cartridge
 
+static struct BurnRomInfo fourplayRomDesc[] = {
+	{ "4play_p1.rom", 0x100000, 0x3C3D741B, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "4play_s1.rom", 0x020000, 0xDE828076, 2 | BRF_GRA },			 //  1 Text data
 
+	{ "4play_c1.rom", 0x020000, 0x7EE8CDCD, 3 | BRF_GRA },			 //  2 Sprite data
+	{ "4play_c2.rom", 0x020000, 0x7EE8CDCD, 3 | BRF_GRA },			 //  3
 
+	{ "4play_m1.rom", 0x020000, 0x5132580E, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "4play_v1.rom", 0x020000, 0x7EE8CDCD, 5 | BRF_SND },			 //  5 Sound data
+};
 
+STDROMPICKEXT(fourplay, fourplay, neogeo)
+STD_ROM_FN(fourplay)
 
+struct BurnDriver BurnDrv4play = {
+	"4play", NULL, "neogeo", NULL, "???",
+	"4 player input test\0", "4 player  input test cartridge", "SNK", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 4, HARDWARE_SNK_NEOGEO | HARDWARE_SNK_4_JOYSTICKS, GBF_MISC, 0,
+	NULL, fourplayRomInfo, fourplayRomName, NULL, NULL, neodualInputInfo, neodualDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // -----------------------------------------------------------------------------
 // Demos and Homebrew
 
 // Shadow of the Beast (Neo Geo demo)
 
+static struct BurnRomInfo beastRomDesc[] = {
+	{ "2002-p1.bin",  0x080000, 0x1f9e62a4, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "2002-s1.bin",  0x020000, 0x05a417f5, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "2002-c1.bin",  0x080000, 0xe1974741, 3 | BRF_GRA },           //  2 Sprite data
+	{ "2002-c2.bin",  0x080000, 0x9f5b9cf6, 3 | BRF_GRA },           //  3 
 
+	{ "nnp-m1.rom",   0x010000, 0x7669de64, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "nnp-v1.rom",   0x080000, 0x504bf849, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(beast, beast, neogeo)
+STD_ROM_FN(beast)
 
+struct BurnDriver BurnDrvbeast = {
+	"beast", NULL, "neogeo", NULL, "????",
+	"Shadow of the Beast (Neo Geo demo)\0", NULL, "Jeff Kurtz", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, beastRomInfo, beastRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Codename - Blut Engel (2006-01-19)
 
@@ -15075,70 +15113,208 @@ struct BurnDriver BurnDrvcnbe = {
 	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_VERSHOOT, 0,
 	NULL, cnbeRomInfo, cnbeRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
 	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Columns (Neo Geo)
 
+static struct BurnRomInfo columnsnRomDesc[] = {
+	{ "2000-p1.bin",  0x080000, 0xc6c9888d, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "2000-s1.bin",  0x020000, 0x089a28a8, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "2000-c1.bin",  0x080000, 0x9a579cab, 3 | BRF_GRA },           //  2 Sprite data
+	{ "2000-c2.bin",  0x080000, 0x91d14043, 3 | BRF_GRA },           //  3 
 
+	{ "nnp-m1.rom",   0x010000, 0x7669de64, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "nnp-v1.rom",   0x080000, 0x504bf849, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(columnsn, columnsn, neogeo)
+STD_ROM_FN(columnsn)
 
+struct BurnDriver BurnDrvcolumnsn = {
+	"columnsn", NULL, "neogeo", NULL, "????",
+	"Columns (Neo Geo)\0", NULL, "homebrew", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_PUZZLE, 0,
+	NULL, columnsnRomInfo, columnsnRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Jonas Indiana and the Lost Temple of RA (20050717)
 
+static struct BurnRomInfo ltorb1RomDesc[] = {
+	{ "nnp-p1.rom",   0x040000, 0x353f6b05, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "nnp-s1.rom",   0x010000, 0x8224d8b7, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "nnp-c1.rom",   0x080000, 0x8b607198, 3 | BRF_GRA },           //  2 Sprite data
+	{ "nnp-c2.rom",   0x080000, 0x6b96b59c, 3 | BRF_GRA },           //  3 
 
+	{ "nnp-m1.rom",   0x010000, 0x6847fd52, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "nnp-v1.rom",   0x080000, 0x0329c2e7, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(ltorb1, ltorb1, neogeo)
+STD_ROM_FN(ltorb1)
 
+struct BurnDriver BurnDrvltorb1 = {
+	"ltorb1", NULL, "neogeo", NULL, "2005",
+	"Jonas Indiana and the Lost Temple of RA (20050717)\0", NULL, "blastar@gmx.net", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_PLATFORM, 0,
+	NULL, ltorb1RomInfo, ltorb1RomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Neo 2500 Demo
 
+static struct BurnRomInfo neo2500RomDesc[] = {
+	{ "2500-p1.bin",  0x080000, 0x2321c0d8, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "2500-s1.bin",  0x010000, 0x1a37925c, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "2500-c1.bin",  0x080000, 0x8c304b56, 3 | BRF_GRA },           //  2 Sprite data
+	{ "2500-c2.bin",  0x080000, 0x9a0758d6, 3 | BRF_GRA },           //  3 
 
+	{ "202-m1.bin",   0x020000, 0x9c0291ea, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "202-v1.bin",   0x080000, 0xdebeb8fb, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(neo2500, neo2500, neogeo)
+STD_ROM_FN(neo2500)
 
+struct BurnDriver BurnDrvneo2500 = {
+	"neo2500", NULL, "neogeo", NULL, "2004",
+	"Neo 2500 Demo\0", NULL, "blastar@gmx.net", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neo2500RomInfo, neo2500RomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Neo Demo
+static struct BurnRomInfo neodemoRomDesc[] = {
+	{ "demo-p1.bin",  0x080000, 0xfbfce2a4, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "demo-s1.bin",  0x020000, 0xcd19264f, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "demo-c1.bin",  0x100000, 0x870b28ea, 3 | BRF_GRA },           //  2 Sprite data
+	{ "demo-c2.bin",  0x100000, 0x1ecf8128, 3 | BRF_GRA },           //  3 
 
+	{ "202-m1.bin",   0x020000, 0x9c0291ea, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "202-v1.bin",   0x080000, 0xdebeb8fb, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(neodemo, neodemo, neogeo)
+STD_ROM_FN(neodemo)
 
+struct BurnDriver BurnDrvneodemo = {
+	"neodemo", NULL, "neogeo", NULL, "2002",
+	"Chaos Demo (Neo Geo)\0", NULL, "Chaos", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neodemoRomInfo, neodemoRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Neo No Panepon (beta)
 
+static struct BurnRomInfo neonoponRomDesc[] = {
+	{ "nnp-p1.rom",   0x080000, 0x8a792271, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "nnp-s1.rom",   0x010000, 0x93e6fe7d, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "nnp-c1.rom",   0x100000, 0x4a718ae3, 3 | BRF_GRA },           //  2 Sprite data
+	{ "nnp-c2.rom",   0x100000, 0x0e2cbc25, 3 | BRF_GRA },           //  3 
 
+	{ "nnp-m1.rom",   0x010000, 0x7669de64, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "nnp-v1.rom",   0x080000, 0x504bf849, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(neonopon, neonopon, neogeo)
+STD_ROM_FN(neonopon)
 
+struct BurnDriver BurnDrvneonopon = {
+	"neonopon", NULL, "neogeo", NULL, "????",
+	"Neo No Panepon (beta)\0", NULL, "blastar@gmx.net", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_PUZZLE, 0,
+	NULL, neonoponRomInfo, neonoponRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Neo Pong
 
+static struct BurnRomInfo neopongRomDesc[] = {
+	{ "pong_p1.rom",  0x020000, 0x9f35e29d, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "pong_s1.rom",  0x020000, 0xcd19264f, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "pong_c1.rom",  0x100000, 0xf5a57d1a, 3 | BRF_GRA },           //  2 Sprite data
+	{ "pong_c2.rom",  0x100000, 0xaffde64e, 3 | BRF_GRA },           //  3 
 
+	{ "pong_m1.rom",  0x020000, 0x78c851cb, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "pong_v1.rom",  0x200000, 0x6c31223c, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(neopong, neopong, neogeo)
+STD_ROM_FN(neopong)
 
+struct BurnDriver BurnDrvneopong = {
+	"neopong", NULL, "neogeo", NULL, "2002",
+	"Neo Pong (ver 1.1)\0", NULL, "Neo Dev Corporation", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_BALLPADDLE, 0,
+	NULL, neopongRomInfo, neopongRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Neo Pong (v1.0)
 
+static struct BurnRomInfo neopongaRomDesc[] = {
+	{ "np10_p1.rom",  0x020000, 0x31b724d7, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "pong_s1.rom",  0x020000, 0xcd19264f, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "np10_c1.rom",  0x100000, 0xd7587282, 3 | BRF_GRA },           //  2 Sprite data
+	{ "np10_c2.rom",  0x100000, 0xfefc9d06, 3 | BRF_GRA },           //  3 
 
+	{ "np10_m1.rom",  0x020000, 0x9c0291ea, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "np10_v1.rom",  0x080000, 0xdebeb8fb, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(neoponga, neoponga, neogeo)
+STD_ROM_FN(neoponga)
 
+static INT32 neopongaInit()
+{
+	bDisableNeoWatchdog = true;
 	
+	return NeoInit();
+}
 
+struct BurnDriver BurnDrvneoponga = {
+	"neoponga", "neopong", "neogeo", NULL, "2002",
+	"Neo Pong (ver 1.0)\0", NULL, "Neo Dev Corporation", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_BALLPADDLE, 0,
+	NULL, neopongaRomInfo, neopongaRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	neopongaInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
 	0x1000,	304, 224, 4, 3
 };
 
@@ -15172,111 +15348,394 @@ struct BurnDriver BurnDrvngem2k = {
 
 // Neo Frog Feast
 
+static struct BurnRomInfo ngfrogRomDesc[] = {
+	{ "frg-p1.bin",   0x080000, 0xc26848da, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "frg-s1.bin",   0x020000, 0x88f4cd13, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "frg-c1.bin",   0x100000, 0x7b2f9fb3, 3 | BRF_GRA },           //  2 Sprite data
+	{ "frg-c2.bin",   0x100000, 0xa7f18a6f, 3 | BRF_GRA },           //  3 
+	{ "frg-c3.bin",   0x100000, 0x956bac74, 3 | BRF_GRA },           //  4 
+	{ "frg-c4.bin",   0x100000, 0x956bac74, 3 | BRF_GRA },           //  5 
 
+	{ "frg-m1.bin",   0x020000, 0xc825b484, 4 | BRF_ESS | BRF_PRG }, //  6 Z80 code
 
+	{ "frg-v1.bin",   0x100000, 0x2639da11, 5 | BRF_SND },           //  7 Sound data
+	{ "frg-v2.bin",   0x100000, 0xe5eda58b, 5 | BRF_SND },           //  8 
+};
 
+STDROMPICKEXT(ngfrog, ngfrog, neogeo)
+STD_ROM_FN(ngfrog)
 
+struct BurnDriver BurnDrvngfrog = {
+	"ngfrog", NULL, "neogeo", NULL, "2006",
+	"Frog Feast (Neo Geo)\0", NULL, "Rastersoft", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, ngfrogRomInfo, ngfrogRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Poker Night
 
+static struct BurnRomInfo poknightRomDesc[] = {
+	{ "2003-p1.bin",  0x080000, 0x750421ee, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "2003-s1.bin",  0x020000, 0xa26d2f09, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "2003-c1.bin",  0x080000, 0x5fb2b761, 3 | BRF_GRA },           //  2 Sprite data
+	{ "2003-c2.bin",  0x080000, 0xf2b570e3, 3 | BRF_GRA },           //  3 
 
+	{ "nnp-m1.rom",   0x010000, 0x7669de64, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "nnp-v1.rom",   0x080000, 0x504bf849, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(poknight, poknight, neogeo)
+STD_ROM_FN(poknight)
 
+struct BurnDriver BurnDrvpoknight = {
+	"poknight", NULL, "neogeo", NULL, "????",
+	"Poker Night\0", NULL, "Jeff Kurtz", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_CASINO, 0,
+	NULL, poknightRomInfo, poknightRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Neo System Check (ver 1.0b)
 
+static struct BurnRomInfo syscheckRomDesc[] = {
+	{ "sys-p1.rom",   0x080000, 0xa4adbe1e, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "sys-s1.rom",   0x010000, 0x4774f28e, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "sys-c1.rom",   0x080000, 0x75660aac, 3 | BRF_GRA },           //  2 Sprite data
+	{ "sys-c2.rom",   0x080000, 0x75660aac, 3 | BRF_GRA },           //  3 
 
+	{ "sys-m1.rom",   0x010000, 0x7669de64, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
 
+	{ "sys-v1.rom",   0x080000, 0x504bf849, 5 | BRF_SND },           //  5 Sound data
+};
 
+STDROMPICKEXT(syscheck, syscheck, neogeo)
+STD_ROM_FN(syscheck)
 
+struct BurnDriver BurnDrvsyscheck = {
+	"syscheck", NULL, "neogeo", NULL, "????",
+	"Neo System Check (ver 1.0b)\0", NULL, "blastar@gmx.net", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, syscheckRomInfo, syscheckRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Chip n Dale (Intro demo)
 
+static struct BurnRomInfo cndiRomDesc[] = {
+	{ "cnd-p1.bin",   0x800000, 0x2df9a41d, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "cnd-s1.bin",   0x010000, 0x63b8b25e, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "cnd-c1.bin",   0x400000, 0x55bd32fc, 3 | BRF_GRA },           //  2 Sprite data
+	{ "cnd-c2.bin",   0x400000, 0xbbb43733, 3 | BRF_GRA },           //  3 
+	{ "cnd-c3.bin",   0x400000, 0x715e0318, 3 | BRF_GRA },           //  4
+	{ "cnd-c4.bin",   0x400000, 0x016f3c7e, 3 | BRF_GRA },           //  5 
+	{ "cnd-c5.bin",   0x400000, 0x28c6cb8c, 3 | BRF_GRA },           //  6 
+	{ "cnd-c6.bin",   0x400000, 0x9c89503f, 3 | BRF_GRA },           //  7 
+	{ "cnd-c7.bin",   0x400000, 0x074dd407, 3 | BRF_GRA },           //  8
+	{ "cnd-c8.bin",   0x400000, 0x5ddb7db5, 3 | BRF_GRA },           //  9 
 	
+	{ "cnd-m1.bin",   0x002000, 0xae120a59, 4 | BRF_ESS | BRF_PRG }, //  10 Z80 code
 
+	{ "cnd-v1.bin",   0x092000, 0x91d45537, 5 | BRF_SND },           //  11 Sound data
+};
 
+STDROMPICKEXT(cndi, cndi, neogeo)
+STD_ROM_FN(cndi)
 
+struct BurnDriver BurnDrvcndi = {
+	"cndi", NULL, "neogeo", NULL, "2009",
+	"Chip n Dale (Intro demo)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, cndiRomInfo, cndiRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // DarkWing Duck (Intro demo)
 
+static struct BurnRomInfo dwiRomDesc[] = {
+	{ "dwi-p1.bin",   0x800000, 0x8e3f2ea8, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "dwi-s1.bin",   0x010000, 0x3dc5c1ef, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "dwi-c1.bin",   0x400000, 0x2b8bda94, 3 | BRF_GRA },           //  2 Sprite data
+	{ "dwi-c2.bin",   0x400000, 0x5345e4de, 3 | BRF_GRA },           //  3 
+	{ "dwi-c3.bin",   0x400000, 0xc6185f14, 3 | BRF_GRA },           //  4
+	{ "dwi-c4.bin",   0x400000, 0xc9e59701, 3 | BRF_GRA },           //  5 
+	{ "dwi-c5.bin",   0x400000, 0x42dd1c90, 3 | BRF_GRA },           //  6 
+	{ "dwi-c6.bin",   0x400000, 0x9fa6d651, 3 | BRF_GRA },           //  7 
+	{ "dwi-c7.bin",   0x400000, 0x5cfa6886, 3 | BRF_GRA },           //  8
+	{ "dwi-c8.bin",   0x400000, 0x59c37871, 3 | BRF_GRA },           //  9 
 
+	{ "dwi-m1.bin",   0x002000, 0x2249e065, 4 | BRF_ESS | BRF_PRG }, //  10 Z80 code
 
+	{ "dwi-v1.bin",   0x09b000, 0x13bb4ce4, 5 | BRF_SND },           //  11 Sound data
+};
 
+STDROMPICKEXT(dwi, dwi, neogeo)
+STD_ROM_FN(dwi)
 
+struct BurnDriver BurnDrvdwi = {
+	"dwi", NULL, "neogeo", NULL, "2009",
+	"DarkWing Duck (Intro demo)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, dwiRomInfo, dwiRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // DarkWing Duck (Intro demo, alt)
 
+static struct BurnRomInfo dwiaRomDesc[] = {
+	{ "dwi-p1.bin",   0x800000, 0x8e3f2ea8, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "dwi-s1a.bin",  0x010000, 0x63b8b25e, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "dwi-c1.bin",   0x400000, 0x2b8bda94, 3 | BRF_GRA },           //  2 Sprite data
+	{ "dwi-c2.bin",   0x400000, 0x5345e4de, 3 | BRF_GRA },           //  3 
+	{ "dwi-c3.bin",   0x400000, 0xc6185f14, 3 | BRF_GRA },           //  4
+	{ "dwi-c4.bin",   0x400000, 0xc9e59701, 3 | BRF_GRA },           //  5 
+	{ "dwi-c5.bin",   0x400000, 0x42dd1c90, 3 | BRF_GRA },           //  6 
+	{ "dwi-c6.bin",   0x400000, 0x9fa6d651, 3 | BRF_GRA },           //  7 
+	{ "dwi-c7.bin",   0x400000, 0x5cfa6886, 3 | BRF_GRA },           //  8
+	{ "dwi-c8.bin",   0x400000, 0x59c37871, 3 | BRF_GRA },           //  9 
 
+	{ "dwi-m1a.bin",  0x002000, 0xb9f8df96, 4 | BRF_ESS | BRF_PRG }, //  10 Z80 code
 
+	{ "dwi-v1.bin",   0x09b000, 0x13bb4ce4, 5 | BRF_SND },           //  11 Sound data
+};
 
+STDROMPICKEXT(dwia, dwia, neogeo)
+STD_ROM_FN(dwia)
 
+struct BurnDriver BurnDrvdwia = {
+	"dwia", "dwi", "neogeo", NULL, "2009",
+	"DarkWing Duck (Intro demo, alt)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, dwiaRomInfo, dwiaRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Duck Tales (Intro demo)
 
+static struct BurnRomInfo duckiRomDesc[] = {
+	{ "duck-p1.bin",  0x800000, 0xf975711c, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "duck-s1.bin",  0x010000, 0x63b8b25e, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "duck-c1.bin",  0x400000, 0x02adabba, 3 | BRF_GRA },           //  2 Sprite data
+	{ "duck-c2.bin",  0x400000, 0x00bd87ac, 3 | BRF_GRA },           //  3 
+	{ "duck-c3.bin",  0x400000, 0x263307c8, 3 | BRF_GRA },           //  4
+	{ "duck-c4.bin",  0x400000, 0xb8330c1e, 3 | BRF_GRA },           //  5 
+	{ "duck-c5.bin",  0x400000, 0xce99fcb8, 3 | BRF_GRA },           //  6 
+	{ "duck-c6.bin",  0x400000, 0xa6d30781, 3 | BRF_GRA },           //  7 
+	{ "duck-c7.bin",  0x400000, 0xeda15323, 3 | BRF_GRA },           //  8
+	{ "duck-c8.bin",  0x400000, 0x400fd4cd, 3 | BRF_GRA },           //  9 
 
+	{ "duck-m1.bin",  0x002000, 0x7761d993, 4 | BRF_ESS | BRF_PRG }, //  10 Z80 code
 
+	{ "duck-v1.bin",  0x090200, 0x24b716ee, 5 | BRF_SND },           //  11 Sound data
+};
 
+STDROMPICKEXT(ducki, ducki, neogeo)
+STD_ROM_FN(ducki)
 
+struct BurnDriver BurnDrvducki = {
+	"ducki", NULL, "neogeo", NULL, "2009",
+	"Duck Tales (Intro demo)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, duckiRomInfo, duckiRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Ghost Busters (Intro demo)
 
+static struct BurnRomInfo ghostbiRomDesc[] = {
+	{ "ghostb-p1.bin",  0x100000, 0xaf69ef5f, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
+	{ "ghostb-p2.bin",  0x400000, 0xf57e393f, 1 | BRF_ESS | BRF_PRG }, //  1 68K code
 
+	{ "ghostb-s1.bin",  0x010000, 0x63b8b25e, 2 | BRF_GRA },           //  2 Text layer tiles
 
+	{ "ghostb-c1.bin",  0x400000, 0x4281fecd, 3 | BRF_GRA },           //  3 Sprite data
+	{ "ghostb-c2.bin",  0x400000, 0x0f07018c, 3 | BRF_GRA },           //  4 
+	{ "ghostb-c3.bin",  0x400000, 0xa4589b2a, 3 | BRF_GRA },           //  5
+	{ "ghostb-c4.bin",  0x400000, 0x2a72bd04, 3 | BRF_GRA },           //  6 
+	{ "ghostb-c5.bin",  0x400000, 0xad3b72f9, 3 | BRF_GRA },           //  7 
+	{ "ghostb-c6.bin",  0x400000, 0x963e0941, 3 | BRF_GRA },           //  8 
 
+	{ "ghostb-m1.bin",  0x002000, 0x6624e642, 4 | BRF_ESS | BRF_PRG }, //  9 Z80 code
 
+	{ "ghostb-v1.bin",  0x094a00, 0x44864761, 5 | BRF_SND },           //  10 Sound data
+};
 
+STDROMPICKEXT(ghostbi, ghostbi, neogeo)
+STD_ROM_FN(ghostbi)
 
+struct BurnDriver BurnDrvghostbi = {
+	"ghostbi", NULL, "neogeo", NULL, "2009",
+	"Ghost Busters (Intro demo)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, ghostbiRomInfo, ghostbiRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Robocop (Intro demo)
 
+static struct BurnRomInfo robocopiRomDesc[] = {
+	{ "robo-p1.bin",  0x800000, 0xadcb4fe0, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "robo-s1.bin",  0x010000, 0x63b8b25e, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "robo-c1.bin",  0x400000, 0x8cf565a0, 3 | BRF_GRA },           //  2 Sprite data
+	{ "robo-c2.bin",  0x400000, 0x76ef561d, 3 | BRF_GRA },           //  3 
+	{ "robo-c3.bin",  0x400000, 0x7166790c, 3 | BRF_GRA },           //  4
+	{ "robo-c4.bin",  0x400000, 0xc0cdcbfc, 3 | BRF_GRA },           //  5 
+	{ "robo-c5.bin",  0x400000, 0xa5ddc363, 3 | BRF_GRA },           //  6 
+	{ "robo-c6.bin",  0x400000, 0x1fcc8fce, 3 | BRF_GRA },           //  7 
+	{ "robo-c7.bin",  0x400000, 0xbe9f9da2, 3 | BRF_GRA },           //  8
+	{ "robo-c8.bin",  0x400000, 0x7cff633a, 3 | BRF_GRA },           //  9 
 
+	{ "robo-m1.bin",  0x002000, 0xc4d35e83, 4 | BRF_ESS | BRF_PRG }, //  10 Z80 code
 
+	{ "robo-v1.bin",  0x096000, 0xecb284a9, 5 | BRF_SND },           //  11 Sound data
+};
 
+STDROMPICKEXT(robocopi, robocopi, neogeo)
+STD_ROM_FN(robocopi)
 
+struct BurnDriver BurnDrvrobocopi = {
+	"robocopi", NULL, "neogeo", NULL, "2009",
+	"Robocop (Intro demo)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, robocopiRomInfo, robocopiRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Spiderman (Intro demo)
 
+static struct BurnRomInfo spidermiRomDesc[] = {
+	{ "sman-p1.bin",  0x100000, 0x66b5cfe8, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
+	{ "sman-p2.bin",  0x400000, 0x72082aea, 1 | BRF_ESS | BRF_PRG }, //  1
 
+	{ "sman-s1.bin",  0x010000, 0x63b8b25e, 2 | BRF_GRA },           //  2 Text layer tiles
 
+	{ "sman-c1.bin",  0x400000, 0x8e5ccfdd, 3 | BRF_GRA },           //  3 Sprite data
+	{ "sman-c2.bin",  0x400000, 0xa6406f5b, 3 | BRF_GRA },           //  4 
+	{ "sman-c3.bin",  0x400000, 0xadfff926, 3 | BRF_GRA },           //  5
+	{ "sman-c4.bin",  0x400000, 0x068c307f, 3 | BRF_GRA },           //  6 
+	{ "sman-c5.bin",  0x400000, 0x9a5cf7a6, 3 | BRF_GRA },           //  7 
+	{ "sman-c6.bin",  0x400000, 0x934f03c0, 3 | BRF_GRA },           //  8 
 
+	{ "sman-m1.bin",  0x002000, 0x6a02cb1d, 4 | BRF_ESS | BRF_PRG }, //  9 Z80 code
 
+	{ "sman-v1.bin",  0x096100, 0x95c138da, 5 | BRF_SND },           //  10 Sound data
+};
 
+STDROMPICKEXT(spidermi, spidermi, neogeo)
+STD_ROM_FN(spidermi)
 
+struct BurnDriver BurnDrvspidermi = {
+	"spidermi", NULL, "neogeo", NULL, "2009",
+	"Spiderman (Intro demo)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, spidermiRomInfo, spidermiRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Teenage Mutant Ninja Turtles (Intro demo)
 
+static struct BurnRomInfo tmntiRomDesc[] = {
+	{ "tmnt-p1.bin",  0x800000, 0x2d5066ff, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "tmnt-s1.bin",  0x010000, 0x3dc5c1ef, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "tmnt-c1.bin",  0x400000, 0xae1735c1, 3 | BRF_GRA },           //  2 Sprite data
+	{ "tmnt-c2.bin",  0x400000, 0x344281b5, 3 | BRF_GRA },           //  3 
+	{ "tmnt-c3.bin",  0x400000, 0x1058a648, 3 | BRF_GRA },           //  4
+	{ "tmnt-c4.bin",  0x400000, 0x1c6ba1b0, 3 | BRF_GRA },           //  5 
+	{ "tmnt-c5.bin",  0x400000, 0x73a89fb0, 3 | BRF_GRA },           //  6 
+	{ "tmnt-c6.bin",  0x400000, 0xa139246a, 3 | BRF_GRA },           //  7 
+	{ "tmnt-c7.bin",  0x400000, 0xed957842, 3 | BRF_GRA },           //  8
+	{ "tmnt-c8.bin",  0x400000, 0x8c15d91b, 3 | BRF_GRA },           //  9 
 
+	{ "tmnt-m1.bin",  0x002000, 0x953542ef, 4 | BRF_ESS | BRF_PRG }, //  10 Z80 code
 
+	{ "tmnt-v1.bin",  0x094900, 0x273640c3, 5 | BRF_SND },           //  11 Sound data
+};
 
+STDROMPICKEXT(tmnti, tmnti, neogeo)
+STD_ROM_FN(tmnti)
 
+struct BurnDriver BurnDrvtmnti = {
+	"tmnti", NULL, "neogeo", NULL, "2009",
+	"Teenage Mutant Ninja Turtles (Intro demo)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, tmntiRomInfo, tmntiRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // Teenage Mutant Ninja Turtles (Intro demo, alt)
 
+static struct BurnRomInfo tmntiaRomDesc[] = {
+	{ "tmnt-p1a.bin", 0x800000, 0xed4f5fec, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
 
+	{ "tmnt-s1.bin",  0x010000, 0x3dc5c1ef, 2 | BRF_GRA },           //  1 Text layer tiles
 
+	{ "tmnt-c1.bin",  0x400000, 0xae1735c1, 3 | BRF_GRA },           //  2 Sprite data
+	{ "tmnt-c2.bin",  0x400000, 0x344281b5, 3 | BRF_GRA },           //  3 
+	{ "tmnt-c3.bin",  0x400000, 0x1058a648, 3 | BRF_GRA },           //  4
+	{ "tmnt-c4.bin",  0x400000, 0x1c6ba1b0, 3 | BRF_GRA },           //  5 
+	{ "tmnt-c5.bin",  0x400000, 0x73a89fb0, 3 | BRF_GRA },           //  6 
+	{ "tmnt-c6.bin",  0x400000, 0xa139246a, 3 | BRF_GRA },           //  7 
+	{ "tmnt-c7.bin",  0x400000, 0xed957842, 3 | BRF_GRA },           //  8
+	{ "tmnt-c8.bin",  0x400000, 0x8c15d91b, 3 | BRF_GRA },           //  9 
 
+	{ "tmnt-m1.bin",  0x002000, 0x953542ef, 4 | BRF_ESS | BRF_PRG }, //  10 Z80 code
 
+	{ "tmnt-v1.bin",  0x094900, 0x273640c3, 5 | BRF_SND },           //  11 Sound data
+};
 
+STDROMPICKEXT(tmntia, tmntia, neogeo)
+STD_ROM_FN(tmntia)
 
+struct BurnDriver BurnDrvtmntia = {
+	"tmntia", "tmnti", "neogeo", NULL, "2009",
+	"Teenage Mutant Ninja Turtles (Intro demo, alt)\0", "You must use the Universe BIOS and set region to Japan AES", "Sergi", "Neo Geo MVS",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_DEMO, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, tmntiaRomInfo, tmntiaRomName, NULL, NULL, neogeoInputInfo, neogeouniDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 
 // Neo Thunder
@@ -15339,31 +15798,88 @@ struct BurnDriver BurnDrvngftdemo = {
 
 // Neo CastleVania Demo
 
+static struct BurnRomInfo neocstlvRomDesc[] = {
+	{ "cstlv_p1.rom", 0x080000, 0x8d6cd9f2, 1 | BRF_ESS | BRF_PRG },	//  0 68K Code
 
+	{ "cstlv_s1.rom", 0x040000, 0xbe950195, 2 | BRF_GRA },		//  1 Text data
 
+	{ "cstlv_c1.rom", 0x100000, 0x960a7414, 3 | BRF_GRA },		//  2 Sprite data
+	{ "cstlv_c2.rom", 0x100000, 0x24a961d0, 3 | BRF_GRA },		//  3
 
+	{ "cstlv_m1.rom", 0x020000, 0x89c71460, 4 | BRF_ESS | BRF_PRG },	//  4 Z80 code
 
+	{ "cstlv_v1.rom", 0x080000, 0xdebeb8fb, 5 | BRF_SND },		//  5 Sound data
+}; 
 
+STDROMPICKEXT(neocstlv, neocstlv, neogeo)
+STD_ROM_FN(neocstlv)
 
+struct BurnDriver BurnDrvneocstlv = {
+	"neocstlv", NULL, "neogeo", NULL, "2004",
+	"Neo CastleVania Demo\0", NULL, "Barf/BarfHappy", "Neo Geo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neocstlvRomInfo, neocstlvRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 // NeoGeo 3D! Demo
 
+static struct BurnRomInfo neo3ddmoRomDesc[] = {
+	{ "neo3d_p1.rom", 0x080000, 0x791f6042, 1 | BRF_ESS | BRF_PRG },	//  0 68K Code
 
+	{ "neo3d_s1.rom", 0x020000, 0xcd19264f, 2 | BRF_GRA },		//  1 Text data
 
+	{ "neo3d_c1.rom", 0x100000, 0xa7eaca76, 3 | BRF_GRA },		//  2 Sprite data
+	{ "neo3d_c2.rom", 0x100000, 0x042f2cde, 3 | BRF_GRA },		//  3
 
+	{ "neo3d_m1.rom", 0x020000, 0x7e74cc1f, 4 | BRF_ESS | BRF_PRG },	//  4 Z80 code
 
+	{ "neo3d_v1.rom", 0x080000, 0xdebeb8fb, 5 | BRF_SND },		//  5 Sound data
+}; 
 
+STDROMPICKEXT(neo3ddmo, neo3ddmo, neogeo)
+STD_ROM_FN(neo3ddmo)
 
+struct BurnDriver BurnDrvneo3ddmo = {
+	"neo3ddmo", NULL, "neogeo", NULL, "2012",
+	"NeoGeo 3D! Demo\0", NULL, "Oxygene", "Neo Geo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neo3ddmoRomInfo, neo3ddmoRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 
 // WW2 Demo - Arcade Development Project
 
+static struct BurnRomInfo neoww2RomDesc[] = {
+	{ "ww2_p1.rom",   0x080000, 0xd53762ff, 1 | BRF_ESS | BRF_PRG },	//  0 68K Code
 
+	{ "ww2_s1.rom",   0x010000, 0x3fda5d1a, 2 | BRF_GRA },		//  1 Text data
 
+	{ "ww2_c1.rom",   0x100000, 0x955efd3e, 3 | BRF_GRA },		//  2 Sprite data
+	{ "ww2_c2.rom",   0x100000, 0xc213940f, 3 | BRF_GRA },		//  3
 
+	{ "ww2_m1.rom",   0x020000, 0x99c2354e, 4 | BRF_ESS | BRF_PRG },	//  4 Z80 code
 
+	{ "ww2_v1.rom",   0x080000, 0xdebeb8fb, 5 | BRF_SND },		//  5 Sound data
+}; 
 
+STDROMPICKEXT(neoww2, neoww2, neogeo)
+STD_ROM_FN(neoww2)
 
+struct BurnDriver BurnDrvneoww2 = {
+	"neoww2", NULL, "neogeo", NULL, "2012",
+	"WW2 Demo - Arcade Development Project\0", NULL, "Charles DOTY/RasterSoft (USA)", "Neo Geo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neoww2RomInfo, neoww2RomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 
 // Time's UP Demo
@@ -15391,46 +15907,122 @@ struct BurnDriver BurnDrvtimesupd = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
 	NULL, timesupdRomInfo, timesupdRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 
 // Galaga Demo (set 1)
 
+static struct BurnRomInfo neogalagRomDesc[] = {
+	{ "gal_p1.rom",   0x100000, 0x7226db5c, 1 | BRF_ESS | BRF_PRG },	//  0 68K Code
 
+	{ "gal_s1.rom",   0x002000, 0x90557449, 2 | BRF_GRA },		//  1 Text data
 
+	{ "gal_c1.rom",   0x100000, 0x6de8c6f6, 3 | BRF_GRA },		//  2 Sprite data
+	{ "gal_c2.rom",   0x100000, 0xfa5f0c1d, 3 | BRF_GRA },		//  3
 
+	{ "gal_m1.rom",   0x020000, 0x9c0291ea, 4 | BRF_ESS | BRF_PRG },	//  4 Z80 code
 
+	{ "gal_v1.rom",   0x080000, 0xdebeb8fb, 5 | BRF_SND },		//  5 Sound data
+}; 
 
+STDROMPICKEXT(neogalag, neogalag, neogeo)
+STD_ROM_FN(neogalag)
 
+struct BurnDriver BurnDrvneogalag = {
+	"neogalag", NULL, "neogeo", NULL, "2013",
+	"Galaga Demo (set 1)\0", NULL, "Cristiano Bei/www.iocerom.com", "Neo Geo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neogalagRomInfo, neogalagRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 
 // Galaga Demo (set 2)
 
+static struct BurnRomInfo neogalagaRomDesc[] = {
+	{ "gal_p1a.rom",  0x100000, 0x01dc85fd, 1 | BRF_ESS | BRF_PRG },	//  0 68K Code
 
+	{ "gal_s1.rom",   0x002000, 0x90557449, 2 | BRF_GRA },		//  1 Text data
 
+	{ "gal_c1a.rom",  0x100000, 0xf8221e34, 3 | BRF_GRA },		//  2 Sprite data
+	{ "gal_c2a.rom",  0x100000, 0xc30cf1fc, 3 | BRF_GRA },		//  3
 
+	{ "gal_m1.rom",   0x020000, 0x9c0291ea, 4 | BRF_ESS | BRF_PRG },	//  4 Z80 code
 
+	{ "gal_v1.rom",   0x080000, 0xdebeb8fb, 5 | BRF_SND },		//  5 Sound data
+}; 
 
+STDROMPICKEXT(neogalaga, neogalaga, neogeo)
+STD_ROM_FN(neogalaga)
 
+struct BurnDriver BurnDrvneogalaga = {
+	"neogalaga", "neogalag", "neogeo", NULL, "2013",
+	"Galaga Demo (set 2)\0", NULL, "Cristiano Bei/www.iocerom.com", "Neo Geo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neogalagaRomInfo, neogalagaRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 
 // NeoGeo 2-Player Tetris
 
+static struct BurnRomInfo neotetRomDesc[] = {
+	{ "tet_p1.rom",   0x080000, 0x3465569a, 1 | BRF_ESS | BRF_PRG },	//  0 68K Code
 
+	{ "tet_s1.rom",   0x020000, 0xa545b593, 2 | BRF_GRA },		//  1 Text data
 
+	{ "tet_c1.rom",   0x080000, 0xacc6d1d4, 3 | BRF_GRA },		//  2 Sprite data
+	{ "tet_c2.rom",   0x080000, 0x7ec06ab5, 3 | BRF_GRA },		//  3
 
+	{ "tet_m1.rom",   0x020000, 0x6b3703c6, 4 | BRF_ESS | BRF_PRG },	//  4 Z80 code
 
+	{ "tet_v1.rom",   0x080000, 0x2be8e290, 5 | BRF_SND },		//  5 Sound data
+}; 
 
+STDROMPICKEXT(neotet, neotet, neogeo)
+STD_ROM_FN(neotet)
 
+struct BurnDriver BurnDrvneotet = {
+	"neotet", NULL, "neogeo", NULL, "2013",
+	"NeoGeo 2-Player Tetris\0", NULL, "Crim/Stephen", "Neo Geo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neotetRomInfo, neotetRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
+	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
+	0x1000,	304, 224, 4, 3
+};
 
 
 // Primo Demo
 
+static struct BurnRomInfo neoprimoRomDesc[] = {
+	{ "pri_p1.rom",   0x100000, 0xa315fb81, 1 | BRF_ESS | BRF_PRG },	//  0 68K Code
 
+	{ "pri_s1.rom",   0x020000, 0xa545b593, 2 | BRF_GRA },		//  1 Text data
 
+	{ "pri_c1.rom",   0x100000, 0xd68941e1, 3 | BRF_GRA },		//  2 Sprite data
+	{ "pri_c2.rom",   0x100000, 0xdf7e359f, 3 | BRF_GRA },		//  3
 
+	{ "pri_m1.rom",   0x020000, 0x9c0291ea, 4 | BRF_ESS | BRF_PRG },	//  4 Z80 code
 
+	{ "pri_v1.rom",   0x080000, 0xdebeb8fb, 5 | BRF_SND },		//  5 Sound data
+}; 
 
+STDROMPICKEXT(neoprimo, neoprimo, neogeo)
+STD_ROM_FN(neoprimo)
 
+struct BurnDriver BurnDrvneoprimo = {
+	"neoprimo", NULL, "neogeo", NULL, "2013",
+	"Primo Demo\0", NULL, "iocerom.com", "Neo Geo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_SNK_NEOGEO, GBF_MISC, 0,
+	NULL, neoprimoRomInfo, neoprimoRomName, NULL, NULL, neogeoInputInfo, neogeoDIPInfo,
 	NeoInit, NeoExit, NeoFrame, NeoRender, NeoScan, &NeoRecalcPalette,
 	0x1000,	304, 224, 4, 3
 };
