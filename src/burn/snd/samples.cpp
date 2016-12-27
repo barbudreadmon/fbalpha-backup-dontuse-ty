@@ -251,7 +251,7 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 	void *destination = NULL;
 	char szTempPath[MAX_PATH];
 #ifdef __LIBRETRO__
-#ifdef _WIN32
+#if defined(_XBOX) || defined(_WIN32)
 	char slash = '\\';
 #else
 	char slash = '/';

@@ -10,6 +10,7 @@ EXTERNAL_ZLIB = 0
 TOAPLAN_SOUND_SAMPLES_HACK = 1
 NO_MIDWAY = 1
 USE_X64_DYNAREC = 0
+INCLUDE_7Z_SUPPORT = 1
 
 ifeq ($(platform),)
 platform = unix
@@ -269,8 +270,7 @@ endif
 CC_SYSTEM = gcc
 CXX_SYSTEM = g++
 
-BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
-	$(FBA_CPU_DIR)/arm7/arm7exec.c \
+BURN_BLACKLIST := $(FBA_CPU_DIR)/arm7/arm7exec.c \
 	$(FBA_CPU_DIR)/arm7/arm7core.c \
 	$(FBA_CPU_DIR)/adsp2100/2100ops.c \
 	$(FBA_CPU_DIR)/hd6309/6309tbl.c \
@@ -450,18 +450,31 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(TMS34010_DIR) \
 	$(FBA_CPU_DIR)/z80
 
-FBA_LIB_DIRS := $(FBA_LIB_DIR)/zlib
-
 FBA_INTERFACE_DIRS := $(FBA_INTERFACE_DIR)/audio
 
 FBA_SRC_DIRS := $(FBA_BURNER_DIR) $(FBA_BURN_DIRS) $(FBA_CPU_DIRS) $(FBA_BURNER_DIRS) $(FBA_INTERFACE_DIRS)
 
-
 ifeq ($(EXTERNAL_ZLIB), 1)
 	FBA_DEFINES += -DEXTERNAL_ZLIB
 else
-	FBA_SRC_DIRS += $(FBA_LIB_DIRS)
+	FBA_SRC_DIRS += $(FBA_LIB_DIR)/zlib
 	LDFLAGS += -lz
+endif
+
+ifeq ($(INCLUDE_7Z_SUPPORT), 1)
+	FBA_DEFINES += -DINCLUDE_7Z_SUPPORT
+	FBA_SRC_DIRS += $(FBA_LIB_DIR)/lib7z
+	BURN_BLACKLIST += $(FBA_LIB_DIR)/lib7z/LzFindMt.c \
+		$(FBA_LIB_DIR)/lib7z/LzmaEnc.c \
+		$(FBA_LIB_DIR)/lib7z/MtCoder.c \
+		$(FBA_LIB_DIR)/lib7z/Lzma2Enc.c \
+		$(FBA_LIB_DIR)/lib7z/Bcj2Enc.c \
+		$(FBA_LIB_DIR)/lib7z/Threads.c \
+		$(FBA_LIB_DIR)/lib7z/Lzma86Enc.c \
+		$(FBA_LIB_DIR)/lib7z/LzmaLib.c \
+		$(FBA_LIB_DIR)/lib7z/XzEnc.c
+else
+	BURN_BLACKLIST += $(FBA_BURNER_DIR)/un7z.cpp
 endif
 
 SOURCES_CXX := $(GRIFFIN_CXXSRCFILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp))) $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp $(LIBRETRO_DIR)/gami.cpp $(LIBRETRO_DIR)/gamc.cpp
@@ -495,6 +508,7 @@ INCFLAGS := -I$(FBA_BURNER_DIR)/win32 \
 	-I$(FBA_CPU_DIR)/i8039 \
 	-I$(FBA_CPU_DIR)/i8051 \
 	-I$(FBA_LIB_DIR)/zlib \
+	-I$(FBA_LIB_DIR)/lib7z \
 	-I$(FBA_BURN_DIR)/drv/capcom \
 	-I$(FBA_BURN_DIR)/drv/konami \
 	-I$(FBA_BURN_DIR)/drv/dataeast \
