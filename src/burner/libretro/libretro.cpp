@@ -2353,9 +2353,19 @@ static void InputTick()
 		}
 
 		if (pgi->nInput == GIT_JOYSLIDER) {
-			// Get state of the axis
-			nAdd = CinpJoyAxis(pgi->Input.Slider.JoyAxis.nJoy, pgi->Input.Slider.JoyAxis.nAxis);
-			nAdd /= 0x100;
+                  // Get states of the two keys
+                  if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))        {
+                        nAdd -= 0x100;
+                  }
+                  if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))       {
+                        nAdd += 0x100;
+                  }
+
+                  if (!nAdd) {
+                        // Get state of the axis
+                        nAdd = CinpJoyAxis(pgi->Input.Slider.JoyAxis.nJoy, pgi->Input.Slider.JoyAxis.nAxis);
+                        nAdd /= 0x100;
+                  }
 		}
 
 		// nAdd is now -0x100 to +0x100
