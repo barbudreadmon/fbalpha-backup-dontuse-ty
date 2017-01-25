@@ -1069,14 +1069,11 @@ static bool open_archive()
 void retro_init()
 {
    struct retro_log_callback log;
-   uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
       log_cb = log.log;
    else
       log_cb = log_dummy;
-
-   environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);
 
    BurnLibInit();
 }
@@ -2070,7 +2067,12 @@ static bool init_input(void)
    init_macro_input_descriptors();
    // The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
    set_input_descriptors();
-   
+
+   /* serialization quirks for netplay, cps3 seems problematic, neogeo, cps1 and 2 seem to be good to go */
+   uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
+   if(!strcmp(systemname, "CPS-3"))
+      environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);
+
    return has_analog;
 }
 #else
