@@ -1489,8 +1489,10 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 {
    nBurnDrvActive = driver;
 
-   if (!open_archive())
+   if (!open_archive()) {
+      log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
       return false;
+   }
 
    nBurnBpp = 2;
    nFMInterpolation = 3;
@@ -1508,6 +1510,10 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    int width, height;
    BurnDrvGetVisibleSize(&width, &height);
    unsigned drv_flags = BurnDrvGetFlags();
+   if (!(drv_flags & BDF_GAME_WORKING)) {
+	  log_cb(RETRO_LOG_ERROR, "[FBA] Game %s is not marked as working\n", game_zip_name);
+      return false;
+   }
    size_t pitch_size = nBurnBpp == 2 ? sizeof(uint16_t) : sizeof(uint32_t);
    if (drv_flags & BDF_ORIENTATION_VERTICAL)
       nBurnPitch = height * pitch_size;
@@ -1695,7 +1701,7 @@ bool retro_load_game(const struct retro_game_info *info)
    }
 
 error:
-   log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
+   log_cb(RETRO_LOG_ERROR, "[FBA] Cannot load this game.\n");
    return false;
 }
 

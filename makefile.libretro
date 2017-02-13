@@ -162,7 +162,7 @@ else ifeq ($(platform), vita)
 	AR = arm-vita-eabi-ar$(EXE_EXT)
 	PLATFORM_DEFINES += -DVITA
 	ENDIANNESS_DEFINES := -DLSB_FIRST
-	CFLAGS += -O2 -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive
+	CFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive
 	CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 	EXTERNAL_ZLIB = 1
 	STATIC_LINKING = 1
@@ -558,8 +558,8 @@ ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -g -DFBA_DEBUG
 	CXXFLAGS += -O0 -g -DFBA_DEBUG
 else
-	CFLAGS += -O2 -DNDEBUG
-	CXXFLAGS += -O2 -DNDEBUG
+	CFLAGS += -O3 -DNDEBUG
+	CXXFLAGS += -O3 -DNDEBUG
 endif
 
 ifeq ($(platform), sncps3)
@@ -573,11 +573,11 @@ CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
 LDFLAGS += $(fpic)
 
 CFLAGS += -std=gnu99 \
-	   -fforce-addr -finline-limit=1200 \
+	   -fforce-addr -finline-limit=1200 -fno-tree-loop-vectorize \
 	   -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
 	   -Wno-sequence-point -Wno-pedantic
 CXXFLAGS += -std=gnu++11 \
-	   -fforce-addr -finline-limit=1200 \
+	   -fforce-addr -finline-limit=1200 -fno-tree-loop-vectorize \
 	   -fcheck-new \
 	   -Wall -W -pedantic -Wshadow -Wno-long-long -Wno-write-strings \
 	   -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \
