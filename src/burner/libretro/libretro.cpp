@@ -1511,7 +1511,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    BurnDrvGetVisibleSize(&width, &height);
    unsigned drv_flags = BurnDrvGetFlags();
    if (!(drv_flags & BDF_GAME_WORKING)) {
-	  log_cb(RETRO_LOG_ERROR, "[FBA] Game %s is not marked as working\n", game_zip_name);
+      log_cb(RETRO_LOG_ERROR, "[FBA] Game %s is not marked as working\n", game_zip_name);
       return false;
    }
    size_t pitch_size = nBurnBpp == 2 ? sizeof(uint16_t) : sizeof(uint32_t);
