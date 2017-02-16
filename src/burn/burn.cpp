@@ -189,45 +189,6 @@ extern "C" TCHAR* BurnDrvGetText(UINT32 i)
 
 	if (!(i & DRV_ASCIIONLY)) {
 		switch (i & 0xFF) {
-			case DRV_FULLNAME:
-				pszStringW = pDriver[nBurnDrvActive]->szFullNameW;
-				
-				if (i & DRV_NEXTNAME) {
-					if (pszCurrentNameW && pDriver[nBurnDrvActive]->szFullNameW) {
-						pszCurrentNameW += wcslen(pszCurrentNameW) + 1;
-						if (!pszCurrentNameW[0]) {
-							return NULL;
-						}
-						pszStringW = pszCurrentNameW;
-					}
-				} else {
-
-#if !defined (_UNICODE)
-
-					// Ensure all of the Unicode titles are printable in the current locale
-					pszCurrentNameW = pDriver[nBurnDrvActive]->szFullNameW;
-					if (pszCurrentNameW && pszCurrentNameW[0]) {
-						INT32 nRet;
-
-						do {
-							nRet = wcstombs(szFullNameA, pszCurrentNameW, 256);
-							pszCurrentNameW += wcslen(pszCurrentNameW) + 1;
-						} while	(nRet >= 0 && pszCurrentNameW[0]);
-
-						// If all titles can be printed, we can use the Unicode versions
-						if (nRet >= 0) {
-							pszStringW = pszCurrentNameW = pDriver[nBurnDrvActive]->szFullNameW;
-						}
-					}
-
-#else
-
-					pszStringW = pszCurrentNameW = pDriver[nBurnDrvActive]->szFullNameW;
-
-#endif
-
-				}
-				break;
 			case DRV_COMMENT:
 				pszStringW = pDriver[nBurnDrvActive]->szCommentW;
 				break;
