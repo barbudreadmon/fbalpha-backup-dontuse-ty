@@ -56,6 +56,10 @@ FBA_SCRIPTS_DIR = $(MAIN_FBA_DIR)/dep/scripts
 GRIFFIN_DIR = griffin-libretro
 
 TARGET_NAME := fbalpha
+GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
+ifneq ($(GIT_VERSION)," unknown")
+	FBA_DEFINES += -DGIT_VERSION=\"$(GIT_VERSION)\"
+endif
 
 ifeq ($(platform), unix)
 	TARGET := $(TARGET_NAME)_libretro.so
