@@ -54,6 +54,7 @@ FBA_INTERFACE_DIR := $(MAIN_FBA_DIR)/intf
 FBA_GENERATED_DIR = $(MAIN_FBA_DIR)/dep/generated
 FBA_SCRIPTS_DIR = $(MAIN_FBA_DIR)/dep/scripts
 GRIFFIN_DIR = griffin-libretro
+INLINE_LIMIT=-finline-limit=1200 -fno-tree-loop-vectorize
 
 TARGET_NAME := fbalpha
 GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
@@ -86,6 +87,7 @@ ifndef ($(NOUNIVERSAL))
 	CXXFLAGS += $(ARCHFLAGS)
 	LDFLAGS += $(ARCHFLAGS)
 endif
+   INLINE_LIMIT=
 
 # iOS
 else ifneq (,$(findstring ios,$(platform)))
@@ -93,6 +95,7 @@ else ifneq (,$(findstring ios,$(platform)))
 	TARGET := $(TARGET_NAME)_libretro_ios.dylib
 	fpic := -fPIC
 	SHARED := -dynamiclib
+   INLINE_LIMIT=
 ifeq ($(IOSSDK),)
 	IOSSDK := $(shell xcodebuild -version -sdk iphoneos Path)
 endif
@@ -576,12 +579,13 @@ CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
 CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
 LDFLAGS += $(fpic)
 
+
 CFLAGS += -std=gnu99 \
-	   -fforce-addr -finline-limit=1200 -fno-tree-loop-vectorize \
+	   -fforce-addr $(INLINE_LIMIT)  \
 	   -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
 	   -Wno-sequence-point -Wno-pedantic
 CXXFLAGS += -std=gnu++11 \
-	   -fforce-addr -finline-limit=1200 -fno-tree-loop-vectorize \
+	   -fforce-addr $(INLINE_LIMIT) \
 	   -fcheck-new \
 	   -Wall -W -pedantic -Wshadow -Wno-long-long -Wno-write-strings \
 	   -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \
