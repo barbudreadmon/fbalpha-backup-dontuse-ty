@@ -67,6 +67,7 @@ void Z80GetContext (void *dst);
 void Z80SetContext (void *src);
 int Z80Scan(int nAction);
 INT32 z80TotalCycles();
+void Z80StopExecute();
 
 extern unsigned char Z80Vector;
 extern void (*z80edfe_callback)(Z80_Regs *Regs);
@@ -92,6 +93,7 @@ int ActiveZ80GetBC();
 int ActiveZ80GetDE();
 int ActiveZ80GetHL();
 int ActiveZ80GetI();
+int ActiveZ80GetIM();
 int ActiveZ80GetPrevPC();
 void ActiveZ80SetIRQHold();
 
