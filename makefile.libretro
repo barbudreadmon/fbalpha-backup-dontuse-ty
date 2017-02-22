@@ -583,7 +583,7 @@ LDFLAGS += $(fpic)
 CFLAGS += -std=gnu99 \
 	   -fforce-addr $(INLINE_LIMIT)  \
 	   -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
-	   -Wno-sequence-point -Wno-pedantic
+	   -Wno-sequence-point -Wno-pedantic -Wno-strict-aliasing
 CXXFLAGS += -std=gnu++11 \
 	   -fforce-addr $(INLINE_LIMIT) \
 	   -fcheck-new \
@@ -591,7 +591,7 @@ CXXFLAGS += -std=gnu++11 \
 	   -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \
 	   -Wuninitialized -Wpointer-arith -Wno-inline -Wno-address -Wno-unused-value \
 	   -Wno-unused-but-set-variable -Wno-sequence-point -Wno-narrowing -Wno-extra \
-	   -Wno-pedantic
+	   -Wno-pedantic -Wno-strict-aliasing
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)
 	CFLAGS += -DFRONTEND_SUPPORTS_RGB565
