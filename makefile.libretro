@@ -48,6 +48,17 @@ FBA_SCRIPTS_DIR = $(MAIN_FBA_DIR)/dep/scripts
 GRIFFIN_DIR = griffin-libretro
 INLINE_LIMIT=-finline-limit=1200 -fno-tree-loop-vectorize
 
+# GCC < 4.9 and clang does not support -fno-tree-loop-vectorize
+ifeq ($(shell expr `gcc -dumpversion | cut -f1` \< 4.9), 1)
+   INLINE_LIMIT=
+endif
+ifneq (, $(findstring clang,$(CC)))
+   INLINE_LIMIT=
+endif
+ifneq (, $(findstring clang,$(CXX)))
+   INLINE_LIMIT=
+endif
+
 # TARGET
 TARGET_NAME := fbalpha
 
@@ -102,14 +113,12 @@ else ifeq ($(platform), osx)
       CXXFLAGS += $(ARCHFLAGS)
       LDFLAGS += $(ARCHFLAGS)
    endif
-   INLINE_LIMIT=
 
 # iOS
 else ifneq (,$(findstring ios,$(platform)))
    TARGET := $(TARGET_NAME)_libretro_ios.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
-   INLINE_LIMIT=
    ifeq ($(IOSSDK),)
       IOSSDK := $(shell xcodebuild -version -sdk iphoneos Path)
    endif
