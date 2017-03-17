@@ -453,9 +453,9 @@ FBA_SRC_DIRS := $(FBA_BURNER_DIR) $(FBA_BURN_DIRS) $(FBA_CPU_DIRS) $(FBA_BURNER_
 
 ifeq ($(EXTERNAL_ZLIB), 1)
    FBA_DEFINES += -DEXTERNAL_ZLIB
+   LDFLAGS += -lz
 else
    FBA_SRC_DIRS += $(FBA_LIB_DIR)/zlib
-   LDFLAGS += -lz
 endif
 
 ifeq ($(INCLUDE_7Z_SUPPORT), 1)
