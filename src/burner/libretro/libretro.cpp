@@ -1421,7 +1421,7 @@ size_t retro_serialize_size()
 
    BurnAcb = burn_dummy_state_cb;
    state_size = 0;
-   BurnAreaScan(ACB_FULLSCAN | ACB_WRITE, 0);
+   BurnAreaScan(ACB_VOLATILE | ACB_WRITE | ACB_READ, 0);
    return state_size;
 }
 
@@ -1432,7 +1432,7 @@ bool retro_serialize(void *data, size_t size)
 
    BurnAcb = burn_write_state_cb;
    write_state_ptr = (uint8_t*)data;
-   BurnAreaScan(ACB_FULLSCAN | ACB_WRITE, 0);
+   BurnAreaScan(ACB_VOLATILE | ACB_WRITE | ACB_READ, 0);
 
    return true;
 }
@@ -1443,7 +1443,7 @@ bool retro_unserialize(const void *data, size_t size)
       return false;
    BurnAcb = burn_read_state_cb;
    read_state_ptr = (const uint8_t*)data;
-   BurnAreaScan(ACB_FULLSCAN | ACB_READ, 0);
+   BurnAreaScan(ACB_VOLATILE | ACB_WRITE | ACB_READ, 0);
 
    return true;
 }
@@ -2077,10 +2077,10 @@ static bool init_input(void)
    // The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
    set_input_descriptors();
 
-   /* serialization quirks for netplay, cps3 seems problematic, neogeo, cps1 and 2 seem to be good to go */
+   /* serialization quirks for netplay, cps3 seems problematic, neogeo, cps1 and 2 seem to be good to go 
    uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
    if(!strcmp(systemname, "CPS-3"))
-      environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);
+      environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);*/
 
    return has_analog;
 }
