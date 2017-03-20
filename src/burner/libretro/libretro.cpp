@@ -1406,6 +1406,7 @@ static int burn_write_state_cb(BurnArea *pba)
 
 static int burn_read_state_cb(BurnArea *pba)
 {
+   log_cb(RETRO_LOG_INFO, "state debug: len %d, sz %d\n", pba->nLen, pba->szName);
    memcpy(pba->Data, read_state_ptr, pba->nLen);
    read_state_ptr += pba->nLen;
    return 0;
