@@ -1399,7 +1399,7 @@ static unsigned state_size;
 
 static int burn_write_state_cb(BurnArea *pba)
 {
-   log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, sizeof(pba->nLen));
+   log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
    memcpy(write_state_ptr, pba->Data, pba->nLen);
    write_state_ptr += pba->nLen;
    return 0;
