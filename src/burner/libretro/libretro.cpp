@@ -713,7 +713,10 @@ static void set_environment()
    }
 
    vars[idx_var] = var_empty;
-   
+#if 1
+   log_cb(RETRO_LOG_INFO, "INT8 %d, UINT8 %d, INT16 %d, UINT16 %d, INT32 %d, UINT32 %d INT64 %d UINT64 %d\n", 
+      sizeof(INT8), sizeof(UINT8), sizeof(INT16), sizeof(UINT16), sizeof(INT32), sizeof(UINT32), sizeof(UINT64),sizeof(UINT64));
+#endif
    environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars);
 }
 
