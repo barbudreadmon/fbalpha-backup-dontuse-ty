@@ -30,7 +30,7 @@ typedef struct
 	INT32 cycles_left;
 	INT32 hold_irq;
 	const struct z80_irq_daisy_chain *daisy;
-   INT64 dummy;
+	INT64 dummy;
 	int		(*irq_callback)(int irqline);
 } Z80_Regs;
 

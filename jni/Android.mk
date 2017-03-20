@@ -1,5 +1,5 @@
 HAVE_GRIFFIN    := 0
-
+GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -208,6 +208,11 @@ ifeq ($(EXTERNAL_ZLIB), 1)
 	FBA_DEFINES += -DEXTERNAL_ZLIB
 else
 	FBA_SRC_DIRS += $(FBA_LIB_DIRS)
+endif
+
+# GIT HASH
+ifneq ($(GIT_VERSION)," unknown")
+   FBA_DEFINES += -DGIT_VERSION=\"$(GIT_VERSION)\"
 endif
 
 LOCAL_SRC_FILES := $(GRIFFIN_CXX_SRC_FILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
