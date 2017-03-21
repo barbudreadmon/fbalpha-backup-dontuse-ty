@@ -11,6 +11,7 @@ TOAPLAN_SOUND_SAMPLES_HACK = 1
 NO_MIDWAY = 1
 USE_X64_DYNAREC = 0
 INCLUDE_7Z_SUPPORT = 1
+PTR64 ?= 1
 
 # system platform
 ifeq ($(platform),)
@@ -66,6 +67,10 @@ TARGET_NAME := fbalpha
 GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
 ifneq ($(GIT_VERSION)," unknown")
    FBA_DEFINES += -DGIT_VERSION=\"$(GIT_VERSION)\"
+endif
+
+ifeq ($(PTR64), 1)
+   FBA_DEFINES += -DPTR64
 endif
 
 # Unix
