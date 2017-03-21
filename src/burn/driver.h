@@ -68,6 +68,12 @@ enum {
 #define READ8_HANDLER(name) 	UINT8 name(void)
 #define WRITE8_HANDLER(name) 	void  name(UINT8 data)
 
+#ifdef _MSC_VER
+#define ALIGN_VAR(x)  __declspec(align(x))
+#else
+#define ALIGN_VAR(x) __attribute__((aligned(x)))
+#endif
+
 #ifdef __cplusplus
  extern "C" {
 #endif
