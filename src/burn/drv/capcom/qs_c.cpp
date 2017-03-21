@@ -21,7 +21,7 @@ struct QChan {
 
 		INT8* PlayBank;					// Pointer to current bank
 #if !defined(PTR64)
-		INT32 dummy;
+		INT64 dummy;
 #endif
 		INT32 nPlayStart;					// Start of being played
 		INT32 nStart;						// Start of sample 16.12
