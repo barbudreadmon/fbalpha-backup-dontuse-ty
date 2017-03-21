@@ -713,10 +713,6 @@ static void set_environment()
    }
 
    vars[idx_var] = var_empty;
-#if 1
-   log_cb(RETRO_LOG_INFO, "INT8 %d, UINT8 %d, INT16 %d, UINT16 %d, INT32 %d, UINT32 %d INT64 %d UINT64 %d\n", 
-      sizeof(INT8), sizeof(UINT8), sizeof(INT16), sizeof(UINT16), sizeof(INT32), sizeof(UINT32), sizeof(UINT64),sizeof(UINT64));
-#endif
    environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars);
 }
 
@@ -1396,10 +1392,13 @@ void retro_run()
 static uint8_t *write_state_ptr;
 static const uint8_t *read_state_ptr;
 static unsigned state_size;
+static bool logged = false;
+
 
 static int burn_write_state_cb(BurnArea *pba)
 {
-   log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
+   if (!logged)
+      log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
    memcpy(write_state_ptr, pba->Data, pba->nLen);
    write_state_ptr += pba->nLen;
    return 0;
@@ -1437,7 +1436,7 @@ bool retro_serialize(void *data, size_t size)
    BurnAcb = burn_write_state_cb;
    write_state_ptr = (uint8_t*)data;
    BurnAreaScan(ACB_VOLATILE | ACB_WRITE | ACB_READ, 0);
-
+   logged = true;
    return true;
 }
 
