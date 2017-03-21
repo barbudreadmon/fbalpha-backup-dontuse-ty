@@ -1424,7 +1424,7 @@ size_t retro_serialize_size()
 
    BurnAcb = burn_dummy_state_cb;
    state_size = 0;
-   BurnAreaScan(ACB_VOLATILE | ACB_WRITE | ACB_READ, 0);
+   BurnAreaScan(ACB_VOLATILE | ACB_READ, 0);
    return state_size;
 }
 
@@ -1435,7 +1435,7 @@ bool retro_serialize(void *data, size_t size)
 
    BurnAcb = burn_write_state_cb;
    write_state_ptr = (uint8_t*)data;
-   BurnAreaScan(ACB_VOLATILE | ACB_WRITE | ACB_READ, 0);
+   BurnAreaScan(ACB_VOLATILE | ACB_READ, 0);
    logged = true;
    return true;
 }
@@ -1446,7 +1446,7 @@ bool retro_unserialize(const void *data, size_t size)
       return false;
    BurnAcb = burn_read_state_cb;
    read_state_ptr = (const uint8_t*)data;
-   BurnAreaScan(ACB_VOLATILE | ACB_WRITE | ACB_READ, 0);
+   BurnAreaScan(ACB_VOLATILE | ACB_WRITE, 0);
 
    return true;
 }
