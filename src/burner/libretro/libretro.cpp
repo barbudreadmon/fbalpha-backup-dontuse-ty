@@ -1392,13 +1392,9 @@ void retro_run()
 static uint8_t *write_state_ptr;
 static const uint8_t *read_state_ptr;
 static unsigned state_size;
-static bool logged = false;
-
 
 static int burn_write_state_cb(BurnArea *pba)
 {
-   if (!logged)
-      log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
    memcpy(write_state_ptr, pba->Data, pba->nLen);
    write_state_ptr += pba->nLen;
    return 0;
@@ -1413,6 +1409,7 @@ static int burn_read_state_cb(BurnArea *pba)
 
 static int burn_dummy_state_cb(BurnArea *pba)
 {
+   log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
    state_size += pba->nLen;
    return 0;
 }
@@ -1423,8 +1420,7 @@ size_t retro_serialize_size()
       return state_size;
 
    BurnAcb = burn_dummy_state_cb;
-   state_size = 0;
-   BurnAreaScan(ACB_VOLATILE | ACB_READ, 0);
+   BurnAreaScan(ACB_VOLATILE, 0);
    return state_size;
 }
 
@@ -1435,8 +1431,7 @@ bool retro_serialize(void *data, size_t size)
 
    BurnAcb = burn_write_state_cb;
    write_state_ptr = (uint8_t*)data;
-   BurnAreaScan(ACB_VOLATILE | ACB_READ, 0);
-   logged = true;
+   BurnAreaScan(ACB_VOLATILE | ACB_READ, 0);   
    return true;
 }
 
@@ -1444,10 +1439,10 @@ bool retro_unserialize(const void *data, size_t size)
 {
    if (size != state_size)
       return false;
+
    BurnAcb = burn_read_state_cb;
    read_state_ptr = (const uint8_t*)data;
    BurnAreaScan(ACB_VOLATILE | ACB_WRITE, 0);
-
    return true;
 }
 
@@ -1702,6 +1697,7 @@ bool retro_load_game(const struct retro_game_info *info)
       BurnDrvGetFullSize(&width, &height);
 
       g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+      state_size = 0;
 
       return true;
    }
