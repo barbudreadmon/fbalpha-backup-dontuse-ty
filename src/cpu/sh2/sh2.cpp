@@ -131,7 +131,7 @@ typedef struct
 	INT32	sh2_icount;
 	int     sh2_total_cycles;
 	
-	int 	(*irq_callback)(int irqline);
+	ALIGN_VAR(8) int 	(*irq_callback)(int irqline);
 
 } SH2;
 
@@ -193,8 +193,8 @@ typedef struct
 	pSh2ReadLongHandler ReadLong[SH2_MAXHANDLER];
 	pSh2WriteLongHandler WriteLong[SH2_MAXHANDLER];
 	
-	ALIGN_VAR(8) unsigned char * opbase;
-	ALIGN_VAR(8) int suspend;
+	unsigned char * opbase;
+	int suspend;
 } SH2EXT;
 
 static SH2EXT * pSh2Ext;
@@ -3535,7 +3535,6 @@ int Sh2Scan(int nAction)
 			ScanVar(& ( Sh2Ext[i].sh2 ), sizeof(SH2) - 4, szText);
 			
 			SCAN_VAR (Sh2Ext[i].suspend);
-			SCAN_VAR (Sh2Ext[i].opbase);
 			
 #if FAST_OP_FETCH
 			//	Sh2Ext[i].opbase
