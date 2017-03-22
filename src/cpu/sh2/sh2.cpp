@@ -193,8 +193,8 @@ typedef struct
 	pSh2ReadLongHandler ReadLong[SH2_MAXHANDLER];
 	pSh2WriteLongHandler WriteLong[SH2_MAXHANDLER];
 	
-	unsigned char * opbase;
-	int suspend;
+	ALIGN_VAR(8) unsigned char * opbase;
+	ALIGN_VAR(8) int suspend;
 } SH2EXT;
 
 static SH2EXT * pSh2Ext;
