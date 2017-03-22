@@ -205,6 +205,7 @@ INT32 BurnStateLoad(TCHAR* szName, INT32 bAll, INT32 (*pLoadGame)())
 	}
 
 	// load movie extra info
+#ifndef __LIBRETRO__
 	if(nReplayStatus)
 	{
 		const char szMovieExtra[] = "MOV ";
@@ -257,6 +258,7 @@ INT32 BurnStateLoad(TCHAR* szName, INT32 bAll, INT32 (*pLoadGame)())
 
 		if(buf) free(buf);
 	}
+#endif
 
 	fclose(fp);
 
@@ -461,6 +463,7 @@ INT32 BurnStateSave(TCHAR* szName, INT32 bAll)
 	fwrite(&szHeader, 1, 4, fp);
 	nRet = BurnStateSaveEmbed(fp, -1, bAll);
 
+#ifndef __LIBRETRO__
 	// save movie extra info
 	if(nReplayStatus)
 	{
@@ -530,6 +533,7 @@ INT32 BurnStateSave(TCHAR* szName, INT32 bAll)
 		if(huff_buf)    free(huff_buf);
 		if(input_buf)   free(input_buf);
 	}
+#endif
 
 	fclose(fp);
 
