@@ -11,7 +11,7 @@ Samples should be put under SYSTEM_DIRECTORY/fba/samples
 
 ## hiscore.dat
 
-Place hiscore.dat from http://highscore.mameworld.info/download.htm (use 'old format hiscore.dat (pre mame v0174)' version) in SAVE_DIRECTORY
+Move hiscore.dat from /metadata/ to your SAVE_DIRECTORY
 
 ## Raspberry Pi 2 users
 
