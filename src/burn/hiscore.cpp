@@ -367,7 +367,7 @@ void HiscoreInit()
 #else
 	char slash = '/';
 #endif
-	snprintf(szDatFilename, sizeof(szDatFilename), "%s%chiscore.dat", g_save_dir, slash);
+	snprintf(szDatFilename, sizeof(szDatFilename), "%s%cfba%chiscore.dat", g_system_dir, slash, slash);
 #else
  	_stprintf(szDatFilename, _T("%shiscore.dat"), szAppHiscorePath);
 #endif

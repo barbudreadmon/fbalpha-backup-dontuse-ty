@@ -11,7 +11,7 @@ Samples should be put under SYSTEM_DIRECTORY/fba/samples
 
 ## hiscore.dat
 
-Move hiscore.dat from /metadata/ to your SAVE_DIRECTORY
+Move hiscore.dat from /metadata/ to /SYSTEM_DIRECTORY/fba/
 
 ## Raspberry Pi 2 users
 
