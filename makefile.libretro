@@ -8,10 +8,10 @@ USE_SPEEDHACKS = 1
 USE_OLD_MAPPING = 0
 EXTERNAL_ZLIB = 0
 TOAPLAN_SOUND_SAMPLES_HACK = 1
-NO_MIDWAY = 1
-USE_X64_DYNAREC = 0
 INCLUDE_7Z_SUPPORT = 1
 PTR64 ?= 1
+INCLUDE_CPLUSPLUS11_FILES = 0
+BUILD_X64_EXE = 0
 
 # system platform
 ifeq ($(platform),)
@@ -352,21 +352,23 @@ ifeq ($(NO_SMS), 1)
    SMS_DIR :=
 endif
 
-ifeq ($(NO_MIDWAY), 1)
-   MIDWAY_DIR :=
-   MIPS3_DIR :=
-   MIPS3_X64_DYNAREC_DIR :=
-   TMS34010_DIR :=
-   ADSP2100_DIR :=
-   BURN_BLACKLIST += $(FBA_CPU_DIR)/adsp2100_intf.cpp \
+ifeq ($(INCLUDE_CPLUSPLUS11_FILES), 1)
+	CXXFLAGS += -std=gnu++11
+	ifeq ($(BUILD_X64_EXE), 1)
+		FBA_DEFINES += -DXBYAK_NO_OP_NAMES -DMIPS3_X64_DRC
+	else
+		MIPS3_X64_DYNAREC_DIR :=
+	endif
+else
+	CXXFLAGS += -std=gnu++98
+	MIDWAY_DIR :=
+	MIPS3_DIR :=
+	MIPS3_X64_DYNAREC_DIR :=
+	TMS34010_DIR :=
+	ADSP2100_DIR :=
+	BURN_BLACKLIST += $(FBA_CPU_DIR)/adsp2100_intf.cpp \
 		$(FBA_CPU_DIR)/tms34010_intf.cpp \
 		$(FBA_CPU_DIR)/mips3_intf.cpp
-else
-   ifeq ($(USE_X64_DYNAREC), 1)
-      FBA_DEFINES += -DXBYAK_NO_OP_NAMES -DMIPS3_X64_DRC
-   else
-      MIPS3_X64_DYNAREC_DIR :=
-   endif
 endif
 
 ifeq ($(NO_CPS), 1)
@@ -576,8 +578,7 @@ CFLAGS += -std=gnu99 \
 	   -fforce-addr $(INLINE_LIMIT)  \
 	   -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
 	   -Wno-sequence-point -Wno-pedantic -Wno-strict-aliasing
-CXXFLAGS += -std=gnu++11 \
-	   -fforce-addr $(INLINE_LIMIT) \
+CXXFLAGS += -fforce-addr $(INLINE_LIMIT) \
 	   -fcheck-new \
 	   -Wall -W -pedantic -Wshadow -Wno-long-long -Wno-write-strings \
 	   -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \

@@ -597,8 +597,8 @@ static int InpDIPSWInit()
                dip_option->values_str.append("|");
             
             log_cb(RETRO_LOG_INFO, "   '%s'\n", dip_option->values[dip_value_idx].friendly_name);
-         }         
-         dip_option->values_str.shrink_to_fit();
+         }
+         std::basic_string<char>(dip_option->values_str).swap(dip_option->values_str);
 
          j++;
       }
@@ -3003,7 +3003,7 @@ static void init_macro_core_options()
          macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_R3, "RetroPad R3 Button" } );
       }
 
-      macro_option->values.shrink_to_fit();
+      std::vector<macro_core_option_value, std::allocator<macro_core_option_value> >(macro_option->values).swap(macro_option->values);
 
       // Create the string values for the macro option
       macro_option->values_str.assign(macro_option->friendly_name);
@@ -3017,7 +3017,7 @@ static void init_macro_core_options()
          if (macro_value_idx != macro_option->values.size() - 1)
             macro_option->values_str.append("|");
       }
-      macro_option->values_str.shrink_to_fit();
+      std::basic_string<char>(macro_option->values_str).swap(macro_option->values_str);
 
       log_cb(RETRO_LOG_INFO, "'%s' (%d)\n", macro_option->values_str.c_str(), macro_option->values.size() - 1); // -1 to exclude the None from the macro count
    }
