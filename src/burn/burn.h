@@ -17,17 +17,18 @@
  #define MAX_PATH 	260
 #endif
 
-#ifdef _MSC_VER
-#define ALIGN_VAR(x)  __declspec(align(x))
-#else
-#define ALIGN_VAR(x)  __attribute__((aligned(x)))
-#endif
-
 #include <time.h>
 
 extern TCHAR szAppHiscorePath[MAX_PATH];
 extern TCHAR szAppSamplesPath[MAX_PATH];
 extern TCHAR szAppBlendPath[MAX_PATH];
+
+// Alignment macro, to keep savestates compatible between 32/64bit platforms.
+#ifdef _MSC_VER
+#define ALIGN_VAR(x)  __declspec(align(x))
+#else
+#define ALIGN_VAR(x)  __attribute__((aligned(x)))
+#endif
 
 // Enable the MAME logerror() function in debug builds
 // #define MAME_USE_LOGERROR
@@ -322,6 +323,7 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 // Flags used with the Burndriver structure
 
 // Flags for the flags member
+#define BDF_GAME_NOT_WORKING							(0)
 #define BDF_GAME_WORKING								(1 << 0)
 #define BDF_ORIENTATION_FLIPPED							(1 << 1)
 #define BDF_ORIENTATION_VERTICAL						(1 << 2)
@@ -394,22 +396,28 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 #define HARDWARE_SEGA_SYSTEM1							(HARDWARE_PREFIX_SEGA | 0x00090000)
 #define HARDWARE_SEGA_MISC								(HARDWARE_PREFIX_SEGA | 0x000a0000)
 
-#define HARDWARE_SEGA_FD1089A_ENC						(0x0001)
-#define HARDWARE_SEGA_FD1089B_ENC						(0x0002)
-#define HARDWARE_SEGA_5358								(0x0004)
-#define HARDWARE_SEGA_MC8123_ENC						(0x0008)
-#define HARDWARE_SEGA_BAYROUTE_MEMMAP					(0x0010)
-#define HARDWARE_SEGA_ALT_MEMMAP						(0x0020)
-#define HARDWARE_SEGA_FD1094_ENC						(0x0040)
-#define HARDWARE_SEGA_SPRITE_LOAD32						(0x0080)
-#define HARDWARE_SEGA_YM2203							(0x0100)
-#define HARDWARE_SEGA_INVERT_TILES						(0x0200)
-#define HARDWARE_SEGA_5521								(0x0400)
-#define HARDWARE_SEGA_5797								(0x0800)
-#define HARDWARE_SEGA_YM2413							(0x1000)
-#define HARDWARE_SEGA_FD1094_ENC_CPU2					(0x2000)
-#define HARDWARE_SEGA_ISGSM								(0x4000)
-#define HARDWARE_SEGA_5704_PS2							(0x8000)
+#define HARDWARE_SEGA_PCB_MASK							(0x0f)
+#define HARDWARE_SEGA_5358								(0x01)
+#define HARDWARE_SEGA_5358_SMALL						(0x02)
+#define HARDWARE_SEGA_5704								(0x03)
+#define HARDWARE_SEGA_5521								(0x04)
+#define HARDWARE_SEGA_5797								(0x05)
+#define HARDWARE_SEGA_5704_PS2							(0x06)
+#define HARDWARE_SEGA_171_SHADOW						(0x07)
+#define HARDWARE_SEGA_171_5874							(0x08)
+#define HARDWARE_SEGA_171_5987							(0x09)
+#define HARDWARE_SEGA_837_7525							(0x0a)
+
+#define HARDWARE_SEGA_FD1089A_ENC						(0x0010)
+#define HARDWARE_SEGA_FD1089B_ENC						(0x0020)
+#define HARDWARE_SEGA_MC8123_ENC						(0x0040)
+#define HARDWARE_SEGA_FD1094_ENC						(0x0080)
+#define HARDWARE_SEGA_SPRITE_LOAD32						(0x0100)
+#define HARDWARE_SEGA_YM2203							(0x0200)
+#define HARDWARE_SEGA_INVERT_TILES						(0x0400)
+#define HARDWARE_SEGA_YM2413							(0x0800)
+#define HARDWARE_SEGA_FD1094_ENC_CPU2					(0x1000)
+#define HARDWARE_SEGA_ISGSM								(0x2000)
 
 #define HARDWARE_KONAMI_68K_Z80							(HARDWARE_PREFIX_KONAMI | 0x00010000)
 #define HARDWARE_KONAMI_68K_ONLY						(HARDWARE_PREFIX_KONAMI | 0x00020000)
@@ -569,7 +577,8 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 #define HARWARE_CAPCOM_MISC								(HARDWARE_PREFIX_CAPCOM_MISC)
 
 #define HARDWARE_SETA1									(HARDWARE_PREFIX_SETA | 0x10000)
-#define HARDWARE_SETA2									(HARDWARE_PREFIX_SETA | 0x10000)
+#define HARDWARE_SETA2									(HARDWARE_PREFIX_SETA | 0x20000)
+#define HARDWARE_SETA_SSV								(HARDWARE_PREFIX_SETA | 0x30000)
 
 #define HARDWARE_TECHNOS								(HARDWARE_PREFIX_TECHNOS)
 
@@ -615,4 +624,3 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 #endif
 
 #endif
-

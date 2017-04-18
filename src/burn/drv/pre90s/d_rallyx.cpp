@@ -716,7 +716,9 @@ static INT32 DrvDoReset()
 	ZetClose();
 	
 	BurnSampleReset();
-	
+
+	NamcoSoundReset();
+
 	DrvCPUFireIRQ = 0;
 	DrvCPUIRQVector = 0;
 	xScroll = 0;
@@ -1132,7 +1134,7 @@ static void MachineInit()
 	ZetMapMemory(DrvZ80Ram1      , 0x9800, 0x9fff, MAP_RAM);
 	ZetClose();
 	
-	NamcoSoundInit(18432000 / 6 / 32, 3);
+	NamcoSoundInit(18432000 / 6 / 32, 3, 0);
 	NacmoSoundSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 	BurnSampleInit(1);
 	BurnSampleSetAllRoutesAllSamples(0.80, BURN_SND_ROUTE_BOTH);

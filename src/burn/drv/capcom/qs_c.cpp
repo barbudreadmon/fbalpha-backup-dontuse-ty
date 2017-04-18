@@ -19,8 +19,9 @@ struct QChan {
 		UINT8 bKey;				// 1 if channel is playing
 		INT8 nBank;						// Bank we are currently playing a sample from
 
-		ALIGN_VAR(8) INT8* PlayBank;   // Pointer to current bank
-		ALIGN_VAR(8) INT32 nPlayStart; // Start of being played
+		ALIGN_VAR(8) INT8* PlayBank;		// Pointer to current bank
+
+		INT32 nPlayStart;					// Start of being played
 		INT32 nStart;						// Start of sample 16.12
 		INT32 nEnd;						// End of sample   16.12
 		INT32 nLoop;						// Loop offset from end

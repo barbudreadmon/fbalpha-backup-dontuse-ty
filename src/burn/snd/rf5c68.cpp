@@ -1,3 +1,8 @@
+// Based on MAME sources by Olivier Galibert,Aaron Giles
+/*********************************************************/
+/*    ricoh RF5C68(or clone) PCM controller              */
+/*********************************************************/
+
 #include "burnint.h"
 #include "rf5c68.h"
 #include "burn_sound.h"
@@ -158,9 +163,15 @@ void RF5C68PCMExit()
 		free(left);
 		left = NULL;
 	}
+
 	if (right) {
 		free(right);
 		right = NULL;
+	}
+
+	if (chip) {
+		free(chip);
+		chip = NULL;
 	}
 
 	DebugSnd_RF5C68Initted = 0;

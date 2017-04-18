@@ -290,7 +290,6 @@ static INT32 DrvDoReset()
 	ZetReset();
 	ZetClose();
 
-	oki_bankswitch(1);
 	MSM6295Reset(0);
 
 	return 0;

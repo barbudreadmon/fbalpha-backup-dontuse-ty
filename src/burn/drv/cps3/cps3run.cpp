@@ -441,25 +441,25 @@ static void cps3_process_character_dma(UINT32 address)
 		switch ( dat1 & 0x00e00000 ) {
 		case 0x00800000:
 			chardma_table_address = real_source;
-			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_ACK);
 			break;
 		case 0x00400000:
 			cps3_do_char_dma( real_source, real_destination, real_length );
-			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_ACK);
 			break;
 		case 0x00600000:
 			//bprintf(PRINT_NORMAL, _T("Character DMA (alt) start %08x to %08x with %d\n"), real_source, real_destination, real_length);
 			/* 8bpp DMA decompression
 			   - this is used on SFIII NG Sean's Stage ONLY */
 			cps3_do_alt_char_dma( real_source, real_destination, real_length );
-			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_ACK);
 			break;
 		case 0x00000000:
 			// Red Earth need this. 8192 byte trans to 0x00003000 (from 0x007ec000???)
 			// seems some stars(6bit alpha) without compress
 			//bprintf(PRINT_NORMAL, _T("Character DMA (redearth) start %08x to %08x with %d\n"), real_source, real_destination, real_length);
 			memcpy( (UINT8 *)RamCRam + real_destination, RomUser + real_source, real_length );
-			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_ACK);
 			break;
 		default:
 			bprintf(PRINT_NORMAL, _T("Character DMA Unknown DMA List Command Type %08x\n"), dat1);
@@ -496,7 +496,7 @@ static INT32 MemIndex()
 	
 	RamEnd		= Next;
 	
-	Cps3CurPal		= (UINT16 *) Next; Next += 0x020001 * sizeof(UINT16); // iq_132 - layer disable
+	Cps3CurPal  = (UINT16 *) Next; Next += 0x020002 * sizeof(UINT16); // iq_132 - layer disable, +1 to keep things aligned
 	RamScreen	= (UINT32 *) Next; Next += (512 * 2) * (224 * 2 + 32) * sizeof(UINT32);
 	
 	MemEnd		= Next;
@@ -692,7 +692,7 @@ void __fastcall cps3WriteWord(UINT32 addr, UINT16 data)
 #endif
 				Cps3CurPal[(paldma_dest + i) ] = BurnHighCol(r, g, b, 0);
 			}
-			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_ACK);
 		}
 		break;
 	
@@ -1048,15 +1048,12 @@ static INT32 Cps3Reset()
 			Sh2SetVBR(0x06000000);
 		}
 	}
-	
-	if (!cps3_isSpecial) {
-		if (cps3_dip & 0x80) {
-			EEPROM[0x11] = 0x100 + (EEPROM[0x11] & 0xff);
-			EEPROM[0x29] = 0x100 + (EEPROM[0x29] & 0xff);
-		} else {
-			EEPROM[0x11] = 0x000 + (EEPROM[0x11] & 0xff);
-			EEPROM[0x29] = 0x000 + (EEPROM[0x29] & 0xff);
-		}
+	if (cps3_dip & 0x80) {
+		EEPROM[0x11] = 0x100 + (EEPROM[0x11] & 0xff);
+		EEPROM[0x29] = 0x100 + (EEPROM[0x29] & 0xff);
+	} else {
+		EEPROM[0x11] = 0x000 + (EEPROM[0x11] & 0xff);
+		EEPROM[0x29] = 0x000 + (EEPROM[0x29] & 0xff);
 	}
 
 	cps3_current_eeprom_read = 0;	
@@ -1149,7 +1146,7 @@ INT32 cps3Init()
 		Sh2Init(1);
 		Sh2Open(0);
 
-#if defined USE_SPEEDHACKS
+#ifdef USE_SPEEDHACKS
 		cps3speedhack = 1;
 #endif
 
@@ -1223,7 +1220,7 @@ INT32 cps3Init()
 		Sh2SetWriteWordHandler(4, cps3VidWriteWord);
 		Sh2SetWriteLongHandler(4, cps3VidWriteLong);
 
-#if defined USE_SPEEDHACKS
+#ifdef USE_SPEEDHACKS
 		// install speedup read handler
 		Sh2MapHandler(5,			0x02000000 | (cps3_speedup_ram_address & 0x030000),
 							0x0200ffff | (cps3_speedup_ram_address & 0x030000), MAP_READ);
@@ -2020,11 +2017,11 @@ INT32 cps3Frame()
 		
 		if (cps_int10_cnt >= 2) {
 			cps_int10_cnt = 0;
-			Sh2SetIRQLine(10, CPU_IRQSTATUS_AUTO);
+			Sh2SetIRQLine(10, CPU_IRQSTATUS_ACK);
 		} else cps_int10_cnt++;
 
 	}
-	Sh2SetIRQLine(12, CPU_IRQSTATUS_AUTO);
+	Sh2SetIRQLine(12, CPU_IRQSTATUS_ACK);
 
 	cps3SndUpdate();
 	
@@ -2087,6 +2084,7 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 		ba.nAddress = 0;
 		ba.szName	= "Palette";
 		BurnAcb(&ba);
+
 #ifndef __LIBRETRO__
 		ba.Data		= RamCRam;
 		ba.nLen		= 0x0800000;
@@ -2094,7 +2092,6 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 		ba.szName	= "Sprite ROM";
 		BurnAcb(&ba);
 #endif
-
 
 /*		// so huge. need not backup it while NOCD
 		// otherwize, need backup gfx also

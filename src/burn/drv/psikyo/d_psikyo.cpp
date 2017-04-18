@@ -1,4 +1,5 @@
 // Psikyo MC68EC020 based hardware
+// Based by MAME driver by Luca Elia,Olivier Galibert,Paul Priest
 #include "psikyo.h"
 #include "burn_ym2610.h"
 #include "burn_ymf278b.h"
@@ -1048,10 +1049,10 @@ UINT16 tengaiMCURead(UINT32 offset)
 		case 0: {
 			UINT16 res;
 			if (s1945_mcu_control & 16) {
-				res = s1945_mcu_latching & 4 ? 0xff00 : s1945_mcu_latch1 << 8;
+				res = (s1945_mcu_latching & 4) ? 0xff00 : s1945_mcu_latch1 << 8;
 				s1945_mcu_latching |= 4;
 			} else {
-				res = s1945_mcu_latching & 1 ? 0xff00 : s1945_mcu_latch2 << 8;
+				res = (s1945_mcu_latching & 1) ? 0xff00 : s1945_mcu_latch2 << 8;
 				s1945_mcu_latching |= 1;
 			}
 			res |= s1945_mcu_bctrl & 0x00f0;
@@ -1864,7 +1865,7 @@ static INT32 DrvInit()
 		}
 		case PSIKYO_HW_S1945:
 		case PSIKYO_HW_TENGAI: {
-			BurnYMF278BInit(0, PsikyoSampleROM02, &PsikyoFMIRQHandler, PsikyoSynchroniseStream);
+			BurnYMF278BInit(0, PsikyoSampleROM02, PsikyoSampleROM02Size, &PsikyoFMIRQHandler, PsikyoSynchroniseStream);
 			BurnYMF278BSetRoute(BURN_SND_YMF278B_YMF278B_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 			BurnYMF278BSetRoute(BURN_SND_YMF278B_YMF278B_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
 			BurnTimerAttachZet(4000000);

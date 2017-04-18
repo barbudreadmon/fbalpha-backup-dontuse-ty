@@ -524,6 +524,13 @@ void m6800_init()
 
 void m6800_reset(void)
 {
+	// save pointers, clear context, restore pointers
+	void (* const * insn)(void) = m6800.insn;
+	const UINT8 *cycles = m6800.cycles;
+	//memset(&m6800, 0, sizeof(m6800));
+	m6800.insn = insn;
+	m6800.cycles = cycles;
+
 	SEI;				/* IRQ disabled */
 	PCD = RM16( 0xfffe );
 	CHANGE_PC();
@@ -544,6 +551,18 @@ void m6800_reset(void)
 	OCD = 0xffff;
 	TOD = 0xffff;
 	m6800.ram_ctrl |= 0x40;
+}
+
+void m6800_reset_hard(void)
+{
+	// save pointers, clear context, restore pointers
+	void (* const * insn)(void) = m6800.insn;
+	const UINT8 *cycles = m6800.cycles;
+	//memset(&m6800, 0, sizeof(m6800));
+	m6800.insn = insn;
+	m6800.cycles = cycles;
+
+	m6800_reset();
 }
 
 int m6800_get_pc()

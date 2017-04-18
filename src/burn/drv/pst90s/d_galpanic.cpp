@@ -1,6 +1,6 @@
 /*
  * Gals Panic (set 1) driver for FB Alpha 0.2.96.71
- *
+ * Based on MAME driver by Nicola Salmoria
  * Port by OopsWare. 2007
  */
 
@@ -756,6 +756,23 @@ STD_ROM_PICK(Wownfant)
 STD_ROM_FN(Wownfant)
 
 // Rom information
+static struct BurnRomInfo Missw02RomDesc[] = {
+	{ "8.u81",  					0x080000, 0x316666d0, BRF_ESS | BRF_PRG }, // 68000 code
+	{ "7.u80",  					0x080000, 0xd61f4d18, BRF_ESS | BRF_PRG },
+	{ "3.bin",   					0x200000, 0xfdfe36ba, BRF_ESS | BRF_PRG },
+	{ "4.bin",						0x200000, 0xaa769a81, BRF_ESS | BRF_PRG },
+
+	{ "6.u113", 					0x080000, 0x3e77ca1f, BRF_GRA },			  // graphics
+	{ "5.u112", 					0x080000, 0xead3411d, BRF_GRA },
+
+	{ "2.u4",   					0x080000, 0x06dc889e, BRF_SND },			  // PCM
+	{ "1.u1",   					0x080000, 0x864167c2, BRF_SND },
+};
+
+STD_ROM_PICK(Missw02)
+STD_ROM_FN(Missw02)
+
+// Rom information
 static struct BurnRomInfo GalhustlRomDesc[] = {
 	{ "ue17.3",        		0x080000, 0xb2583dbb, BRF_ESS | BRF_PRG }, // 68000 code
 	{ "ud17.4",        		0x080000, 0x470a3668, BRF_ESS | BRF_PRG },
@@ -855,7 +872,7 @@ static INT32 MemIndex2()
 		} else {
 	Rom68K 		= Next; Next += 0x500000;			// 68000 ROM
 		}
-	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2a") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2n") || !strcmp(BurnDrvGetTextA(DRV_NAME), "wownfant")) {
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2a") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2n") || !strcmp(BurnDrvGetTextA(DRV_NAME), "wownfant") || !strcmp(BurnDrvGetTextA(DRV_NAME), "missw02")) {
 	RomGfx		= Next; Next += 0x200100;			// Graphics, 1M 16x16x4bit decode to 2M + 64byte safe
 		} else {
 	RomGfx		= Next; Next += 0x100100;			// Graphics, 1/2M 16x16x4bit decode to 1M + 64byte safe
@@ -2025,11 +2042,11 @@ static INT32 ComadFrame()
 	ComadClearOpposites(&DrvInput[1]);
 	ComadClearOpposites(&DrvInput[3]);
 
-	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "supmodel") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2a") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2n") || !strcmp(BurnDrvGetTextA(DRV_NAME), "wownfant")) {
-	nCyclesTotal[0] = (INT32)((INT64)12000000 * nBurnCPUSpeedAdjust / (0x0100 * 60));
-		} else {
-	nCyclesTotal[0] = (INT32)((INT64)10000000 * nBurnCPUSpeedAdjust / (0x0100 * 60));
-		}
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "supmodel") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2a") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fantsia2n") || !strcmp(BurnDrvGetTextA(DRV_NAME), "wownfant") || !strcmp(BurnDrvGetTextA(DRV_NAME), "missw02")) {
+		nCyclesTotal[0] = (INT32)((INT64)12000000 * nBurnCPUSpeedAdjust / (0x0100 * 60));
+	} else {
+		nCyclesTotal[0] = (INT32)((INT64)10000000 * nBurnCPUSpeedAdjust / (0x0100 * 60));
+	}
 
 	SekOpen(0);
 	SekNewFrame();
@@ -2306,6 +2323,16 @@ struct BurnDriver BurnDrvWownfant = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_POST90S, GBF_PUZZLE, 0,
 	NULL, WownfantRomInfo, WownfantRomName, NULL, NULL, GalpanicInputInfo, Missw96DIPInfo,
+	WownfantInit, GalpanicExit, ComadFrame, ComadDraw, GalpanicScan, &RecalcBgPalette, 0x400,
+	256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvMissw02 = {
+	"missw02", NULL, NULL, NULL, "2002",
+	"Miss World 2002\0", NULL, "Daigom", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_POST90S, GBF_PUZZLE, 0,
+	NULL, Missw02RomInfo, Missw02RomName, NULL, NULL, GalpanicInputInfo, Missw96DIPInfo,
 	WownfantInit, GalpanicExit, ComadFrame, ComadDraw, GalpanicScan, &RecalcBgPalette, 0x400,
 	256, 224, 4, 3
 };

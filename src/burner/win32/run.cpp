@@ -73,7 +73,7 @@ static int GetInput(bool bCopy)
 	static int i = 0;
 	InputMake(bCopy); 						// get input
 
-        CheckSystemMacros();
+	CheckSystemMacros();
 
 	// Update Input dialog ever 3 frames
 	if (i == 0) {
@@ -91,17 +91,28 @@ static int GetInput(bool bCopy)
 	return 0;
 }
 
+static time_t fpstimer;
+static unsigned int nPreviousFrames;
+
+static void DisplayFPSInit()
+{
+	nDoFPS = 0;
+	fpstimer = 0;
+	nPreviousFrames = nFramesRendered;
+}
+
 static void DisplayFPS()
 {
-	static time_t fpstimer;
-	static unsigned int nPreviousFrames;
-
 	TCHAR fpsstring[8];
 	time_t temptime = clock();
 	double fps = (double)(nFramesRendered - nPreviousFrames) * CLOCKS_PER_SEC / (temptime - fpstimer);
+	if (bAppDoFast) {
+		fps *= nFastSpeed+1;
+	}
 	_sntprintf(fpsstring, 7, _T("%2.2lf"), fps);
-	if (temptime - fpstimer>0) // to avoid strange fps value from division by zero at start -dink
+	if (fpstimer && temptime - fpstimer>0) { // avoid strange fps values
 		VidSNewShortMsg(fpsstring, 0xDFDFFF, 480, 0);
+	}
 
 	fpstimer = temptime;
 	nPreviousFrames = nFramesRendered;
@@ -329,8 +340,9 @@ int RunReset()
 {
 	// Reset the speed throttling code
 	nNormalLast = 0; nNormalFrac = 0;
+
 	// Reset FPS display
-	nDoFPS = 0;
+	DisplayFPSInit();
 
 	if (!bAudPlaying) {
 		// run without sound
@@ -466,9 +478,10 @@ int RunMessageLoop()
 								nOldAudVolume = nAudVolume;
 								TCHAR buffer[60];
 
-								nAudVolume += 100;
 								if (GetAsyncKeyState(VK_CONTROL) & 0x80000000) {
-									nAudVolume += 900;
+									nAudVolume += 100;
+								} else {
+									nAudVolume += 1000;
 								}
 
 								if (nAudVolume > 10000) {
@@ -487,9 +500,10 @@ int RunMessageLoop()
 							  	nOldAudVolume = nAudVolume;
 								TCHAR buffer[60];
 
-								nAudVolume -= 100;
 								if (GetAsyncKeyState(VK_CONTROL) & 0x80000000) {
-									nAudVolume -= 900;
+									nAudVolume -= 100;
+								} else {
+									nAudVolume -= 1000;
 								}
 
 								if (nAudVolume < 0) {
@@ -565,6 +579,8 @@ int RunMessageLoop()
 								break;
 							}
 							case VK_F1: {
+								bool bOldAppDoFast = bAppDoFast;
+
 								if (kNetGame) {
 									break;
 								}
@@ -581,15 +597,28 @@ int RunMessageLoop()
 									bAppDoFast = !bAppDoFast;
 									bAppDoFasttoggled = bAppDoFast;
 								}
+
+								if (bOldAppDoFast != bAppDoFast) {
+									DisplayFPSInit(); // resync fps display
+								}
 								break;
 							}
 							case VK_BACK: {
-								bShowFPS = !bShowFPS;
-								if (bShowFPS) {
-									DisplayFPS();
-								} else {
-									VidSKillShortMsg();
-									VidSKillOSDMsg();
+								if ((GetAsyncKeyState(VK_SHIFT) & 0x80000000) && !GetAsyncKeyState(VK_CONTROL))
+								{ // Shift-Backspace: toggles recording/replay frame counter
+									bReplayFrameCounterDisplay = !bReplayFrameCounterDisplay;
+									if (!bReplayFrameCounterDisplay) {
+										VidSKillTinyMsg();
+									}
+								} else
+								{ // Backspace: toggles FPS counter
+									bShowFPS = !bShowFPS;
+									if (bShowFPS) {
+										DisplayFPSInit();
+									} else {
+										VidSKillShortMsg();
+										VidSKillOSDMsg();
+									}
 								}
 								break;
 							}
@@ -612,11 +641,17 @@ int RunMessageLoop()
 						switch (Msg.wParam) {
 							case VK_MENU:
 								continue;
-							case VK_F1:
+							case VK_F1: {
+								bool bOldAppDoFast = bAppDoFast;
+
 								if (!bAppDoFasttoggled)
 									bAppDoFast = 0;
 								bAppDoFasttoggled = 0;
+								if (bOldAppDoFast != bAppDoFast) {
+									DisplayFPSInit(); // resync fps display
+								}
 								break;
+							}
 						}
 					}
 				}

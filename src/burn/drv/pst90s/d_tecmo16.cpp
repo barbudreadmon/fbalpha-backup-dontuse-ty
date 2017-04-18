@@ -1,3 +1,6 @@
+// FB Alpha Tecmo 16-bit driver module
+// Based on MAME driver by Hau, Nicola Salmoria
+
 #include "tiles_generic.h"
 #include "m68000_intf.h"
 #include "z80_intf.h"
@@ -650,7 +653,7 @@ static INT32 FstarfrcMemIndex()
 	FstarfrcColour2Ram   = Next; Next += 0x01000;
 	FstarfrcSpriteRam    = Next; Next += 0x01000;
 	FstarfrcPaletteRam   = Next; Next += 0x02000;
-	FstarfrcZ80Ram       = Next; Next += 0x0c002;
+	FstarfrcZ80Ram       = Next; Next += 0x0c010; // c002
 
 	RamEnd = Next;
 

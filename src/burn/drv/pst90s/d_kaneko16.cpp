@@ -1,3 +1,6 @@
+// FB Alpha Kaneko 16-bit driver module
+// Based on MAME driver by Luca Elia
+
 #include "tiles_generic.h"
 #include "m68000_intf.h"
 #include "z80_intf.h"
@@ -309,15 +312,15 @@ static struct BurnInputInfo GtmrInputList[] = {
 	{"P1 Down"           , BIT_DIGITAL  , Kaneko16InputPort0 + 1, "p1 down"   },
 	{"P1 Left"           , BIT_DIGITAL  , Kaneko16InputPort0 + 2, "p1 left"   },
 	{"P1 Right"          , BIT_DIGITAL  , Kaneko16InputPort0 + 3, "p1 right"  },
-	{"P1 Fire 1"         , BIT_DIGITAL  , Kaneko16InputPort0 + 5, "p1 fire 1" },
-	{"P1 Fire 2"         , BIT_DIGITAL  , Kaneko16InputPort0 + 4, "p1 fire 2" },
+	{"P1 Fire 1"         , BIT_DIGITAL  , Kaneko16InputPort0 + 4, "p1 fire 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL  , Kaneko16InputPort0 + 5, "p1 fire 2" },
 
 	{"P2 Up"             , BIT_DIGITAL  , Kaneko16InputPort1 + 0, "p2 up"     },
 	{"P2 Down"           , BIT_DIGITAL  , Kaneko16InputPort1 + 1, "p2 down"   },
 	{"P2 Left"           , BIT_DIGITAL  , Kaneko16InputPort1 + 2, "p2 left"   },
 	{"P2 Right"          , BIT_DIGITAL  , Kaneko16InputPort1 + 3, "p2 right"  },
-	{"P2 Fire 1"         , BIT_DIGITAL  , Kaneko16InputPort1 + 5, "p2 fire 1" },
-	{"P2 Fire 2"         , BIT_DIGITAL  , Kaneko16InputPort1 + 4, "p2 fire 2" },
+	{"P2 Fire 1"         , BIT_DIGITAL  , Kaneko16InputPort1 + 4, "p2 fire 1" },
+	{"P2 Fire 2"         , BIT_DIGITAL  , Kaneko16InputPort1 + 5, "p2 fire 2" },
 
 	{"Reset"             , BIT_DIGITAL  , &Kaneko16Reset        , "reset"     },
 	{"Service"           , BIT_DIGITAL  , Kaneko16InputPort2 + 6, "service"   },
@@ -4714,6 +4717,7 @@ static INT32 WingforcInit()
 	Kaneko16VideoInit();
 	Kaneko16SpriteRamSize = 0x1000;
 	Kaneko16SpriteXOffset = 0x10000 - 0x680;
+	Kaneko16TilesYOffset = -0x09;
 	Kaneko16SpritePrio(2, 3, 5, 7);
 	
 	// Allocate and Blank all required memory
@@ -5805,6 +5809,7 @@ static INT32 Kaneko16Exit()
 	Kaneko16DisplayEnable = 0;
 	Kaneko168BppSprites = 0;
 	Kaneko16Eeprom = 0;
+	Kaneko16NVRam = NULL;
 	Kaneko16TilesXOffset = 0;
 	Kaneko16TilesYOffset = 0;
 	Kaneko16Bg15 = 0;
@@ -6427,8 +6432,14 @@ static void Kaneko16QueueTilesLayer(INT32 Layer)
 			if (px < 0 || px >= nScreenWidth) continue;
 			
 			TileIndex = ((my * 32) + mx) * 2;
-			
-			Code = VRAM[TileIndex + 1] & (numTiles - 1);
+
+			if (numTiles & 0xfff)
+			{ // gtmr2
+				Code = VRAM[TileIndex + 1];
+				if (Code >= numTiles) continue;
+			} else {
+				Code = VRAM[TileIndex + 1] & (numTiles - 1);
+			}
 			Attr = VRAM[TileIndex + 0];
 			Priority = (Attr >> 8) & 7;
 			Colour = (Attr >> 2) & 0x3f;
@@ -6554,7 +6565,15 @@ static void Kaneko16RenderTileLayer(INT32 Layer, INT32 PriorityDraw, INT32 xScro
 
 	for (my = 0; my < 32; my++) {
 		for (mx = 0; mx < 32; mx++) {
-			Code = VRAM[TileIndex + 1] & (numTiles - 1);
+
+			if (numTiles & 0xfff)
+			{ // gtmr2
+				Code = VRAM[TileIndex + 1];
+				if (Code >= numTiles) continue;
+			} else {
+				Code = VRAM[TileIndex + 1] & (numTiles - 1);
+			}
+
 			Attr = VRAM[TileIndex + 0];
 			Colour = (Attr >> 2) & 0x3f;
 			Flip = Attr & 3;
@@ -7277,24 +7296,25 @@ static INT32 ShogwarrFrame()
 	SekOpen(0);
 	SekNewFrame();
 
-	INT32 nInterleave = 240;
+	INT32 nInterleave = 256;
+	nCyclesTotal[0] = (12000000 * 100) / 5918;
+	nCyclesDone[0] = 0;
+	INT32 nSegment = 0;
 
 	for (INT32 nScanline = 0; nScanline < nInterleave; nScanline++)
 	{
-		INT32 nSegment = ((12000000 * 100) / 5918) / nInterleave;
-
-		SekRun(nSegment);
+		nSegment = (nCyclesTotal[0] - nCyclesDone[0]) / (nInterleave - nScanline);
+		nCyclesDone[0] += SekRun(nSegment);
 
 		if (nScanline ==  64) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
 		if (nScanline == 144) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
-		if (nScanline == 223) {
-			SekSetIRQLine(4, CPU_IRQSTATUS_ACK); //AUTO);
-			 shogwarr_calc3_mcu_run();
+		if (nScanline == 223-16) {
+			shogwarr_calc3_mcu_run();
 		}
-		if (nScanline == 224) {
-			SekSetIRQLine(4, CPU_IRQSTATUS_NONE); //AUTO);
+
+		if (nScanline == 224-16) { // needs -16 otherwise sprite flicker in some shogunwarriors levels.
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
-			
 	}
 
 	SekClose();

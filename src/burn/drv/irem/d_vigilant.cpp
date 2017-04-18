@@ -1,3 +1,5 @@
+// Based on MAME driver by Mike Balfour
+
 #include "tiles_generic.h"
 #include "z80_intf.h"
 #include "burn_ym2151.h"
@@ -1165,7 +1167,7 @@ void __fastcall KikcubicZ80Write1(UINT16 a, UINT8 d)
 {
 	if (a >= 0xc800 && a <= 0xcaff) {
 		INT32 Offset = a & 0x3ff;
-		INT32 Bank = Offset & 0x400;
+		INT32 Bank = 0; /*Offset & 0x400;*/ // always bank 0 due to shortened palette ram in kikcubic
 		INT32 r, g, b;
 		
 		DrvPaletteRam[Offset] = d;

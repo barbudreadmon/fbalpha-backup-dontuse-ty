@@ -1,4 +1,5 @@
 // FB Alpha GI Joe driver module
+// Based on MAME driver by Olivier Galibert
 
 #include "tiles_generic.h"
 #include "m68000_intf.h" 
@@ -187,6 +188,7 @@ static void _fastcall gijoe_main_write_word(UINT32 address, UINT16 data)
 			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
 		return;
 	}
+	//bprintf(0, _T("%X %X\n"), address, data);
 }
 
 static void _fastcall gijoe_main_write_byte(UINT32 address, UINT8 data)
@@ -355,7 +357,7 @@ static UINT8 __fastcall gijoe_sound_read(UINT16 address)
 
 static void gijoe_sprite_callback(INT32 */*code*/, INT32 *color, INT32 *priority)
 {
-	int pri = (*color & 0x03e0) >> 4;
+	INT32 pri = (*color & 0x03e0) >> 4;
 
 	if (pri <= layerpri[3])					*priority = 0x0000;
 	else if (pri > layerpri[3] && pri <= layerpri[2])	*priority = 0xff00;
@@ -368,7 +370,7 @@ static void gijoe_sprite_callback(INT32 */*code*/, INT32 *color, INT32 *priority
 
 static void gijoe_tile_callback(int layer, int *code, int *color, int */*flags*/)
 {
-	int tile = *code;
+	INT32 tile = *code;
 
 	if (tile >= 0xf000 && tile <= 0xf4ff)
 	{
@@ -441,6 +443,8 @@ static INT32 DrvDoReset()
 
 	avac_vrc = 0xffff;
 	sound_nmi_enable = 0;
+
+	irq6_timer = -1;
 
 	return 0;
 }
@@ -542,7 +546,7 @@ static INT32 DrvInit()
 	K056832SetGlobalOffsets(24, 16);
 
 	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x3fffff, gijoe_sprite_callback, 1);
-	K053247SetSpriteOffset(-61, -46);
+	K053247SetSpriteOffset(-61, -46+10);
 
 	K054539Init(0, 48000, DrvSndROM, 0x200000);
 	K054539SetRoute(0, BURN_SND_K054539_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
@@ -593,7 +597,7 @@ static INT32 DrvDraw()
 {
 	DrvPaletteRecalc();
 
-	int layers[4], dirty, mask, vrc_mode, vrc_new;
+	INT32 layers[4], dirty, mask = 0, vrc_mode, vrc_new;
 
 	K056832ReadAvac(&vrc_mode, &vrc_new);
 
@@ -673,14 +677,14 @@ static INT32 DrvFrame()
 			DrvInputs[3] ^= (DrvJoy4[i] & 1) << i;
 		}
 
-		DrvInputs[0] = (DrvInputs[0] & 0xfff7) | (DrvDips[0] & 0x08);
+		DrvInputs[0] = (DrvInputs[0] & 0xf7ff) | ((DrvDips[0] & 0x08) << 8);
 		DrvInputs[2] = (DrvInputs[2] & 0x7f7f) | (DrvDips[1] & 0x80) | ((DrvDips[2] & 0x80) << 8);
 		DrvInputs[3] = (DrvInputs[3] & 0xff7f) | (DrvDips[3] & 0x80);
 		DrvInputs[0] &= 0x0fff;
 		DrvInputs[1] &= 0x0fff;
 	}
 
-	INT32 nInterleave = nBurnSoundLen;
+	INT32 nInterleave = 256;
 	INT32 nSoundBufferPos = 0;
 	INT32 nCyclesTotal[2] = { 16000000 / 60, 8000000 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
@@ -696,10 +700,10 @@ static INT32 DrvFrame()
 		nCyclesSegment = SekRun(nCyclesSegment);
 		nCyclesDone[0] += nCyclesSegment;
 
-		if (control_data & 0x20 && irq6_timer > 0) {
+		if (control_data & 0x20 && irq6_timer == 0) {
 			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
-		}
-		irq6_timer--;
+			irq6_timer = -1;
+		} else if (irq6_timer != -1) irq6_timer--;
 
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[1];
@@ -709,23 +713,25 @@ static INT32 DrvFrame()
 			ZetNmi();
 		}
 
+		if (i == 240) {
+			if (K056832IsIrqEnabled()) {
+				if (K053246_is_IRQ_enabled()) {
+					gijoe_objdma();
+					irq6_timer = 1; // guess
+				}
+
+				if (control_data & 0x80) {
+					SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
+				}
+			}
+		}
+
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 			memset (pSoundBuf, 0, nSegmentLength * 2 * 2);
 			K054539Update(0, pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
-		}
-	}
-
-	if (K056832IsIrqEnabled()) {
-		if (K053246_is_IRQ_enabled()) {
-			gijoe_objdma();
-			irq6_timer = 10; // guess
-		}
-
-		if (control_data & 0x80) {
-			SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		}
 	}
 
@@ -748,7 +754,7 @@ static INT32 DrvFrame()
 	return 0;
 }
 
-static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
+static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 
@@ -756,7 +762,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		*pnMin = 0x029732;
 	}
 
-	if (nAction & ACB_VOLATILE) {		
+	if (nAction & ACB_VOLATILE) {
 		memset(&ba, 0, sizeof(ba));
 
 		ba.Data	  = AllRam;
@@ -772,15 +778,15 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		KonamiICScan(nAction);
 
 		SCAN_VAR(avac_vrc);
+		SCAN_VAR(avac_bits);
+		SCAN_VAR(avac_occupancy);
 		SCAN_VAR(sound_nmi_enable);
 		SCAN_VAR(control_data);
-		SCAN_VAR(sound_nmi_enable);
 		SCAN_VAR(irq6_timer);
 
-		for (INT32 i = 0; i < 4; i++) {
-			SCAN_VAR(avac_bits[i]);
-			SCAN_VAR(avac_occupancy[i]);
-		}
+		SCAN_VAR(layerpri);
+		SCAN_VAR(layer_colorbase);
+		SCAN_VAR(sprite_colorbase);
 	}
 
 	return 0;

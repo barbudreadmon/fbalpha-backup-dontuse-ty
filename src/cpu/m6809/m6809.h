@@ -12,6 +12,7 @@ typedef struct
 {
 	PAIR	pc; 		/* Program counter */
 	PAIR	ppc;		/* Previous program counter */
+	PAIR    ea;         /* effective address */
 	PAIR	d;			/* Accumulator a and b */
 	PAIR	dp; 		/* Direct Page register (page in MSB) */
 	PAIR	u, s;		/* Stack pointers */
@@ -20,7 +21,7 @@ typedef struct
 	UINT8	ireg;		/* First opcode */
 	UINT8	irq_state[2];
     int     extra_cycles; /* cycles used up by interrupts */
-    int     (*irq_callback)(int irqline);
+	ALIGN_VAR(8) int (*irq_callback)(int irqline);
     UINT8   int_state;  /* SYNC and CWAI flags */
     UINT8   nmi_state;
 } m6809_Regs;
@@ -39,10 +40,12 @@ enum
 
 void m6809_init(int (*irqcallback)(int));
 void m6809_reset(void);
+void m6809_reset_hard(void);
 int m6809_execute(int cycles);
 void m6809_set_irq_line(int irqline, int state);
 void m6809_get_context(void *dst);
 void m6809_set_context(void *src);
+UINT16 m6809_get_pc();
 
 unsigned char M6809ReadByte(unsigned short Address);
 void M6809WriteByte(unsigned short Address, unsigned char Data);

@@ -1,5 +1,5 @@
 // FB Alpha Psikyo Sh2-based hardware driver module
-// Based on MAME driver by David Haywood
+// Based on MAME driver by Paul Priest, David Haywood
 
 // To do!
 // implement background zooming update.
@@ -205,6 +205,26 @@ static struct BurnDIPInfo SoldividDIPList[]=
 };
 
 STDDIPINFO(Soldivid)
+
+static struct BurnDIPInfo SoldividkDIPList[]=
+{
+	{0x14, 0xff, 0xff, 0x60, NULL			},
+	{0x15, 0xff, 0xff, 0x01, NULL			},
+
+	{0   , 0xfe, 0   ,    2, "Service Mode"		},
+	{0x14, 0x01, 0x20, 0x20, "Off"			},
+	{0x14, 0x01, 0x20, 0x00, "On"			},
+
+	{0   , 0xfe, 0   ,    2, "Debug"		},
+	{0x14, 0x01, 0x40, 0x40, "Off"			},
+	{0x14, 0x01, 0x40, 0x00, "On"			},
+
+//	{0   , 0xfe, 0   ,    2, "Region"		}, /* Game is hard coded to Korea */
+//	{0x15, 0x01, 0x01, 0x00, "Japan"		},
+//	{0x15, 0x01, 0x01, 0x01, "World"		},
+};
+
+STDDIPINFO(Soldividk)
 
 static struct BurnDIPInfo Gunbird2DIPList[]=
 {
@@ -638,7 +658,7 @@ static void DrvGfxDecode(INT32 size)
 {
 	BurnSwap32(pPsikyoshTiles, size);
 
-	if (strcmp(BurnDrvGetTextA(DRV_NAME), "soldivid") == 0) {
+	if (strcmp(BurnDrvGetTextA(DRV_NAME), "soldivid") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "soldividk") == 0) {
 		BurnByteswap(pPsikyoshTiles, size);
 	}
 }
@@ -671,13 +691,6 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	{
 		Sh2Init(1);
 		Sh2Open(0);
-
-#if defined USE_SPEEDHACKS
-#ifdef __LIBRETRO__
-		if(sh2speedhack) cps3speedhack = 1;
-#endif
-#endif
-
 		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
 		Sh2MapMemory(DrvSh2ROM + 0x100000,	0x02000000, 0x020fffff, MAP_ROM);
 		Sh2MapMemory(DrvSprRAM,			0x03000000, 0x0300ffff, MAP_RAM);
@@ -691,13 +704,6 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	} else {
 		Sh2Init(1);
 		Sh2Open(0);
-
-#if defined USE_SPEEDHACKS
-#ifdef __LIBRETRO__
-		if(sh2speedhack) cps3speedhack = 1;
-#endif
-#endif
-
 		Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
 		Sh2MapMemory(DrvSprRAM,			0x04000000, 0x0400ffff, MAP_RAM);
 		Sh2MapMemory(DrvPalRAM,			0x04040000, 0x0404ffff, MAP_RAM);
@@ -715,7 +721,7 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	Sh2SetReadWordHandler (1,		hack_read_word);
 	Sh2SetReadLongHandler (1,		hack_read_long);
 
-	BurnYMF278BInit(0, DrvSndROM, &DrvIRQCallback, DrvSynchroniseStream);
+	BurnYMF278BInit(0, DrvSndROM, 0x400000, &DrvIRQCallback, DrvSynchroniseStream);
 	BurnYMF278BSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 	BurnTimerAttachSh2(28636350);
 
@@ -815,12 +821,12 @@ static struct BurnRomInfo soldividRomDesc[] = {
 	{ "2-prog_l.u18",	0x080000, 0xcf179b04, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
 	{ "1-prog_h.u17",	0x080000, 0xf467d1c4, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "4l.u10",		0x400000, 0x9eb9f269, 2 | BRF_GRA },           //  2 Graphics
-	{ "4h.u31",		0x400000, 0x7c76cfe7, 2 | BRF_GRA },           //  3
-	{ "5l.u9",		0x400000, 0xc59c6858, 2 | BRF_GRA },           //  4
-	{ "5h.u30",		0x400000, 0x73bc66d0, 2 | BRF_GRA },           //  5
-	{ "6l.u8",		0x400000, 0xf01b816e, 2 | BRF_GRA },           //  6
-	{ "6h.u37",		0x400000, 0xfdd57361, 2 | BRF_GRA },           //  7
+	{ "4l.u10",			0x400000, 0x9eb9f269, 2 | BRF_GRA },           //  2 Graphics
+	{ "4h.u31",			0x400000, 0x7c76cfe7, 2 | BRF_GRA },           //  3
+	{ "5l.u9",			0x400000, 0xc59c6858, 2 | BRF_GRA },           //  4
+	{ "5h.u30",			0x400000, 0x73bc66d0, 2 | BRF_GRA },           //  5
+	{ "6l.u8",			0x400000, 0xf01b816e, 2 | BRF_GRA },           //  6
+	{ "6h.u37",			0x400000, 0xfdd57361, 2 | BRF_GRA },           //  7
 
 	{ "sound.bin",		0x400000, 0xe98f8d45, 3 | BRF_SND },           //  8 Samples
 };
@@ -861,6 +867,44 @@ struct BurnDriver BurnDrvSoldivid = {
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_PSIKYO, GBF_HORSHOOT, 0,
 	NULL, soldividRomInfo, soldividRomName, NULL, NULL, Common3ButtonInputInfo, SoldividDIPInfo,
 	SoldividInit, DrvExit, DrvFrame, PsikyoshDraw, DrvScan, NULL, 0x1400,
+	320, 224, 4, 3
+};
+
+static INT32 SoldividkInit()
+{
+	speedhack_address = 0x00000c;
+	speedhack_pc[0] = 0x0001AFB0;
+	speedhack_pc[1] = 0x0001AE7A;
+
+	return DrvInit(SoldividLoadCallback, 0, 0x3800000, 0x2000000);
+}
+
+// Sol Divide - The Sword Of Darkness (Korea)
+
+static struct BurnRomInfo soldividkRomDesc[] = {
+	{ "9-prog_lk.u18",	0x080000, 0xb534029d, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
+	{ "8-prog_hk.u17",	0x080000, 0xa48e3206, 1 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "4l.u10",			0x400000, 0x9eb9f269, 2 | BRF_GRA },           //  2 Graphics
+	{ "4h.u31",			0x400000, 0x7c76cfe7, 2 | BRF_GRA },           //  3
+	{ "5l.u9",			0x400000, 0xc59c6858, 2 | BRF_GRA },           //  4
+	{ "5h.u30",			0x400000, 0x73bc66d0, 2 | BRF_GRA },           //  5
+	{ "6l.u8",			0x400000, 0xf01b816e, 2 | BRF_GRA },           //  6
+	{ "6h.u37",			0x400000, 0xfdd57361, 2 | BRF_GRA },           //  7
+
+	{ "sound.bin",		0x400000, 0xe98f8d45, 3 | BRF_SND },           //  8 Samples
+};
+
+STD_ROM_PICK(soldividk)
+STD_ROM_FN(soldividk)
+
+struct BurnDriver BurnDrvSoldividk = {
+	"soldividk", "soldivid", NULL, NULL, "1997",
+	"Sol Divide - The Sword Of Darkness (Korea)\0", NULL, "Psikyo", "PS3-V1",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_PSIKYO, GBF_HORSHOOT, 0,
+	NULL, soldividkRomInfo, soldividkRomName, NULL, NULL, Common3ButtonInputInfo, SoldividkDIPInfo,
+	SoldividkInit, DrvExit, DrvFrame, PsikyoshDraw, DrvScan, NULL, 0x1400,
 	320, 224, 4, 3
 };
 

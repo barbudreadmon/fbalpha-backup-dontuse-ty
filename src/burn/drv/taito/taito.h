@@ -29,6 +29,7 @@ extern UINT8 *TaitoSpriteRam;
 extern UINT8 *TaitoSpriteRam2;
 extern UINT8 *TaitoSpriteRamBuffered;
 extern UINT8 *TaitoSpriteRamDelayed;
+extern UINT8 *TaitoSpriteRamDelayed2;
 extern UINT8 *TaitoSpriteExtension;
 extern UINT8 *TaitoVideoRam;
 extern UINT32  *TaitoPalette;
@@ -99,6 +100,7 @@ extern INT32 TaitoDoReset();
 #define TAITO_ES5505			30
 #define TAITO_ES5505_BYTESWAP		31
 #define TAITO_DEFAULT_EEPROM		32
+#define TAITO_CHARS_BYTESWAP32		33
 
 extern UINT8 *Taito68KRom1;
 extern UINT8 *Taito68KRom2;
@@ -204,6 +206,7 @@ extern INT32 *TaitoSpriteBYOffsets;
 
 extern INT32 TaitoLoadRoms(INT32 bLoad);
 extern INT32 TaitoExit();
+extern void TaitoClearVariables();
 
 // Taito F2 Sprites
 struct TaitoF2SpriteEntry {
@@ -216,6 +219,7 @@ struct TaitoF2SpriteEntry {
 	INT32 xZoom;
 	INT32 yZoom;
 	INT32 Priority;
+	INT32 Priority_Raw;
 };
 extern struct TaitoF2SpriteEntry *TaitoF2SpriteList;
 
@@ -238,4 +242,5 @@ void TaitoF2FullBufferDelayed();
 
 void TaitoF2MakeSpriteList();
 void TaitoF2RenderSpriteList(INT32 TaitoF2SpritePriorityLevel);
+void TaitoF2RenderSpriteListPriMasks(INT32 *primasks);
 void TaitoF2HandleSpriteBuffering();

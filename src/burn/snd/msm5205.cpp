@@ -1,3 +1,23 @@
+// copyright-holders:Aaron Giles
+/*
+ *   streaming ADPCM driver
+ *   by Aaron Giles
+ *
+ *   Library to transcode from an ADPCM source to raw PCM.
+ *   Written by Buffoni Mirko in 08/06/97
+ *   References: various sources and documents.
+ *
+ *   HJB 08/31/98
+ *   modified to use an automatically selected oversampling factor
+ *   for the current sample rate
+ *
+ *   01/06/99
+ *    separate MSM5205 emulator form adpcm.c and some fix
+ *
+ *   07/29/12
+ *    added basic support for the MSM6585
+ */
+
 #include "burnint.h"
 #include "msm5205.h"
 #include "math.h"
@@ -40,6 +60,8 @@ static struct _MSM5205_state *voice;
 static void MSM5205_playmode(INT32 chip, INT32 select);
 
 static const INT32 index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
+
+static UINT8 *scanline_table = NULL;
 
 static void ComputeTables(INT32 chip)
 {
@@ -115,7 +137,7 @@ static void MSM5205StreamUpdate(INT32 chip)
 
 	len -= pos;
 	voice->streampos = pos + len;
-	
+
 	if (pos == 0) {
 		memset (stream[chip], 0, nBurnSoundLen * sizeof(INT16));
 	}
@@ -200,13 +222,13 @@ void MSM5205Render(INT32 chip, INT16 *buffer, INT32 len)
 				nRightSample += source[i];
 			}
 		}
-		
+
+		source[i] = 0; // clear dac
+
 		nLeftSample = BURN_SND_CLIP(nLeftSample);
 		nRightSample = BURN_SND_CLIP(nRightSample);
-		
+
 		if (voice->bAdd) {
-			//buffer[0] += nLeftSample;
-			//buffer[1] += nRightSample;
 			buffer[0] = BURN_SND_CLIP(buffer[0] + nLeftSample);
 			buffer[1] = BURN_SND_CLIP(buffer[1] + nRightSample);
 		} else {
@@ -263,7 +285,10 @@ void MSM5205Init(INT32 chip, INT32 (*stream_sync)(INT32), INT32 clock, void (*vc
 	float FPSRatio = (float)(6000 - nBurnFPS) / 6000;
 	INT32 nSoundLen = nBurnSoundLen + (INT32)((float)nBurnSoundLen * FPSRatio) + 1;
 	stream[chip]		= (INT16*)BurnMalloc(nSoundLen * sizeof(INT16));
-	
+
+	if (chip == 0)
+		scanline_table = (UINT8*)BurnMalloc(256 * 2); // just incase.
+
 	ComputeTables (chip);
 	
 	nNumChips = chip;
@@ -320,6 +345,8 @@ void MSM5205Exit()
 	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205Exit called without init\n"));
 #endif
 
+	if (!DebugSnd_MSM5205Initted) return;
+
 	for (INT32 chip = 0; chip < MAX_MSM5205; chip++)
 	{
 		voice = &chips[chip];
@@ -330,7 +357,10 @@ void MSM5205Exit()
 
 		BurnFree (stream[chip]);
 	}
-	
+
+	BurnFree(scanline_table);
+	scanline_table = NULL;
+
 	DebugSnd_MSM5205Initted = 0;
 	nNumChips = 0;
 }
@@ -391,6 +421,34 @@ void MSM5205PlaymodeWrite(INT32 chip, INT32 select)
 	MSM5205_playmode(chip,select);
 }
 
+
+void MSM5205NewFrame(INT32 chip, INT32 cpu_speed, INT32 interleave)
+{
+	INT32 MSMCalcdInterleave = MSM5205CalcInterleave(chip, cpu_speed);
+	INT32 LastIdx = -1;
+	INT32 Idx = 0;
+
+	for (INT32 i = 0; i < interleave; i++)
+	{
+		Idx = (INT32)round(((double)MSMCalcdInterleave / (double)interleave) * (double)i);
+
+		if (Idx != LastIdx) {
+			scanline_table[i] = 1;
+		} else scanline_table[i] = 0;
+		LastIdx = Idx;
+	}
+}
+
+void MSM5205UpdateScanline(INT32 scanline)
+{
+#if defined FBA_DEBUG
+	if (!DebugSnd_MSM5205Initted) bprintf(PRINT_ERROR, _T("MSM5205UpdateScanline called without init\n"));
+#endif
+	if (scanline_table[scanline]) {
+		MSM5205Update();
+	}
+}
+
 void MSM5205Update()
 {
 #if defined FBA_DEBUG
@@ -443,7 +501,7 @@ void MSM5205Scan(INT32 nAction, INT32 *pnMin)
 	}
 
 	if (nAction & ACB_DRIVER_DATA) {
-               for (INT32 chip = 0; chip < MAX_MSM5205; chip++) {
+		for (INT32 chip = 0; chip < MAX_MSM5205; chip++) {
 			voice = &chips[chip];
 
 			SCAN_VAR(voice->data);
@@ -455,7 +513,7 @@ void MSM5205Scan(INT32 nAction, INT32 *pnMin)
 			SCAN_VAR(voice->signal);
 			SCAN_VAR(voice->step);
 			SCAN_VAR(voice->volume);
-			SCAN_VAR(voice->clock); // added by dink
+			SCAN_VAR(voice->clock);
 			SCAN_VAR(voice->select);
 			SCAN_VAR(voice->streampos);
 		}

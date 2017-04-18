@@ -1,3 +1,5 @@
+// Based on MAME sources by Jarek Burczynski, Hiromitsu Shioya
+
 #include "burnint.h"
 #include "msm5232.h"
 
@@ -296,6 +298,8 @@ void MSM5232Exit()
 #if defined FBA_DEBUG
 	if (!DebugSnd_MSM5232Initted) bprintf(PRINT_ERROR, _T("MSM5232Exit called without init\n"));
 #endif
+
+	if (!DebugSnd_MSM5232Initted) return;
 
 	for (INT32 j = 0; j < 11; j++) {
 		BurnFree(sound_buffer[j]);

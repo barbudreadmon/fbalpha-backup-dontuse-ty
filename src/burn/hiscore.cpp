@@ -369,7 +369,7 @@ void HiscoreInit()
 #endif
 	snprintf(szDatFilename, sizeof(szDatFilename), "%s%cfba%chiscore.dat", g_system_dir, slash, slash);
 #else
- 	_stprintf(szDatFilename, _T("%shiscore.dat"), szAppHiscorePath);
+	_stprintf(szDatFilename, _T("%shiscore.dat"), szAppHiscorePath);
 #endif
 
 	FILE *fp = _tfopen(szDatFilename, _T("r"));
@@ -424,7 +424,7 @@ void HiscoreInit()
 #ifdef __LIBRETRO__
 	snprintf(szFilename, sizeof(szFilename), "%s%c%s.hi", g_save_dir, slash, BurnDrvGetText(DRV_NAME));
 #else
- 	_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
+	_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
 #endif
 
 	fp = _tfopen(szFilename, _T("rb"));
@@ -633,7 +633,7 @@ void HiscoreExit()
 #endif
 		snprintf(szFilename, sizeof(szFilename), "%s%c%s.hi", g_save_dir, slash, BurnDrvGetText(DRV_NAME));
 #else
- 		_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
+		_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
 #endif
 
 		FILE *fp = _tfopen(szFilename, _T("wb"));

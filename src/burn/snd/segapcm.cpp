@@ -1,3 +1,8 @@
+// Based on MAME sources by Hiromitsu Shioya, Olivier Galibert
+/*********************************************************/
+/*    SEGA 16ch 8bit PCM                                 */
+/*********************************************************/
+
 #include "burnint.h"
 #include "burn_sound.h"
 #include "segapcm.h"
@@ -174,6 +179,8 @@ void SegaPCMExit()
 #if defined FBA_DEBUG
 	if (!DebugSnd_SegaPCMInitted) bprintf(PRINT_ERROR, _T("SegaPCMExit called without init\n"));
 #endif
+
+	if (!DebugSnd_SegaPCMInitted) return;
 
 	for (INT32 i = 0; i < nNumChips + 1; i++) {
 		BurnFree(Chip[i]);

@@ -1,4 +1,5 @@
 // Mouser for FBA, ported by vbt with help from dink
+// Based on MAME driver by Frank Palazzolo
 #include "tiles_generic.h"
 #include "z80_intf.h"
 #include "driver.h"
@@ -93,7 +94,7 @@ static struct BurnDIPInfo MouserDIPList[]=
 	{0x10, 0x01, 0x70, 0x40, "1 Coin  3 Credits"		},
 	{0x10, 0x01, 0x70, 0x60, "1 Coin  4 Credits"		},
 
-	{0   , 0xfe, 0   ,    8, "Cabinet"		},
+	{0   , 0xfe, 0   ,    2, "Cabinet"		},
 	{0x10, 0x01, 0x80, 0x80, "Upright"		},
 	{0x10, 0x01, 0x80, 0x00, "Cocktail"		},
 };

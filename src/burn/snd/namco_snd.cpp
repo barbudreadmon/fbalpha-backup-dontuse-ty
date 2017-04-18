@@ -1,3 +1,17 @@
+// Based on MAME sources by Nicola Salmoria,Aaron Giles
+/***************************************************************************
+
+    NAMCO sound driver.
+
+    This driver handles the four known types of NAMCO wavetable sounds:
+
+        - 3-voice mono (PROM-based design: Pac-Man, Pengo, Dig Dug, etc)
+        - 8-voice quadrophonic (Pole Position 1, Pole Position 2)
+        - 8-voice mono (custom 15XX: Mappy, Dig Dug 2, etc)
+        - 8-voice stereo (System 1)
+
+***************************************************************************/
+
 #include "burnint.h"
 #include "burn_sound.h"
 #include "namco_snd.h"
@@ -27,6 +41,8 @@ typedef struct
 
 static UINT8 *namco_soundregs;
 static UINT8 *namco_wavedata;
+static UINT8 *namco_waveformdata;
+static INT32 namco_waveformdatasize = 0;
 
 struct namco_sound
 {
@@ -47,6 +63,7 @@ struct namco_sound
 	
 	double gain[2];
 	INT32 output_dir[2];
+	INT32 bAdd;
 };
 
 static struct namco_sound *chip = NULL;
@@ -78,24 +95,24 @@ static void update_namco_waveform(INT32 offset, UINT8 data)
 }
 
 static inline UINT32 namco_update_one(INT16 *buffer, INT32 length, const INT16 *wave, UINT32 counter, UINT32 freq)
-{
+{ // accumulator.
 	while (length-- > 0)
 	{
 		INT32 nLeftSample = 0, nRightSample = 0;
-		
+
 		if ((chip->output_dir[BURN_SND_NAMCOSND_ROUTE_1] & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
 			nLeftSample += (INT32)(wave[WAVEFORM_POSITION(counter)] * chip->gain[BURN_SND_NAMCOSND_ROUTE_1]);
 		}
 		if ((chip->output_dir[BURN_SND_NAMCOSND_ROUTE_1] & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) {
 			nRightSample += (INT32)(wave[WAVEFORM_POSITION(counter)] * chip->gain[BURN_SND_NAMCOSND_ROUTE_1]);
 		}
-		
+
 		nLeftSample = BURN_SND_CLIP(nLeftSample);
 		nRightSample = BURN_SND_CLIP(nRightSample);
-		
-		*buffer++ += nLeftSample;
-		*buffer++ += nRightSample;
-		
+
+		*buffer = BURN_SND_CLIP(*buffer + nLeftSample); buffer++;
+		*buffer = BURN_SND_CLIP(*buffer + nRightSample); buffer++;
+
 		counter += freq * chip->update_step;
 	}
 
@@ -103,13 +120,18 @@ static inline UINT32 namco_update_one(INT16 *buffer, INT32 length, const INT16 *
 }
 
 static inline UINT32 namco_stereo_update_one(INT16 *buffer, INT32 length, const INT16 *wave, UINT32 counter, UINT32 freq)
-{
+{ // stereo accumulator. confused? it does 2 passes of this, one for left, one for right, hence the buffer += 2.
 	while (length-- > 0)
 	{
-		// no route support here - no games use this currently
-		*buffer += wave[WAVEFORM_POSITION(counter)];
+		INT32 nSample = 0;
+
+		// no route support here - no games use this currently (just volume/gain)
+		nSample = (INT32)(wave[WAVEFORM_POSITION(counter)] * chip->gain[BURN_SND_NAMCOSND_ROUTE_1]);
+
+		*buffer = BURN_SND_CLIP(*buffer + BURN_SND_CLIP(nSample));
+
 		counter += freq * chip->update_step;
-		buffer +=2;
+		buffer += 2;
 	}
 
 	return counter;
@@ -123,9 +145,12 @@ void NamcoSoundUpdate(INT16* buffer, INT32 length)
 
 	sound_channel *voice;
 
-	/* zap the contents of the buffer */
-	memset(buffer, 0, length * sizeof(*buffer) * 2);
+	INT32 add_stream = chip->bAdd;
 
+	/* zap the contents of the buffers */
+	if (add_stream == 0) {
+		memset(buffer, 0, length * 2 * sizeof(INT16));
+	}
 	/* if no sound, we're done */
 	if (chip->sound_enable == 0)
 		return;
@@ -155,10 +180,17 @@ void NamcoSoundUpdate(INT16* buffer, INT32 length)
 				{
 					INT32 cnt;
 
-					if (voice->noise_state)
-						*mix++ += noise_data;
-					else
-						*mix++ -= noise_data;
+					if (voice->noise_state) {
+						*mix = BURN_SND_CLIP(*mix + noise_data);
+						mix++;
+						*mix = BURN_SND_CLIP(*mix + noise_data);
+						mix++;
+					} else {
+						*mix = BURN_SND_CLIP(*mix - noise_data);
+						mix++;
+						*mix = BURN_SND_CLIP(*mix - noise_data);
+						mix++;
+					}
 
 					if (hold)
 					{
@@ -206,8 +238,12 @@ void NamcoSoundUpdateStereo(INT16* buffer, INT32 length)
 
 	sound_channel *voice;
 
+	INT32 add_stream = chip->bAdd;
+
 	/* zap the contents of the buffers */
-	memset(buffer, 0, length * 2 * sizeof(*buffer));
+	if (add_stream == 0) {
+		memset(buffer, 0, length * 2 * sizeof(INT16));
+	}
 
 	/* if no sound, we're done */
 	if (chip->sound_enable == 0)
@@ -242,13 +278,17 @@ void NamcoSoundUpdateStereo(INT16* buffer, INT32 length)
 
 					if (voice->noise_state)
 					{
-						*lrmix++ += l_noise_data;
-						*lrmix++ += r_noise_data;
+						*lrmix = BURN_SND_CLIP(*lrmix + l_noise_data);
+						lrmix++;
+						*lrmix = BURN_SND_CLIP(*lrmix + r_noise_data);
+						lrmix++;
 					}
 					else
 					{
-						*lrmix++ -= l_noise_data;
-						*lrmix++ -= r_noise_data;
+						*lrmix = BURN_SND_CLIP(*lrmix - l_noise_data);
+						lrmix++;
+						*lrmix = BURN_SND_CLIP(*lrmix - r_noise_data);
+						lrmix++;
 					}
 
 					if (hold)
@@ -465,7 +505,12 @@ static INT32 build_decoded_waveform()
 		size = 32 * 8;		/* 32 samples, 8 waveforms */
 	}
 
-	p = (INT16*)malloc(size * MAX_VOLUME * sizeof (INT16));
+	namco_waveformdatasize = size * MAX_VOLUME * sizeof (INT16);
+
+	p = (INT16*)malloc(namco_waveformdatasize);
+	namco_waveformdata = (UINT8*)p; //strictly for savestates.
+
+	memset(p, 0, namco_waveformdatasize);
 
 	for (v = 0; v < MAX_VOLUME; v++)
 	{
@@ -476,6 +521,7 @@ static INT32 build_decoded_waveform()
 	if (namco_wavedata == NULL) {
 		enable_ram = 1;
 		namco_wavedata = (UINT8*)malloc(0x400);
+		memset(namco_wavedata, 0, 0x400);
 	}
 
 	/* We need waveform data. It fails if region is not specified. */
@@ -511,7 +557,7 @@ void NamcoSoundReset()
 	}
 }
 
-void NamcoSoundInit(INT32 clock, INT32 num_voices)
+void NamcoSoundInit(INT32 clock, INT32 num_voices, INT32 bAdd)
 {
 	DebugSnd_NamcoSndInitted = 1;
 	
@@ -527,6 +573,8 @@ void NamcoSoundInit(INT32 clock, INT32 num_voices)
 	chip->num_voices = num_voices;
 	chip->last_channel = chip->channel_list + chip->num_voices;
 	chip->stereo = 0;
+
+	chip->bAdd = bAdd;
 
 	/* adjust internal clock */
 	chip->namco_clock = clock;
@@ -583,6 +631,8 @@ void NamcoSoundExit()
 	if (!DebugSnd_NamcoSndInitted) bprintf(PRINT_ERROR, _T("NamcoSoundExit called without init\n"));
 #endif
 
+	if (!DebugSnd_NamcoSndInitted) return;
+
 	if (chip) {
 		free(chip);
 		chip = NULL;
@@ -591,9 +641,6 @@ void NamcoSoundExit()
 	if (namco_soundregs) {
 		free(namco_soundregs);
 		namco_soundregs = NULL;
-
-		//free (namco_wavedata); hmmm -dink
-		//namco_wavedata = NULL;
 	}
 
 	if (enable_ram) {
@@ -608,7 +655,7 @@ void NamcoSoundExit()
 void NamcoSoundScan(INT32 nAction,INT32 *pnMin)
 {
 	struct BurnArea ba;
-	char szName[20];
+	char szName[30];
 
 	if ((nAction & ACB_DRIVER_DATA) == 0) {
 		return;
@@ -618,6 +665,7 @@ void NamcoSoundScan(INT32 nAction,INT32 *pnMin)
 		*pnMin = 0x029707;
 	}
 
+	memset(&ba, 0, sizeof(ba));
 	sprintf(szName, "NamcoSound");
 	ba.Data		= &chip->channel_list;
 	ba.nLen		= sizeof(chip->channel_list);
@@ -625,7 +673,16 @@ void NamcoSoundScan(INT32 nAction,INT32 *pnMin)
 	ba.szName	= szName;
 	BurnAcb(&ba);
 
+	memset(&ba, 0, sizeof(ba));
+	sprintf(szName, "NamcoSoundWaveFormData");
+	ba.Data		= namco_waveformdata;
+	ba.nLen		= namco_waveformdatasize;
+	ba.nAddress = 0;
+	ba.szName	= szName;
+	BurnAcb(&ba);
+
 	if (enable_ram) {
+		memset(&ba, 0, sizeof(ba));
 		sprintf(szName, "NamcoSoundWaveData");
 		ba.Data		= namco_wavedata;
 		ba.nLen		= 0x400;
@@ -634,6 +691,7 @@ void NamcoSoundScan(INT32 nAction,INT32 *pnMin)
 		BurnAcb(&ba);
 	}
 
+	memset(&ba, 0, sizeof(ba));
 	sprintf(szName, "NamcoSoundRegs");
 	ba.Data		= namco_soundregs;
 	ba.nLen		= 0x40;

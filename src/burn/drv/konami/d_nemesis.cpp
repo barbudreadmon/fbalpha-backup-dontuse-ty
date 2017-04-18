@@ -15,6 +15,7 @@
 extern "C" {
 #include "ay8910.h"
 }
+#include "burn_shift.h"
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -83,8 +84,7 @@ static INT32 vlm5030_enable = 0;
 static INT32 rcflt_enable = 0;
 static INT32 hcrash_mode = 0;
 static INT32 gearboxmode = 0;
-static INT32 gearshifter = 0;
-
+static INT32 bUseShifter = 0;
 
 #define A(a, b, c, d) {a, b, (UINT8*)(c), d}
 
@@ -661,7 +661,7 @@ static struct BurnDIPInfo TwinbeeDIPList[]=
 	{0,    0xfe, 0,       3, "Color Settings"	},
 	{0x15, 0x01, 0x03, 0x00, "Proper Colors (Dark)"	},
 	{0x15, 0x01, 0x03, 0x01, "Light Colors"		},
-	{0x17, 0x01, 0x03, 0x02, "MAMEUIFx Colors (Mid)"},
+	{0x15, 0x01, 0x03, 0x02, "MAMEUIFx Colors (Mid)"},
 };
 
 STDDIPINFO(Twinbee)
@@ -1040,23 +1040,23 @@ static struct BurnDIPInfo CitybombDIPList[]=
 //	{0x15, 0x01, 0x04, 0x00, "Upright"		},
 //	{0x15, 0x01, 0x04, 0x04, "Cocktail"		},
 
-	{0   , 0xfe, 0   ,    0, "Qualify"		},
+	{0   , 0xfe, 0   ,    4, "Qualify"		},
 	{0x15, 0x01, 0x18, 0x18, "Long"			},
 	{0x15, 0x01, 0x18, 0x10, "Normal"		},
 	{0x15, 0x01, 0x18, 0x08, "Short"		},
 	{0x15, 0x01, 0x18, 0x00, "Very Short"		},
 
-	{0   , 0xfe, 0   ,    2, "Difficulty"		},
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
 	{0x15, 0x01, 0x60, 0x60, "Easy"			},
 	{0x15, 0x01, 0x60, 0x40, "Normal"		},
 	{0x15, 0x01, 0x60, 0x20, "Hard"			},
 	{0x15, 0x01, 0x60, 0x00, "Hardest"		},
 
-	{0   , 0xfe, 0   ,    4, "Demo Sounds"		},
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
 	{0x15, 0x01, 0x80, 0x80, "Off"			},
 	{0x15, 0x01, 0x80, 0x00, "On"			},
 
-//	{0   , 0xfe, 0   ,    4, "Flip Screen"		},
+//	{0   , 0xfe, 0   ,    2, "Flip Screen"		},
 //	{0x16, 0x01, 0x02, 0x00, "Off"			},
 //	{0x16, 0x01, 0x02, 0x02, "On"			},
 
@@ -2157,7 +2157,10 @@ static INT32 DrvDoReset()
 
 	watchdog = 0;
 	selected_ip = 0;
-	gearshifter = 0;
+
+	if (bUseShifter)
+		BurnShiftReset();
+
 	DrvDial1 = 0x3f;
 
 	return 0;
@@ -2375,6 +2378,12 @@ static INT32 NemesisInit()
 	return 0;
 }
 
+static void ShifterSetup()
+{
+	BurnShiftInit(SHIFT_POSITION_BOTTOM_RIGHT, SHIFT_COLOR_GREEN, 80);
+	bUseShifter = 1;
+}
+
 static INT32 KonamigtInit()
 {
 	AllMem = NULL;
@@ -2433,6 +2442,8 @@ static INT32 KonamigtInit()
 	palette_write = nemesis_palette_update;
 
 	GenericTilesInit();
+
+	ShifterSetup();
 
 	DrvDoReset();
 
@@ -2752,6 +2763,8 @@ static INT32 Rf2_gx400Init()
 
 	GenericTilesInit();
 
+	ShifterSetup();
+
 	DrvDoReset();
 
 	gearboxmode = 1;
@@ -2899,6 +2912,8 @@ static INT32 DrvExit()
 	if (k005289_enable) K005289Exit();
 	if (k051649_enable) K051649Exit();
 	if (rcflt_enable) filter_rc_exit();
+	if (bUseShifter) BurnShiftExit();
+	bUseShifter = 0;
 
 	BurnFree (AllMem);
 
@@ -3072,6 +3087,8 @@ static INT32 DrvDraw()
 	if (nBurnLayer & 8) draw_layer(DrvVidRAM0, DrvColRAM0, xscroll1, yscroll1, 1, 8);
 
 	BurnTransferCopy(DrvPalette);
+	if (bUseShifter)
+		BurnShiftRender();
 
 	return 0;
 }
@@ -3164,20 +3181,6 @@ static INT32 NemesisFrame()
 	return 0;
 }
 
-static UINT8 shift_update(UINT8 shifter_input) // rf2 / konamigt
-{
-	{ // gear shifter stuff
-		static UINT8 prevshift = 0;
-
-		if (prevshift != shifter_input && shifter_input) {
-			gearshifter = !gearshifter;
-		}
-
-		prevshift = shifter_input;
-	}
-	return (gearshifter) ? 0x10 : 0x00;
-}
-
 static void spinner_update()
 { // spinner calculation stuff. (wheel) for rf2 / konamigt & hcrash
 	UINT8 INCREMENT = 0x02;
@@ -3220,7 +3223,7 @@ static INT32 KonamigtFrame()
 		}
 
 		DrvInputs[1] = DrvInputs[1] & ~0x10;
-		DrvInputs[1] |= shift_update(DrvJoy2[4]);
+		DrvInputs[1] |= ((BurnShiftInputCheckToggle(DrvJoy2[4])) ? 0x10 : 0x00);
 	}
 
 	spinner_update();
@@ -3519,7 +3522,7 @@ static INT32 Gx400Frame()
 
 		if (gearboxmode) { // rf2
 			DrvInputs[1] = DrvInputs[1] & ~0x10;
-			DrvInputs[1] |= shift_update(DrvJoy2[4]);
+			DrvInputs[1] |= ((BurnShiftInputCheckToggle(DrvJoy2[4])) ? 0x00 : 0x10); // different from the rest.
 
 			spinner_update();
 		}
@@ -3667,10 +3670,10 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		if (k007232_enable) K007232Scan(nAction, pnMin);
 		if (k051649_enable) K051649Scan(nAction, pnMin);
 		if (vlm5030_enable) vlm5030Scan(nAction);
+		if (bUseShifter) BurnShiftScan(nAction);
 
 		SCAN_VAR(selected_ip);
 		SCAN_VAR(DrvDial1);
-		SCAN_VAR(gearshifter);
 	}
 
 	if (nAction & ACB_WRITE) {

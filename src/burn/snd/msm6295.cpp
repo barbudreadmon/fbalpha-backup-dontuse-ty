@@ -1,3 +1,6 @@
+// OKI MSM6295 module
+// Emulation by Jan Klaassen
+
 #include <math.h>
 #include "burnint.h"
 #include "msm6295.h"
@@ -456,8 +459,12 @@ void MSM6295Exit(INT32 nChip)
 	if (nChip > nLastMSM6295Chip) bprintf(PRINT_ERROR, _T("MSM6295Exit called with invalid chip number %x\n"), nChip);
 #endif
 
-	BurnFree(pLeftBuffer);
-	BurnFree(pRightBuffer);
+	if (!DebugSnd_MSM6295Initted) return;
+
+	if (pLeftBuffer) BurnFree(pLeftBuffer);
+	if (pRightBuffer) BurnFree(pRightBuffer);
+	pLeftBuffer = NULL;
+	pRightBuffer = NULL;
 
 	for (INT32 nChannel = 0; nChannel < 4; nChannel++) {
 		BurnFree(MSM6295ChannelData[nChip][nChannel]);
@@ -550,7 +557,7 @@ INT32 MSM6295Init(INT32 nChip, INT32 nSamplerate, bool bAddSignal)
 	
 	MSM6295[nChip].nOutputDir = BURN_SND_ROUTE_BOTH;
 
-	memset (pBankPointer[nChip], 0, 0x40000/0x100);
+	memset (pBankPointer[nChip], 0, (0x40000/0x100) * sizeof(UINT8*));
 
 	MSM6295Reset(nChip);
 

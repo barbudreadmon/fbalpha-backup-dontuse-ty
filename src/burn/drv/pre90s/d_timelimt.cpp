@@ -41,6 +41,8 @@ static UINT8 scrolly;
 static UINT16 scrollx;
 static INT32 watchdog;
 
+static INT32 TimelimtMode = 0;
+
 static struct BurnInputInfo TimelimtInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 start"	},
@@ -374,18 +376,24 @@ static INT32 DrvInit()
 		if (BurnLoadRom(DrvColPROM + 0x0000, 11, 1)) return 1;
 		if (BurnLoadRom(DrvColPROM + 0x0020, 12, 1)) return 1;
 
-		if (BurnLoadRom(DrvColPROM + 0x0040, 13, 1))
-		{
-			const UINT8 color_data[32] = {
-				0x00, 0x00, 0xA4, 0xF6, 0xC0, 0x2F, 0x07, 0xFF, 0x00, 0x00, 0xA4, 0xF6, 0xC0, 0x28, 0x07, 0xFF, 
-				0x00, 0x00, 0xA4, 0xF6, 0xC0, 0x2F, 0x07, 0xFF, 0x00, 0x00, 0xA4, 0xF6, 0xC0, 0x0D, 0x07, 0xFF
+		if (!TimelimtMode)
+			if (BurnLoadRom(DrvColPROM + 0x0040, 13, 1)) return 1;
+
+		if (TimelimtMode)
+		{ // fill in missing timelimt prom with color values, values (c) 2017 -dink
+	            const UINT8 color_data[32] = {
+		        //0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
+				0x00, 0x00, 0xA4, 0xF6, 0xC0, 0x2F, 0x07, 0xFF, 0x00, 0x99, 0x99, 0xF6, 0x0A, 0x1F, 0x58, 0xFF,
+				0x00, 0x0F, 0xB5, 0x54, 0xE1, 0x50, 0x5F, 0x64, 0x00, 0x0B, 0x53, 0x0F, 0x80, 0x08, 0x0D, 0xAE
 			};
 
 			memcpy (DrvColPROM + 0x40, color_data, 0x20);
 		}
 
 		if (BurnLoadRom(DrvZ80ROM1 + 0x0000, 14, 1)) return 1;
-		    BurnLoadRom(DrvZ80ROM1 + 0x1000, 15, 1);
+
+		if (TimelimtMode)
+			if (BurnLoadRom(DrvZ80ROM1 + 0x1000, 15, 1)) return 1;
 
 		DrvGfxDecode();
 		DrvPaletteInit();
@@ -435,6 +443,8 @@ static INT32 DrvExit()
 
 	BurnFree(AllMem);
 
+	TimelimtMode = 0;
+
 	return 0;
 }
 
@@ -463,7 +473,7 @@ static void draw_fg_layer()
 {
 	for (INT32 offs = 0; offs < 32 * 32; offs++)
 	{
-		INT32 sx = (offs & 0x1f) * 8;
+		INT32 sx = ((offs & 0x1f) * 8);
 		INT32 sy = ((offs / 0x20) * 8) - 16;
 
 		if (sx >= nScreenWidth || sy >= nScreenHeight) continue;
@@ -509,9 +519,11 @@ static INT32 DrvDraw()
 		DrvRecalc = 0;
 	}
 
-	draw_bg_layer();
-	draw_sprites();
-	draw_fg_layer();
+	BurnTransferClear();
+
+	if (nBurnLayer & 1) draw_bg_layer();
+	if (nBurnLayer & 2) draw_sprites();
+	if (nBurnLayer & 4) draw_fg_layer();
 
 	BurnTransferCopy(DrvPalette);
 
@@ -529,6 +541,48 @@ static INT32 DrvFrame()
 		DrvDoReset(1);
 	}
 
+	/*  -- save until 100% sure colors jive well. --
+	static UINT8 oldj = 0;
+	static INT32 selektor = 0;
+
+	if (DrvJoy1[4] && oldj == 0) {
+		selektor++;
+	}
+	if (counter!=0) DrvColPROM[0x40 + selektor] = counter;
+	bprintf(0, _T("DrvColPROM[0x40 + %X] = %X.\n"), selektor, counter);
+	oldj = DrvJoy1[4];
+
+	//    0x40 + 2 = windows in police car
+	//         + 3 = tires
+	//           5 = hubcaps
+	//           6 = headlights
+	//           7 = body
+	//           8
+	//           9 = police pants 0x99
+	//           A = police coat    ""
+	//           B = shoes/hair
+	//           C = Holster/belt 0xa ?
+	//           D = Face       0x1f
+	//			 E = gun        0x58
+	//           F = cuff       0x65
+	//           10 = nothing
+	//           11 = gang suit 0xf
+	//           12 = gang face 0xb5
+	//           13 = gang shoes 0x54
+	//           14 = gang tie/knife 0xe1
+	//           15 = killr shirt 0x50
+	//           16 = gang shirt 0x5f
+	//           17 = "" pants 0x64
+	//           18 = ?
+	//           19 = bomb clock 0xb
+	//           1a = skull border 0x53
+	//           1b = bomb wrapper 0xf
+	//           1c = bomb border/wire, 0x80
+	//           1d = clock hands 0x8
+	//           1e = bomb wrapper 2 0xd
+	//           1f = skull 0xae
+	*/
+
 	{
 		DrvInputs[0] = 0;
 		DrvInputs[1] = 0x03;
@@ -537,6 +591,8 @@ static INT32 DrvFrame()
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 		}
 	}
+
+
 
 	INT32 nInterleave = 50; // 3000 hz
 	INT32 nCyclesTotal[2] = { 5000000 / 60, 3072000 / 60 };
@@ -548,7 +604,7 @@ static INT32 DrvFrame()
 
 		ZetOpen(0);
 		nCyclesDone[0] += ZetRun(nSegment);
-		if (i == (nInterleave - 1) && nmi_enable) ZetNmi();
+		if (i == (nInterleave - 1) && nmi_enable && nCurrentFrame & 1) ZetNmi();
 		ZetClose();
 
 		nSegment = nCyclesTotal[1] / nInterleave;
@@ -628,13 +684,20 @@ static struct BurnRomInfo timelimtRomDesc[] = {
 STD_ROM_PICK(timelimt)
 STD_ROM_FN(timelimt)
 
+static INT32 TimelimtInit()
+{
+	TimelimtMode = 1;
+
+	return DrvInit();
+}
+
 struct BurnDriver BurnDrvTimelimt = {
 	"timelimt", NULL, NULL, NULL, "1983",
 	"Time Limit\0", NULL, "Chuo Co. Ltd", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 1, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, timelimtRomInfo, timelimtRomName, NULL, NULL, TimelimtInputInfo, TimelimtDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
+	TimelimtInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
 	224, 256, 3, 4
 };
 

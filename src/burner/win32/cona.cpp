@@ -189,6 +189,7 @@ int ConfigAppLoad()
 		VAR(nLoadMenuShowY);
 		VAR(nLoadMenuBoardTypeFilter);
 		VAR(nLoadMenuGenreFilter);
+		VAR(nLoadMenuFavoritesFilter);
 		VAR(nLoadMenuFamilyFilter);
 
 		STR(szAppRomPaths[0]);
@@ -242,7 +243,9 @@ int ConfigAppLoad()
 		
 		VAR(EnableHiscores);
 		VAR(bBurnUseBlend);
-		
+		VAR(BurnShiftEnabled);
+		VAR(bSkipStartupCheck);
+
 #ifdef INCLUDE_AVI_RECORDING
 		VAR(nAvi3x);
 #endif
@@ -547,6 +550,9 @@ int ConfigAppSave()
 	
 	_ftprintf(h, _T("\n// Load game dialog genre filter options\n"));
 	VAR(nLoadMenuGenreFilter);
+
+	_ftprintf(h, _T("\n// Load game dialog favorites filter options\n"));
+	VAR(nLoadMenuFavoritesFilter);
 	
 	_ftprintf(h, _T("\n// Load game dialog family filter options\n"));
 	VAR(nLoadMenuFamilyFilter);
@@ -627,6 +633,12 @@ int ConfigAppSave()
 	
 	_ftprintf(h, _T("\n// If non-zero, enable alpha blending support.\n"));
 	VAR(bBurnUseBlend);
+
+	_ftprintf(h, _T("\n// If non-zero, enable gear shifter display support.\n"));
+	VAR(BurnShiftEnabled);
+
+	_ftprintf(h, _T("\n// If non-zero, DISABLE start-up rom scan (if needed).\n"));
+	VAR(bSkipStartupCheck);
 	
 #ifdef INCLUDE_AVI_RECORDING
 	_ftprintf(h, _T("\n// If non-zero, enable 1x - 3x pixel output for the AVI writer.\n"));

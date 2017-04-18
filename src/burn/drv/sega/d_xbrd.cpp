@@ -99,10 +99,10 @@ static struct BurnInputInfo LoffireInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL   , System16InputPort0 + 6, "p1 coin"    },
 	{"Coin 2"            , BIT_DIGITAL   , System16InputPort0 + 7, "p2 coin"    },
 
-	A("P1 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"  ),
-	A("P1 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"  ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort1 + 7, "p1 fire 1"  },
-	{"P1 Fire 2"         , BIT_DIGITAL   , System16InputPort1 + 6, "p1 fire 2"  },
+	A("P1 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"   ),
+	A("P1 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"   ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort1 + 7, "p1 fire 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL   , System16InputPort1 + 6, "p1 fire 2" },
 	
 	A("P2 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort2,   "p2 x-axis"  ),
 	A("P2 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort3,   "p2 y-axis"  ),
@@ -2518,7 +2518,7 @@ static UINT8 iochip_regs[2][8] = {{ 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0
 static UINT8 LastsurvMux = 0;
 static INT32 LastsurvPosition[2] = { 0, 0 };
 
-inline UINT16 iochip_r(INT32 which, INT32 port, INT32 inputval)
+static inline UINT16 iochip_r(INT32 which, INT32 port, INT32 inputval)
 {
 	UINT16 result = iochip_regs[which][port];
 	

@@ -27,6 +27,8 @@ static UINT8 *DrvPalRAM;
 static UINT8 *DrvVidRAM0;
 static UINT8 *DrvVidRAM1;
 static UINT8 *DrvSprRAM;
+static UINT8 *DrvEepROM;
+
 static UINT32 *DrvPalette;
 static UINT32 *Palette;
 static UINT8  DrvRecalc;
@@ -49,6 +51,7 @@ static UINT16 headpanic_platform_y;
 static UINT8 esd16_z80_bank;
 
 static INT32 game_select;
+static INT32 weird_offsets = 0;
 
 static struct BurnInputInfo MultchmpInputList[] = {
 	{"Coin 1"       , BIT_DIGITAL  , DrvJoy2 + 0,	 "p1 coin"  },
@@ -285,7 +288,7 @@ void __fastcall hedpanic_write_byte(UINT32 address, UINT8 data)
 	switch (address)
 	{
 		case 0xc0000e:
-			EEPROMWrite(data & 0x02, data & 0x01, (data & 0x04) >> 6);
+			EEPROMWrite(data & 0x02, data & 0x01, (data & 0x04) >> 2);
 		return;
 	}
 
@@ -354,12 +357,13 @@ UINT8 __fastcall hedpanic_read_byte(UINT32 address)
 		case 0xc00006:
 			return (EEPROMRead() & 1) << 7;
 	}
-
+	//bprintf(0, _T("rb %X.\n"), address);
 	return 0;
 }
 
-UINT16 __fastcall hedpanic_read_word(UINT32)
+UINT16 __fastcall hedpanic_read_word(UINT32 /*address*/)
 {
+	//bprintf(0, _T("rw %X.\n"), address);
 	return 0;
 }
 
@@ -616,6 +620,10 @@ static INT32 DrvDoReset()
 
 	EEPROMReset();
 
+	if (game_select == 1 && EEPROMAvailable() == 0) {
+		EEPROMFill(DrvEepROM, 0, 0x80);
+	}
+
 	SekOpen(0);
 	SekReset();
 	SekClose();
@@ -817,7 +825,8 @@ static INT32 MemIndex()
 	DrvGfx2Trans	= Next; Next += 0x0006000;
 
 	MSM6295ROM	= Next;
-	DrvSndROM	= Next; Next += 0x0040000;
+	DrvSndROM	= Next; Next += 0x0080000;
+	DrvEepROM   = Next; Next += 0x0000100; // from romset
 
 	DrvPalette	= (UINT32*)Next; Next += 0x0800 * sizeof(UINT32);
 	
@@ -905,6 +914,8 @@ static INT32 DrvExit()
 
 	BurnFree (AllMem);
 
+	weird_offsets = 0;
+
 	return 0;
 }
 
@@ -914,7 +925,7 @@ static void esd16_draw_sprites(INT32 priority)
 {
 	UINT16 *spriteram16 = (UINT16*)DrvSprRAM;
 
-	for (INT32 offs = 0;  offs < 0x800/2 - 8/2 ; offs += 8/2 )
+	for (INT32 offs = 0; offs < 0x800/2 - 8/2; offs += 8/2 )
 	{
 		INT32 y, starty, endy;
 
@@ -924,6 +935,9 @@ static void esd16_draw_sprites(INT32 priority)
 
 		int	sy	=	BURN_ENDIAN_SWAP_INT16(spriteram16[ offs ]);
 		int	code	=	BURN_ENDIAN_SWAP_INT16(spriteram16[ offs + 1 ]);
+		int flash = sy & 0x1000;
+
+		if (flash && nCurrentFrame & 1) continue;
 
 		INT32 dimy	=	0x10 << ((sy >> 9) & 3);
 
@@ -974,15 +988,16 @@ static void esd16_draw_sprites(INT32 priority)
 	}
 }
 
-static void draw_background_8x8(UINT8 *vidram, INT32 color, INT32 transp, INT32 scrollx, INT32 scrolly)
+static void draw_layer_8x8(UINT8 *vidram, INT32 color, INT32 transp, INT32 scrollx, INT32 scrolly, INT32 fg)
 {
-	INT32 offs;
 	UINT16 *vram = (UINT16*)vidram;
 
-	scrollx &= 0x3ff;
+	//scrollx &= 0x3ff; breaks a few frames of scrolling in hedpanic
 	scrolly &= 0x1ff;
 
-	for (offs = 0; offs < 0x4000 / 2; offs++) {
+	if (weird_offsets && fg == 0) scrollx += -3; //hedpanic
+
+	for (INT32 offs = 0; offs < 0x4000 / 2; offs++) {
 		INT32 code = BURN_ENDIAN_SWAP_INT16(vram[offs]);
 
 		if (DrvGfx1Trans[code] && transp) continue;
@@ -1017,15 +1032,16 @@ static void draw_background_8x8(UINT8 *vidram, INT32 color, INT32 transp, INT32 
 	return;
 }
 
-static void draw_background_16x16(UINT8 *vidram, INT32 color, INT32 transp, INT32 scrollx, INT32 scrolly)
+static void draw_layer_16x16(UINT8 *vidram, INT32 color, INT32 transp, INT32 scrollx, INT32 scrolly, INT32 fg)
 {
-	INT32 offs;
 	UINT16 *vram = (UINT16*)vidram;
 
 	scrollx &= 0x3ff;
 	scrolly &= 0x3ff;
 
-	for (offs = 0; offs < 0x1000 / 2; offs++) {
+	if (weird_offsets && fg == 1) scrollx += 4; //hedpanic
+
+	for (INT32 offs = 0; offs < 0x1000 / 2; offs++) {
 		INT32 code = BURN_ENDIAN_SWAP_INT16(vram[offs]) & 0x3fff;
 
 		if (DrvGfx2Trans[code] && transp) continue;
@@ -1033,7 +1049,7 @@ static void draw_background_16x16(UINT8 *vidram, INT32 color, INT32 transp, INT3
 		INT32 sx = (offs & 0x3f) << 4;
 		INT32 sy = (offs >> 6) << 4;
 
-		sx -= scrollx;
+		sx -= scrollx-4;
 		sy -= scrolly;
 
 		if (sx > 0x3ff) sx -= 0x400;
@@ -1070,18 +1086,20 @@ static INT32 DrvDraw()
 		}
 	}
 
+	BurnTransferClear();
+
 	if (head_layersize & 0x0001) {
-		draw_background_16x16(DrvVidRAM0, esd16_tilemap0_color, 0, esd16_scroll_0[0] + 0x62, esd16_scroll_0[1]+8);
+		if (nBurnLayer & 1) draw_layer_16x16(DrvVidRAM0, esd16_tilemap0_color, 0, esd16_scroll_0[0] + 0x62, esd16_scroll_0[1]+8, 0);
 	} else {
-		draw_background_8x8(DrvVidRAM0, esd16_tilemap0_color, 0, esd16_scroll_0[0] + 0x62, esd16_scroll_0[1]+8);
+		if (nBurnLayer & 1) draw_layer_8x8(DrvVidRAM0, esd16_tilemap0_color, 0, esd16_scroll_0[0] + 0x62, esd16_scroll_0[1]+8, 0);
 	}
 
 	if (nSpriteEnable & 1) esd16_draw_sprites(1);
 
 	if (head_layersize & 0x0002) {
-		draw_background_16x16(DrvVidRAM1, 0, 1, esd16_scroll_1[0] + 0x60, esd16_scroll_1[1]+8);
+		if (nBurnLayer & 2) draw_layer_16x16(DrvVidRAM1, 0, 1, esd16_scroll_1[0] + 0x60, esd16_scroll_1[1]+8, 1);
 	} else {
-		draw_background_8x8(DrvVidRAM1, 0, 1, esd16_scroll_1[0] + 0x60, esd16_scroll_1[1]+8);
+		if (nBurnLayer & 2) draw_layer_8x8(DrvVidRAM1, 0, 1, esd16_scroll_1[0] + 0x60, esd16_scroll_1[1]+8, 1);
 	}
 
 	if (nSpriteEnable & 2) esd16_draw_sprites(0);
@@ -1102,11 +1120,6 @@ static INT32 DrvDraw()
 
 static INT32 DrvFrame()
 {
-	INT32 nCyclesSegment;
-	INT32 nInterleave = 64;
-	INT32 nCyclesTotal[2];
-	INT32 nCyclesDone[2];
-
 	if (DrvReset) {
 		DrvDoReset();
 	}
@@ -1128,13 +1141,13 @@ static INT32 DrvFrame()
 	SekNewFrame();
 	ZetNewFrame();
 
+	INT32 nCyclesSegment;
+	INT32 nInterleave = 64;
+	INT32 nCyclesTotal[2] = { 16000000 / 60, 4000000 / 60 };
+	INT32 nCyclesDone[2] = { 0, 0 };
+
 	SekOpen(0);
 	ZetOpen(0);
-
-	nCyclesTotal[0] = 16000000 / 60;
-	nCyclesTotal[1] = 4000000  / 60;
-
-	nCyclesDone[0] = nCyclesDone[1] = 0;
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
@@ -1168,7 +1181,7 @@ static INT32 DrvFrame()
 
 //----------------------------------------------------------------------------------------------------------
 
-static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
+static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 
@@ -1176,7 +1189,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		*pnMin = 0x029692;
 	}
 
-	if (nAction & ACB_VOLATILE) {	
+	if (nAction & ACB_VOLATILE) {
 		memset(&ba, 0, sizeof(ba));
 
 		ba.Data	  = AllRam;
@@ -1243,6 +1256,7 @@ STD_ROM_FN(multchmp)
 static INT32 multchmpCallback()
 {
 	game_select = 0;
+	weird_offsets = 1;
 
 	{
 		if (BurnLoadRom(Drv68KROM + 1, 0, 2)) return 1;
@@ -1394,7 +1408,7 @@ static struct BurnRomInfo hedpanicRomDesc[] = {
 
 	{ "esd4.su10",		0x020000, 0x3c11c590, 5 | BRF_SND },			//  8 - OKI Samples
 	
-	{ "hedpanic.nv",	0x000080, 0xe91f4038, 0 | BRF_OPT },			//  9 - Default EEPROM
+	{ "hedpanic.nv",	0x000080, 0xe91f4038, 6 | BRF_GRA },			//  9 - Default EEPROM
 };
 
 STD_ROM_PICK(hedpanic)
@@ -1403,6 +1417,7 @@ STD_ROM_FN(hedpanic)
 static INT32 hedpanicCallback()
 {
 	game_select = 1;
+	weird_offsets = 1;
 
 	{
 		if (BurnLoadRom(Drv68KROM  + 1, 0, 2)) return 1;
@@ -1418,6 +1433,8 @@ static INT32 hedpanicCallback()
 		if (BurnLoadRom(DrvGfxROM1 + 0x000001, 7, 2)) return 1;
 
 		if (BurnLoadRom(DrvSndROM,             8, 1)) return 1;
+		if (BurnLoadRom(DrvEepROM,             9, 1)) return 1;
+		
 
 		HedpanicGfxDecode();
 	}
@@ -1452,6 +1469,40 @@ struct BurnDriver BurnDrvHedpanic = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_PLATFORM, 0,
 	NULL, hedpanicRomInfo, hedpanicRomName, NULL, NULL, HedpanicInputInfo, NULL,
+	HedpanicInit, DrvExit, DrvFrame, DrvDraw, DrvScan,
+	&DrvRecalc, 0x800, 320, 240, 4, 3
+};
+
+
+// Head Panic (ver. 0702, 02/07/1999)
+
+static struct BurnRomInfo hedpanicaRomDesc[] = {
+	{ "esd12.cu03",		0x040000, 0xdeb7e0a0, 1 | BRF_PRG | BRF_ESS },	//  0 - 68k Code
+	{ "esd11.cu02", 	0x040000, 0xe1418f23, 1 | BRF_PRG | BRF_ESS },	//  1
+
+	{ "esd3.su06",		0x040000, 0xa88d4424, 2 | BRF_PRG | BRF_ESS },	//  2 - Z80 Code
+
+	{ "ju06",			0x200000, 0x9f6f6193, 3 | BRF_GRA },			//  3 - Sprites
+	{ "ju04",			0x200000, 0x4f3503d7, 3 | BRF_GRA },			//  4
+	{ "esd5.bin",		0x080000, 0x6968265a, 3 | BRF_GRA },			//  5
+
+	{ "fu35",			0x200000, 0x9b5a45c5, 4 | BRF_GRA },			//  6 - Tiles
+	{ "fu34",			0x200000, 0x8f2099cc, 4 | BRF_GRA },			//  7
+
+	{ "esd4.bin",		0x080000, 0x5692fe92, 5 | BRF_SND },			//  8 - OKI Samples
+	
+	{ "hedpanic.nv",	0x000080, 0xe91f4038, 0 | BRF_OPT },			//  9 - Default EEPROM
+};
+
+STD_ROM_PICK(hedpanica)
+STD_ROM_FN(hedpanica)
+
+struct BurnDriver BurnDrvHedpanica = {
+	"hedpanica", "hedpanic", NULL, NULL, "1999",
+	"Head Panic (ver. 0702, 02/07/1999)\0", "Story line & game instructions in English", "ESD / Fuuki", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_PLATFORM, 0,
+	NULL, hedpanicaRomInfo, hedpanicaRomName, NULL, NULL, HedpanicInputInfo, NULL,
 	HedpanicInit, DrvExit, DrvFrame, DrvDraw, DrvScan,
 	&DrvRecalc, 0x800, 320, 240, 4, 3
 };
@@ -1619,6 +1670,8 @@ static struct BurnRomInfo tangtangRomDesc[] = {
 	{ "fu34.bin",	0x200000, 0xbf91f543, 4 | BRF_GRA },		//  9
 
 	{ "esd4.su10",	0x020000, 0xf2dfb02d, 5 | BRF_SND },		// 10 - OKI Samples
+	
+	{ "eeprom",		0x000080, 0x00514989, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(tangtang)
@@ -1627,6 +1680,7 @@ STD_ROM_FN(tangtang)
 static INT32 tangtangCallback()
 {
 	game_select = 4;
+	weird_offsets = 1;
 
 	{
 		if (BurnLoadRom(Drv68KROM  + 1, 0, 2)) return 1;

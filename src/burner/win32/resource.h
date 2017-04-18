@@ -57,6 +57,7 @@
 #define IDR_MENU_BLITTER_5					114
 #define IDR_MENU_AUD_PLUGIN_1				130
 #define IDR_MENU_AUD_PLUGIN_2				131
+#define	IDR_MENU_GAMESEL					140
 #define IDR_ACCELERATOR                 	150
 
 #define IDD_REPLAYINP                   233
@@ -259,6 +260,7 @@
 #define IDRESCAN                        	20601
 #define IDGAMEINFO                       	20602
 #define IDRESCANSET                        	20603
+#define IDFAVORITESET                       20604
 
 #define IDC_MVS_CART1                 		20700
 #define IDC_MVS_CART2                   	20701
@@ -637,6 +639,7 @@
 #define MENU_AVI1X							10724
 #define MENU_AVI2X							10725
 #define MENU_AVI3X							10726
+#define MENU_GEARSHIFT						10727
 
 #define MENU_BASIC_NORMAL          	    	11001
 #define MENU_BASIC_SCAN                	    11002
@@ -821,6 +824,11 @@
 #define MENU_AVISTART					    11827
 #define MENU_AVISTOP					    11828
 #define MENU_AVIINTAUD					    11829
+
+#define GAMESEL_MENU_PLAY					11900
+#define GAMESEL_MENU_GAMEINFO				11901
+#define GAMESEL_MENU_VIEWEMMA				11902
+#define GAMESEL_MENU_FAVORITE				11903
 
 // Next default values for new objects
 //

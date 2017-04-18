@@ -1,6 +1,7 @@
+// copyright-holders:Aaron Giles
 /*********************************************************
 
-    Konami 054539 PCM Sound Chip
+    Konami 054539 (TOP) PCM Sound Chip
 
     A lot of information comes from Amuse.
     Big thanks to them.
@@ -32,7 +33,7 @@ struct k054539_channel {
 };
 
 struct k054539_info {
-	const k054539_interface *intf;
+	k054539_interface intf;
 	double voltab[256];
 	double pantab[0xf];
 
@@ -147,8 +148,8 @@ void K054539Write(INT32 chip, INT32 offset, UINT8 data)
 	{
 		case 0x13f:
 			pan = data >= 0x11 && data <= 0x1f ? data - 0x11 : 0x18 - 0x11;
-			if(info->intf->apan)
-				info->intf->apan(info->pantab[pan], info->pantab[0xe - pan]);
+			if(info->intf.apan)
+				info->intf.apan(info->pantab[pan], info->pantab[0xe - pan]);
 		break;
 
 		case 0x214:
@@ -254,8 +255,6 @@ void K054539Reset(INT32 chip)
 
 static void k054539_init_chip(INT32 clock, UINT8 *rom, INT32 nLen)
 {
-	INT32 i;
-
 	memset(info->regs, 0, sizeof(info->regs));
 	memset(info->k054539_posreg_latch, 0, sizeof(info->k054539_posreg_latch));
 	info->k054539_flags |= K054539_UPDATE_AT_KEYON; // make it default until proven otherwise
@@ -269,7 +268,7 @@ static void k054539_init_chip(INT32 clock, UINT8 *rom, INT32 nLen)
 	info->rom = rom;
 	info->rom_size = nLen;
 	info->rom_mask = 0xffffffffU;
-	for(i=0; i<32; i++) {
+	for (INT32 i = 0; i < 32; i++) {
 		if((1U<<i) >= info->rom_size) {
 			info->rom_mask = (1U<<i) - 1;
 			break;
@@ -285,16 +284,22 @@ static void k054539_init_chip(INT32 clock, UINT8 *rom, INT32 nLen)
 //		timer_pulse(ATTOTIME_IN_HZ(480), info, 0, k054539_irq); // 10% of usual clock...
 }
 
+void K054539SetApanCallback(INT32 chip, void (*ApanCB)(double, double))
+{
+	info = &Chips[chip];
+	info->intf.apan = ApanCB;
+}
+
 void K054539Init(INT32 chip, INT32 clock, UINT8 *rom, INT32 nLen)
 {
 	DebugSnd_K054539Initted = 1;
 	
-	static const k054539_interface defintrf = { 0, 0 };
 	INT32 i;
+
+	memset(&Chips[chip], 0, sizeof(k054539_info));
 
 	info = &Chips[chip];
 
-	info->intf = &defintrf;
 	info->clock = clock;
 
 	nUpdateStep = (INT32)(((float)clock / nBurnSoundRate) * 32768);
@@ -337,6 +342,8 @@ void K054539Exit()
 #if defined FBA_DEBUG
 	if (!DebugSnd_K054539Initted) bprintf(PRINT_ERROR, _T("K054539Exit called without init\n"));
 #endif
+
+	if (!DebugSnd_K054539Initted) return;
 
 	if (soundbuf[0] != NULL) {
 		free (soundbuf[0]);

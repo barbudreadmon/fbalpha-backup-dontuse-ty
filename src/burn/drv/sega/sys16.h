@@ -10,6 +10,10 @@
 #include "bitswap.h"
 #include "genesis_vid.h"
 #include "8255ppi.h"
+#include "burn_shift.h"
+#include "mcs51.h"
+#include "resnet.h"
+#include "msm6295.h"
 
 #define SYS16_ROM_PROG			1
 #define SYS16_ROM_TILES			2
@@ -30,6 +34,8 @@
 #define SYS16_ROM_PROG3			17
 #define SYS16_ROM_SPRITES2		18
 #define SYS16_ROM_RF5C68DATA	19
+#define SYS16_ROM_I8751			20
+#define SYS16_ROM_MSM6295		21
 
 // sys16_run.cpp
 extern UINT8 System16InputPort0[8];
@@ -50,6 +56,7 @@ extern INT32 System16AnalogSelect;
 extern UINT8 System16Dip[3];
 extern UINT8 System16Input[7];
 extern UINT8 System16Reset;
+extern UINT8 System16MCUData;
 extern UINT8 *System16Rom;
 extern UINT8 *System16Code;
 extern UINT8 *System16Rom2;
@@ -58,12 +65,14 @@ extern UINT8 *System16Z80Code;
 extern UINT8 *System16UPD7759Data;
 extern UINT8 *System16PCMData;
 extern UINT8 *System16RF5C68Data;
+extern UINT8 *System16I8751Rom;
 extern UINT8 *System16Prom;
 extern UINT8 *System16Key;
 extern UINT8 *System16Ram;
 extern UINT8 *System16ExtraRam;
 extern UINT8 *System16Z80Ram;
 extern UINT8 *System16TempGfx;
+extern UINT8 *System16PriorityMap;
 extern UINT8 *System16TileRam;
 extern UINT8 *System16TextRam;
 extern UINT8 *System16TextRam;
@@ -96,6 +105,8 @@ extern UINT32 System16SpriteRamSize;
 extern UINT32 System16SpriteRam2Size;
 extern UINT32 System16RotateRamSize;
 extern UINT32 System16UPD7759DataSize;
+extern UINT32 System16I8751RomNum;
+extern UINT32 System16MSM6295RomNum;
 
 extern UINT8 System16VideoControl;
 extern INT32 System16SoundLatch;
@@ -104,7 +115,9 @@ extern bool Shangon;
 extern bool Hangon;
 extern bool AlienSyndrome;
 extern bool HammerAway;
+extern bool Lockonph;
 extern bool System16Z80Enable;
+extern bool System1668KEnable;
 
 extern INT32 System16YM2413IRQInterval;
 
@@ -112,6 +125,9 @@ extern bool System16HasGears;
 
 extern INT32 nSystem16CyclesDone[4]; 
 extern UINT32 System16ClockSpeed;
+extern UINT32 System16Z80ClockSpeed;
+
+extern UINT8* System16I8751InitialConfig;
 
 typedef void (*Sim8751)();
 extern Sim8751 Simulate8751;
@@ -170,17 +186,16 @@ UINT16 __fastcall System16AReadWord(UINT32 a);
 UINT8 __fastcall System16AReadByte(UINT32 a);
 void __fastcall System16AWriteWord(UINT32 a, UINT16 d);
 void __fastcall System16AWriteByte(UINT32 a, UINT8 d);
+UINT8 System16A_I8751ReadPort(INT32 port);
+void System16A_I8751WritePort(INT32 port, UINT8 data);
 
 // d_sys16b.cpp
-UINT8 __fastcall System16BReadByte(UINT32 a);
-void __fastcall System16BWriteByte(UINT32 a, UINT8 d);
-void __fastcall System16BWriteWord(UINT32 a, UINT16 d);
 
 // d_sys18.cpp
-UINT16 __fastcall System18ReadWord(UINT32 a);
-UINT8 __fastcall System18ReadByte(UINT32 a);
-void __fastcall System18WriteWord(UINT32 a, UINT16 d);
-void __fastcall System18WriteByte(UINT32 a, UINT8 d);
+UINT8 system18_io_chip_r(UINT32 offset);
+void system18_io_chip_w(UINT32 offset, UINT16 d);
+void System18GfxBankWrite(UINT32 offset, UINT16 d);
+void HamawayGfxBankWrite(UINT32 offset, UINT16 d);
 
 // d_hangon.cpp
 void HangonPPI0WritePortA(UINT8 data);
@@ -195,10 +210,9 @@ void __fastcall HangonWriteByte(UINT32 a, UINT8 d);
 
 // d_outrun.cpp
 void OutrunPPI0WritePortC(UINT8 data);
-UINT16 __fastcall OutrunReadWord(UINT32 a);
-UINT8 __fastcall OutrunReadByte(UINT32 a);
-void __fastcall OutrunWriteWord(UINT32 a, UINT16 d);
-void __fastcall OutrunWriteByte(UINT32 a, UINT8 d);
+UINT16 System16RoadControlRead(UINT32 a);
+void System16RoadControlWrite(UINT32 offset, UINT16 d);
+UINT16 __fastcall Outrun2ReadWord(UINT32 a);
 UINT8 __fastcall Outrun2ReadByte(UINT32 a);
 void __fastcall Outrun2WriteWord(UINT32 a, UINT16 d);
 void __fastcall Outrun2WriteByte(UINT32 a, UINT8 d);
@@ -249,6 +263,7 @@ extern INT32 System16RoadColorOffset3;
 extern INT32 System16RoadXOffset;
 extern INT32 System16RoadPriority;
 extern INT32 System16PaletteEntries;
+extern INT32 System16SpritePalOffset;
 extern INT32 System16TilemapColorOffset;
 extern INT32 System16TileBankSize;
 extern INT32 System16RecalcBgTileMap;
@@ -261,6 +276,9 @@ extern INT32 System16IgnoreVideoEnable;
 extern bool bSystem16BootlegRender;
 
 extern UINT16 *pTempDraw;
+
+void System16PaletteInit();
+void System16PaletteExit();
 
 void System16GfxScan(INT32 nAction);
 void System16Decode8x8Tiles(UINT8 *pTile, INT32 Num, INT32 offs1, INT32 offs2, INT32 offs3);
@@ -289,9 +307,35 @@ void YBoardRender();
 void FD1089Decrypt();
 
 // sys16_fd1094.cpp
+extern UINT16* fd1094_userregion;
+
 void fd1094_driver_init(INT32 nCPU);
 void fd1094_machine_init();
 void fd1094_exit();
 void fd1094_scan(INT32 nAction);
 
 // genesis_vid.cpp
+
+// sega_315_5195.cpp
+extern bool LaserGhost;
+
+typedef UINT8 (*sega_315_5195_custom_io)(UINT32);
+extern sega_315_5195_custom_io sega_315_5195_custom_io_do;
+
+typedef void (*sega_315_5195_custom_io_write)(UINT32, UINT8);
+extern sega_315_5195_custom_io_write sega_315_5195_custom_io_write_do;
+
+UINT8 sega_315_5195_io_read(UINT32 offset);
+void sega_315_5195_io_write(UINT32 offset, UINT8 d);
+UINT8 __fastcall sega_315_5195_read_byte(UINT32 a);
+UINT16 __fastcall sega_315_5195_read_word(UINT32 a);
+void __fastcall sega_315_5195_write_byte(UINT32 a, UINT8 d);
+void __fastcall sega_315_5195_write_word(UINT32 a, UINT16 d);
+UINT8 sega_315_5195_i8751_read_port(INT32 port);
+void sega_315_5195_i8751_write_port(INT32 port, UINT8 data);
+
+void sega_315_5195_reset();
+void sega_315_5195_configure_explicit(UINT8 *map_data);
+void sega_315_5195_init();
+void sega_315_5195_exit();
+INT32 sega_315_5195_scan(INT32 nAction);

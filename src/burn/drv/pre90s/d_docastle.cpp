@@ -1,4 +1,4 @@
-// Mr. Do's Castle emu-layer for FB Alpha by dink, based on the MAME driver.
+// Mr. Do's Castle emu-layer for FB Alpha by dink, based on the MAME driver by Brad Oliver.
 //
 // Todo:
 //   fix DrvDip[0]
@@ -417,9 +417,12 @@ STDDIPINFO(Kickridr)
 static void DrvMakeInputs()
 {
 	UINT8 *DrvJoy[3] = { DrvJoy1, DrvJoy2, DrvJoy3 };
-	UINT32 DrvJoyInit[3] = { 0xff, 0xff, 0xff };
+	UINT32 DrvJoyInit[3] = { 0, 0xff, 0xff };
 
 	CompileInput(DrvJoy, (void*)DrvInput, 3, 8, DrvJoyInit);
+
+	ProcessJoystick(&DrvInput[0], 0, 1,3,2,0, INPUT_4WAY);
+	ProcessJoystick(&DrvInput[0], 1, 5,7,6,4, INPUT_4WAY | INPUT_MAKEACTIVELOW);
 }
 
 static UINT8 shared0r(UINT8 offs)
@@ -549,7 +552,7 @@ static UINT8 __fastcall docastle_cpu1_read(UINT16 address)
 		case 0xc007: return DrvInput[2] | DrvDip[0]; // wont work because its active low, revisit.
 
 		case 0xc004:
-			flipscreen = address & 0x80 ? 1 : 0;
+			flipscreen = (address & 0x80) ? 1 : 0;
 			return flipscreen;
 	}
 

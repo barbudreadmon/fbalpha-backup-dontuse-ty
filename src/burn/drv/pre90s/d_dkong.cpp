@@ -1,5 +1,5 @@
 // Fb Alpha Donkey Kong driver module
-// Based on MAME driver by various
+// Based on MAME driver by Couriersud
 
 // still need:
 
@@ -74,6 +74,7 @@ static int dkongjr_walk = 0;
 static int page = 0,mcustatus;
 static int p[8] = { 255,255,255,255,255,255,255,255 };
 static int t[2] = { 1,1 };
+static UINT8 radarscp1 = 0;
 
 static struct BurnInputInfo DkongInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 7,	"p1 coin"},
@@ -444,17 +445,17 @@ static struct BurnDIPInfo HerodkDIPList[]=
 {
 	{0x10, 0xff, 0xff, 0x81, NULL			},
 
-	{0   , 0xfe, 0   ,    0, "Lives"		},
+	{0   , 0xfe, 0   ,    2, "Lives"		},
 	{0x10, 0x01, 0x02, 0x00, "3"			},
 	{0x10, 0x01, 0x02, 0x02, "5"			},
 
-	{0   , 0xfe, 0   ,    2, "Difficulty?"		},
+	{0   , 0xfe, 0   ,    4, "Difficulty?"		},
 	{0x10, 0x01, 0x0c, 0x00, "0"			},
 	{0x10, 0x01, 0x0c, 0x04, "1"			},
 	{0x10, 0x01, 0x0c, 0x08, "2"			},
 	{0x10, 0x01, 0x0c, 0x0c, "3"			},
 
-	{0   , 0xfe, 0   ,    4, "Coinage"		},
+	{0   , 0xfe, 0   ,    8, "Coinage"		},
 	{0x10, 0x01, 0x70, 0x70, "5 Coins 1 Credits"	},
 	{0x10, 0x01, 0x70, 0x50, "4 Coins 1 Credits"	},
 	{0x10, 0x01, 0x70, 0x30, "3 Coins 1 Credits"	},
@@ -464,7 +465,7 @@ static struct BurnDIPInfo HerodkDIPList[]=
 	{0x10, 0x01, 0x70, 0x40, "1 Coin  3 Credits"	},
 	{0x10, 0x01, 0x70, 0x60, "1 Coin  4 Credits"	},
 
-	{0   , 0xfe, 0   ,    8, "Cabinet"		},
+	{0   , 0xfe, 0   ,    2, "Cabinet"		},
 	{0x10, 0x01, 0x80, 0x80, "Upright"		},
 	{0x10, 0x01, 0x80, 0x00, "Cocktail"		},
 };
@@ -1464,6 +1465,8 @@ static INT32 DrvExit()
 
 	BurnFree(AllMem);
 
+	radarscp1 = 0;
+
 	return 0;
 }
 
@@ -1559,8 +1562,6 @@ static INT32 Dkong3Init()
 	M6502Open(0);
 	//M6502MapMemory(DrvSndRAM0, 0x0000, 0x01ff, MAP_RAM); // handled below
 	//M6502MapMemory(DrvSndROM0, 0xe000, 0xffff, MAP_ROM);
-	M6502SetWriteMemIndexHandler(dkong3_sound0_write);
-	M6502SetReadMemIndexHandler(dkong3_sound0_read);
 	M6502SetReadOpArgHandler(dkong3_sound0_read);
 	M6502SetReadOpHandler(dkong3_sound0_read);
 	M6502SetWriteHandler(dkong3_sound0_write);
@@ -1571,8 +1572,6 @@ static INT32 Dkong3Init()
 	M6502Open(1);
 	//M6502MapMemory(DrvSndRAM1, 0x0000, 0x01ff, MAP_RAM); // handled below
 	//M6502MapMemory(DrvSndROM1, 0xe000, 0xffff, MAP_ROM);
-	M6502SetWriteMemIndexHandler(dkong3_sound1_write);
-	M6502SetReadMemIndexHandler(dkong3_sound1_read);
 	M6502SetReadOpArgHandler(dkong3_sound1_read);
 	M6502SetReadOpHandler(dkong3_sound1_read);
 	M6502SetWriteHandler(dkong3_sound1_write);
@@ -1737,7 +1736,7 @@ static void draw_grid()
 	const UINT8 *table = DrvGfxROM2;
 	INT32 x,y,counter;
 
-	counter = 0x400; //flip_screen ? 0x000 : 0x400;
+	counter = (radarscp1) ? 0x000 : 0x400; //flip_screen ? 0x000 : 0x400;
 
 	x = 0;
 	y = 16;
@@ -2173,7 +2172,7 @@ static INT32 Dkong3Scan(INT32 nAction, INT32 *pnMin)
 
 struct BurnDriver BurnDrvRadarscp = {
 	"radarscp", NULL, NULL, NULL, "1980",
-	"Radar Scope\0", NULL, "Nintendo", "Miscellaneous",
+	"Radar Scope\0", "No sound", "Nintendo", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, radarscpRomInfo, radarscpRomName, NULL, NULL, RadarscpInputInfo, RadarscpDIPInfo,
@@ -2235,6 +2234,7 @@ static INT32 radarscp1Init()
 		ZetOpen(0);
 		ZetSetWriteHandler(radarscp_main_write);
 		ZetClose();
+		radarscp1 = 1;
 	}
 
 	return ret;
@@ -2242,7 +2242,7 @@ static INT32 radarscp1Init()
 
 struct BurnDriver BurnDrvRadarscp1 = {
 	"radarscp1", "radarscp", NULL, NULL, "1980",
-	"Radar Scope (TRS01)\0", "No sound", "Nintendo", "Miscellaneous",
+	"Radar Scope (TRS01)\0", "No sound / Gfx Issues", "Nintendo", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, radarscp1RomInfo, radarscp1RomName, NULL, NULL, RadarscpInputInfo, RadarscpDIPInfo,
@@ -3262,7 +3262,7 @@ STD_ROM_FN(dkong3)
 
 struct BurnDriver BurnDrvDkong3 = {
 	"dkong3", NULL, NULL, NULL, "1983",
-	"Donkey Kong 3 (US)\0", "No sound", "Nintendo of America", "Miscellaneous",
+	"Donkey Kong 3 (US)\0", NULL, "Nintendo of America", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, dkong3RomInfo, dkong3RomName, NULL, NULL, Dkong3InputInfo, Dkong3DIPInfo,
@@ -3303,11 +3303,11 @@ STD_ROM_FN(dkong3j)
 
 struct BurnDriver BurnDrvDkong3j = {
 	"dkong3j", "dkong3", NULL, NULL, "1983",
-	"Donkey Kong 3 (Japan)\0", "No sound", "Nintendo", "Miscellaneous",
+	"Donkey Kong 3 (Japan)\0", NULL, "Nintendo", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, dkong3jRomInfo, dkong3jRomName, NULL, NULL, Dkong3InputInfo, Dkong3DIPInfo,
-	Dkong3Init, Dkong3Exit, DrvFrame, dkongDraw, Dkong3Scan, &DrvRecalc, 0x100,
+	Dkong3Init, Dkong3Exit, Dkong3Frame, dkongDraw, Dkong3Scan, &DrvRecalc, 0x100,
 	224, 256, 3, 4
 };
 

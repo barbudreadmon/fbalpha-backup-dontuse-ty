@@ -131,9 +131,10 @@ static m6809_Regs m6809;
 #define DPD 	m6809.dp.d
 #define CC  	m6809.cc
 
-static PAIR ea;         /* effective address */
-#define EA	ea.w.l
-#define EAD ea.d
+#define ea      m6809.ea
+#define EA      ea.w.l
+#define EAD     ea.d
+#define EAB     ea.b.l
 
 #define CHANGE_PC change_pc(PCD)
 
@@ -288,7 +289,7 @@ CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N,CC_N
 #define SIGNED(b) ((UINT16)(b&0x80?b|0xff00:b))
 
 /* macros for addressing modes (postbytes have their own code) */
-#define DIRECT	EAD = DPD; IMMBYTE(ea.b.l)
+#define DIRECT	EAD = DPD; IMMBYTE(EAB)
 #define IMM8	EAD = PCD; PC++
 #define IMM16	EAD = PCD; PC+=2
 #define EXTENDED IMMWORD(ea)
@@ -435,6 +436,15 @@ void m6809_reset(void)
 	CHANGE_PC;
 }
 
+void m6809_reset_hard(void)
+{
+	int (*irq_callback)(int irqline) = m6809.irq_callback;
+	memset(&m6809, 0, sizeof(m6809));
+	m6809.irq_callback = irq_callback;
+
+	m6809_reset();
+}
+
 /*
 static void m6809_exit(void)
 {
@@ -495,6 +505,11 @@ void m6809_set_irq_line(int irqline, int state)
 
 /* includes the actual opcode implementations */
 #include "6809ops.c"
+
+UINT16 m6809_get_pc()
+{
+	return m6809.pc.w.l;
+}
 
 /* execute instructions on this CPU until icount expires */
 int m6809_execute(int cycles)	/* NS 970908 */

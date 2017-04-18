@@ -42,6 +42,7 @@ void M6809SetWriteHandler(void (*pHandler)(UINT16, UINT8));
 void M6809SetReadOpHandler(UINT8 (*pHandler)(UINT16));
 void M6809SetReadOpArgHandler(UINT8 (*pHandler)(UINT16));
 INT32 M6809Scan(INT32 nAction);
+UINT16 M6809GetPC();
 
 void M6809WriteRom(UINT32 Address, UINT8 Data);
 
@@ -52,4 +53,15 @@ inline static INT32 M6809TotalCycles()
 #endif
 
 	return nM6809CyclesTotal;
+}
+
+inline static INT32 M6809Idle(INT32 cycles)
+{
+#if defined FBA_DEBUG
+	if (!DebugCPU_M6809Initted) bprintf(PRINT_ERROR, _T("M6809Idle called without init\n"));
+#endif
+
+	nM6809CyclesTotal += cycles;
+
+	return cycles;
 }

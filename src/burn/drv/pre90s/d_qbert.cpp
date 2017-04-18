@@ -426,7 +426,7 @@ static void qbert_knocker(UINT8 knock)
 
 static void gottlieb_sh_w(UINT16 /*offset*/, UINT8 data)
 {
-	static INT32 random_offset=0;
+	static INT32 random_offset = rand()&7;
 	data &= 0x3f;
 
 	if ((data & 0x0f) != 0xf) {
@@ -720,8 +720,6 @@ static INT32 DrvInit()
 	M6502Open(0);
 	M6502SetWriteHandler(audio_write);
 	M6502SetReadHandler(audio_read);
-	M6502SetWriteMemIndexHandler(audio_write);
-	M6502SetReadMemIndexHandler(audio_read);
 	M6502SetReadOpArgHandler(audio_read);
 	M6502SetReadOpHandler(audio_read);
 	M6502Close();
@@ -932,6 +930,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 }
 
 static struct BurnSampleInfo qbertSampleDesc[] = {
+#if !defined (ROM_VERIFY)
 	{"fx_17a", SAMPLE_NOLOOP },
 	{"fx_17b", SAMPLE_NOLOOP },
 	{"fx_17c", SAMPLE_NOLOOP },
@@ -976,6 +975,7 @@ static struct BurnSampleInfo qbertSampleDesc[] = {
 	{"fx_23",  SAMPLE_NOLOOP },
 	{"fx_28",  SAMPLE_NOLOOP },
 	{"fx_36",  SAMPLE_NOLOOP },
+#endif
 	{"knocker", SAMPLE_NOLOOP },
 	{"", 0 }
 };

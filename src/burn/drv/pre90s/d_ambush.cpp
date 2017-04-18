@@ -575,7 +575,7 @@ struct BurnDriver BurnDrvAmbushj = {
 	"ambushj", "ambush", NULL, NULL, "1983",
 	"Ambush (Japan)\0", NULL, "Nippon Amuse Co-Ltd", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, ambushjRomInfo, ambushjRomName, NULL, NULL, AmbushInputInfo, AmbushDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	256, 224, 4, 3
@@ -617,13 +617,13 @@ struct BurnDriver BurnDrvAmbushh = {
 // Ambush (Volt Elec co-ltd)
 
 static struct BurnRomInfo ambushvRomDesc[] = {
-	{ "n1_h7.bin",    0x2000, 0x3c0833b4, BRF_ESS | BRF_PRG }, //  0 Z80 Code
-	{ "ambush.g7",    0x2000, 0x90291409, BRF_ESS | BRF_PRG }, //  1
-	{ "ambush.f7",    0x2000, 0xd023ca29, BRF_ESS | BRF_PRG }, //  2
-	{ "ambush.e7",    0x2000, 0x6cc2d3ee, BRF_ESS | BRF_PRG }, //  3
+	{ "n1.h7",        0x2000, 0x3c0833b4, BRF_ESS | BRF_PRG }, //  0 Z80 Code
+	{ "n2.g7",        0x2000, 0x90291409, BRF_ESS | BRF_PRG }, //  1
+	{ "n3.f7",        0x2000, 0xd023ca29, BRF_ESS | BRF_PRG }, //  2
+	{ "n4.e7",        0x2000, 0x6cc2d3ee, BRF_ESS | BRF_PRG }, //  3
 
-	{ "ambush.n4",    0x2000, 0xecc0dc85, BRF_GRA },	   //  4 Graphics tiles
-	{ "ambush.m4",    0x2000, 0xe86ca98a, BRF_GRA },	   //  5
+	{ "f2.n4",        0x2000, 0xecc0dc85, BRF_GRA },	   //  4 Graphics tiles
+	{ "f1.m4",        0x2000, 0xe86ca98a, BRF_GRA },	   //  5
 
 	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	   //  6 color PROMs
 

@@ -1,3 +1,6 @@
+// FB Alpha SNK 68k-based (pre-Neo-Geo) driver module
+// Based on MAME driver by Bryan McPhail, Acho A. Tang, Nicola Salmoria
+
 #include "tiles_generic.h"
 #include "m68000_intf.h"
 #include "z80_intf.h"
@@ -1188,6 +1191,8 @@ static INT32 DrvExit()
 	BurnFree (Mem);
 
 	game_select = 0;
+	game_rotates = 0;
+	game_rotates_inverted = 0;
 
 	return 0;
 }

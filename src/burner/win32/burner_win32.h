@@ -103,6 +103,8 @@ extern bool bCmdOptUsed;
 extern bool bAlwaysProcessKeyboardInput;
 extern bool bAlwaysCreateSupportFolders;
 
+extern bool bQuietLoading;
+
 extern bool bNoChangeNumLock;
 extern bool bMonitorAutoCheck;
 
@@ -196,6 +198,7 @@ int MediaExit();
 
 // misc_win32.cpp
 extern bool bIsWindowsXPorGreater; 
+extern bool bIsWindowsXP;
 BOOL DetectWindowsVersion();
 int AppDirectory();
 void UpdatePath(TCHAR* path);
@@ -211,6 +214,9 @@ extern TCHAR szAppRomPaths[DIRS_MAX][MAX_PATH];
 int DrvInit(int nDrvNum, bool bRestore);
 int DrvInitCallback();								// Used when Burn library needs to load a game. DrvInit(nBurnSelect, false)
 int DrvExit();
+
+// burn_shift
+extern INT32 BurnShiftEnabled;
 
 // run.cpp
 extern int bRunPause;
@@ -250,6 +256,7 @@ void SetPauseMode(bool bPause);
 int ActivateChat();
 void DeActivateChat();
 int BurnerLoadDriver(TCHAR *szDriverName);
+int StartFromReset(TCHAR *szDriverName);
 
 // menu.cpp
 #define UM_DISPLAYPOPUP (WM_USER + 0x0100)
@@ -289,6 +296,7 @@ extern int nLoadMenuShowX;
 extern int nLoadMenuShowY;
 extern int nLoadMenuBoardTypeFilter;
 extern int nLoadMenuGenreFilter;
+extern int nLoadMenuFavoritesFilter;
 extern int nLoadMenuFamilyFilter;
 extern int nSelDlgWidth;
 extern int nSelDlgHeight;
@@ -393,6 +401,7 @@ int SFactdCreate();
 // roms.cpp
 extern char* gameAv;
 extern bool avOk;
+extern bool bSkipStartupCheck;
 int RomsDirCreate(HWND hParentWND);
 int CreateROMInfo(HWND hParentWND);
 void FreeROMInfo();
@@ -420,6 +429,7 @@ int StartReplay(const TCHAR* szFileName = NULL);
 void StopReplay();
 int FreezeInput(unsigned char** buf, int* size);
 int UnfreezeInput(const unsigned char* buf, int size);
+void DisplayReplayProperties(HWND hDlg, bool bClear);
 
 // memcard.cpp
 extern int nMemoryCardStatus;						// & 1 = file selected, & 2 = inserted
@@ -437,6 +447,9 @@ int ProgressDestroy();
 
 // gameinfo.cpp
 int GameInfoDialogCreate(HWND hParentWND, int nDrvSel);
+void LoadFavorites();
+void AddFavorite_Ext(UINT8 addf);
+INT32 CheckFavorites(char *name);
 
 // ---------------------------------------------------------------------------
 // Debugger

@@ -30,7 +30,7 @@ typedef struct
 	INT32 cycles_left;
 	INT32 hold_irq;
 	ALIGN_VAR(8) const struct z80_irq_daisy_chain *daisy;
-	ALIGN_VAR(8) int		(*irq_callback)(int irqline);
+	ALIGN_VAR(8) int (*irq_callback)(int irqline);
 } Z80_Regs;
 
 enum {

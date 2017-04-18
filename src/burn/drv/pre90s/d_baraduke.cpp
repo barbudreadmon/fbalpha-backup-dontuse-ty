@@ -19,7 +19,6 @@ static UINT8 *DrvGfxROM2;
 static UINT8 *DrvColPROM;
 static UINT8 *DrvHD63701RAM1;
 static UINT8 *DrvHD63701RAM;
-static UINT8 *DrvWavRAM;
 static UINT8 *DrvVidRAM;
 static UINT8 *DrvTxtRAM;
 static UINT8 *DrvSprRAM;
@@ -32,6 +31,7 @@ static UINT8 *buffer_sprites;
 static UINT8 *coin_lockout;
 static UINT8 *scroll;
 static UINT8 *ip_select;
+static INT32 *kludge1105;
 
 static INT32 watchdog;
 
@@ -41,8 +41,6 @@ static UINT8 DrvJoy3[8];
 static UINT8 DrvDips[3];
 static UINT8 DrvReset;
 static UINT8 DrvInputs[8];
-
-static INT32 nCyclesDone[2];
 
 static struct BurnInputInfo BaradukeInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 coin"	},
@@ -76,17 +74,17 @@ static struct BurnDIPInfo BaradukeDIPList[]=
 	{0x11, 0xff, 0xff, 0xff, NULL			},
 	{0x12, 0xff, 0xff, 0xff, NULL			},
 
-	{0   , 0xfe, 0   ,    0, "Coin B"		},
+	{0   , 0xfe, 0   ,    4, "Coin B"		},
 	{0x10, 0x01, 0x03, 0x00, "3 Coins 1 Credits"	},
 	{0x10, 0x01, 0x03, 0x01, "2 Coins 1 Credits"	},
 	{0x10, 0x01, 0x03, 0x03, "1 Coin  1 Credits"	},
 	{0x10, 0x01, 0x03, 0x02, "1 Coin  2 Credits"	},
 
-	{0   , 0xfe, 0   ,    4, "Demo Sounds"		},
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
 	{0x10, 0x01, 0x04, 0x00, "Off"			},
 	{0x10, 0x01, 0x04, 0x04, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "Coin A"		},
+	{0   , 0xfe, 0   ,    4, "Coin A"		},
 	{0x10, 0x01, 0x18, 0x00, "3 Coins 1 Credits"	},
 	{0x10, 0x01, 0x18, 0x08, "2 Coins 1 Credits"	},
 	{0x10, 0x01, 0x18, 0x18, "1 Coin  1 Credits"	},
@@ -98,7 +96,7 @@ static struct BurnDIPInfo BaradukeDIPList[]=
 	{0x10, 0x01, 0x60, 0x20, "4"			},
 	{0x10, 0x01, 0x60, 0x00, "5"			},
 
-	{0   , 0xfe, 0   ,    4, "Service Mode"		},
+	{0   , 0xfe, 0   ,    2, "Service Mode"		},
 	{0x10, 0x01, 0x80, 0x80, "Off"			},
 	{0x10, 0x01, 0x80, 0x00, "On"			},
 
@@ -106,7 +104,7 @@ static struct BurnDIPInfo BaradukeDIPList[]=
 	{0x11, 0x01, 0x02, 0x02, "Off"			},
 	{0x11, 0x01, 0x02, 0x00, "On"			},
 
-	{0   , 0xfe, 0   ,    0, "Freeze"		},
+	{0   , 0xfe, 0   ,    2, "Freeze"		},
 	{0x11, 0x01, 0x04, 0x04, "Off"			},
 	{0x11, 0x01, 0x04, 0x00, "On"			},
 
@@ -114,13 +112,13 @@ static struct BurnDIPInfo BaradukeDIPList[]=
 	{0x11, 0x01, 0x08, 0x08, "Off"			},
 	{0x11, 0x01, 0x08, 0x00, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "Difficulty"		},
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
 	{0x11, 0x01, 0x30, 0x20, "Easy"			},
 	{0x11, 0x01, 0x30, 0x30, "Normal"		},
 	{0x11, 0x01, 0x30, 0x10, "Hard"			},
 	{0x11, 0x01, 0x30, 0x00, "Very Hard"		},
 
-	{0   , 0xfe, 0   ,    2, "Bonus Life"		},
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
 	{0x11, 0x01, 0xc0, 0x80, "Every 10k"		},
 	{0x11, 0x01, 0xc0, 0xc0, "10k And Every 20k"	},
 	{0x11, 0x01, 0xc0, 0x40, "Every 20k"		},
@@ -256,9 +254,7 @@ UINT8 baraduke_mcu_read(UINT16 address)
 	}
 
 	if (address == 0x1105) {
-		static INT32 kludge = 0;
-		kludge++;
-		return kludge>>4;
+		return ((*kludge1105)++ >> 4) & 0xff;
 	}
 
 	if ((address & 0xfc00) == 0x1000) {
@@ -322,6 +318,8 @@ static INT32 DrvDoReset(INT32 ClearRAM)
 	HD63701Reset();
 //	HD63701Close();
 
+	NamcoSoundReset();
+
 	BurnLEDReset();
 
 	BurnLEDSetFlipscreen(1);
@@ -353,14 +351,12 @@ static INT32 MemIndex()
 	DrvHD63701RAM1		= Next; Next += 0x000080;
 	DrvHD63701RAM		= Next; Next += 0x000800;
 
-	NamcoSoundProm		= Next;
-	DrvWavRAM		= Next; Next += 0x000400;
-
 	DrvVidRAM		= Next; Next += 0x002000;
 	DrvTxtRAM		= Next; Next += 0x000800;
 	DrvSprRAM		= Next; Next += 0x002000;
 
 	coin_lockout		= Next; Next += 0x000001;
+	kludge1105      = (INT32*)Next; Next += 0x000004;
 	ip_select		= Next; Next += 0x000001;
 	buffer_sprites		= Next; Next += 0x000001;
 	flipscreen		= Next; Next += 0x000001;
@@ -510,8 +506,8 @@ static INT32 DrvInit(INT32 type)
 	HD63701SetWritePortHandler(baraduke_mcu_write_port);
 //	HD63701Close();
 
-	NamcoSoundInit(49152000/2048, 8);
-	NacmoSoundSetAllRoutes(0.50, BURN_SND_ROUTE_BOTH); // MAME uses 1.00, which is way too loud
+	NamcoSoundInit(49152000/2048, 8, 0);
+	NacmoSoundSetAllRoutes(0.50, BURN_SND_ROUTE_BOTH);
 
 	BurnLEDInit(2, LED_POSITION_BOTTOM_RIGHT, LED_SIZE_5x5, LED_COLOR_GREEN, 100);
 
@@ -735,10 +731,10 @@ static INT32 DrvFrame()
 	M6809NewFrame();
 	HD63701NewFrame();
 
-	INT32 nInterleave = 100; // 1000?
+	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 1536000 / 60, 1536000 / 60 };
-	//INT32 nCyclesDone[2] = { 0, 0 };
-	nCyclesDone[0] = nCyclesDone[1] = 0;
+	INT32 nCyclesDone[2] = { 0, 0 };
+	INT32 nSoundBufferPos = 0;
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
@@ -752,17 +748,30 @@ static INT32 DrvFrame()
 		}
 		M6809Close();
 
-	//	HD63701Open(0);
+		//	HD63701Open(0);
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 		nCyclesDone[1] += HD63701Run(nNext - nCyclesDone[1]);
 		if (i == (nInterleave - 1)) {
 			HD63701SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
-	//	HD63701Close();
-	}
+		//	HD63701Close();
 
+		// Render Sound Segment
+		if (pBurnSoundOut) {
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			NamcoSoundUpdate(pSoundBuf, nSegmentLength);
+			nSoundBufferPos += nSegmentLength;
+		}
+
+	}
+	// Make sure the buffer is entirely filled.
 	if (pBurnSoundOut) {
-		NamcoSoundUpdate(pBurnSoundOut, nBurnSoundLen);
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+		if (nSegmentLength) {
+			NamcoSoundUpdate(pSoundBuf, nSegmentLength);
+		}
 	}
 
 	if (pBurnDraw) {
@@ -782,7 +791,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		*pnMin = 0x029707;
 	}
 
-	if (nAction & ACB_VOLATILE) {		
+	if (nAction & ACB_VOLATILE) {
 		memset(&ba, 0, sizeof(ba));
 
 		ba.Data	  = AllRam;

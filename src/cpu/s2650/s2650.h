@@ -8,7 +8,7 @@
 
 #define PMSK    0x1fff          /* mask page offset */
 #define PLEN    0x2000          /* page length */
-#define S2650_PAGE    0x6000          /* mask page */
+#define PAGE    0x6000          /* mask page */
 #define AMSK    0x7fff          /* mask address range */
 
 /* processor status lower */

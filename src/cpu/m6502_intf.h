@@ -4,8 +4,6 @@ typedef UINT8 (*pReadPortHandler)(UINT16 a);
 typedef void (*pWritePortHandler)(UINT16 a, UINT8 d);
 typedef UINT8 (*pReadByteHandler)(UINT16 a);
 typedef void (*pWriteByteHandler)(UINT16 a, UINT8 d);
-typedef UINT8 (*pReadMemIndexHandler)(UINT16 a);
-typedef void (*pWriteMemIndexHandler)(UINT16 a, UINT8 d);
 typedef UINT8 (*pReadOpHandler)(UINT16 a);
 typedef UINT8 (*pReadOpArgHandler)(UINT16 a);
 
@@ -19,13 +17,12 @@ struct M6502Ext {
 	void (*set_irq_line)(INT32 irqline, INT32 state);
 
 	UINT8* pMemMap[0x100 * 3];
+	UINT8 opcode_reorder[0x100];
 
 	pReadPortHandler ReadPort;
 	pWritePortHandler WritePort;
 	pReadByteHandler ReadByte;
 	pWriteByteHandler WriteByte;
-	pReadMemIndexHandler ReadMemIndex;
-	pWriteMemIndexHandler WriteMemIndex;
 	pReadOpHandler ReadOp;
 	pReadOpArgHandler ReadOpArg;
 	
@@ -50,8 +47,11 @@ void m6510_write_0000(UINT16 address, UINT8 data);
 // The M6504 only has 13 address bits! use address mirroring!
 
 enum { TYPE_M6502=0, TYPE_M6504, TYPE_M65C02, TYPE_M65SC02, TYPE_N2A03, TYPE_DECO16,
-//	 these are the same!
-	TYPE_M6510, TYPE_M6510T, TYPE_M7501, TYPE_M8502	 };
+//	these are the same!
+	TYPE_M6510, TYPE_M6510T, TYPE_M7501, TYPE_M8502,
+//	these involve encryption
+	TYPE_DECOCPU7, TYPE_DECO222, TYPE_DECOC10707
+};
 
 INT32 M6502Init(INT32 cpu, INT32 type); // if you're using more than one type
 void M6502Exit();
@@ -59,6 +59,7 @@ void M6502Open(INT32 num);
 void M6502Close();
 INT32 M6502GetActive();
 void M6502Idle(INT32 nCycles);
+void M6502ReleaseSlice();
 void M6502SetIRQLine(INT32 vector, INT32 status);
 INT32 M6502Run(INT32 cycles);
 void M6502RunEnd();
@@ -67,8 +68,6 @@ void M6502SetReadPortHandler(UINT8 (*pHandler)(UINT16));
 void M6502SetWritePortHandler(void (*pHandler)(UINT16, UINT8));
 void M6502SetReadHandler(UINT8 (*pHandler)(UINT16));
 void M6502SetWriteHandler(void (*pHandler)(UINT16, UINT8));
-void M6502SetReadMemIndexHandler(UINT8 (*pHandler)(UINT16));
-void M6502SetWriteMemIndexHandler(void (*pHandler)(UINT16, UINT8));
 void M6502SetReadOpHandler(UINT8 (*pHandler)(UINT16));
 void M6502SetReadOpArgHandler(UINT8 (*pHandler)(UINT16));
 INT32 M6502Scan(INT32 nAction);
@@ -86,3 +85,6 @@ inline static INT32 M6502TotalCycles()
 
 	return nM6502CyclesTotal;
 }
+
+// m6502.cpp used for Data East encrypted CPUs.
+void DecoCpu7SetDecode(UINT8 (*write)(UINT16,UINT8));

@@ -13,6 +13,8 @@ typedef void (__fastcall *pSh2WriteLongHandler)(unsigned int a, unsigned int d);
 
 extern int has_sh2;
 extern INT32 cps3speedhack;
+extern INT32 sh2_suprnova_speedhack;
+extern INT32 sh2_busyloop_speedhack_mode2;
 
 void __fastcall Sh2WriteByte(unsigned int a, unsigned char d);
 unsigned char __fastcall Sh2ReadByte(unsigned int a);
@@ -49,6 +51,7 @@ void Sh2BurnUntilInt(int);
 int Sh2TotalCycles();
 void Sh2NewFrame();
 void Sh2BurnCycles(int cycles);
+void Sh2Idle(int cycles);
 
 int Sh2Scan(int);
 

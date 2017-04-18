@@ -3,8 +3,8 @@
 
 /*
 	to do:
-		clean
-		poundfor inputs
+		majtitle rowscrolling issue (start game, hit a ball and watch the bg)
+	    poundfor inputs
 */
 
 #include "tiles_generic.h"
@@ -41,7 +41,7 @@ static UINT8 *scroll;
 static UINT8 *RamPrioBitmap;
 
 static UINT8 *soundlatch;
-static UINT8 *video_enable;
+static UINT8 *video_disable;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
@@ -67,6 +67,7 @@ static INT32 nCyclesTotal[2];
 
 static INT32 Clock_16mhz = 0;
 static INT32 Kengo = 0;
+static INT32 CosmicCop = 0;
 static INT32 m72_video_type = 0;
 static INT32 z80_nmi_enable = 0;
 static INT32 enable_z80_reset = 0; // only if z80 is not rom-based!
@@ -685,7 +686,7 @@ STDDIPINFO(Poundfor)
 
 static const UINT8 *protection_code = NULL;
 static const UINT8 *protection_crc = NULL;
-static const INT32           *protection_sample_offsets = NULL;
+static const INT32 *protection_sample_offsets = NULL;
 
 static UINT8 protection_read(INT32 address)
 {
@@ -1059,9 +1060,8 @@ void __fastcall m72_main_write_port(UINT32 port, UINT8 data)
 			// coin counter = data & 3 (&1 = 0, &2 = 1)
 			// flipscreen = ((data & 0x04) >> 2) ^ ((~input_port_read(space->machine, "DSW") >> 8) & 1);
 
-			video_enable[0] = data & 0x08;
+			video_disable[0] = data & 0x08;
 
-	//		bprintf (0, _T("%x\n"), data & 0x10);
 			if (enable_z80_reset) {
 				if (data & 0x10) {
 					z80_reset = 0;
@@ -1182,10 +1182,6 @@ UINT8 __fastcall m72_main_read_port(UINT32 port)
 
 void __fastcall m72_sound_write_port(UINT16 port, UINT8 data)
 {
-	//port &= 0xff;
-	//if (port != 0x00 && port != 0x01)
-	//	bprintf (0, _T("%2.2x, %2.2x wp\n"), port & 0xff, data);
-
 	switch (port & 0xff)
 	{
 		case 0x00:
@@ -1242,8 +1238,6 @@ void __fastcall m72_sound_write_port(UINT16 port, UINT8 data)
 
 UINT8 __fastcall m72_sound_read_port(UINT16 port)
 {
-//	if ((port & 0xff) != 0x84 && (port & 0xfe) != 0x00) bprintf (0, _T("%2.2x, rp\n"), port & 0xff);
-
 	switch (port & 0xff)
 	{
 		case 0x00:
@@ -1296,7 +1290,7 @@ static INT32 DrvDoReset()
 	ym2151_previous = 0;
 	sample_address = 0;
 	irq_raster_position = -1;
-	m72_irq_base = 0;
+	if (!CosmicCop) m72_irq_base = 0;
 
 	return 0;
 }
@@ -1657,8 +1651,8 @@ static INT32 MemIndex()
 	DrvProtRAM	= Next; Next += 0x001000;
 	DrvRowScroll	= Next; Next += 0x000800;
 
-	soundlatch	= Next; Next += 0x000001;
-	video_enable	= Next; Next += 0x000001;
+	soundlatch	= Next; Next += 0x000004; // 1
+	video_disable	= Next; Next += 0x000004; // 1
 
 	scroll		= Next; Next += 0x000008;
 
@@ -1717,19 +1711,23 @@ static INT32 DrvInit(void (*pCPUMapCallback)(), void (*pSNDMapCallback)(), INT32
 		break;
 
 		case 2: // hharry
+		case 7: // cosmccop (layer offsets of type 2, flipxy of type 1)
 			video_offsets[0] = -4;
 			video_offsets[1] = -6;
+			if (video_type == 7) m72_video_type = 1; // cosmccop: diff flipx/y handling in draw_layer()
 		break;
 
 		case 4: // poundfor
 			video_offsets[0] = video_offsets[1] = -6;
 			m72_video_type = 1; // rtype
 		break;
+
 		case 5: // kengo
 			video_offsets[0] = -3;
 			video_offsets[1] = -6;
 			m72_video_type = 1; // rtype
 		break;
+
 		case 6: // airduel m82
 			video_offsets[0] = video_offsets[1] = -6;
 			m72_video_type = 1; // rtype
@@ -1766,6 +1764,7 @@ static INT32 DrvExit()
 	z80_nmi_enable = 0;
 	m72_irq_base = 0;
 	Kengo = 0;
+	CosmicCop = 0;
 	Clock_16mhz = 0;
 
 	m72_install_protection(NULL,NULL,NULL);
@@ -1825,7 +1824,7 @@ static void draw_layer(INT32 layer, INT32 forcelayer, INT32 type, INT32 start, I
 			INT32 code  = BURN_ENDIAN_SWAP_INT16(vram[offs * 2 + 0]);
 			INT32 color = BURN_ENDIAN_SWAP_INT16(vram[offs * 2 + 1]);
 
-			if (type == 1||type==3) {
+			if (type == 1 || type == 3) {
 				flipy = color & 0x0040;
 				flipx = color & 0x0020;
 				prio  = (color & 0x0100) ? 2 : (color & 0x80) ? 1 : 0;
@@ -1866,8 +1865,6 @@ static void draw_layer(INT32 layer, INT32 forcelayer, INT32 type, INT32 start, I
 	}
 }
 
-INT32 start_screen = 0;
-
 static void draw_sprites()
 {
 	UINT16 *sprram = (UINT16*)DrvSprBuf;
@@ -1887,7 +1884,6 @@ static void draw_sprites()
 		INT32 h = 1 << ((attr & 0x3000) >> 12);
 		sy -= 16 * h;
 
-		sy -= start_screen;
 		sx -= 64; // ?
 #if 0
 		if (*flipscreen)
@@ -1956,7 +1952,6 @@ static void majtitle_draw_sprites()
 		h = 1 << ((BURN_ENDIAN_SWAP_INT16(spriteram16_2[offs+2]) & 0x3000) >> 12);
 		sy -= 16 * h;
 
-		sy -= start_screen;
 		sx -= 64; // ?
 #if 0
 		if (flip_screen_get(machine))
@@ -2009,24 +2004,25 @@ static void dodrawline(INT32 start, INT32 finish)
 #if defined USE_SPEEDHACKS
 	if(!pBurnDraw) return;
 #endif
-	if (*video_enable) return;
+	if (*video_disable) return;
 
-	draw_layer(1, 1, m72_video_type, start, finish);
-	draw_layer(0, 1, m72_video_type, start, finish);
+	if (nBurnLayer & 1) draw_layer(1, 1, m72_video_type, start, finish);
+	if (nBurnLayer & 2) draw_layer(0, 1, m72_video_type, start, finish);
 
-	// hacky hack for drawing sprites in scanline... slow.
-	start_screen = start;
-	UINT16 *ptr = pTransDraw;
-	INT32 scrn = nScreenHeight;
-	pTransDraw += start * nScreenWidth;
-	nScreenHeight = finish - start;
-	if (m72_video_type == 3) majtitle_draw_sprites();
-	draw_sprites();
-	pTransDraw = ptr;
-	nScreenHeight = scrn;
+	GenericTilesSetClip(0, -1, start, finish);
+	if (nSpriteEnable & 1) {
+		if (m72_video_type == 3) majtitle_draw_sprites();
+		draw_sprites();
+	}
+	GenericTilesClearClip();
 
-	draw_layer(1, 0, m72_video_type, start, finish);
-	draw_layer(0, 0, m72_video_type, start, finish);
+	if (nBurnLayer & 4) draw_layer(1, 0, m72_video_type, start, finish);
+	if (nBurnLayer & 8) draw_layer(0, 0, m72_video_type, start, finish);
+}
+
+static inline void DrvDrawInitFrame()
+{
+	BurnTransferClear();
 }
 
 static INT32 DrvDraw()
@@ -2038,21 +2034,7 @@ static INT32 DrvDraw()
 		DrvRecalc = 0;
 	}
 
-//	if (*video_enable) {
-//		BurnTransferClear();
-//		BurnTransferCopy(DrvPalette);
-//		return 0;
-//	}
-
-//	draw_layer(1, 1, 0, nScreenHeight);
-//	draw_layer(0, 1, 0, nScreenHeight);
-//	draw_sprites();
-//	draw_layer(1, 0, 0, nScreenHeight);
-//	draw_layer(0, 0, 0, nScreenHeight);
-
 	BurnTransferCopy(DrvPalette);
-
-	BurnTransferClear();
 
 	return 0;
 }
@@ -2121,6 +2103,10 @@ static INT32 DrvFrame()
 		nCyclesTotal[0] = (INT32)((INT64)(8000000 / 55) * nBurnCPUSpeedAdjust / 0x0100);
 	nCyclesTotal[1] = (INT32)((INT64)(3579545 / 55) * nBurnCPUSpeedAdjust / 0x0100);
 	nCyclesDone[0] = nCyclesDone[1] = 0;
+
+	if (pBurnDraw) {
+		DrvDrawInitFrame();
+	}
 
 	VezOpen(0);
 	ZetOpen(0);
@@ -3522,9 +3508,10 @@ static INT32 cosmccopInit()
 {
 	Clock_16mhz = 1;
 
-	INT32 rc = DrvInit(hharryu_main_cpu_map, sound_rom_map, NULL, Z80_REAL_NMI, 2);
+	INT32 rc = DrvInit(hharryu_main_cpu_map, sound_rom_map, NULL, Z80_REAL_NMI, 7);
 
-	m72_irq_base = 0x60; // Cosmic Cop doesn't write to port 0x42, set it manually.
+	m72_irq_base = 0x60; // Cosmic Cop doesn't write to port 0x42 (irq config), set it manually. (after DrvInit()!)
+	CosmicCop = 1;
 
 	return rc;
 }
@@ -4029,7 +4016,7 @@ static INT32 majtitleInit()
 
 struct BurnDriver BurnDrvMajtitle = {
 	"majtitle", NULL, NULL, NULL, "1990",
-	"Major Title (World)\0", NULL, "Irem", "M84",
+	"Major Title (World)\0", "Graphics issues", "Irem", "M84",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_IREM_M72, GBF_SPORTSMISC, 0,
 	NULL, majtitleRomInfo, majtitleRomName, NULL, NULL, CommonInputInfo, Rtype2DIPInfo,
@@ -4071,7 +4058,7 @@ STD_ROM_FN(majtitlej)
 
 struct BurnDriver BurnDrvMajtitlej = {
 	"majtitlej", "majtitle", NULL, NULL, "1990",
-	"Major Title (Japan)\0", NULL, "Irem", "M84",
+	"Major Title (Japan)\0", "Graphics issues", "Irem", "M84",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_IREM_M72, GBF_SPORTSMISC, 0,
 	NULL, majtitlejRomInfo, majtitlejRomName, NULL, NULL, CommonInputInfo, Rtype2DIPInfo,

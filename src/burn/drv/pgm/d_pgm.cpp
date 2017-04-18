@@ -279,6 +279,18 @@ static struct BurnDIPInfo kov100DIPList[] = {
 	{0x2E,	0x01, 0x0F,	0x05, "World"				},
 };
 
+static struct BurnDIPInfo kov100hkDIPList[] = {
+	{0x2E,	0xFF, 0xFF,	0x04, NULL				},
+
+	{0,	0xFE, 0,	6,    "Region (Fake)"			},
+	{0x2E,	0x01, 0x0F,	0x00, "China"				},
+	{0x2E,	0x01, 0x0F,	0x01, "Taiwan"				},
+	{0x2E,	0x01, 0x0F,	0x02, "Japan"				},
+	{0x2E,	0x01, 0x0F,	0x03, "Korea"				},
+	{0x2E,	0x01, 0x0F,	0x04, "Hong Kong"			},
+	{0x2E,	0x01, 0x0F,	0x05, "World"				},
+};
+
 static struct BurnDIPInfo kov2DIPList[] = {
 	{0x2E,	0xFF, 0xFF,	0x04, NULL				},
 
@@ -307,7 +319,7 @@ static struct BurnDIPInfo martmastDIPList[] = {
 static struct BurnDIPInfo martmastc102DIPList[] = {
 	{0x2E,	0xFF, 0xFF,	0x00, NULL				},
 
-	{0,	0xFE, 0,	7,    "Region (Fake)"			},
+	{0,	0xFE, 0,	6,    "Region (Fake)"			},
 	{0x2E,	0x01, 0x07,	0x00, "China"				},
 	{0x2E,	0x01, 0x07,	0x01, "Taiwan"				},
 	{0x2E,	0x01, 0x07,	0x02, "Japan"				},
@@ -449,6 +461,7 @@ STDDIPINFOEXT(orld105k, 	pgm,	orld105k		)
 STDDIPINFOEXT(orld112c, 	pgm,	orld112c		)
 STDDIPINFOEXT(kov,       	pgm,	kov		    	)
 STDDIPINFOEXT(kov100,       pgm,	kov100			)
+STDDIPINFOEXT(kov100hk,     pgm,	kov100hk		)
 STDDIPINFOEXT(kov2,       	pgm,	kov2			)
 STDDIPINFOEXT(kovshxas,    	pgm,	kovshxas		)
 STDDIPINFOEXT(killbld,	 	pgm,	killbld			)
@@ -1565,6 +1578,45 @@ struct BurnDriver BurnDrvKov100 = {
 };
 
 
+// Knights of Valour Plus / Sangoku Senki (V100, Hong Kong)
+
+static struct BurnRomInfo kov100hkRomDesc[] = {
+	{ "sav114.u4",     		0x080000, 0x4db3d4d3, 1 | BRF_PRG | BRF_ESS },  //  0 68K Code
+	{ "sav114.u7",     		0x080000, 0xb8d12b0c, 1 | BRF_PRG | BRF_ESS },  //  1
+	{ "sav114.u5",     		0x080000, 0x9e586dab, 1 | BRF_PRG | BRF_ESS },  //  2
+	{ "sav114.u8",     		0x080000, 0xab129997, 1 | BRF_PRG | BRF_ESS },  //  3
+	{ "sav114.u10",    		0x080000, 0x8f84ecfd, 1 | BRF_PRG | BRF_ESS },  //  4
+
+	{ "t0600.rom",     		0x800000, 0x4acc1ad6, 2 | BRF_GRA },			//  5 Tile data
+	
+	{ "a0600.rom",     		0x800000, 0xd8167834, 3 | BRF_GRA },			//  6 Sprite Color Data
+	{ "a0601.rom",     		0x800000, 0xff7a4373, 3 | BRF_GRA },			//  7
+	{ "a0602.rom",     		0x800000, 0xe7a32959, 3 | BRF_GRA },			//  8
+	{ "a0603.rom",     		0x400000, 0xec31abda, 3 | BRF_GRA },			//  9
+	
+	{ "b0600.rom",     		0x800000, 0x7d3cd059, 4 | BRF_GRA },			// 10 Sprite Masks & Color Indexes
+	{ "b0601.rom",     		0x400000, 0xa0bb1c2f, 4 | BRF_GRA },			// 11
+	
+	{ "m0600.rom",     		0x400000, 0x3ada4fd6, 5 | BRF_SND },			// 12 Samples	
+	
+	// IGS 027 55857E 100 9901 HONG KONG
+	{ "kov_igs027.bin", 	0x004000, 0x00000000, 7 | BRF_PRG | BRF_ESS | BRF_NODUMP },	// 13 Internal ARM7 Rom
+};
+
+STDROMPICKEXT(kov100hk, kov100hk, pgm)
+STD_ROM_FN(kov100hk)
+
+struct BurnDriver BurnDrvKov100hk = {
+	"kov100hk", "kov", "pgm", NULL, "1999",
+	"Knights of Valour - Sangoku Senki (V100, Hong Kong)\0", NULL, "IGS", "PolyGameMaster",
+	L"Knights of Valour\0\u4E09\u56FD\u6226\u7D00\0\u4E09\u56FD\u6218\u7EAA (V100, Hong Kong)\0", NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_IGS_PGM/* | HARDWARE_IGS_USE_ARM_CPU*/, GBF_SCRFIGHT, 0,
+	NULL, kov100hkRomInfo, kov100hkRomName, NULL, NULL, pgmInputInfo, kov100hkDIPInfo,
+	kovInit, pgmExit, pgmFrame, pgmDraw, pgmScan, &nPgmPalRecalc, 0x900,
+	448, 224, 4, 3
+};
+
+
 // Knights of Valour Plus / Sangoku Senki Plus (V119)
 
 static struct BurnRomInfo kovplusRomDesc[] = {
@@ -2169,6 +2221,45 @@ struct BurnDriver BurnDrvmartmastc = {
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_IGS_PGM | HARDWARE_IGS_USE_ARM_CPU, GBF_VSFIGHT, 0,
 	NULL, martmastcRomInfo, martmastcRomName, NULL, NULL, pgmInputInfo, martmastDIPInfo,
 	martmastcInit, pgmExit, pgmFrame, pgmDraw, pgmScan, &nPgmPalRecalc, 0x900,
+	448, 224, 4, 3
+};
+
+
+// Martial Masters / Xing Yi (V103, 102, 101, China)
+// Needs proper martial_masters_v102_cn.asic to be dumped
+
+static struct BurnRomInfo martmastc103RomDesc[] = {
+	{ "v103_32m.u9",   		0x400000, 0xdf5ffbe9, 1 | BRF_PRG | BRF_ESS },  //  0 68K Code
+
+	{ "t1000.u3",	   		0x800000, 0xbbf879b5, 2 | BRF_GRA },			//  1 Tile data
+
+	{ "a1000.u3",      		0x800000, 0x43577ac8, 3 | BRF_GRA },			//  2 Sprite Color Data
+	{ "a1001.u4",      		0x800000, 0xfe7a476f, 3 | BRF_GRA },			//  3
+	{ "a1002.u6",      		0x800000, 0x62e33d38, 3 | BRF_GRA },			//  4
+	{ "a1003.u8",      		0x800000, 0xb2c4945a, 3 | BRF_GRA },			//  5
+	{ "a1004.u10",     		0x400000, 0x9fd3f5fd, 3 | BRF_GRA },			//  6
+
+	{ "b1000.u9",	   		0x800000, 0xc5961f6f, 4 | BRF_GRA },			//  7 Sprite Masks & Color Indexes
+	{ "b1001.u11",	   		0x800000, 0x0b7e1c06, 4 | BRF_GRA },			//  8
+
+	{ "m1000.u5",      		0x800000, 0xed407ae8, 5 | BRF_SND },			//  9 Samples
+	{ "m1001.u7",      		0x400000, 0x662d2d48, 5 | BRF_SND },			// 10
+	
+	{ "martial_masters_v101_cn.asic",	0x004000, 0xb3e25b7d, 7 | BRF_PRG | BRF_ESS },  // 11 Internal ARM7 Rom
+
+	{ "v102_16m.u10",  		0x200000, 0x18b745e6, 8 | BRF_PRG | BRF_ESS },  // 12 External ARM7 Rom
+};
+
+STDROMPICKEXT(martmastc103, martmastc103, pgm)
+STD_ROM_FN(martmastc103)
+
+struct BurnDriver BurnDrvmartmastc103 = {
+	"martmastc103", "martmast", "pgm", NULL, "2001",
+	"Martial Masters (V103, 102, 101, China)\0", NULL, "IGS", "PolyGameMaster",
+	L"Martial Masters\0\u5f62\u610f\u62f3 (V103, 102, 101, China)\0", NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_IGS_PGM | HARDWARE_IGS_USE_ARM_CPU, GBF_VSFIGHT, 0,
+	NULL, martmastc103RomInfo, martmastc103RomName, NULL, NULL, pgmInputInfo, martmastc102DIPInfo,
+	martmastInit, pgmExit, pgmFrame, pgmDraw, pgmScan, &nPgmPalRecalc, 0x900,
 	448, 224, 4, 3
 };
 

@@ -1,3 +1,6 @@
+// FB Alpha Tumble Pop driver module
+// Based on MAME driver by David Haywood,Bryan McPhail
+
 #include "tiles_generic.h"
 #include "m68000_intf.h"
 #include "z80_intf.h"
@@ -1509,15 +1512,15 @@ static INT32 MemIndex()
 	UINT8 *Next; Next = Mem;
 
 	Drv68KRom                   = Next; Next += 0x100000;
-	if (DrvHasZ80)DrvZ80Rom     = Next; Next += 0x010000;
-	if (DrvHasProt) DrvProtData = Next; Next += 0x000200;
+	if (DrvHasZ80) { DrvZ80Rom     = Next; Next += 0x010000; }
+	if (DrvHasProt) { DrvProtData = Next; Next += 0x000200; }
 	MSM6295ROM                  = Next; Next += 0x040000;
 	DrvMSM6295ROMSrc            = Next; Next += 0x100000;
 
 	RamStart                    = Next;
 
 	Drv68KRam                   = Next; Next += 0x010800;
-	if (DrvHasZ80)DrvZ80Ram     = Next; Next += 0x000800;
+	if (DrvHasZ80) { DrvZ80Ram     = Next; Next += 0x000800; }
 	DrvSpriteRam                = Next; Next += DrvSpriteRamSize;
 	DrvPf1Ram                   = Next; Next += 0x002000;
 	DrvPf2Ram                   = Next; Next += 0x002000;
@@ -2416,7 +2419,7 @@ static INT32 TumblebLoadRoms()
 	
 	// Load Sample Roms
 	nRet = BurnLoadRom(DrvMSM6295ROMSrc + 0x00000, 6, 1); if (nRet != 0) return 1;
-	if (Tumbleb2) nRet = BurnLoadRom(DrvMSM6295ROMSrc + 0x80000, 6, 1); if (nRet != 0) return 1;
+	if (Tumbleb2) { nRet = BurnLoadRom(DrvMSM6295ROMSrc + 0x80000, 6, 1); if (nRet != 0) return 1; }
 	memcpy(MSM6295ROM, DrvMSM6295ROMSrc, 0x40000);
 	
 	BurnFree(DrvTempRom);
@@ -3020,7 +3023,9 @@ static INT32 DrvInit(bool bReset, INT32 SpriteRamSize, INT32 SpriteMask, INT32 S
 	MemIndex();
 
 	nRet = DrvLoadRoms();
-	
+
+	if (nRet) return 1;
+
 	DrvMap68k();
 	
 	if (DrvHasZ80) DrvMapZ80();
@@ -3211,7 +3216,7 @@ static INT32 ChokchokInit()
 	Pf1XOffset = -5;
 	Pf1YOffset = 0;
 	Pf2XOffset = -1;
-	Pf2YOffset = 2;
+	Pf2YOffset = 1;
 	
 	return nRet;
 }
@@ -4268,15 +4273,15 @@ static void DrvDraw()
 {
 	BurnTransferClear();
 	DrvCalcPalette();
-	DrvRenderPf2Layer(DrvControl[3], DrvControl[4]);
+	if (nBurnLayer & 1) DrvRenderPf2Layer(DrvControl[3], DrvControl[4]);
 	
 	if (DrvControl[6] & 0x80) {
-		DrvRenderCharLayer();
+		if (nBurnLayer & 2) DrvRenderCharLayer();
 	} else {
-		DrvRenderPf1Layer(DrvControl[1], DrvControl[2]);
+		if (nBurnLayer & 4) DrvRenderPf1Layer(DrvControl[1], DrvControl[2]);
 	}
 	
-	DrvRenderSprites(0, 0);
+	if (nSpriteEnable & 1) DrvRenderSprites(0, 0);
 	BurnTransferCopy(DrvPalette);
 }
 

@@ -5,7 +5,7 @@ int bDrvOkay = 0;						// 1 if the Driver has been initted okay, and it's okay t
 
 TCHAR szAppRomPaths[DIRS_MAX][MAX_PATH] = { { _T("") }, { _T("") }, { _T("") }, { _T("") }, { _T("") }, 
 											{ _T("") }, { _T("") }, { _T("") }, { _T("") }, { _T("") }, 
-											{ _T("") }, { _T("sms/") }, { _T("gamegear/") }, { _T("sg1000/") }, { _T("coleco/") },
+											{ _T("msx/") }, { _T("sms/") }, { _T("gamegear/") }, { _T("sg1000/") }, { _T("coleco/") },
 											{ _T("tg16/") }, { _T("sgx/") }, { _T("pce/") }, { _T("megadriv/") }, { _T("roms/") } };
 
 static bool bSaveRAM = false;
@@ -54,14 +54,14 @@ static int DoLibInit()					// Do Init of Burn library driver
 	}
 	
 	if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) != HARDWARE_SNK_MVS) {
-		ProgressCreate();
+		if (!bQuietLoading) ProgressCreate();
 	}
 
 	nRet = BurnDrvInit();
 
 	BzipClose();
 
-	ProgressDestroy();
+	if (!bQuietLoading) ProgressDestroy();
 
 	if (nRet) {
 		return 3;
@@ -100,13 +100,13 @@ int __cdecl DrvCartridgeAccess(BurnCartrigeCommand nCommand)
 {
 	switch (nCommand) {
 		case CART_INIT_START:
-			ProgressCreate();
+			if (!bQuietLoading) ProgressCreate();
 			if (DrvBzipOpen()) {
 				return 1;
 			}
 			break;
 		case CART_INIT_END:
-			ProgressDestroy();
+			if (!bQuietLoading) ProgressDestroy();
 			BzipClose();
 			break;
 		case CART_EXIT:
@@ -147,7 +147,11 @@ int DrvInit(int nDrvNum, bool bRestore)
 		}
 	}
 
-	MediaInit();
+	{ // Init input and audio, save blitter init for later. (reduce # of mode changes, nice for emu front-ends)
+		bVidOkay = 1;
+		MediaInit();
+		bVidOkay = 0;
+	}
 
 	// Define nMaxPlayers early; GameInpInit() needs it (normally defined in DoLibInit()).
 	nMaxPlayers = BurnDrvGetMaxPlayers();

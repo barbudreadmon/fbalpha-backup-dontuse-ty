@@ -780,6 +780,37 @@ int BurnerLoadDriver(TCHAR *szDriverName)
 	return 0;
 }
 
+int StartFromReset(TCHAR *szDriverName)
+{
+	if (!bDrvOkay) {
+		BurnerLoadDriver(szDriverName);
+		return 1;
+	}
+	//if(nBurnDrvActive < 1) return 0;
+	
+	int nOldDrvSelect = nBurnDrvActive;
+
+	DrvExit();
+	bLoading = 1;
+	
+	nBurnDrvActive = nOldDrvSelect;
+	nDialogSelect = nOldDrvSelect;
+	SplashDestroy(1);
+	StopReplay();
+	
+	DrvInit(nOldDrvSelect, false);	// Init the game driver, without loading SRAM
+	MenuEnableItems();
+	bAltPause = 0;
+	AudSoundPlay();			// Restart sound
+	bLoading = 0;
+	UpdatePreviousGameList();
+	if (bVidAutoSwitchFull) {
+		nVidFullscreen = 1;
+		POST_INITIALISE_MESSAGE;
+	}
+	return 1;
+}
+
 void scrnSSUndo() // called from the menu (shift+F8) and CheckSystemMacros() in run.cpp
 {
 	if (bDrvOkay) {
@@ -1145,7 +1176,7 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 		case MENU_STATE_LOAD_SLOT:
 			if (bDrvOkay && !kNetGame) {
 				if (StatedLoad(nSavestateSlot) == 0) {
-					VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_STATE_LOADED, true));
+					VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_STATE_LOADED, true), 0, 40);
 				} else {
 					VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_STATE_LOAD_ERROR, true), 0xFF3F3F);
 				}
@@ -1155,7 +1186,7 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 		case MENU_STATE_SAVE_SLOT:
 			if (bDrvOkay) {
 				if (StatedSave(nSavestateSlot) == 0) {
-					VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_STATE_SAVED, true));
+					VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_STATE_SAVED, true), 0, 40);
 				} else {
 					VidSNewShortMsg(FBALoadStringEx(hAppInst, IDS_STATE_SAVE_ERROR, true), 0xFF3F3F);
 					SetPauseMode(1);
@@ -1844,6 +1875,10 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			
 		case MENU_USEBLEND:
 			bBurnUseBlend = !bBurnUseBlend;
+			break;
+
+		case MENU_GEARSHIFT:
+			BurnShiftEnabled = !BurnShiftEnabled;
 			break;
 			
 #ifdef INCLUDE_AVI_RECORDING

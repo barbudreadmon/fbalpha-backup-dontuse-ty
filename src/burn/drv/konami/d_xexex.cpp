@@ -1,4 +1,5 @@
 // FB Alpha Xexex driver module
+// Based on MAME driver by Olivier Galibert
 
 #include "tiles_generic.h"
 #include "m68000_intf.h"
@@ -38,9 +39,10 @@ static INT32 layerpri[4];
 static INT32 layer_colorbase[4];
 static INT32 sprite_colorbase;
 
-static UINT8 DrvJoy1[16];
-static UINT8 DrvJoy2[16];
-static UINT8 DrvJoy3[16];
+static UINT8 DrvJoy1[8];
+static UINT8 DrvJoy2[8];
+static UINT8 DrvJoy3[8];
+static UINT8 DrvJoy4[8];
 static UINT8 DrvReset;
 static UINT16 DrvInputs[4];
 static UINT8 DrvDips[2];
@@ -73,6 +75,7 @@ static struct BurnInputInfo XexexInputList[] = {
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
 	{"Service 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"service"},
 	{"Service 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"service"},
+	{"Service Mode",		BIT_DIGITAL,	DrvJoy4 + 3,	"diagnostics"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 };
 
@@ -80,11 +83,11 @@ STDINPUTINFO(Xexex)
 
 static struct BurnDIPInfo XexexDIPList[]=
 {
-	{0x13, 0xff, 0xff, 0xfe, NULL		},
+	{0x14, 0xff, 0xff, 0x00, NULL		},
 
-	{0   , 0xfe, 0   ,    2, "Service Mode"	},
-	{0x13, 0x01, 0x08, 0x08, "Off"		},
-	{0x13, 0x01, 0x08, 0x00, "On"		},
+	{0   , 0xfe, 0   ,    2, "PCM Volume Boost"	},
+	{0x14, 0x01, 0x08, 0x00, "Off"		},
+	{0x14, 0x01, 0x08, 0x08, "On"		},
 };
 
 STDDIPINFO(Xexex)
@@ -112,6 +115,14 @@ static void xexex_objdma()
 	while (--counter);
 
 	if (num_inactive) do { *dst = 0; dst += 8; } while (--num_inactive);
+}
+
+static void update_de000()
+{
+	K053246_set_OBJCHA_line((control_data & 0x100) >> 8);
+	EEPROMWrite((control_data & 0x04), (control_data & 0x02), (control_data & 0x01));
+	enable_alpha = ~control_data & 0x200;
+
 }
 
 static void _fastcall xexex_main_write_word(UINT32 address, UINT16 data)
@@ -149,10 +160,8 @@ static void _fastcall xexex_main_write_word(UINT32 address, UINT16 data)
 	switch (address)
 	{
 		case 0x0de000:
-			EEPROMWrite((data & 0x04), (data & 0x02), (data & 0x01));
-			K053246_set_OBJCHA_line((data & 0x100) >> 8);
-			enable_alpha = ~data & 0x200;
 			control_data = data;
+			update_de000();
 		return;
 	}
 }
@@ -223,15 +232,13 @@ static void _fastcall xexex_main_write_byte(UINT32 address, UINT8 data)
 		return;
 
 		case 0x0de000:
-			enable_alpha = ~data & 0x02;
 			control_data = (control_data & 0x00ff) | (data << 8);
-			K053246_set_OBJCHA_line((data & 0x100) >> 8);
+			update_de000();
 		return;
 
 		case 0x0de001:
-			EEPROMWrite((data & 0x04), (data & 0x02), (data & 0x01));
 			control_data = (control_data & 0xff00) | (data << 0);
-			K053246_set_OBJCHA_line((data & 0x100) >> 8);
+			update_de000();
 		return;
 
 		case 0x170000:
@@ -242,7 +249,7 @@ static void _fastcall xexex_main_write_byte(UINT32 address, UINT8 data)
 static UINT16 _fastcall xexex_main_read_word(UINT32 address)
 {
 	if ((address & 0xfffff0) == 0x0c8000) {
-		return K053250RegRead(0, address);	
+		return K053250RegRead(0, address);
 	}
 
 	if ((address & 0xffc000) == 0x180000) {
@@ -272,7 +279,7 @@ static UINT16 _fastcall xexex_main_read_word(UINT32 address)
 			return DrvInputs[0];
 
 		case 0x0dc002:
-			return DrvInputs[3] | 2 | (EEPROMRead() ? 0x0001 : 0);
+			return (DrvInputs[3] & 0x8) | 2 | (EEPROMRead() ? 0x01 : 0);
 
 		case 0x0de000:
 			return control_data;
@@ -305,6 +312,9 @@ static UINT8 _fastcall xexex_main_read_byte(UINT32 address)
 		case 0x0c4001:
 			return K053246Read((address & 1)); // ^ 1? ??
 
+		case 0x0d6011:
+			return 0; // nop
+
 		case 0x0d6015:
 			return *soundlatch3;
 
@@ -330,7 +340,7 @@ static UINT8 _fastcall xexex_main_read_byte(UINT32 address)
 			return 0;
 
 		case 0x0dc003:
-			return DrvInputs[3] | 2 | (EEPROMRead() ? 0x01 : 0);
+			return (DrvInputs[3] & 0x8) | 2 | (EEPROMRead() ? 0x01 : 0);
 	}
 
 	return 0;
@@ -501,6 +511,11 @@ static INT32 MemIndex()
 	return 0;
 }
 
+static void XexexApanCallback(double one, double two)
+{
+	//bprintf(0, _T("apan %f, %f. "), one, two); - wip
+}
+
 static INT32 DrvInit()
 {
 	BurnSetRefreshRate(54.25);
@@ -589,8 +604,9 @@ static INT32 DrvInit()
 	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.50, BURN_SND_ROUTE_BOTH);
 
 	K054539Init(0, 48000, DrvSndROM, 0x300000);
-	K054539SetRoute(0, BURN_SND_K054539_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
-	K054539SetRoute(0, BURN_SND_K054539_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
+	K054539SetRoute(0, BURN_SND_K054539_ROUTE_1, (DrvDips[0] & 0x08) ? 1.40 : 1.10, BURN_SND_ROUTE_BOTH);
+	K054539SetRoute(0, BURN_SND_K054539_ROUTE_2, (DrvDips[0] & 0x08) ? 1.40 : 1.10, BURN_SND_ROUTE_BOTH);
+	K054539SetApanCallback(0, XexexApanCallback);
 
 	DrvDoReset();
 
@@ -629,7 +645,7 @@ static INT32 DrvDraw()
 {
 	DrvPaletteRecalc();
 
-	int layer[4], bg_colorbase, plane, alpha;
+	INT32 layer[4], bg_colorbase, plane, alpha;
 
 	sprite_colorbase = K053251GetPaletteIndex(0);
 
@@ -673,6 +689,11 @@ static INT32 DrvDraw()
 	{
 		alpha = K054338_set_alpha_level(1);
 
+		// this kludge fixes: flashy transitions in intro, cutscene after stage 3
+		// is missing several effects, continue screen is missing "zooming!" numbers.
+		if (alpha < 0x10)
+			alpha = 0x10;
+
 		if (alpha > 0)
 		{
 			if (nBurnLayer & 8) K056832Draw(1, K056832_SET_ALPHA(255-alpha), 0);
@@ -700,7 +721,7 @@ static INT32 DrvFrame()
 			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 		}
 
-		DrvInputs[3] = DrvDips[0] & 0x08;
+		DrvInputs[3] = (DrvJoy4[3]) ? 0x00 : 0x08; // Service Mode
 	}
 
 	INT32 nInterleave = 120;
@@ -716,8 +737,7 @@ static INT32 DrvFrame()
 
 		nNext = (i + 1) * nCyclesTotal[0] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[0];
-		nCyclesSegment = SekRun(nCyclesSegment);
-		nCyclesDone[0] += nCyclesSegment;
+		nCyclesDone[0] += SekRun(nCyclesSegment);
 
 		if (i == 0 && control_data & 0x20) {
 			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
@@ -729,13 +749,13 @@ static INT32 DrvFrame()
 				if (irq5_timer == 0 && control_data & 0x40) {
 					SekSetIRQLine(5, CPU_IRQSTATUS_AUTO);
 				}
-			} 
+			}
 		}
 
 		if (i == ((nInterleave/2)-1)) {
 			if (K053246_is_IRQ_enabled()) {
 				xexex_objdma();
-				irq5_timer = 5; // guess
+				irq5_timer = 5; // lots of testing led to this number.
 			}
 
 			if (control_data & 0x0800)
@@ -744,8 +764,7 @@ static INT32 DrvFrame()
 
 		nNext = (i + 1) * nCyclesTotal[1] / nInterleave;
 		nCyclesSegment = nNext - nCyclesDone[1];
-		nCyclesSegment = ZetRun(nCyclesSegment);
-		nCyclesDone[1] += nCyclesSegment;
+		nCyclesDone[1] += ZetRun(nCyclesSegment);
 
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
@@ -775,7 +794,7 @@ static INT32 DrvFrame()
 	return 0;
 }
 
-static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
+static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 
@@ -783,7 +802,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		*pnMin = 0x029732;
 	}
 
-	if (nAction & ACB_VOLATILE) {		
+	if (nAction & ACB_VOLATILE) {
 		memset(&ba, 0, sizeof(ba));
 
 		ba.Data	  = AllRam;

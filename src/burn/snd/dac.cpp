@@ -131,17 +131,29 @@ void DACWrite(INT32 Chip, UINT8 Data)
 	ptr->Output = (INT32)(UnsignedVolTable[Data] * ptr->nVolume);
 }
 
+void DACWrite16(INT32 Chip, INT16 Data)
+{
+#if defined FBA_DEBUG
+	if (!DebugSnd_DACInitted) bprintf(PRINT_ERROR, _T("DACWrite16 called without init\n"));
+	if (Chip > NumChips) bprintf(PRINT_ERROR, _T("DACWrite16 called with invalid chip number %x\n"), Chip);
+#endif
+
+	struct dac_info *ptr;
+
+	ptr = &dac_table[Chip];
+
+	if (Data != ptr->Output) {
+		UpdateStream(Chip, ptr->pSyncCallback());
+		ptr->Output = Data;
+	}
+}
+
 void DACSignedWrite(INT32 Chip, UINT8 Data)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_DACInitted) bprintf(PRINT_ERROR, _T("DACSignedWrite called without init\n"));
 	if (Chip > NumChips) bprintf(PRINT_ERROR, _T("DACSignedWrite called with invalid chip number %x\n"), Chip);
 #endif
-
-	//as of nov.7 2014 no longer needed, keeping just in-case :)
-	//if (Data == 0x77 || Data == 0x7f || Data == 0x80)
-	//	return; // HACK: buzzing fix (armed formation, terra cresta, Soldier Girl Amazon, & possibly others.)
-
 	struct dac_info *ptr;
 
 	ptr = &dac_table[Chip];
@@ -222,6 +234,8 @@ void DACExit()
 	if (!DebugSnd_DACInitted) bprintf(PRINT_ERROR, _T("DACExit called without init\n"));
 #endif
 
+	if (!DebugSnd_DACInitted) return;
+
 	struct dac_info *ptr;
 
 	for (INT32 i = 0; i < DAC_NUM; i++) {
@@ -237,6 +251,8 @@ void DACExit()
 
 	BurnFree (lBuffer);
 	BurnFree (rBuffer);
+	lBuffer = NULL;
+	rBuffer = NULL;
 }
 
 INT32 DACScan(INT32 nAction,INT32 *pnMin)

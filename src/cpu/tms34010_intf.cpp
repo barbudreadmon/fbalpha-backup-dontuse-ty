@@ -3,23 +3,23 @@
 #include "tms34010_intf.h"
 
 #define ADDR_BITS   32
-#define TMS34010_PAGE_SIZE   0x1000
-#define TMS34010_PAGE_SIZE_8 (0x1000 >> 3)
-#define TMS34010_PAGE_SHIFT  12
-#define TMS34010_PAGE_MASK   0xFFF
-#define TMS34010_PAGE_COUNT  (1 << (ADDR_BITS - TMS34010_PAGE_SHIFT))
-#define TMS34010_PAGE_WADD    (TMS34010_PAGE_COUNT)
+#define PAGE_SIZE   0x1000
+#define PAGE_SIZE_8 (0x1000 >> 3)
+#define PAGE_SHIFT  12
+#define PAGE_MASK   0xFFF
+#define PAGE_COUNT  (1 << (ADDR_BITS - PAGE_SHIFT))
+#define PAGE_WADD    (PAGE_COUNT)
 #define MAXHANDLER  32
-#define PFN(x)  (((x) >> TMS34010_PAGE_SHIFT) & 0xFFFFF)
+#define PFN(x)  (((x) >> PAGE_SHIFT) & 0xFFFFF)
 
 template<typename T>
 inline T fast_read(UINT8 *ptr, UINT32 adr) {
-    return *((T*)  ((UINT8*) ptr + TOBYTE(adr & TMS34010_PAGE_MASK)));
+    return *((T*)  ((UINT8*) ptr + TOBYTE(adr & PAGE_MASK)));
 }
 
 template<typename T>
 inline void fast_write(UINT8 *xptr, UINT32 adr, T value) {
-    T *ptr = ((T*)  ((UINT8*) xptr + TOBYTE(adr & TMS34010_PAGE_MASK)));
+    T *ptr = ((T*)  ((UINT8*) xptr + TOBYTE(adr & PAGE_MASK)));
     *ptr = value;
 }
 
@@ -28,7 +28,7 @@ static pTMS34010ScanlineRender scanlineRenderCallback = NULL;
 
 struct TMS34010MemoryMap
 {
-    UINT8 *map[TMS34010_PAGE_COUNT * 2];
+    UINT8 *map[PAGE_COUNT * 2];
 
     pTMS34010ReadHandler read[MAXHANDLER];
     pTMS34010WriteHandler write[MAXHANDLER];
@@ -113,7 +113,7 @@ UINT16 TMS34010ReadWord(UINT32 address)
 
 void TMS34010WriteWord(UINT32 address, UINT16 value)
 {
-    UINT8 *pr = g_mmap.map[TMS34010_PAGE_WADD + PFN(address)];
+    UINT8 *pr = g_mmap.map[PAGE_WADD + PFN(address)];
     if ((uintptr_t)pr >= MAXHANDLER) {
         // address is bit-address
         return fast_write<UINT16>(pr,address,value);
@@ -124,9 +124,9 @@ void TMS34010WriteWord(UINT32 address, UINT16 value)
 
 void TMS34010MapReset()
 {
-    for (int page = 0; page < TMS34010_PAGE_COUNT; page++) {
+    for (int page = 0; page < PAGE_COUNT; page++) {
         g_mmap.map[page] = nullptr;
-        g_mmap.map[page + TMS34010_PAGE_WADD] = nullptr;
+        g_mmap.map[page + PAGE_WADD] = nullptr;
     }
     for (int handler = 0; handler < MAXHANDLER; handler++) {
         g_mmap.read[handler] = default_read;
@@ -142,10 +142,10 @@ void TMS34010MapMemory(UINT8 *mem, UINT32 start, UINT32 end, UINT8 type)
     for (int i = 0; i < max_pages; i++, page++) {
 
         if (type & MAP_READ)
-            g_mmap.map[page] = mem + (TMS34010_PAGE_SIZE_8 * i);
+            g_mmap.map[page] = mem + (PAGE_SIZE_8 * i);
 
         if (type & MAP_WRITE)
-            g_mmap.map[page + TMS34010_PAGE_WADD] = mem + (TMS34010_PAGE_SIZE_8 * i);
+            g_mmap.map[page + PAGE_WADD] = mem + (PAGE_SIZE_8 * i);
     }
 }
 
@@ -160,7 +160,7 @@ void TMS34010MapHandler(UINT32 num, UINT32 start, UINT32 end, UINT8 type)
             g_mmap.map[page] = (UINT8*) num;
 
         if (type & MAP_WRITE)
-            g_mmap.map[page + TMS34010_PAGE_WADD] = (UINT8*) num;
+            g_mmap.map[page + PAGE_WADD] = (UINT8*) num;
     }
 }
 

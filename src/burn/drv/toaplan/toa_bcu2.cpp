@@ -103,7 +103,7 @@ static UINT8* pFCU2SpriteBuffer;
 static UINT16** pFCU2SpriteQueue[16];
 static UINT16** pFCU2SpriteQueueData = NULL;
 
-//static INT32 nFCU2SpriteXOffset, nFCU2SpriteYOffset;
+INT32 nFCU2SpriteXOffset = 0, nFCU2SpriteYOffset = 0;
 
 static void FCU2PrepareSprites()
 {
@@ -145,9 +145,9 @@ static void FCU2RenderSpriteQueue(INT32 nPriority)
 		nSpriteXSize = ((((UINT16*)FCU2RAMSize)[s] >> 0) & 0x0F);
 		nSpriteYSize = ((((UINT16*)FCU2RAMSize)[s] >> 4) & 0x0F);
 
-		nSpriteXPos = (pSpriteInfo[2] >> 7) + 0;//nFCU2SpriteXOffset;
+		nSpriteXPos = (pSpriteInfo[2] >> 7) + nFCU2SpriteXOffset;
 		nSpriteXPos &= 0x01FF;
-		nSpriteYPos = (pSpriteInfo[3] >> 7) + 0;//nFCU2SpriteYOffset;
+		nSpriteYPos = (pSpriteInfo[3] >> 7) + nFCU2SpriteYOffset;
 		nSpriteYPos &= 0x01FF;
 
 		if (Hellfire) nSpriteYPos -= 16;
@@ -224,7 +224,8 @@ static void BCU2QueueLayer(UINT16* pTilemap, INT32 nXPos, INT32 nYPos)
 			nTileNumber = pTilemap[nTileRow + nTileColumn + 1];
 			nTileAttrib = pTilemap[nTileRow + nTileColumn];
 
-			if (!(nTileNumber & 0x8000) && (nTileAttrib & 0xF000)) {
+			// Rallybik uses hidden tiles to do the background fades on the titlescreen.
+			if ((!(nTileNumber & 0x8000) && (nTileAttrib & 0xF000)) || Rallybik) {
 				pBCU2TileQueue[nTileAttrib >> 12]->nTileAttrib = (nTileAttrib << 16) | nTileNumber;
 				pBCU2TileQueue[nTileAttrib >> 12]->nTileXPos = (x << 3) - (nXPos & 7);
 				pBCU2TileQueue[nTileAttrib >> 12]->nTileYPos = (y << 3) - (nYPos & 7);
@@ -429,6 +430,9 @@ INT32 ToaExitBCU2()
 	nLayer1YOffset = 0;
 	nLayer2YOffset = 0;
 	nLayer3YOffset = 0;
+
+	nFCU2SpriteXOffset = 0;
+	nFCU2SpriteYOffset = 0;
 
 	BurnFree(pBCU2TileQueueData);
 	BurnFree(BCU2TileAttrib);

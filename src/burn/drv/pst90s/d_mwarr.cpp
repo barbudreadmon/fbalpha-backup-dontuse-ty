@@ -1,16 +1,14 @@
 // Fb Alpha Mighty Warrior / Steel Force / Twin Brats driver module
 // Based on MAME drivers by Pierpaolo Prazzoli, David Haywood, and stephh
+//
+// for later: figure out why the 3rd tile layer needs prio-hack, otherwise
+// mwarr title goes under the sprites in the attract mode.
+//
 
 #include "tiles_generic.h"
 #include "m68000_intf.h"
 #include "msm6295.h"
 #include "eeprom.h"
-
-/*
-	To do:
-		why do some times get clipped on the left side in steel force?
-		is the terrible sound normal?
-*/
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -41,8 +39,8 @@ static UINT8 *DrvUnkRAM1;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-static UINT16 *pPrioDraw;
 
+static UINT32 sprite_mask;
 static INT32 sprite_command_switch;
 static INT32 nSoundBank[2];
 
@@ -58,6 +56,8 @@ static UINT8 DrvJoy1[16];
 static UINT8 DrvJoy2[16];
 static UINT8 DrvDips[2];
 static UINT16 DrvInps[2];
+
+static UINT8 DrvSrv[1] = { 0 }; // stlforce, twinbrat
 
 static struct BurnInputInfo DrvInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 coin"	},
@@ -86,6 +86,35 @@ static struct BurnInputInfo DrvInputList[] = {
 };
 
 STDINPUTINFO(Drv)
+
+static struct BurnInputInfo StlforceInputList[] = {
+	{"P1 Coin",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 coin"	},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 start"	},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"		},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
+	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy1 + 6,	"p1 fire 3"	},
+
+	{"P2 Coin",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 coin"	},
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 15,	"p2 start"	},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy1 + 8,	"p2 up"		},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy1 + 9,	"p2 down"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy1 + 10,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy1 + 11,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy1 + 12,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy1 + 13,	"p2 fire 2"	},
+	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy1 + 14,	"p2 fire 3"	},
+
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Service Mode",BIT_DIGITAL,    DrvSrv + 0,     "diag"  },
+	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
+};
+
+STDINPUTINFO(Stlforce)
 
 static struct BurnDIPInfo MwarrDIPList[]=
 {
@@ -143,7 +172,7 @@ STDDIPINFO(Mwarr)
 
 static inline void palette_write(INT32 offset)
 {
-	UINT16 p = *((UINT16*)(DrvPalRAM + offset));	
+	UINT16 p = *((UINT16*)(DrvPalRAM + offset));
 
 	UINT16 b = (p >> 10) & 0x1f;
 	b = (((b << 3) | (b >> 2)) * bright) / 256;
@@ -170,7 +199,7 @@ static void sprite_buffer_command(INT32 data)
 {
 	if (sprite_command_switch)
 	{
-		switch (data & 0x0f)
+		switch (data)
 		{
 			case 0x00: // clear sprites
 				memset (DrvSprBuf, 0, 0x1000);
@@ -186,7 +215,7 @@ static void sprite_buffer_command(INT32 data)
 			case 0x0b: // mighty warrior
 			case 0x0e: // mighty warrior
 			case 0x0f: // mighty warrior
-			default:
+    		default:
 				memcpy (DrvSprBuf, DrvSprRAM, 0x1000);
 			break;
 		}
@@ -215,7 +244,7 @@ static void __fastcall mwarr_write_byte(UINT32 address, UINT8 data)
 	}
 
 	if (address >= 0x110020 && address <= 0x11ffff) {
-		Drv68KRAM[address & 0xffff] = data;
+		Drv68KRAM[(address & 0xffff)^1] = data;
 		return;
 	}
 
@@ -232,10 +261,14 @@ static void __fastcall mwarr_write_byte(UINT32 address, UINT8 data)
 		case 0x190001:
 			MSM6295Command(1, data);
 		return;
+
+		case 0x110017:
+			sprite_buffer_command(data);
+		break;
 	}
 
 	if (address >= 0x110000 && address <= 0x11ffff) {
-		Drv68KRAM[address & 0xffff] = data;
+		Drv68KRAM[(address & 0xffff)^1] = data;
 		return;
 	}
 }
@@ -272,7 +305,6 @@ static void __fastcall mwarr_write_word(UINT32 address, UINT16 data)
 		*((UINT16*)(Drv68KRAM + (address & 0xfffe))) = data;
 		return;
 	}
-
 }
 
 static UINT8 __fastcall mwarr_read_byte(UINT32 address)
@@ -337,13 +369,13 @@ static UINT8 __fastcall stlforce_read_byte(UINT32 address)
 	switch (address)
 	{
 		case 0x400000:
-			return DrvInps[0];
-
-		case 0x400001:
 			return DrvInps[0] >> 8;
 
+		case 0x400001:
+			return DrvInps[0];
+
 		case 0x400003:
-			return (DrvInps[1] & ~0x50) | (EEPROMRead() ? 0x40 : 0) | vblank;
+			return (DrvInps[1] & ~0x58) | (DrvSrv[0] ? 0x00 : 0x08) | (EEPROMRead() ? 0x40 : 0) | vblank;
 
 		case 0x410001:
 			return MSM6295ReadStatus(0);
@@ -372,8 +404,10 @@ static int DrvGfxDecode(INT32 sprite_length, INT32 sprite_bpp)
 
 	memcpy (tmp, DrvGfxROM0, sprite_length);
 
-	GfxDecode(fract / (16 * 16), sprite_bpp, 16, 16, Plane0 + (6 - sprite_bpp), XOffs0, YOffs0, 0x100, tmp, DrvGfxROM0);
-
+	sprite_mask = fract / (16 * 16);
+	GfxDecode(sprite_mask, sprite_bpp, 16, 16, Plane0 + (6 - sprite_bpp), XOffs0, YOffs0, 0x100, tmp, DrvGfxROM0);
+	sprite_mask--;
+	//bprintf(0, _T("sprite mask: %X.\n"), sprite_mask);
 	memcpy (tmp, DrvGfxROM1, 0x040000);
 
 	GfxDecode(0x2000, 4,  8,  8, Plane1, XOffs1, YOffs1, 0x100, tmp, DrvGfxROM1);
@@ -414,8 +448,6 @@ static INT32 MemIndex(INT32 mwarr)
 	DrvSndROM1	= Next; Next += 0x080000;
 
 	DrvPalette	= (UINT32*)Next; Next += 0x0800 * sizeof(INT32);
-
-	pPrioDraw	= (UINT16*)Next; Next += 512 * 256 * sizeof(UINT16);
 
 	AllRam		= Next;
 
@@ -482,6 +514,34 @@ static INT32 DrvDoReset()
 	bright = 0xff; // start off at full brightness
 
 	return 0;
+}
+
+static tilemap_callback( bg )
+{
+	UINT16 *ram = (UINT16*)DrvBgRAM;
+
+	TILE_SET_INFO(4, ram[offs] & 0x1fff, ram[offs] >> 13, 0);
+}
+
+static tilemap_callback( low )
+{
+	UINT16 *ram = (UINT16*)DrvMloRAM;
+
+	TILE_SET_INFO(3, ram[offs] & 0x1fff, ram[offs] >> 13, 0);
+}
+
+static tilemap_callback( mid )
+{
+	UINT16 *ram = (UINT16*)DrvMhiRAM;
+
+	TILE_SET_INFO(2, ram[offs] & 0x1fff, ram[offs] >> 13, 0);
+}
+
+static tilemap_callback( txt )
+{
+	UINT16 *ram = (UINT16*)DrvTxtRAM;
+
+	TILE_SET_INFO(1, ram[offs] & 0x1fff, ram[offs] >> 13, 0);
 }
 
 static INT32 MwarrInit()
@@ -570,6 +630,19 @@ static INT32 MwarrInit()
 	global_x_offset = 8;
 
 	GenericTilesInit();
+	GenericTilemapInit(0, TILEMAP_SCAN_COLS, bg_map_callback,  16, 16, 64, 16);
+	GenericTilemapInit(1, TILEMAP_SCAN_COLS, low_map_callback, 16, 16, 64, 16);
+	GenericTilemapInit(2, TILEMAP_SCAN_COLS, mid_map_callback, 16, 16, 64, 16);
+	GenericTilemapInit(3, TILEMAP_SCAN_ROWS, txt_map_callback,  8,  8, 64, 32);
+	GenericTilemapSetGfx(1, DrvGfxROM1, 4, 16, 16, 0x200000, 0x180, 0x07);
+	GenericTilemapSetGfx(2, DrvGfxROM2, 4, 16, 16, 0x200000, 0x100, 0x07);
+	GenericTilemapSetGfx(3, DrvGfxROM3, 4, 16, 16, 0x200000, 0x080, 0x07);
+	GenericTilemapSetGfx(4, DrvGfxROM4, 4,  8,  8, 0x100000, 0x000, 0x07);
+	GenericTilemapSetTransparent(1, 0);
+	GenericTilemapSetTransparent(2, 0);
+	GenericTilemapSetTransparent(3, 0);
+	GenericTilemapSetOffsets(TMAP_GLOBAL, -global_x_offset, 0);
+	GenericTilemapSetOffsets(3, -24, 0);
 
 	DrvDoReset();
 
@@ -634,7 +707,7 @@ static INT32 CommonInit(INT32 select, INT32 xoffset)
 	SekSetWriteByteHandler(0,	stlforce_write_byte);
 	SekSetWriteWordHandler(0,	stlforce_write_word);
 	SekSetReadByteHandler(0,	stlforce_read_byte);
-//	SekSetReadWordHandler(0,	stlforce_read_word);
+	//SekSetReadWordHandler(0,	stlforce_read_word);
 	SekClose();
 
 	MSM6295Init(0, 937500 / 132, 0);
@@ -645,6 +718,18 @@ static INT32 CommonInit(INT32 select, INT32 xoffset)
 	global_x_offset = xoffset;
 
 	GenericTilesInit();
+	GenericTilemapInit(0, TILEMAP_SCAN_COLS, bg_map_callback,  16, 16, 64, 16);
+	GenericTilemapInit(1, TILEMAP_SCAN_COLS, low_map_callback, 16, 16, 64, 16);
+	GenericTilemapInit(2, TILEMAP_SCAN_COLS, mid_map_callback, 16, 16, 64, 16);
+	GenericTilemapInit(3, TILEMAP_SCAN_ROWS, txt_map_callback,  8,  8, 64, 32);
+	GenericTilemapSetGfx(1, DrvGfxROM1, 4, 16, 16, 0x200000, 0x180, 0x07);
+	GenericTilemapSetGfx(2, DrvGfxROM2, 4, 16, 16, 0x200000, 0x100, 0x07);
+	GenericTilemapSetGfx(3, DrvGfxROM3, 4, 16, 16, 0x200000, 0x080, 0x07);
+	GenericTilemapSetGfx(4, DrvGfxROM4, 4,  8,  8, 0x100000, 0x000, 0x07);
+	GenericTilemapSetTransparent(1, 0);
+	GenericTilemapSetTransparent(2, 0);
+	GenericTilemapSetTransparent(3, 0);
+	GenericTilemapSetOffsets(TMAP_GLOBAL, -global_x_offset, 0);
 
 	DrvDoReset();
 
@@ -653,12 +738,23 @@ static INT32 CommonInit(INT32 select, INT32 xoffset)
 
 static INT32 StlforceInit()
 {
-	return CommonInit(1, 8);
+	INT32 nRet = CommonInit(1, 8);
+
+	GenericTilemapSetOffsets(3, -24, 0);
+
+	return nRet;
 }
 
 static INT32 TwinbratInit()
 {
-	return CommonInit(2, 24);
+	INT32 nRet = CommonInit(2, 16);
+
+		GenericTilemapSetOffsets(TMAP_GLOBAL, -global_x_offset, 1);
+	GenericTilemapSetOffsets(3, -32, 0);
+
+	global_x_offset = 24+3;
+
+	return nRet;
 }
 
 static INT32 DrvExit()
@@ -682,41 +778,6 @@ static INT32 DrvExit()
 	DrvSpriteBpp = 0;
 
 	return 0;
-}
-
-static inline void draw16x16_prio_tile(INT32 code, INT32 color, INT32 sx, INT32 sy, INT32 flipx, INT32 priority)
-{
-	UINT16 *dst = pTransDraw + (sy * nScreenWidth) + sx;
-	UINT16 *pri = pPrioDraw + (sy * nScreenWidth) + sx;
-
-	UINT8 *gfx = DrvGfxROM0 + code * (16*16);
-
-	if (flipx) flipx = 0x0f;
-
-	for (INT32 y = 0; y < 16; y++)
-	{
-		if ((sy + y) >= 0 && (sy + y) < nScreenHeight)
-		{
-			for (INT32 x = 0; x < 16; x++)
-			{
-				if ((sx + x) >= 0 && (sx + x) < nScreenWidth)
-				{
-					if (gfx[x^flipx])
-					{
-						if ((priority & (1 << pri[x])) == 0 && pri[x] < 0x80)
-						{
-							dst[x] = gfx[x^flipx] + color;
-							pri[x] |= 0x80;
-						}
-					}
-				}
-			}
-		}
-
-		dst += nScreenWidth;
-		pri += nScreenWidth;
-		gfx += 16;
-	}
 }
 
 static void draw_sprites(INT32 use_priority)
@@ -746,130 +807,15 @@ static void draw_sprites(INT32 use_priority)
 			for (INT32 i = 0; i <= dy; i++)
 			{
 				INT32 yy = y + i * 16;
-
-#if 1
-				draw16x16_prio_tile(source[2]+i, color, x,	yy,	flipx, pri_mask);
-				draw16x16_prio_tile(source[2]+i, color, x-1024, yy,	flipx, pri_mask);
-				draw16x16_prio_tile(source[2]+i, color, x-1024, yy-512, flipx, pri_mask);
-				draw16x16_prio_tile(source[2]+i, color, x,	yy-512, flipx, pri_mask);
-#else
-				if (flipx) {
-					Render16x16Tile_Mask_FlipX_Clip(pTransDraw, source[2]+i, x,      yy,     color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-					Render16x16Tile_Mask_FlipX_Clip(pTransDraw, source[2]+i, x-1024, yy,     color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-					Render16x16Tile_Mask_FlipX_Clip(pTransDraw, source[2]+i, x-1024, yy-512, color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-					Render16x16Tile_Mask_FlipX_Clip(pTransDraw, source[2]+i, x,      yy-512, color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-				} else {
-					Render16x16Tile_Mask_Clip(pTransDraw, source[2]+i, x,      yy,     color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-					Render16x16Tile_Mask_Clip(pTransDraw, source[2]+i, x-1024, yy,     color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-					Render16x16Tile_Mask_Clip(pTransDraw, source[2]+i, x-1024, yy-512, color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-					Render16x16Tile_Mask_Clip(pTransDraw, source[2]+i, x,      yy-512, color, DrvSpriteBpp, 0, 0x400, DrvGfxROM0);
-				}
-#endif
+				INT32 code = (source[2]+i);// & sprite_mask; // breaks mwarr sprites.
+				RenderPrioSprite(pTransDraw, DrvGfxROM0, code, color, 0, x     , yy    , flipx, 0, 16, 16, pri_mask);
+				RenderPrioSprite(pTransDraw, DrvGfxROM0, code, color, 0, x-1024, yy    , flipx, 0, 16, 16, pri_mask);
+				RenderPrioSprite(pTransDraw, DrvGfxROM0, code, color, 0, x-1024, yy-512, flipx, 0, 16, 16, pri_mask);
+				RenderPrioSprite(pTransDraw, DrvGfxROM0, code, color, 0, x     , yy-512, flipx, 0, 16, 16, pri_mask);
 			}
 		}
 
 		source -= 0x04;
-	}
-}
-
-static void draw_layer(UINT8 *src, UINT8 *gfxbase, UINT8 *scrl, INT32 attand, INT32 gfxoffs, INT32 scrolloff, INT32 priority)
-{
-	UINT16 *vram = (UINT16*)src;
-	UINT16 *attr = (UINT16 *)DrvVidAttrRAM;
-	UINT16 *xscroll = (UINT16*)scrl;
-
-	INT32 linescroll = attr[6] & attand;
-	INT32 scrolly = attr[scrolloff] & 0xff;
-
-	INT32 x_offset = ((game_select) ? 8 : 19) + global_x_offset;
-
-	for (INT32 sy = 0; sy < nScreenHeight; sy++)
-	{
-		INT32 yy = (sy + scrolly) & 0xff;
-
-		INT32 scrollx = (((linescroll) ? xscroll[yy] : xscroll[0]) + x_offset) & 0x3ff;
-
-		UINT16 *dst = pTransDraw + sy * nScreenWidth;
-		UINT16 *pri = pPrioDraw + sy * nScreenWidth;
-
-		for (INT32 sx = 0; sx < nScreenWidth + 16; sx += 16)
-		{
-			INT32 sxx = sx - (scrollx & 0xf);
-
-			INT32 offs = (yy / 16) + ((sx + scrollx) & 0x3f0);
-
-			INT32 code  =  vram[offs] & 0x1fff;
-			INT32 color =((vram[offs] & 0xe000) >> 9) + gfxoffs;
-
-			UINT8 *gfx = gfxbase + (code * 256) + ((yy & 0x0f) * 16);
-
-			for (INT32 x = 0; x < 16; x++, sxx++)
-			{
-				if (sxx >= 0 && sxx < nScreenWidth) {
-					if (gfx[x]) {
-						dst[sxx] = gfx[x] + color;
-						pri[sxx] = priority;
-					}
-				}
-			}
-		}
-	}
-}
-
-static void draw_text_layer()
-{
-	UINT16 *vram = (UINT16*)DrvTxtRAM;
-	UINT16 *scroll = (UINT16 *)DrvVidAttrRAM;
-
-	INT32 scrollx = (scroll[0] + (((game_select) ? 8 : 16) + global_x_offset)) & 0x1ff;
-	INT32 scrolly = (scroll[4] + 1) & 0xff;
-
-	for (INT32 offs = 0; offs < 64 * 32; offs++)
-	{
-		INT32 code = vram[offs] & 0x1fff;
-
-		INT32 sx = (offs & 0x3f) << 3;
-		INT32 sy = (offs >> 6) << 3;
-
-		sx -= scrollx;
-		if (sx < -7) sx += 512;
-		sy -= scrolly;
-		if (sy < -7) sy += 256;
-
-		if (sx >= nScreenWidth || sy >= nScreenHeight) continue;
-
-		INT32 color = vram[offs] >> 13;
-
-		{
-			color = (color * 16) + 0x180;
-			code *= 8*8;
-			UINT8 *gfx = DrvGfxROM1 + code;
-			UINT16 *dst = pTransDraw + sy * nScreenWidth + sx;
-			UINT16 *pri = pPrioDraw + sy * nScreenWidth + sx;
-
-			for (INT32 y = 0; y < 8; y++)
-			{
-				if ((sy + y) >= 0 && (sy + y) < nScreenHeight)
-				{
-					for (INT32 x = 0; x < 8; x++)
-					{
-						if ((sx+x) >= 0 && (sx + x) < nScreenWidth)
-						{
-							if (gfx[x]) {
-								dst[x] = gfx[x] + color;
-								pri[x] = 0x10;
-							}
-						}
-					}
-				}
-
-				gfx += 8;
-				dst += nScreenWidth;
-				pri += nScreenWidth;
-			}
-		}
-
-	//	Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy - 1, color, 4, 0, 0x180, DrvGfxROM1);
 	}
 }
 
@@ -882,13 +828,57 @@ static INT32 DrvDraw()
 		DrvRecalc = 0;
 	}
 
-	memset (pPrioDraw, 0, 512 * 256 * sizeof(UINT16));
 	BurnTransferClear();
 
-	if (nBurnLayer & 1) draw_layer(DrvBgRAM,  DrvGfxROM4, DrvBgScrollRAM,  0x01, 0x000, 1, 0x01);
-	if (nBurnLayer & 2) draw_layer(DrvMloRAM, DrvGfxROM3, DrvMloScrollRAM, 0x04, 0x080, 2, 0x02);
-	if (nBurnLayer & 4) draw_layer(DrvMhiRAM, DrvGfxROM2, DrvMhiScrollRAM, 0x10, 0x100, 3, 0x04);
-	if (nBurnLayer & 8) draw_text_layer();
+	UINT16 *scroll = (UINT16 *)DrvVidAttrRAM;
+	UINT16 *bgscroll = (UINT16 *)DrvBgScrollRAM;
+	UINT16 *loscroll = (UINT16 *)DrvMloScrollRAM;
+	UINT16 *mgscroll = (UINT16 *)DrvMhiScrollRAM;
+
+	if (scroll[6] & 0x01) {
+		GenericTilemapSetScrollRows(0, 256);
+
+		for (INT32 y = 0; y < 256; y++) {
+			GenericTilemapSetScrollRow(0, y, bgscroll[y] + 20);
+		}
+	} else {
+		GenericTilemapSetScrollRows(0, 1);
+		GenericTilemapSetScrollX(0, bgscroll[0] + 19);
+	}
+
+	if (scroll[6] & 0x04) {
+		GenericTilemapSetScrollRows(1, 256);
+
+		for (INT32 y = 0; y < 256; y++) {
+			GenericTilemapSetScrollRow(1, y, loscroll[y] + 19);
+		}
+	} else {
+		GenericTilemapSetScrollRows(1, 1);
+		GenericTilemapSetScrollX(1, loscroll[0] + 19);
+	}
+
+	if (scroll[6] & 0x10) {
+		GenericTilemapSetScrollRows(2, 256);
+
+		for (INT32 y = 0; y < 256; y++) {
+			GenericTilemapSetScrollRow(2, y, mgscroll[y] + 19);
+		}
+	} else {
+		GenericTilemapSetScrollRows(2, 1);
+		GenericTilemapSetScrollX(2, mgscroll[0] + 19);
+	}
+
+	GenericTilemapSetScrollX(3, scroll[0]);
+
+	GenericTilemapSetScrollY(0, scroll[1] + 1);
+	GenericTilemapSetScrollY(1, scroll[2] + 1);
+	GenericTilemapSetScrollY(2, scroll[3] + 1);
+	GenericTilemapSetScrollY(3, scroll[4] + 1);
+
+	if (nBurnLayer & 1) GenericTilemapDraw(0, pTransDraw, 0x01);
+	if (nBurnLayer & 2) GenericTilemapDraw(1, pTransDraw, 0x02);
+	if (nBurnLayer & 4) GenericTilemapDraw(2, pTransDraw, 0x08); // this should be 0x04, but something is wrong somewhere. -dink
+	if (nBurnLayer & 8) GenericTilemapDraw(3, pTransDraw, 0x10);
 
 	if (nSpriteEnable & 1) draw_sprites((game_select) ? 0 : 1);
 
@@ -922,14 +912,13 @@ static INT32 stlforceFrame()
 
 	vblank = 0;
 
-	for (INT32 i = 0; i < 256; i++)
+	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		nCycleSegment = nCyclesTotal / nInterleave;
-		nCycleSegment = (nCycleSegment * i) - nCyclesDone;
-		nCyclesDone += SekRun(nCycleSegment);
+		nCyclesDone += SekRun(((i + 1) * nCyclesTotal / nInterleave) - nCyclesDone);
 
 		if (i == 240) {
 			vblank = 0x10;
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 
 		nCycleSegment = nBurnSoundLen / nInterleave;
@@ -939,8 +928,6 @@ static INT32 stlforceFrame()
 			nSoundBufferPos += (nCycleSegment << 1);
 		}
 	}
-
-	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 	nCycleSegment = nBurnSoundLen - (nSoundBufferPos>>1);
 	if (pBurnSoundOut && nCycleSegment > 0) {
@@ -985,14 +972,13 @@ static INT32 DrvFrame()
 
 	Drv68KRAM[2] &= ~0x04; // vblank
 
-	for (INT32 i = 0; i < 256; i++)
+	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		nCycleSegment = nCyclesTotal / nInterleave;
-		nCycleSegment = (nCycleSegment * i) - nCyclesDone;
-		nCyclesDone += SekRun(nCycleSegment);
+		nCyclesDone += SekRun(((i + 1) * nCyclesTotal / nInterleave) - nCyclesDone);
 
 		if (i == 240) {
 			Drv68KRAM[2] |= 0x04; // vblank
+			SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 		}
 
 		nCycleSegment = nBurnSoundLen / nInterleave;
@@ -1004,8 +990,6 @@ static INT32 DrvFrame()
 			nSoundBufferPos += (nCycleSegment << 1);
 		}
 	}
-
-	SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
 
 	nCycleSegment = nBurnSoundLen - (nSoundBufferPos>>1);
 	if (pBurnSoundOut && nCycleSegment > 0) {
@@ -1154,7 +1138,7 @@ struct BurnDriver BurnDrvStlforce = {
 	"Steel Force\0", NULL, "Electronic Devices Italy / Ecogames S.L. Spain", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_SCRFIGHT, 0,
-	NULL, stlforceRomInfo, stlforceRomName, NULL, NULL, DrvInputInfo, NULL,
+	NULL, stlforceRomInfo, stlforceRomName, NULL, NULL, StlforceInputInfo, NULL,
 	StlforceInit, DrvExit, stlforceFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	368, 240, 4, 3
 };
@@ -1185,14 +1169,14 @@ static struct BurnRomInfo twinbratRomDesc[] = {
 STD_ROM_PICK(twinbrat)
 STD_ROM_FN(twinbrat)
 
-struct BurnDriverD BurnDrvTwinbrat = {
+struct BurnDriver BurnDrvTwinbrat = {
 	"twinbrat", NULL, NULL, NULL, "1995",
 	"Twin Brats (set 1)\0", NULL, "Elettronica Video-Games S.R.L.", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_MAZE, 0,
-	NULL, twinbratRomInfo, twinbratRomName, NULL, NULL, DrvInputInfo, NULL,
+	NULL, twinbratRomInfo, twinbratRomName, NULL, NULL, StlforceInputInfo, NULL,
 	TwinbratInit, DrvExit, stlforceFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
-	336, 240, 4, 3
+	334, 240, 4, 3
 };
 
 
@@ -1220,12 +1204,12 @@ static struct BurnRomInfo twinbrataRomDesc[] = {
 STD_ROM_PICK(twinbrata)
 STD_ROM_FN(twinbrata)
 
-struct BurnDriverD BurnDrvTwinbrata = {
+struct BurnDriver BurnDrvTwinbrata = {
 	"twinbrata", "twinbrat", NULL, NULL, "1995",
 	"Twin Brats (set 2)\0", NULL, "Elettronica Video-Games S.R.L.", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_MAZE, 0,
-	NULL, twinbrataRomInfo, twinbrataRomName, NULL, NULL, DrvInputInfo, NULL,
+	NULL, twinbrataRomInfo, twinbrataRomName, NULL, NULL, StlforceInputInfo, NULL,
 	TwinbratInit, DrvExit, stlforceFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
-	336, 240, 4, 3
+	334, 240, 4, 3
 };

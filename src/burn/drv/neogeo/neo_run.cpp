@@ -637,6 +637,7 @@ static INT32 LoadRoms()
 	if (!strcmp("pbobblenb", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x380000;
 	if (!strcmp("alpham2p", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x200000;
 	if (!strcmp("burningfp", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x180000;
+	if (!strcmp("burningfpa", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x200000;
 	if (!strcmp("lresortp", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x200000;
 	if (!strcmp("kotm2p", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x300000;
 	if (!strcmp("sbp", BurnDrvGetTextA(DRV_NAME))) nYM2610ADPCMASize[nNeoActiveSlot] = 0x800000;
@@ -1517,7 +1518,7 @@ INT32 NeoScan(INT32 nAction, INT32* pnMin)
 			nPrevBurnCPUSpeedAdjust = -1;
 
 			SCAN_VAR(nLEDLatch);
-			SCAN_VAR(nLED[3]);
+			SCAN_VAR(nLED);
 
 //			BurnGameFeedback(sizeof(nLED), nLED);
 		}

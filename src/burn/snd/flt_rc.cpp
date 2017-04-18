@@ -1,3 +1,5 @@
+// Based on MAME driver by Derrick Renaud, Couriersud
+
 #include "burnint.h"
 #include "burn_sound.h"
 #include "flt_rc.h"
@@ -256,6 +258,8 @@ void filter_rc_exit()
 #if defined FBA_DEBUG
 	if (!DebugSnd_FilterRCInitted) bprintf(PRINT_ERROR, _T("filter_rc_exit called without init\n"));
 #endif
+
+	if (!DebugSnd_FilterRCInitted) return;
 
 	for (INT32 i = 0; i < FLT_RC_NUM; i++) {
 		struct flt_rc_info *ptr;

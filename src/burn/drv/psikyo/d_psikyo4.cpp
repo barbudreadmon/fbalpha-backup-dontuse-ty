@@ -703,13 +703,6 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 gfx_len)
 
 	Sh2Init(1);
 	Sh2Open(0);
-
-#if defined USE_SPEEDHACKS
-#ifdef __LIBRETRO__
-	if(sh2speedhack) cps3speedhack = 1;
-#endif
-#endif
-
 	Sh2MapMemory(DrvSh2ROM,			0x00000000, 0x000fffff, MAP_ROM);
 	Sh2MapMemory(DrvSh2ROM + 0x100000,	0x02000000, 0x021fffff, MAP_ROM);
 	Sh2MapMemory(DrvSh2RAM,			0x06000000, 0x060fffff, MAP_RAM);
@@ -725,7 +718,7 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 gfx_len)
 	Sh2SetReadWordHandler (1,		ps4hack_read_word);
 	Sh2SetReadLongHandler (1,		ps4hack_read_long);
 
-	BurnYMF278BInit(0, DrvSndROM, &DrvIRQCallback, DrvSynchroniseStream);
+	BurnYMF278BInit(0, DrvSndROM, 0x400000, &DrvIRQCallback, DrvSynchroniseStream);
 	BurnYMF278BSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 	BurnTimerAttachSh2(28636350);
 

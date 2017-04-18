@@ -1,3 +1,6 @@
+// FB Alpha Renegade driver module
+// Based on MAME driver by Phil Stroffolino, Carlos A. Lozano, Rob Rosenbrock
+
 #include "tiles_generic.h"
 #include "m6502_intf.h"
 #include "m6805_intf.h"
@@ -146,7 +149,7 @@ static struct BurnDIPInfo DrvDIPList[]=
 	{0x14, 0x01, 0x10, 0x10, "1"                      },
 	{0x14, 0x01, 0x10, 0x00, "2"                      },
 	
-	{0   , 0xfe, 0   , 4   , "Bonus"                  },
+	{0   , 0xfe, 0   , 2   , "Bonus"                  },
 	{0x14, 0x01, 0x20, 0x20, "30k"                    },
 	{0x14, 0x01, 0x20, 0x00, "None"                   },
 	
@@ -863,7 +866,7 @@ static void DrvMSM5205Int()
 		M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
 	} else {
 		UINT8 const data = DrvADPCMRom[DrvADPCMPos / 2];
-		MSM5205DataWrite(0, DrvADPCMPos & 1 ? data & 0xf : data >> 4);
+		MSM5205DataWrite(0, (DrvADPCMPos & 1) ? data & 0xf : data >> 4);
 		DrvADPCMPos++;
 	}
 }

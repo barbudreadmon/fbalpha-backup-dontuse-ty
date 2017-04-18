@@ -116,7 +116,7 @@
 //typedef UINT8 unsigned char
 //typedef UINT16 unsigned short
 //typedef UINT32 unsigned int
-#ifdef _WIN32
+#ifndef __LIBRETRO__
  #define INT8 char
  #define INT16 short
  #define INT32 int

@@ -258,7 +258,7 @@ static struct BurnDIPInfo Glocr360DIPList[]=
 	{0x0c, 0x01, 0xf0, 0x70, "12"                                 },
 	
 	// Dip 2
-	{0   , 0xfe, 0   , 16  , "Coin A"                             },
+	{0   , 0xfe, 0   , 9   , "Coin A"                             },
 	{0x0d, 0x01, 0x0f, 0x0f, "1 Coin  1 Credit"                   },
 	{0x0d, 0x01, 0x0f, 0x0e, "1 Coin  2 Credits"                  },
 	{0x0d, 0x01, 0x0f, 0x0d, "1 Coin  3 Credits"                  },
@@ -269,7 +269,7 @@ static struct BurnDIPInfo Glocr360DIPList[]=
 	{0x0d, 0x01, 0x0f, 0x08, "1 Coin  8 Credits"                  },
 	{0x0d, 0x01, 0x0f, 0x00, "Free Play (if coin B too) or 1C/1C" },
 
-	{0   , 0xfe, 0   , 16  , "Coin B"                             },
+	{0   , 0xfe, 0   , 9   , "Coin B"                             },
 	{0x0d, 0x01, 0xf0, 0xf0, "1 Coin  1 Credit"                   },
 	{0x0d, 0x01, 0xf0, 0xe0, "1 Coin  2 Credits"                  },
 	{0x0d, 0x01, 0xf0, 0xd0, "1 Coin  3 Credits"                  },
@@ -1750,7 +1750,7 @@ void __fastcall YBoard3WriteWord(UINT32 a, UINT16 d)
 Driver Inits
 ====================================================*/
 
-UINT8 Gforce2ProcessAnalogControls(UINT16 value)
+static UINT8 Gforce2ProcessAnalogControls(UINT16 value)
 {
 	UINT8 temp = 0;
 	
@@ -1815,7 +1815,7 @@ UINT8 Gforce2ProcessAnalogControls(UINT16 value)
 	return 0;
 }
 
-UINT8 GlocProcessAnalogControls(UINT16 value)
+static UINT8 GlocProcessAnalogControls(UINT16 value)
 {
 	UINT8 temp = 0;
 	
@@ -1863,7 +1863,7 @@ UINT8 GlocProcessAnalogControls(UINT16 value)
 	return 0;
 }
 
-UINT8 Glocr360ProcessAnalogControls(UINT16 value)
+static UINT8 Glocr360ProcessAnalogControls(UINT16 value)
 {
 	UINT8 temp = 0;
 	
@@ -1929,7 +1929,7 @@ UINT8 Glocr360ProcessAnalogControls(UINT16 value)
 	return 0;
 }
 
-UINT8 PdriftProcessAnalogControls(UINT16 value)
+static UINT8 PdriftProcessAnalogControls(UINT16 value)
 {
 	UINT8 temp = 0;
 	
@@ -1966,7 +1966,7 @@ UINT8 PdriftProcessAnalogControls(UINT16 value)
 	return 0;
 }
 
-UINT8 RchaseProcessAnalogControls(UINT16 value)
+static UINT8 RchaseProcessAnalogControls(UINT16 value)
 {
 	switch (value) {
 		case 0: {
@@ -2158,7 +2158,7 @@ struct BurnDriver BurnDrvGlocr360 = {
 
 struct BurnDriver BurnDrvPdrift = {
 	"pdrift", NULL, NULL, NULL, "1988",
-	"Power Drift (World, Rev A)\0", NULL, "Sega", "Y-Board",
+	"Power Drift (World, Rev A)\0", "Select Auto-Center preset in Input Configuration", "Sega", "Y-Board",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEMY, GBF_RACING, 0,
 	NULL, PdriftRomInfo, PdriftRomName, NULL, NULL, PdriftInputInfo, PdriftDIPInfo,
@@ -2168,7 +2168,7 @@ struct BurnDriver BurnDrvPdrift = {
 
 struct BurnDriver BurnDrvPdrifta = {
 	"pdrifta", "pdrift", NULL, NULL, "1988",
-	"Power Drift (World)\0", NULL, "Sega", "Y-Board",
+	"Power Drift (World)\0", "Select Auto-Center preset in Input Configuration", "Sega", "Y-Board",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEMY, GBF_RACING, 0,
 	NULL, PdriftaRomInfo, PdriftaRomName, NULL, NULL, PdriftInputInfo, PdriftDIPInfo,
@@ -2178,7 +2178,7 @@ struct BurnDriver BurnDrvPdrifta = {
 
 struct BurnDriver BurnDrvPdrifte = {
 	"pdrifte", "pdrift", NULL, NULL, "1988",
-	"Power Drift (World, Earlier)\0", NULL, "Sega", "Y-Board",
+	"Power Drift (World, Earlier)\0", "Select Auto-Center preset in Input Configuration", "Sega", "Y-Board",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEMY, GBF_RACING, 0,
 	NULL, PdrifteRomInfo, PdrifteRomName, NULL, NULL, PdriftInputInfo, PdrifteDIPInfo,
@@ -2188,7 +2188,7 @@ struct BurnDriver BurnDrvPdrifte = {
 
 struct BurnDriver BurnDrvPdriftj = {
 	"pdriftj", "pdrift", NULL, NULL, "1988",
-	"Power Drift (Japan)\0", NULL, "Sega", "Y-Board",
+	"Power Drift (Japan)\0", "Select Auto-Center preset in Input Configuration", "Sega", "Y-Board",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEMY, GBF_RACING, 0,
 	NULL, PdriftjRomInfo, PdriftjRomName, NULL, NULL, PdriftInputInfo, PdriftjDIPInfo,

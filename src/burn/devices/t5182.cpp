@@ -1,3 +1,5 @@
+// FB Alpha t5182 core
+// Based on MAME sources by Jonathan Gevaryahu
 
 #include "burnint.h"
 #include "t5182.h"
@@ -172,6 +174,8 @@ void t5182Exit()
 #if defined FBA_DEBUG
 	if (!DebugDev_T5182Initted) bprintf(PRINT_ERROR, _T("t5182Exit called without init\n"));
 #endif
+
+	if (!DebugDev_T5182Initted) return;
 
 	BurnYM2151Exit();
 

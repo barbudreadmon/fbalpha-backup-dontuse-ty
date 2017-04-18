@@ -35,7 +35,7 @@ static UINT8 *DrvScrollRAM;
 static UINT8 DrvReset;
 static UINT8 DrvJoy1[16];
 static UINT8 DrvJoy2[16];
-static UINT8 DrvJoy3[2];
+static UINT8 DrvJoy3[3];
 static UINT8 DrvDips[3];
 static UINT16 DrvInps[2];
 
@@ -513,42 +513,41 @@ static void tokib_rom_decode()
 
 	len = 0x100000;
 	rom = DrvGfxROM1;
-	for (i = 0; i < len; i++)
-		rom[i] ^= 0xff;
+	for (i = 0; i < len; i++) rom[i] ^= 0xff;
 
-		len = 0x080000;
-		rom = DrvGfxROM2;
-		for (offs = 0; offs < len; offs += 0x20000)
+	len = 0x080000;
+	rom = DrvGfxROM2;
+	for (offs = 0; offs < len; offs += 0x20000)
+	{
+		UINT8 *base = &rom[offs];
+		memcpy (temp, base, 65536 * 2);
+		for (i = 0; i < 16; i++)
 		{
-			UINT8 *base = &rom[offs];
-			memcpy (temp, base, 65536 * 2);
-			for (i = 0; i < 16; i++)
-			{
-				memcpy (&base[0x00000 + i * 0x800], &temp[0x0000 + i * 0x2000], 0x800);
-				memcpy (&base[0x10000 + i * 0x800], &temp[0x0800 + i * 0x2000], 0x800);
-				memcpy (&base[0x08000 + i * 0x800], &temp[0x1000 + i * 0x2000], 0x800);
-				memcpy (&base[0x18000 + i * 0x800], &temp[0x1800 + i * 0x2000], 0x800);
-			}
+			memcpy (&base[0x00000 + i * 0x800], &temp[0x0000 + i * 0x2000], 0x800);
+			memcpy (&base[0x10000 + i * 0x800], &temp[0x0800 + i * 0x2000], 0x800);
+			memcpy (&base[0x08000 + i * 0x800], &temp[0x1000 + i * 0x2000], 0x800);
+			memcpy (&base[0x18000 + i * 0x800], &temp[0x1800 + i * 0x2000], 0x800);
 		}
-		len = 0x080000;
-		rom = DrvGfxROM3;
-		for (offs = 0; offs < len; offs += 0x20000)
+	}
+	len = 0x080000;
+	rom = DrvGfxROM3;
+	for (offs = 0; offs < len; offs += 0x20000)
+	{
+		UINT8 *base = &rom[offs];
+		memcpy (temp, base, 65536 * 2);
+		for (i = 0; i < 16; i++)
 		{
-			UINT8 *base = &rom[offs];
-			memcpy (temp, base, 65536 * 2);
-			for (i = 0; i < 16; i++)
-			{
-				memcpy (&base[0x00000 + i * 0x800], &temp[0x0000 + i * 0x2000], 0x800);
-				memcpy (&base[0x10000 + i * 0x800], &temp[0x0800 + i * 0x2000], 0x800);
-				memcpy (&base[0x08000 + i * 0x800], &temp[0x1000 + i * 0x2000], 0x800);
-				memcpy (&base[0x18000 + i * 0x800], &temp[0x1800 + i * 0x2000], 0x800);
-			}
+			memcpy (&base[0x00000 + i * 0x800], &temp[0x0000 + i * 0x2000], 0x800);
+			memcpy (&base[0x10000 + i * 0x800], &temp[0x0800 + i * 0x2000], 0x800);
+			memcpy (&base[0x08000 + i * 0x800], &temp[0x1000 + i * 0x2000], 0x800);
+			memcpy (&base[0x18000 + i * 0x800], &temp[0x1800 + i * 0x2000], 0x800);
 		}
+	}
 
-		if (temp) {
-			free (temp);
-			temp = NULL;
-		}
+	if (temp) {
+		free (temp);
+		temp = NULL;
+	}
 }
 
 
@@ -1334,14 +1333,14 @@ static INT32 DrvFrame()
 			nCyclesDone[0] += SekRun(segment - SekTotalCycles());
 		}
 
-		BurnTimerUpdateYM3812(i * (nCyclesTotal[1] / nInterleave));
+		BurnTimerUpdateYM3812((i + 1) * (nCyclesTotal[1] / nInterleave));
 
 		if (pTransDraw && i >= 16 && i < 240) {
 			DrawByLine(i - 16);
 		}
 
 		// when the line clears, the timer starts counting for the scroll regs to be written!
-		if (i == 250) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
+		if (i == nInterleave-1) SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 	}
 	
 	BurnTimerEndFrameYM3812(nCyclesTotal[1]);
@@ -1392,7 +1391,7 @@ static INT32 TokibFrame()
 		SekClose();
 
 		ZetOpen(0);
-		BurnTimerUpdateYM3812(i * (nCyclesToDo[1] / nInterleave));
+		BurnTimerUpdateYM3812((i + 1) * (nCyclesToDo[1] / nInterleave));
 		MSM5205Update();
 		ZetClose();
 	}

@@ -1,5 +1,8 @@
 // FB Alpha Super Kaneko Nova System driver module by iq_132, fixups by dink
 // Based on MAME driver by Sylvain Glaize and David Haywood
+//
+// notes: vblokbr/sarukani prefers 60hz w/the speedhack, or it gets stuck in testmode.
+//
 
 #include "tiles_generic.h"
 #include "ymz280b.h"
@@ -41,6 +44,7 @@ static UINT8 *DrvTmpFlagA2;
 static UINT8 *DrvTmpFlagB2;
 static UINT32 *DrvTmpDraw; // main drawing surface
 static UINT32 *pDrvTmpDraw;
+static UINT8 *olddepths;
 
 static struct {
 	UINT16 x1p, y1p, z1p, x1s, y1s, z1s;
@@ -65,6 +69,8 @@ static UINT32 DrvInputs[3];
 static INT32 DrvAnalogPort0 = 0;
 static INT32 DrvAnalogPort1 = 0;
 static UINT8 DrvReset;
+
+static INT32 sixtyhz = 0;
 
 static INT32 nGfxLen0 = 0;
 static INT32 nRedrawTiles = 0;
@@ -104,6 +110,7 @@ static struct BurnInputInfo VblokbrkInputList[] = {
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 14,	"service"},
 	{"Tilt",		BIT_DIGITAL,	DrvJoy1 + 13,	"tilt"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
 
 #undef A
@@ -135,6 +142,7 @@ static struct BurnInputInfo SknsInputList[] = {
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 14,	"service"},
 	{"Tilt",		BIT_DIGITAL,	DrvJoy1 + 13,	"tilt"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
 
 STDINPUTINFO(Skns)
@@ -158,10 +166,38 @@ static struct BurnDIPInfo SknsDIPList[]=
 
 	{0   , 0xfe, 0   ,    2, "Freeze"	},
 	{0x15, 0x01, 0x80, 0x00, "Freezes the game"},
-	{0x15, 0x01, 0x80, 0x80, "Right value"	},
+	{0x15, 0x01, 0x80, 0x80, "No"	},
+
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"},
+	{0x16, 0x01, 0x01, 0x00, "No"		},
+	{0x16, 0x01, 0x01, 0x01, "Yes"		},
 };
 
 STDDIPINFO(Skns)
+
+static struct BurnDIPInfo SknsNoSpeedhackDIPList[]=
+{
+	{0x15, 0xff, 0xff, 0xff, NULL		},
+	{0x16, 0xff, 0xff, 0x00, NULL		},
+
+	{0   , 0xfe, 0   ,    2, "Service Mode"	},
+	{0x15, 0x01, 0x01, 0x01, "Off"		},
+	{0x15, 0x01, 0x01, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Flip Screen"	},
+	{0x15, 0x01, 0x02, 0x02, "Off"		},
+	{0x15, 0x01, 0x02, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Use Backup Ram"},
+	{0x15, 0x01, 0x40, 0x00, "No"		},
+	{0x15, 0x01, 0x40, 0x40, "Yes"		},
+
+	{0   , 0xfe, 0   ,    2, "Freeze"	},
+	{0x15, 0x01, 0x80, 0x00, "Freezes the game"},
+	{0x15, 0x01, 0x80, 0x80, "No"	},
+};
+
+STDDIPINFO(SknsNoSpeedhack)
 
 static struct BurnDIPInfo VblokbrkDIPList[]=
 {
@@ -182,7 +218,11 @@ static struct BurnDIPInfo VblokbrkDIPList[]=
 
 	{0   , 0xfe, 0   ,    2, "Freeze"	},
 	{0x17, 0x01, 0x80, 0x00, "Freezes the game"},
-	{0x17, 0x01, 0x80, 0x80, "Right value"	},
+	{0x17, 0x01, 0x80, 0x80, "No"	},
+
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"},
+	{0x18, 0x01, 0x01, 0x00, "No"		},
+	{0x18, 0x01, 0x01, 0x01, "Yes"		},
 };
 
 STDDIPINFO(Vblokbrk)
@@ -210,6 +250,7 @@ static struct BurnInputInfo CyvernInputList[] = {
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 14,	"service"},
 	{"Tilt",		BIT_DIGITAL,	DrvJoy1 + 13,	"tilt"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
 
 STDINPUTINFO(Cyvern)
@@ -234,10 +275,38 @@ static struct BurnDIPInfo CyvernDIPList[]=
 
 	{0   , 0xfe, 0   ,    2, "Freeze"	},
 	{0x13, 0x01, 0x80, 0x00, "Freezes the game"},
-	{0x13, 0x01, 0x80, 0x80, "Right value"	},
+	{0x13, 0x01, 0x80, 0x80, "No"	},
+
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"},
+	{0x14, 0x01, 0x01, 0x00, "No"		},
+	{0x14, 0x01, 0x01, 0x01, "Yes"		},
 };
 
 STDDIPINFO(Cyvern)
+
+static struct BurnDIPInfo CyvernNoSpeedhackDIPList[]= // gals panic 4 (galpani4)
+{
+	{0x13, 0xff, 0xff, 0xff, NULL		},
+	{0x14, 0xff, 0xff, 0x00, NULL		},
+
+	{0   , 0xfe, 0   ,    2, "Service Mode" },
+	{0x13, 0x01, 0x01, 0x01, "Off"		},
+	{0x13, 0x01, 0x01, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Flip Screen"	},
+	{0x13, 0x01, 0x02, 0x02, "Off"		},
+	{0x13, 0x01, 0x02, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Use Backup Ram"},
+	{0x13, 0x01, 0x40, 0x00, "No"		},
+	{0x13, 0x01, 0x40, 0x40, "Yes"		},
+
+	{0   , 0xfe, 0   ,    2, "Freeze"	},
+	{0x13, 0x01, 0x80, 0x00, "Freezes the game"},
+	{0x13, 0x01, 0x80, 0x80, "No"	},
+};
+
+STDDIPINFO(CyvernNoSpeedhack)
 
 static void hit_calc_orig(UINT16 p, UINT16 s, UINT16 org, UINT16 *l, UINT16 *r)
 {
@@ -515,10 +584,11 @@ static UINT8 __fastcall suprnova_read_byte(UINT32 address)
 
 		case 0x00c00000:
 		case 0x00c00001:
-		case 0x00c00002:
+		case 0x00c00002:return 0;
 		case 0x00c00003:
 			return YMZ280BReadStatus();
 	}
+	bprintf(0, _T("rb %X. "), address);
 
 	return 0;
 }
@@ -561,6 +631,7 @@ static UINT16 __fastcall suprnova_read_word(UINT32 address)
 		case 0x0040000f:
 			return DrvInputs[2]; // 40000c
 	}
+	bprintf(0, _T("rw %X. "), address);
 
 	return 0;
 }
@@ -592,7 +663,6 @@ static UINT32 __fastcall suprnova_read_long(UINT32 address)
 	return 0;
 }
 
-
 static INT32 suprnova_alt_enable_sprites = 0;
 static INT32 bright_spc_g_trans = 0;
 static INT32 bright_spc_r_trans = 0;
@@ -604,8 +674,8 @@ static INT32 suprnova_alt_enable_background = 0;
 static INT32 bright_v3_g = 0;
 static INT32 bright_v3_r = 0;
 static INT32 bright_v3_b = 0;
-static INT32 use_spc_bright = 0;
-static INT32 use_v3_bright = 0;
+static INT32 use_spc_bright = 1;
+static INT32 use_v3_bright = 1;
 
 static void skns_pal_regs_w(UINT32 offset)
 {
@@ -618,37 +688,37 @@ static void skns_pal_regs_w(UINT32 offset)
 			use_spc_bright = data&1;
 			suprnova_alt_enable_sprites = (data>>8)&1;
 			break;
-	
+
 		case (0x04/4): // RWRA1
 			bright_spc_g = data&0xff;
 			bright_spc_g_trans = (data>>8) &0xff;
 			break;
-	
+
 		case (0x08/4): // RWRA2
 			bright_spc_r = data&0xff;
 			bright_spc_r_trans = (data>>8) &0xff;
 			break;
-	
+
 		case (0x0C/4): // RWRA3
 			bright_spc_b = data&0xff;
 			bright_spc_b_trans = (data>>8)&0xff;
 			break;
-	
+
 		case (0x10/4): // RWRB0
 			use_v3_bright = data&1;
 			suprnova_alt_enable_background = (data>>8)&1;
 			break;
-	
+
 		case (0x14/4): // RWRB1
 			bright_v3_g = data&0xff;
 		//	bright_v3_g_trans = (data>>8)&0xff;
 			break;
-	
+
 		case (0x18/4): // RWRB2
 			bright_v3_r = data&0xff;
 		//	bright_v3_r_trans = (data>>8)&0xff;
 			break;
-	
+
 		case (0x1C/4): // RWRB3
 			bright_v3_b = data&0xff;
 		//	bright_v3_b_trans = (data>>8)&0xff;
@@ -660,6 +730,11 @@ static inline void decode_graphics_ram(UINT32 offset)
 {
 	offset &= 0x3fffc;
 	UINT32 p = *((UINT32*)(DrvGfxRAM + offset));
+
+	if ( (DrvGfxROM2[offset + 0] == p >> 24) &&
+		 (DrvGfxROM2[offset + 1] == p >> 16) &&
+		 (DrvGfxROM2[offset + 2] == p >>  8) &&
+		 (DrvGfxROM2[offset + 3] == p >>  0) ) return;
 
 	nRedrawTiles = 1;
 
@@ -690,36 +765,36 @@ static void __fastcall suprnova_write_byte(UINT32 address, UINT8 data)
 			YMZ280BWriteRegister(data);
 		return;
 
-                case 0x01800000:
-              //  case 0x01800001:
-              //  case 0x01800002:
-              //  case 0x01800003:// sengeki writes here... puzzloop complains (security...)
-                    {
-                        hit.disconnect=1; /* hit2 stuff */
-                        switch (m_region) /* 0 Japan, 1 Europe, 2 Asia, 3 USA, 4 Korea */
-                        {
-                        case 0:
-                            if (data == 0) hit.disconnect= 0;
-                            break;
-                        case 3:
-                            if (data == 1) hit.disconnect= 0;
-                            break;
-                        case 4: // korea
-                            if (data == 2) hit.disconnect= 0;
-                            break;
-                        case 1:
-                            if (data == 3) hit.disconnect= 0;
-                            break;
-                        case 2:
-                            if (data < 2) hit.disconnect= 0;
-                            break;
-                            // unknown country id, unlock per default
-                        default:
-                            hit.disconnect= 0;
-                            break;
-                        }
-                    }
-		return;
+		case 0x01800000:
+			//  case 0x01800001:
+			//  case 0x01800002:
+			//  case 0x01800003:// sengeki writes here... puzzloop complains (security...)
+			{
+				hit.disconnect=1; /* hit2 stuff */
+				switch (m_region) /* 0 Japan, 1 Europe, 2 Asia, 3 USA, 4 Korea */
+				{
+					case 0:
+						if (data == 0) hit.disconnect= 0;
+						break;
+					case 3:
+						if (data == 1) hit.disconnect= 0;
+						break;
+                    case 4: // korea
+						if (data == 2) hit.disconnect= 0;
+						break;
+                    case 1:
+						if (data == 3) hit.disconnect= 0;
+						break;
+                    case 2:
+						if (data < 2) hit.disconnect= 0;
+						break;
+						// unknown country id, unlock per default
+                    default:
+						hit.disconnect= 0;
+						break;
+				}
+			}
+			return;
 	}
 
 	if ((address & 0xffffffe0) == 0x02a00000) {
@@ -734,7 +809,7 @@ static void __fastcall suprnova_write_byte(UINT32 address, UINT8 data)
 	// skns io -- not used
 	if ((address & ~0x0f) == 0x00400000) {
 		if ((Sh2GetPC(0) == 0x04013B42 + 2) && Vblokbrk) { // speedhack for Vblokbrk / Saru Kani
-			Sh2BurnUntilInt(0);
+			//Sh2BurnUntilInt(0); // this breaks sound in vblokbrk...
 		}
 		return;
 	}
@@ -782,10 +857,10 @@ static inline void suprnova_speedhack(UINT32 a)
 	UINT32 b  = a & ~3;
 	UINT32 pc = Sh2GetPC(0);
 
-        if (b == speedhack_address) {
-            if (pc == speedhack_pc[0]) {
-                Sh2BurnUntilInt(0);
-            }
+	if (b == speedhack_address) {
+		if (pc == speedhack_pc[0]) {
+			Sh2BurnUntilInt(0);
+		}
 	}
 }
 
@@ -793,7 +868,7 @@ static UINT32 __fastcall suprnova_hack_read_long(UINT32 a)
 {
 	suprnova_speedhack(a);
 
-        a &= 0xffffc;
+	a &= 0xffffc;
 
 	return *((UINT32*)(DrvSh2RAM + a));
 }
@@ -871,6 +946,8 @@ static INT32 MemIndex(INT32 gfxlen0)
 
 	DrvPalette		= (UINT32*)Next; Next += 0x10000 * sizeof(INT32);
 
+	olddepths       = Next; Next += 2 * sizeof(UINT8);
+
 	MemEnd			= Next;
 
 	return 0;
@@ -880,6 +957,7 @@ static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 	memset (DrvTmpScreenBuf, 0xff, 0x8000);
+	memset (&hit, 0, sizeof(hit));
 
 	Sh2Open(0);
 	if (Vblokbrk) {
@@ -895,9 +973,21 @@ static INT32 DrvDoReset()
 	YMZ280BReset();
 
 	hit.disconnect = (m_region != 2) ? 1 : 0;
+
+	suprnova_alt_enable_sprites = 0;
+	bright_spc_g_trans = bright_spc_r_trans = bright_spc_b_trans = 0;
+	bright_spc_g = bright_spc_r = bright_spc_b = 0;
+	//suprnova_alt_enable_background = 0; set in init, and by game
+	bright_v3_g = bright_v3_r = bright_v3_b = 0;
+	use_spc_bright = 1;
+	use_v3_bright = 1;
+
 	nRedrawTiles = 1;
+	olddepths[0] = olddepths[1] = 0xff;
 
 	HiscoreReset();
+
+	sh2_suprnova_speedhack = (DrvDips[1] & 1);
 
  	return 0;
 }
@@ -993,12 +1083,6 @@ static INT32 DrvInit(INT32 bios)
 	Sh2Init(1);
 	Sh2Open(0);
 
-#if defined USE_SPEEDHACKS
-#ifdef __LIBRETRO__
-	if(sh2speedhack) cps3speedhack = 1;
-#endif
-#endif
-
 	Sh2MapMemory(DrvSh2BIOS,		0x00000000, 0x0007ffff, MAP_ROM);
 	Sh2MapMemory(DrvNvRAM,			0x00800000, 0x00801fff, MAP_RAM);
 	Sh2MapMemory(DrvSprRAM,			0x02000000, 0x02003fff, MAP_RAM);
@@ -1025,7 +1109,12 @@ static INT32 DrvInit(INT32 bios)
 	Sh2SetReadWordHandler (1,		suprnova_hack_read_word);
 	Sh2SetReadLongHandler (1,		suprnova_hack_read_long);
 
-	//BurnSetRefreshRate(59.5971); do not use - causes skips in music
+	if (!strncmp(BurnDrvGetTextA(DRV_NAME), "galpanis", 8)) {
+		bprintf(0, _T("Note (soundfix): switching Busy Loop Speedhack to mode #2 for galpanis*.\n"));
+		sh2_busyloop_speedhack_mode2 = 1;
+	}
+
+	if (!sixtyhz) BurnSetRefreshRate(59.5971);
 
 	YMZ280BInit(16666666, NULL);
 
@@ -1054,6 +1143,9 @@ static INT32 DrvExit()
 
 	suprnova_alt_enable_background = 0;
 	Vblokbrk = 0;
+	nGfxLen0 = 0;
+
+	sixtyhz = 0;
 
 	speedhack_address = ~0;
 	memset (speedhack_pc, 0, 2 * sizeof(INT32));
@@ -1061,21 +1153,32 @@ static INT32 DrvExit()
 	return 0;
 }
 
-
 static void draw_layer(UINT8 *source, UINT8 *previous, UINT16 *dest, UINT8 *prid, UINT8 *gfxbase, INT32 layer)
 {
 	UINT32 *prev = (UINT32*)previous;
 	UINT32 *vram = (UINT32*)source;
 
+	UINT8 depthchanged[2] = { 0, 0 };
 	UINT32 depth = *((UINT32*)(DrvV3Regs + 0x0c));
 	if (layer) depth >>= 8;
 	depth &= 1;
 
+	if (depth != olddepths[layer]) {
+		depthchanged[layer] = 1;
+		olddepths[layer] = depth;
+	}
+
 	for (INT32 offs = 0; offs < 64 * 64; offs++)
 	{
-	//	speed hack
-		if (!nRedrawTiles && vram[offs] == prev[offs]) {
-			continue;
+		// dirty tile speed hack. nRedrawTiles true if ram-based graphics changed.
+		if (layer == 1) {
+			if (!depthchanged[layer] && !nRedrawTiles && vram[offs] == prev[offs]) {
+				continue;
+			}
+		} else {
+			if (!depthchanged[layer] && vram[offs] == prev[offs]) {
+				continue;
+			}
 		}
 		prev[offs] = vram[offs];
 
@@ -1295,7 +1398,7 @@ static void supernova_draw(INT32 *offs, UINT16 *bitmap, UINT8 *flags, UINT16 *db
 			incxx=1<<8;
 		}
 
-		suprnova_draw_roz(bitmap,flags,dbitmap,dflags,startx << 8,starty << 8,	incxx << 8,incxy << 8,incyx << 8,incyy << 8, !nowrap, columnscroll, &line[offs[8]]);
+		if (nBurnLayer & (layer+1)) suprnova_draw_roz(bitmap,flags,dbitmap,dflags,startx << 8,starty << 8,	incxx << 8,incxy << 8,incyx << 8,incyy << 8, !nowrap, columnscroll, &line[offs[8]]);
 	}
 }
 
@@ -1339,7 +1442,7 @@ static void DrvRecalcPalette()
 }
 
 
-static void copy_layers()
+static void render_and_copy_layers()
 {
 	UINT32 *vreg = (UINT32*)DrvV3Regs;
 
@@ -1349,11 +1452,8 @@ static void copy_layers()
 	};
 
 	{
-		INT32 supernova_pri_a;
-		INT32 supernova_pri_b;
-
-		supernova_pri_a = (vreg[0x10/4] & 0x0002)>>1;
-		supernova_pri_b = (vreg[0x34/4] & 0x0002)>>1;
+		INT32 supernova_pri_a = (vreg[0x10/4] & 0x0002)>>1;
+		INT32 supernova_pri_b = (vreg[0x34/4] & 0x0002)>>1;
 
 		supernova_draw(offs[1], DrvTmpScreenB, DrvTmpFlagB, DrvTmpScreenB2, DrvTmpFlagB2, 1);
 		supernova_draw(offs[0], DrvTmpScreenA, DrvTmpFlagA, DrvTmpScreenA2, DrvTmpFlagA2, 0);
@@ -1397,17 +1497,17 @@ static void copy_layers()
 					{
 						if (pendata2&0xff)
 						{
-							bgpendata = pendata2;
+							bgpendata = pendata2&0x7fff;
 							bgpri = pri2;
 						}
 						else if (pendata&0xff)
 						{
-							bgpendata = pendata;
+							bgpendata = pendata&0x7fff;
 							bgpri = pri;
 						}
 						else
 						{
-							bgpendata = pendata2;
+							bgpendata = pendata2&0x7fff;
 							bgpri = 0;
 						}
 					}
@@ -1415,12 +1515,12 @@ static void copy_layers()
 					{
 						if (pendata&0xff)
 						{
-							bgpendata = pendata;
+							bgpendata = pendata&0x7fff;
 							bgpri = pri;
 						}
 						else if (pendata2&0xff)
 						{
-							bgpendata = pendata2;
+							bgpendata = pendata2&0x7fff;
 							bgpri = pri2;
 						}
 						else
@@ -1500,7 +1600,7 @@ static INT32 DrvDraw()
 {
 	DrvRecalcPalette();
 
-	if (nBurnBpp == 4) {
+	if (nBurnBpp == 4) { // 32bpp rendered directly
 		DrvTmpDraw = (UINT32*)pBurnDraw;
 	} else {
 		DrvTmpDraw = pDrvTmpDraw;
@@ -1508,17 +1608,18 @@ static INT32 DrvDraw()
 
 	memset (DrvTmpScreenA2, 0, nScreenWidth * nScreenHeight * 2);
 	memset (DrvTmpScreenB2, 0, nScreenWidth * nScreenHeight * 2);
-	if (nRedrawTiles) {
-		memset(DrvTmpScreenA, 0, 1024 * 1024 * sizeof(INT16));
-		memset(DrvTmpScreenB, 0, 1024 * 1024 * sizeof(INT16));
-	}
-	copy_layers();
-	memset (DrvTmpScreenC,  0, nScreenWidth * nScreenHeight * 2);
-	if (nBurnLayer & 4) skns_draw_sprites(DrvTmpScreenC, (UINT32*)DrvSprRAM, 0x4000, DrvGfxROM0, nGfxLen0, (UINT32*)DrvSprRegs, 0);
 
-	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
+	render_and_copy_layers();
+
+	// mix sprites next frame (necessary 1frame sprite lag)
+	memset (DrvTmpScreenC,  0, nScreenWidth * nScreenHeight * 2);
+	if (nSpriteEnable & 1) skns_draw_sprites(DrvTmpScreenC, (UINT32*)DrvSprRAM, 0x4000, DrvGfxROM0, nGfxLen0, (UINT32*)DrvSprRegs, 0);
+
+	if (nBurnBpp != 4) {
+		for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
 			INT32 d = DrvTmpDraw[i];
 			PutPix(pBurnDraw + i * nBurnBpp, BurnHighCol(d>>16, d>>8, d, 0));
+		}
 	}
 
 	nRedrawTiles = 0;
@@ -1561,36 +1662,26 @@ static INT32 DrvFrame()
 		DrvInputs[2] = 0xffffffff;
 	}
 
-	INT32 nTotalCycles = 28638000 / 60;
+	UINT32 nTotalCycles = (sixtyhz) ? (28638000 / 60) : (INT32)(28638000 / 59.5971);
+	INT32 nCyclesDone = 0;
 	INT32 nInterleave = 262;
 
 	for (INT32 i = 0; i < nInterleave; i++) {
-		INT32 segment = nTotalCycles / nInterleave;
-
-		Sh2Run(segment);
+		//Sh2Run(nTotalCycles / nInterleave);
+		nCyclesDone += Sh2Run(((i + 1) * nTotalCycles / nInterleave) - nCyclesDone);
 
 		if (i == 1) {
-			Sh2SetIRQLine(1, CPU_IRQSTATUS_ACK);
-			Sh2Run(0);
-			Sh2SetIRQLine(1, CPU_IRQSTATUS_NONE);
+			Sh2SetIRQLine(1, CPU_IRQSTATUS_AUTO);
 		} else if (i == 240) {
-			Sh2SetIRQLine(5, CPU_IRQSTATUS_ACK);
-			Sh2Run(0);
-			Sh2SetIRQLine(5, CPU_IRQSTATUS_NONE);
+			Sh2SetIRQLine(5, CPU_IRQSTATUS_AUTO);
 		}
 		{ // fire irq9 every interleave iteration.
-			Sh2SetIRQLine(9, CPU_IRQSTATUS_ACK);
-			Sh2Run(0);
-			Sh2SetIRQLine(9, CPU_IRQSTATUS_NONE);
+			Sh2SetIRQLine(9, CPU_IRQSTATUS_AUTO);
 			if (i%125==0 && i!=0) { //125 = every 8 ms (per 261 interleave)
-				Sh2SetIRQLine(11, CPU_IRQSTATUS_ACK);
-				Sh2Run(0);
-				Sh2SetIRQLine(11, CPU_IRQSTATUS_NONE);
+				Sh2SetIRQLine(11, CPU_IRQSTATUS_AUTO);
 			}
 			if (i%31==0 && i!=0) { //31=every 2 ms
-				Sh2SetIRQLine(15, CPU_IRQSTATUS_ACK);
-				Sh2Run(0);
-				Sh2SetIRQLine(15, CPU_IRQSTATUS_NONE);
+				Sh2SetIRQLine(15, CPU_IRQSTATUS_AUTO);
 			}
 		}
 	}
@@ -1632,6 +1723,21 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		Sh2Scan(nAction);
 		YMZ280BScan();
+
+		SCAN_VAR(hit);
+		SCAN_VAR(suprnova_alt_enable_sprites);
+		SCAN_VAR(bright_spc_g_trans);
+		SCAN_VAR(bright_spc_r_trans);
+		SCAN_VAR(bright_spc_b_trans);
+		SCAN_VAR(bright_spc_g);
+		SCAN_VAR(bright_spc_r);
+		SCAN_VAR(bright_spc_b);
+		SCAN_VAR(suprnova_alt_enable_background);
+		SCAN_VAR(bright_v3_g);
+		SCAN_VAR(bright_v3_r);
+		SCAN_VAR(bright_v3_b);
+		SCAN_VAR(use_spc_bright);
+		SCAN_VAR(use_v3_bright);
 	}
 
 	if (nAction & ACB_NVRAM) {
@@ -1644,6 +1750,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 	if (nAction & ACB_WRITE) {
 		nRedrawTiles = 1;
+		olddepths[0] = olddepths[1] = 0xff;
 	}
 
 	return 0;
@@ -1830,6 +1937,7 @@ static INT32 SengekisInit()
 
 	speedhack_address = 0x60b74bc;
 	speedhack_pc[0] = 0x60006ec + 2;
+	sixtyhz = 1;
 
 	return DrvInit(2 /*asia*/);
 }
@@ -1873,6 +1981,7 @@ static INT32 SengekisjInit()
 
 	speedhack_address = 0x60b7380;
 	speedhack_pc[0] = 0x60006ec + 2;
+	sixtyhz = 1;
 
 	return DrvInit(0 /*japan*/);
 }
@@ -2227,7 +2336,7 @@ struct BurnDriver BurnDrvGalpani4 = {
 	"Gals Panic 4 (Japan)\0", NULL, "Kaneko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_PUZZLE, 0,
-	NULL, galpani4RomInfo, galpani4RomName, NULL, NULL, SknsInputInfo, SknsDIPInfo, //CyvernInputInfo, CyvernDIPInfo,
+	NULL, galpani4RomInfo, galpani4RomName, NULL, NULL, CyvernInputInfo, CyvernNoSpeedhackDIPInfo,
 	Galpani4Init, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
@@ -2265,7 +2374,7 @@ struct BurnDriver BurnDrvGalpani4k = {
 	"Gals Panic 4 (Korea)\0", NULL, "Kaneko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_PUZZLE, 0,
-	NULL, galpani4kRomInfo, galpani4kRomName, NULL, NULL, CyvernInputInfo, CyvernDIPInfo,
+	NULL, galpani4kRomInfo, galpani4kRomName, NULL, NULL, CyvernInputInfo, CyvernNoSpeedhackDIPInfo,
 	Galpani4kInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
@@ -2303,7 +2412,7 @@ struct BurnDriver BurnDrvGalpanis = {
 	"Gals Panic S - Extra Edition (Europe)\0", NULL, "Kaneko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_PUZZLE, 0,
-	NULL, galpanisRomInfo, galpanisRomName, NULL, NULL, SknsInputInfo, SknsDIPInfo, //GalpanisInputInfo, GalpanisDIPInfo,
+	NULL, galpanisRomInfo, galpanisRomName, NULL, NULL, SknsInputInfo, SknsNoSpeedhackDIPInfo,
 	GalpanisInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
@@ -2341,7 +2450,7 @@ struct BurnDriver BurnDrvGalpanisj = {
 	"Gals Panic S - Extra Edition (Japan)\0", NULL, "Kaneko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_PUZZLE, 0,
-	NULL, galpanisjRomInfo, galpanisjRomName, NULL, NULL, SknsInputInfo, SknsDIPInfo, //GalpanisInputInfo, GalpanisDIPInfo,
+	NULL, galpanisjRomInfo, galpanisjRomName, NULL, NULL, SknsInputInfo, SknsNoSpeedhackDIPInfo,
 	GalpanisjInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
@@ -2379,17 +2488,18 @@ struct BurnDriver BurnDrvGalpanisk = {
 	"Gals Panic S - Extra Edition (Korea)\0", NULL, "Kaneko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_PUZZLE, 0,
-	NULL, galpaniskRomInfo, galpaniskRomName, NULL, NULL, SknsInputInfo, SknsDIPInfo, //GalpanisInputInfo, GalpanisDIPInfo,
+	NULL, galpaniskRomInfo, galpaniskRomName, NULL, NULL, SknsInputInfo, SknsNoSpeedhackDIPInfo,
 	GalpaniskInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
 
 
-// Gals Panic S2 (Japan)
+// Gals Panic S2 (Europe)
+// only the 2 program ROMs were dumped, but mask ROMs are supposed to match.
 
 static struct BurnRomInfo galpans2RomDesc[] = {
-	{ "gps2j.u6",		0x100000, 0x6e74005b, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
-	{ "gps2j.u4",		0x100000, 0x9b4b2304, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "GPS2E_U6__Ver.3.u6",		0x100000, 0x72fff5d1, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
+	{ "GPS2E_U4__Ver.3.u4",		0x100000, 0x95061601, 1 | BRF_PRG | BRF_ESS }, //  1
 
 	{ "gs210000.u21",	0x400000, 0x294b2f14, 2 | BRF_GRA },           //  2 Sprites
 	{ "gs210100.u20",	0x400000, 0xf75c5a9a, 2 | BRF_GRA },           //  3
@@ -2415,16 +2525,60 @@ static INT32 Galpans2Init()
 	speedhack_address = 0x60fb6bc;
 	speedhack_pc[0] = 0x4049ae2 + 2;
 
-	return DrvInit(0 /*Japan*/);
+	return DrvInit(1 /*Europe*/);
 }
 
 struct BurnDriver BurnDrvGalpans2 = {
 	"galpans2", NULL, "skns", NULL, "1999",
-	"Gals Panic S2 (Japan)\0", NULL, "Kaneko", "Miscellaneous",
+	"Gals Panic S2 (Europe)\0", NULL, "Kaneko", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_PUZZLE, 0,
 	NULL, galpans2RomInfo, galpans2RomName, NULL, NULL, SknsInputInfo, SknsDIPInfo, //GalpanisInputInfo, GalpanisDIPInfo,
 	Galpans2Init, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
+	320, 240, 4, 3
+};
+
+
+// Gals Panic S2 (Japan)
+
+static struct BurnRomInfo galpans2jRomDesc[] = {
+	{ "gps2j.u6",		0x100000, 0x6e74005b, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
+	{ "gps2j.u4",		0x100000, 0x9b4b2304, 1 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "gs210000.u21",	0x400000, 0x294b2f14, 2 | BRF_GRA },           //  2 Sprites
+	{ "gs210100.u20",	0x400000, 0xf75c5a9a, 2 | BRF_GRA },           //  3
+	{ "gs210200.u8",	0x400000, 0x25b4f56b, 2 | BRF_GRA },           //  4
+	{ "gs210300.u32",	0x400000, 0xdb6d4424, 2 | BRF_GRA },           //  5
+
+	{ "gs220000.u17",	0x400000, 0x5caae1c0, 3 | BRF_GRA },           //  6 Background Tiles
+	{ "gs220100.u9",	0x400000, 0x8d51f197, 3 | BRF_GRA },           //  7
+
+	{ "gs221000.u3",	0x400000, 0x58800a18, 4 | BRF_GRA },           //  8 Foreground Tiles
+
+	{ "gs230000.u1",	0x400000, 0x0348e8e1, 5 | BRF_SND },           //  9 YMZ280b Samples
+};
+
+STDROMPICKEXT(galpans2j, galpans2j, skns)
+STD_ROM_FN(galpans2j)
+
+static INT32 Galpans2jInit()
+{
+	sprite_kludge_x = -1;
+	sprite_kludge_y = -1;
+
+	speedhack_address = 0x60fb6bc;
+	speedhack_pc[0] = 0x4049ae2 + 2;
+
+	return DrvInit(0 /*Japan*/);
+}
+
+struct BurnDriver BurnDrvGalpans2j = {
+	"galpans2j", "galpans2", "skns", NULL, "1999",
+	"Gals Panic S2 (Japan)\0", NULL, "Kaneko", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_PUZZLE, 0,
+	NULL, galpans2jRomInfo, galpans2jRomName, NULL, NULL, SknsInputInfo, SknsDIPInfo, //GalpanisInputInfo, GalpanisDIPInfo,
+	Galpans2jInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
 
@@ -2720,18 +2874,18 @@ struct BurnDriver BurnDrvRyouran = {
 };
 
 
-// VS Block Breaker (Asia)
+// VS Block Breaker (Europe)
 
 static struct BurnRomInfo vblokbrkRomDesc[] = {
-	{ "sk01a.u10",		0x080000, 0x4d1be53e, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
-	{ "sk01a.u8",		0x080000, 0x461e0197, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "sk000e2-e.u10",	0x080000, 0x5a278f10, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
+	{ "sk000e-o.u8",	0x080000, 0xaecf0647, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "sk100-00.u24",	0x200000, 0x151dd88a, 2 | BRF_GRA },           //  2 Sprites
+	{ "sk-100-00.u24",	0x200000, 0x151dd88a, 2 | BRF_GRA },           //  2 Sprites
 	{ "sk-101.u20",		0x100000, 0x779cce23, 2 | BRF_GRA },           //  3
 
-	{ "sk200-00.u16",	0x200000, 0x2e297c61, 3 | BRF_GRA },           //  4 Background Tiles
+	{ "sk-200-00.u16",	0x200000, 0x2e297c61, 3 | BRF_GRA },           //  4 Background Tiles
 
-	{ "sk300-00.u4",	0x200000, 0xe6535c05, 5 | BRF_SND },           //  5 YMZ280b Samples
+	{ "sk-300-00.u4",	0x200000, 0xe6535c05, 5 | BRF_SND },           //  5 YMZ280b Samples
 };
 
 STDROMPICKEXT(vblokbrk, vblokbrk, skns)
@@ -2743,17 +2897,57 @@ static INT32 VblokbrkInit()
 	sprite_kludge_y = -1;
 	suprnova_alt_enable_background = 1;
 	Vblokbrk = 1;
+	sixtyhz = 1;
 
-	return DrvInit(2 /*Asia*/);
+	return DrvInit(1 /*Europe*/);
 }
 
 struct BurnDriver BurnDrvVblokbrk = {
 	"vblokbrk", NULL, "skns", NULL, "1997",
-	"VS Block Breaker (Asia)\0", NULL, "Kaneko / Mediaworks", "Miscellaneous",
+	"VS Block Breaker (Europe)\0", NULL, "Kaneko / Mediaworks", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_BALLPADDLE, 0,
 	NULL, vblokbrkRomInfo, vblokbrkRomName, NULL, NULL, VblokbrkInputInfo, VblokbrkDIPInfo,
 	VblokbrkInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
+	320, 240, 4, 3
+};
+
+
+// VS Block Breaker (Asia)
+
+static struct BurnRomInfo vblokbrkaRomDesc[] = {
+	{ "sk01a.u10",		0x080000, 0x4d1be53e, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
+	{ "sk01a.u8",		0x080000, 0x461e0197, 1 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "sk-100-00.u24",	0x200000, 0x151dd88a, 2 | BRF_GRA },           //  2 Sprites
+	{ "sk-101.u20",		0x100000, 0x779cce23, 2 | BRF_GRA },           //  3
+
+	{ "sk-200-00.u16",	0x200000, 0x2e297c61, 3 | BRF_GRA },           //  4 Background Tiles
+
+	{ "sk-300-00.u4",	0x200000, 0xe6535c05, 5 | BRF_SND },           //  5 YMZ280b Samples
+};
+
+STDROMPICKEXT(vblokbrka, vblokbrka, skns)
+STD_ROM_FN(vblokbrka)
+
+static INT32 VblokbrkaInit()
+{
+	sprite_kludge_x = -1;
+	sprite_kludge_y = -1;
+	suprnova_alt_enable_background = 1;
+	Vblokbrk = 1;
+	sixtyhz = 1;
+
+	return DrvInit(2 /*Asia*/);
+}
+
+struct BurnDriver BurnDrvVblokbrka = {
+	"vblokbrka", "vblokbrk", "skns", NULL, "1997",
+	"VS Block Breaker (Asia)\0", NULL, "Kaneko / Mediaworks", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KANEKO_SKNS, GBF_BALLPADDLE, 0,
+	NULL, vblokbrkaRomInfo, vblokbrkaRomName, NULL, NULL, VblokbrkInputInfo, VblokbrkDIPInfo,
+	VblokbrkaInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x8000,
 	320, 240, 4, 3
 };
 
@@ -2764,12 +2958,12 @@ static struct BurnRomInfo sarukaniRomDesc[] = {
 	{ "sk1j1.u10",		0x080000, 0xfcc131b6, 1 | BRF_PRG | BRF_ESS }, //  0 SH2 Code
 	{ "sk1j1.u8",		0x080000, 0x3b6aa343, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "sk100-00.u24",	0x200000, 0x151dd88a, 2 | BRF_GRA },           //  2 Sprites
+	{ "sk-100-00.u24",	0x200000, 0x151dd88a, 2 | BRF_GRA },           //  2 Sprites
 	{ "sk-101.u20",		0x100000, 0x779cce23, 2 | BRF_GRA },           //  3
 
-	{ "sk200-00.u16",	0x200000, 0x2e297c61, 3 | BRF_GRA },           //  4 Background Tiles
+	{ "sk-200-00.u16",	0x200000, 0x2e297c61, 3 | BRF_GRA },           //  4 Background Tiles
 
-	{ "sk300-00.u4",	0x200000, 0xe6535c05, 5 | BRF_SND },           //  5 YMZ280b Samples
+	{ "sk-300-00.u4",	0x200000, 0xe6535c05, 5 | BRF_SND },           //  5 YMZ280b Samples
 };
 
 STDROMPICKEXT(sarukani, sarukani, skns)
@@ -2781,6 +2975,7 @@ static INT32 SarukaniInit()
 	sprite_kludge_y = -1;
 	suprnova_alt_enable_background = 1;
 	Vblokbrk = 1;
+	sixtyhz = 1;
 
 	return DrvInit(0 /*Japan*/);
 }

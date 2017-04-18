@@ -1,4 +1,5 @@
 // PC080SN & PC090OJ based games
+// Based on MAME drivers by Bryan McPhail, Nicola Salmoria, Jarek Burczynski, and David Graves
 
 #include "tiles_generic.h"
 #include "m68000_intf.h"
@@ -9,6 +10,7 @@
 #include "burn_ym2151.h"
 #include "burn_ym2203.h"
 #include "burn_gun.h"
+#include "burn_shift.h"
 
 static UINT32 RastanADPCMPos;
 static INT32 RastanADPCMData;
@@ -24,6 +26,7 @@ static INT32 OpwolfADPCMData[2];
 static INT32 OpWolfGunXOffset;
 static INT32 OpWolfGunYOffset;
 static INT32 bUseGuns = 0;
+static INT32 bUseShifter = 0;
 
 static UINT8 DariusADPCMCommand;
 static INT32 DariusNmiEnable;
@@ -40,7 +43,6 @@ static UINT16 VolfiedVidMask;
 
 static INT32 RainbowCChipVer = 0;
 
-static UINT8 gearshifter; // Topspeed & clones
 static UINT8 z80ctc_load;
 static INT32 z80ctc_constant;
 static INT32 z80ctc_ctr;
@@ -94,10 +96,10 @@ static struct BurnInputInfo OpwolfInputList[] =
 	{"Start 1"           , BIT_DIGITAL   , TaitoInputPort1 + 4, "p1 start"       },
 	{"Coin 2"            , BIT_DIGITAL   , TaitoInputPort0 + 1, "p2 coin"        },
 
-	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0  , "p1 x-axis"   ),
-	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1  , "p1 y-axis"   ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , TaitoInputPort1 + 0, "p1 fire 1" },
-	{"P1 Fire 2"         , BIT_DIGITAL   , TaitoInputPort1 + 1, "p1 fire 2" },
+	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0  , "p1 x-axis"      ),
+	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1  , "p1 y-axis"      ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , TaitoInputPort1 + 0, "p1 fire 1"      },
+	{"P1 Fire 2"         , BIT_DIGITAL   , TaitoInputPort1 + 1, "p1 fire 2"      },
 	
 	{"Reset"             , BIT_DIGITAL   , &TaitoReset        , "reset"          },
 	{"Service"           , BIT_DIGITAL   , TaitoInputPort1 + 2, "service"        },
@@ -444,20 +446,6 @@ static void RastanMakeInputs()
 	if (TaitoInputPort3[7]) TaitoInput[3] |= 0x80;
 }
 
-static UINT8 shift_update(UINT8 shifter_input) // topspeed
-{
-	{ // gear shifter stuff
-		static UINT8 prevshift = 0;
-
-		if (prevshift != shifter_input && shifter_input) {
-			gearshifter = !gearshifter;
-		}
-
-		prevshift = shifter_input;
-	}
-	return (gearshifter) ? 0x00 : 0x10;
-}
-
 static void TopspeedMakeInputs()
 {
 	// Reset Inputs
@@ -479,7 +467,9 @@ static void TopspeedMakeInputs()
 	if (TC0220IOCInputPort1[2]) TC0220IOCInput[1] -= 0x04;
 	if (TC0220IOCInputPort1[3]) TC0220IOCInput[1] -= 0x08;
 //	if (TC0220IOCInputPort1[4]) TC0220IOCInput[1] |= 0x10;
-	TC0220IOCInput[1] |= shift_update(TC0220IOCInputPort1[4]);
+
+	BurnShiftInputCheckToggle(TC0220IOCInputPort1[4]);
+	TC0220IOCInput[1] |= ((bBurnShiftStatus) ? 0x00 : 0x10);
 	if (TC0220IOCInputPort1[5]) TC0220IOCInput[1] |= 0x20;
 	if (TC0220IOCInputPort1[6]) TC0220IOCInput[1] |= 0x40;
 	if (TC0220IOCInputPort1[7]) TC0220IOCInput[1] |= 0x80;
@@ -1994,6 +1984,33 @@ static struct BurnRomInfo RastanaRomDesc[] = {
 STD_ROM_PICK(Rastana)
 STD_ROM_FN(Rastana)
 
+static struct BurnRomInfo RastanbRomDesc[] = {
+	{ "b04-14.19",   0x10000, 0xa38ac909, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP }, /* These two are from the US rastanub set below */
+	{ "b04-21.7",    0x10000, 0x7c8dde9a, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP }, /* These two are from the US rastanub set below */
+	{ "b04-27.20",   0x10000, 0xce37694b, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
+	{ "b04-26.8",    0x10000, 0xfbdb98c7, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
+	{ "b04-29.21",   0x10000, 0x90d7c6e8, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
+	{ "b04-28.9",    0x10000, 0xd6440242, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
+
+	{ "b04-19.49",   0x10000, 0xee81fdd8, BRF_ESS | BRF_PRG | TAITO_Z80ROM1 },
+
+	{ "b04-01.40",   0x20000, 0xcd30de19, BRF_GRA | TAITO_CHARS },
+	{ "b04-03.39",   0x20000, 0xab67e064, BRF_GRA | TAITO_CHARS },
+	{ "b04-02.67",   0x20000, 0x54040fec, BRF_GRA | TAITO_CHARS },
+	{ "b04-04.66",   0x20000, 0x94737e93, BRF_GRA | TAITO_CHARS },
+
+	{ "b04-05.15",   0x20000, 0xc22d94ac, BRF_GRA | TAITO_SPRITESA },
+	{ "b04-07.14",   0x20000, 0xb5632a51, BRF_GRA | TAITO_SPRITESA },
+	{ "b04-06.28",   0x20000, 0x002ccf39, BRF_GRA | TAITO_SPRITESA },
+	{ "b04-08.27",   0x20000, 0xfeafca05, BRF_GRA | TAITO_SPRITESA },
+
+	{ "b04-20.76",   0x10000, 0xfd1a34cc, BRF_SND | TAITO_MSM5205 },
+};
+
+STD_ROM_PICK(Rastanb)
+STD_ROM_FN(Rastanb)
+
+
 static struct BurnRomInfo RastanuRomDesc[] = {
 	{ "b04-38.19",   0x10000, 0x1c91dbb1, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
 	{ "b04-37.7",    0x10000, 0xecf20bdd, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
@@ -2353,7 +2370,7 @@ static int MemIndex()
 
 	Taito68KRam1                        = Next; Next += 0x018000;
 	TaitoZ80Ram1                        = Next; Next += 0x001000;
-	if (TaitoNumZ80s == 2) TaitoZ80Ram2 = Next; Next += 0x000800;
+	if (TaitoNumZ80s == 2) { TaitoZ80Ram2 = Next; Next += 0x000800; }
 	TaitoPaletteRam                     = Next; Next += 0x004000;
 	TaitoSpriteRam                      = Next; Next += 0x00f000;
 	TaitoSharedRam                      = Next; Next += 0x010000;
@@ -2474,6 +2491,8 @@ static void z80ctc_reset();
 static INT32 TopspeedDoReset()
 {
 	TaitoDoReset();
+
+	BurnShiftReset();
 
 	z80ctc_reset();
 	RastanADPCMPos = 0;
@@ -4302,7 +4321,7 @@ static void RastanMSM5205Vck()
 	}
 }
 
-static void TopspeedBankSwitch(UINT32 port, UINT32 Data)
+static void TopspeedBankSwitch(UINT32 /*port*/, UINT32 Data)
 {
 	if (ZetGetActive() == -1) return;
 	Data &= 3;
@@ -5211,7 +5230,10 @@ static INT32 TopspeedInit()
 	nTaitoCyclesTotal[0] = 8000000 / 60;
 	nTaitoCyclesTotal[1] = 8000000 / 60;
 	nTaitoCyclesTotal[2] = 4000000 / 60;
-	
+
+	BurnShiftInitDefault();
+	bUseShifter = 1;
+
 	pTopspeedTempDraw = (UINT16*)BurnMalloc(512 * 512 * sizeof(UINT16));
 
 	// Reset the driver
@@ -5330,7 +5352,10 @@ static INT32 TaitoMiscExit()
 	
 	RainbowCChipVer = 0;
 	bUseGuns = 0;
-	
+	if (bUseShifter)
+		BurnShiftExit();
+	bUseShifter = 0;
+
 	BurnFree(pTopspeedTempDraw);
 	
 	return TaitoExit();
@@ -5677,7 +5702,7 @@ static void RenderSpriteZoom(INT32 Code, INT32 sx, INT32 sy, INT32 Colour, INT32
 	}
 }
 
-static void TopspeedDrawSprites(INT32 PriorityDraw)
+static void TopspeedDrawSprites(INT32 /*PriorityDraw*/)
 {
 	UINT16 *SpriteRam = (UINT16*)TaitoSpriteRam;
 	INT32 Offset, MapOffset, x, y, xCur, yCur, SpriteChunk;
@@ -5811,6 +5836,8 @@ static void TopspeedDraw()
 	if (nSpriteEnable & 2) TopspeedDrawSprites(0);
 	if (nBurnLayer & 8) PC080SNDrawBgLayerPrio(0, 0, TaitoChars, pTransDraw, DrvPriBmp, 8);
 	BurnTransferCopy(TaitoPalette);
+
+	BurnShiftRender();
 }
 
 static void VolfiedDraw()
@@ -6150,6 +6177,7 @@ static INT32 TaitoMiscScan(INT32 nAction, INT32 *pnMin)
 		if (TaitoNumMSM5205) MSM5205Scan(nAction, pnMin);
 		
 		if (bUseGuns) BurnGunScan();
+		if (bUseShifter) BurnShiftScan(nAction);
 				
 		SCAN_VAR(TaitoInput);
 		SCAN_VAR(TaitoAnalogPort0);
@@ -6173,7 +6201,6 @@ static INT32 TaitoMiscScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(DariusNmiEnable);
 		SCAN_VAR(DariusCoinWord);
 		SCAN_VAR(PC090OJSpriteCtrl);	// for jumping
-		SCAN_VAR(gearshifter);
 		z80ctc_scan();
 	}
 	
@@ -6363,6 +6390,16 @@ struct BurnDriver BurnDrvRastana = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, RastanaRomInfo, RastanaRomName, NULL, NULL, RastanInputInfo, RastanDIPInfo,
+	RastanInit, TaitoMiscExit, TaitoMiscFrame, NULL, TaitoMiscScan,
+	NULL, 0x2000, 320, 240, 4, 3
+};
+
+struct BurnDriver BurnDrvRastanb = {
+	"rastanb", "rastan", NULL, NULL, "1987",
+	"Rastan (World, Earlier code base)\0", NULL, "Taito Corporation Japan", "Taito Misc",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
+	NULL, RastanbRomInfo, RastanbRomName, NULL, NULL, RastanInputInfo, RastanDIPInfo,
 	RastanInit, TaitoMiscExit, TaitoMiscFrame, NULL, TaitoMiscScan,
 	NULL, 0x2000, 320, 240, 4, 3
 };

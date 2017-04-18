@@ -53,10 +53,10 @@ struct VezContext {
 	void (*runend)();
 	void (*idle)(INT32);
 
-	UINT8 * ppMemRead[512];
-	UINT8 * ppMemWrite[512];
-	UINT8 * ppMemFetch[512];
-	UINT8 * ppMemFetchData[512];
+	UINT8 * ppMemRead[2048];
+	UINT8 * ppMemWrite[2048];
+	UINT8 * ppMemFetch[2048];
+	UINT8 * ppMemFetchData[2048];
 
 	// Handlers
  #ifdef FASTCALL
@@ -75,7 +75,7 @@ struct VezContext {
 static struct VezContext *VezCPUContext[MAX_VEZ] = { NULL, NULL, NULL, NULL };
 struct VezContext *VezCurrentCPU = 0;
 
-#define VEZ_MEM_SHIFT	11
+#define VEZ_MEM_SHIFT	9
 #define VEZ_MEM_MASK	((1 << VEZ_MEM_SHIFT) - 1)
 
 static INT32 nCPUCount = 0;
@@ -89,8 +89,6 @@ void __fastcall VezDummyWritePort(UINT32, UINT8) { }
 
 UINT8 cpu_readport(UINT32 p)
 {
-	p &= 0x100ff; // ?
-
 	return VezCurrentCPU->ReadPort(p);
 }
 
@@ -391,6 +389,7 @@ void VezExit()
 	for (INT32 i = 0; i < MAX_VEZ; i++) {
 		if (VezCPUContext[i]) {
 			BurnFree(VezCPUContext[i]);
+			VezCPUContext[i] = NULL;
 		}
 	}
 
@@ -552,6 +551,22 @@ INT32 VezMapArea(INT32 nStart, INT32 nEnd, INT32 nMode, UINT8 *Mem1, UINT8 *Mem2
 	for (INT32 i = s; i < e; i++) {
 		VezCurrentCPU->ppMemFetch[i] = Mem1 - nStart;
 		VezCurrentCPU->ppMemFetchData[i] = Mem2 - nStart;
+	}
+
+	return 0;
+}
+
+INT32 VezMapMemory(UINT8 *Mem, INT32 nStart, INT32 nEnd, INT32 nMode)
+{
+#if defined FBA_DEBUG
+	if (!DebugCPU_VezInitted) bprintf(PRINT_ERROR, _T("VezMapMemory called without init\n"));
+	if (nOpenedCPU == -1) bprintf(PRINT_ERROR, _T("VezMapMemory called when no CPU open\n"));
+#endif
+
+	for (INT32 i = 0; i < 3; i++) {
+		if (nMode & (1 << i)) {
+			VezMapArea(nStart, nEnd, i, Mem);
+		}
 	}
 
 	return 0;

@@ -109,7 +109,7 @@ static UINT8 *Mem = NULL, *MemEnd = NULL;
 static UINT8 *RamStart, *RamEnd;
 
 static UINT8 *RomMain;
-static UINT8 *OriginalRom;
+static UINT8 *OriginalRom = NULL;
 
 static UINT8 *Ram68K;
 static UINT8 *RamZ80;
@@ -3000,7 +3000,7 @@ INT32 MegadriveInit()
 	MemIndex();	
 
 	MegadriveLoadRoms(0);
-	MegadriveLoadRoms(1);
+	if (MegadriveLoadRoms(1)) return 1;
 
 	{
 		SekInit(0, 0x68000);										// Allocate 68000
@@ -3112,8 +3112,15 @@ INT32 MegadriveExit()
 	BurnYM2612Exit();
 	SN76496Exit();
 	
-	BurnFree(Mem);
-	BurnFree(OriginalRom);
+	if (Mem) {
+		BurnFree(Mem);
+		Mem = NULL;
+	}
+
+	if (OriginalRom) {
+		BurnFree(OriginalRom);
+		OriginalRom = NULL;
+	}
 	
 	MegadriveCallback = NULL;
 	RomNoByteswap = 0;
@@ -3584,11 +3591,15 @@ static void DrawWindow(INT32 tstart, INT32 tend, INT32 prio, INT32 sh)
 			INT32 tmp, *zb = (INT32 *)(HighCol+8+(tilex<<3));
 			if(prio) {
 				tmp = *zb;
-				if(!(tmp&0x00000080)) tmp&=~0x000000c0; if(!(tmp&0x00008000)) tmp&=~0x0000c000;
-				if(!(tmp&0x00800000)) tmp&=~0x00c00000; if(!(tmp&0x80000000)) tmp&=~0xc0000000;
+				if(!(tmp&0x00000080)) tmp&=~0x000000c0;
+				if(!(tmp&0x00008000)) tmp&=~0x0000c000;
+				if(!(tmp&0x00800000)) tmp&=~0x00c00000;
+				if(!(tmp&0x80000000)) tmp&=~0xc0000000;
 				*zb++=tmp; tmp = *zb;
-				if(!(tmp&0x00000080)) tmp&=~0x000000c0; if(!(tmp&0x00008000)) tmp&=~0x0000c000;
-				if(!(tmp&0x00800000)) tmp&=~0x00c00000; if(!(tmp&0x80000000)) tmp&=~0xc0000000;
+				if(!(tmp&0x00000080)) tmp&=~0x000000c0;
+				if(!(tmp&0x00008000)) tmp&=~0x0000c000;
+				if(!(tmp&0x00800000)) tmp&=~0x00c00000;
+				if(!(tmp&0x80000000)) tmp&=~0xc0000000;
 				*zb++=tmp;
 			} else {
 				pal |= 0x40;
@@ -3625,10 +3636,22 @@ static void DrawTilesFromCache(INT32 *hc, INT32 sh)
 		dx=(code>>16)&0x1ff;
 		if(sh) {
 			UINT8 *zb = HighCol+dx;
-			if(!(*zb&0x80)) *zb&=0x3f; zb++; if(!(*zb&0x80)) *zb&=0x3f; zb++;
-			if(!(*zb&0x80)) *zb&=0x3f; zb++; if(!(*zb&0x80)) *zb&=0x3f; zb++;
-			if(!(*zb&0x80)) *zb&=0x3f; zb++; if(!(*zb&0x80)) *zb&=0x3f; zb++;
-			if(!(*zb&0x80)) *zb&=0x3f; zb++; if(!(*zb&0x80)) *zb&=0x3f; zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
+			if(!(*zb&0x80)) *zb&=0x3f;
+			zb++;
 		}
 
 		pal=((code>>9)&0x30);

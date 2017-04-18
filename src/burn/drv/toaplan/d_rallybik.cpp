@@ -1,3 +1,4 @@
+// Based on MAME driver by Darren Olafson, Quench,Stephane Humbert
 #include "toaplan.h"
 
 #define REFRESHRATE 55.14
@@ -562,7 +563,7 @@ static INT32 DrvScan(INT32 nAction, INT32* pnMin)
 	}
 	if (nAction & ACB_VOLATILE) {
 		memset(&ba, 0, sizeof(ba));
-    		ba.Data		= AllRam;
+		ba.Data		= AllRam;
 		ba.nLen		= RamEnd - AllRam;
 		ba.szName	= "RAM";
 		BurnAcb(&ba);

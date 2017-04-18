@@ -18,7 +18,7 @@
 
 #define CLEAR_LINE	0
 #define change_pc(x)	\
-	S.page = x & S2650_PAGE;	\
+	S.page = x & PAGE;	\
 	S.iar = x & PMSK;	\
 
 /* define this to have some interrupt information logged */
@@ -155,7 +155,7 @@ static void s2650_set_sense(int state);
 			}													\
 			S.psu  = (S.psu & ~SP) | ((S.psu + 1) & SP) | II;	\
 			S.ras[S.psu & SP] = S.page + S.iar;					\
-			S.page = S.ea & S2650_PAGE;								\
+			S.page = S.ea & PAGE;								\
 			S.iar  = S.ea & PMSK;								\
 		}														\
 	}
@@ -295,16 +295,16 @@ static const int S2650_relative[0x100] =
 			break;												\
 		case 0x20: /* auto increment indexed */ 				\
 			S.reg[S.r] += 1;									\
-			S.ea = (S.ea & S2650_PAGE)+((S.ea+S.reg[S.r]) & PMSK);	\
+			S.ea = (S.ea & PAGE)+((S.ea+S.reg[S.r]) & PMSK);	\
 			S.r = 0; /* absolute addressing reg is R0 */		\
 			break;												\
 		case 0x40: /* auto decrement indexed */ 				\
 			S.reg[S.r] -= 1;									\
-			S.ea = (S.ea & S2650_PAGE)+((S.ea+S.reg[S.r]) & PMSK);	\
+			S.ea = (S.ea & PAGE)+((S.ea+S.reg[S.r]) & PMSK);	\
 			S.r = 0; /* absolute addressing reg is R0 */		\
 			break;												\
 		case 0x60: /* indexed */								\
-			S.ea = (S.ea & S2650_PAGE)+((S.ea+S.reg[S.r]) & PMSK);	\
+			S.ea = (S.ea & PAGE)+((S.ea+S.reg[S.r]) & PMSK);	\
 			S.r = 0; /* absolute addressing reg is R0 */		\
 			break;												\
 	}															\
@@ -360,7 +360,7 @@ static const int S2650_relative[0x100] =
 	if (cond)													\
 	{															\
 		REL_EA( S.page );										\
-		S.page = S.ea & S2650_PAGE;									\
+		S.page = S.ea & PAGE;									\
 		S.iar  = S.ea & PMSK;									\
 		change_pc(S.ea);										\
 	} else S.iar = (S.iar + 1) & PMSK;							\
@@ -373,7 +373,7 @@ static const int S2650_relative[0x100] =
 #define M_ZBRR()												\
 {																\
 	REL_ZERO( 0 );												\
-	S.page = S.ea & S2650_PAGE;										\
+	S.page = S.ea & PAGE;										\
 	S.iar  = S.ea & PMSK;										\
 	change_pc(S.ea);											\
 }
@@ -387,7 +387,7 @@ static const int S2650_relative[0x100] =
 	if( cond )													\
 	{															\
 		BRA_EA();												\
-		S.page = S.ea & S2650_PAGE;									\
+		S.page = S.ea & PAGE;									\
 		S.iar  = S.ea & PMSK;									\
 		change_pc(S.ea);										\
 	} else S.iar = (S.iar + 2) & PMSK;							\
@@ -401,7 +401,7 @@ static const int S2650_relative[0x100] =
 {																\
 	BRA_EA();													\
 	S.ea   = (S.ea + S.reg[3]) & AMSK;							\
-	S.page = S.ea & S2650_PAGE;										\
+	S.page = S.ea & PAGE;										\
 	S.iar  = S.ea & PMSK;										\
 	change_pc(S.ea);											\
 }
@@ -417,7 +417,7 @@ static const int S2650_relative[0x100] =
 		REL_EA(S.page); 										\
 		S.psu  = (S.psu & ~SP) | ((S.psu + 1) & SP);			\
 		S.ras[S.psu & SP] = S.page + S.iar;						\
-		S.page = S.ea & S2650_PAGE;									\
+		S.page = S.ea & PAGE;									\
 		S.iar  = S.ea & PMSK;									\
 		change_pc(S.ea);										\
 	} else	S.iar = (S.iar + 1) & PMSK; 						\
@@ -432,7 +432,7 @@ static const int S2650_relative[0x100] =
 	REL_ZERO(0); 											    \
 	S.psu  = (S.psu & ~SP) | ((S.psu + 1) & SP);				\
 	S.ras[S.psu & SP] = S.page + S.iar;							\
-	S.page = S.ea & S2650_PAGE;										\
+	S.page = S.ea & PAGE;										\
 	S.iar  = S.ea & PMSK;										\
 	change_pc(S.ea);											\
 }
@@ -448,7 +448,7 @@ static const int S2650_relative[0x100] =
 		BRA_EA();												\
 		S.psu = (S.psu & ~SP) | ((S.psu + 1) & SP); 			\
 		S.ras[S.psu & SP] = S.page + S.iar;						\
-		S.page = S.ea & S2650_PAGE;									\
+		S.page = S.ea & PAGE;									\
 		S.iar  = S.ea & PMSK;									\
 		change_pc(S.ea);										\
 	} else S.iar = (S.iar + 2) & PMSK;							\
@@ -464,7 +464,7 @@ static const int S2650_relative[0x100] =
 	S.ea  = (S.ea + S.reg[3]) & AMSK;							\
 	S.psu = (S.psu & ~SP) | ((S.psu + 1) & SP); 				\
 	S.ras[S.psu & SP] = S.page + S.iar;							\
-	S.page = S.ea & S2650_PAGE;										\
+	S.page = S.ea & PAGE;										\
 	S.iar  = S.ea & PMSK;										\
 	change_pc(S.ea);											\
 }
@@ -480,7 +480,7 @@ static const int S2650_relative[0x100] =
 		s2650_ICount -= 6;										\
 		S.ea = S.ras[S.psu & SP];								\
 		S.psu = (S.psu & ~SP) | ((S.psu - 1) & SP); 			\
-		S.page = S.ea & S2650_PAGE;									\
+		S.page = S.ea & PAGE;									\
 		S.iar  = S.ea & PMSK;									\
 		change_pc(S.ea);										\
 	}															\
@@ -498,7 +498,7 @@ static const int S2650_relative[0x100] =
 	{															\
 		S.ea = S.ras[S.psu & SP];								\
 		S.psu = (S.psu & ~SP) | ((S.psu - 1) & SP); 			\
-		S.page = S.ea & S2650_PAGE;									\
+		S.page = S.ea & PAGE;									\
 		S.iar  = S.ea & PMSK;									\
 		change_pc(S.ea);										\
 		S.psu &= ~II;											\
@@ -797,7 +797,7 @@ static void s2650_set_context(void *src)
 	if( src )
 	{
 		S = *(s2650_Regs*)src;
-		S.page = S.page & S2650_PAGE;
+		S.page = S.page & PAGE;
 		S.iar = S.iar & PMSK;
         	change_pc(S.page + S.iar);
 	}

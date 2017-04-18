@@ -1,3 +1,5 @@
+// Based on MAME sources by Aaron Giles,smf
+
 #include "burnint.h"
 #include "time.h"
 #include "timekpr.h"
@@ -142,6 +144,31 @@ UINT8 TimeKeeperRead(UINT32 offset)
 #endif
 
 	return Chip.data[offset];
+}
+
+INT32 TimeKeeperIsEmpty()
+{
+#if defined FBA_DEBUG
+	if (!DebugDev_TimeKprInitted) bprintf(PRINT_ERROR, _T("TimeKeeperIsEmpty called without init\n"));
+#endif
+
+	INT32 found = 0;
+
+	for (INT32 i = 0; i < Chip.size; i++) {
+		if (Chip.data[i] != 0xff)
+			found = 1;
+	}
+
+	return !found;
+}
+
+UINT8* TimeKeeperGetRaw()
+{
+#if defined FBA_DEBUG
+	if (!DebugDev_TimeKprInitted) bprintf(PRINT_ERROR, _T("TimeKeeperGetRaw called without init\n"));
+#endif
+
+	return Chip.data;
 }
 
 void TimeKeeperWrite(INT32 offset, UINT8 data)

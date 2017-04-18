@@ -125,8 +125,8 @@ extern INT32 TC0100SCNDblWidth[TC0100SCN_MAX_CHIPS];
 
 void TC0100SCNCtrlWordWrite(INT32 Chip, UINT32 Offset, UINT16 Data);
 INT32 TC0100SCNBottomLayer(INT32 Chip);
-void TC0100SCNRenderBgLayer(INT32 Chip, INT32 Opaque, UINT8 *pSrc);
-void TC0100SCNRenderFgLayer(INT32 Chip, INT32 Opaque, UINT8 *pSrc);
+void TC0100SCNRenderBgLayer(INT32 Chip, INT32 Opaque, UINT8 *pSrc, INT32 Priority = 1);
+void TC0100SCNRenderFgLayer(INT32 Chip, INT32 Opaque, UINT8 *pSrc, INT32 Priority = 2);
 void TC0100SCNRenderCharLayer(INT32 Chip);
 void TC0100SCNReset();
 void TC0100SCNInit(INT32 Chip, INT32 nNumTiles, INT32 xOffset, INT32 yOffset, INT32 xFlip, UINT8 *PriorityMap);
@@ -171,6 +171,7 @@ extern UINT8 *TC0150RODRam;
 void TC0150RODDraw(INT32 yOffs, INT32 pOffs, INT32 Type, INT32 RoadTrans, INT32 LowPriority, INT32 HighPriority);
 void TC0150RODReset();
 void TC0150RODInit(INT32 nRomSize, INT32 xFlip);
+void TC0150RODSetPriMap(UINT8 *PriMap);
 void TC0150RODExit();
 void TC0150RODScan(INT32 nAction);
 
@@ -255,9 +256,11 @@ extern UINT16 TC0480SCPCtrl[0x18];
 
 void TC0480SCPCtrlWordWrite(INT32 Offset, UINT16 Data);
 void TC0480SCPTilemapRender(INT32 Layer, INT32 Opaque, UINT8 *pSrc);
+void TC0480SCPTilemapRenderPrio(INT32 Layer, INT32 Opaque, INT32 Prio, UINT8 *pSrc);
 void TC0480SCPRenderCharLayer();
 void TC0480SCPReset();
 INT32 TC0480SCPGetBgPriority();
+void TC0480SCPSetPriMap(UINT8 *PriMap);
 void TC0480SCPInit(INT32 nNumTiles, INT32 Pixels, INT32 xOffset, INT32 yOffset, INT32 xTextOffset, INT32 yTextOffset, INT32 VisYOffset);
 void TC0480SCPSetColourBase(INT32 Base);
 void TC0480SCPExit();

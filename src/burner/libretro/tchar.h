@@ -7,6 +7,9 @@
 #include "libretro.h"
 #include "inp_keys.h"
 #define TCHAR char
+#ifndef nullptr
+ #define nullptr NULL
+#endif
 #define _T(x) x
 #define _tfopen fopen
 #define _tcstol strtol

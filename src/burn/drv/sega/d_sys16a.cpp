@@ -323,16 +323,16 @@ static struct BurnInputInfo SdiInputList[] = {
 	{"P1 Down"           , BIT_DIGITAL   , System16InputPort1 + 0, "p1 down"      },
 	{"P1 Left"           , BIT_DIGITAL   , System16InputPort1 + 3, "p1 left"      },
 	{"P1 Right"          , BIT_DIGITAL   , System16InputPort1 + 2, "p1 right"     },
-	A("Target Left/Right", BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"    ),
-	A("Target Up/Down"   , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"    ),
+	A("P1 Target L/R"    , BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"    ),
+	A("P1 Target U/D"    , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"    ),
 	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort0 + 6, "p1 fire 1"    },
 
 	{"P2 Up"             , BIT_DIGITAL   , System16InputPort1 + 5, "p2 up"        },
 	{"P2 Down"           , BIT_DIGITAL   , System16InputPort1 + 4, "p2 down"      },
 	{"P2 Left"           , BIT_DIGITAL   , System16InputPort1 + 7, "p2 left"      },
 	{"P2 Right"          , BIT_DIGITAL   , System16InputPort1 + 6, "p2 right"     },
-	A("Target Left/Right", BIT_ANALOG_REL, &System16AnalogPort2,   "p2 x-axis"    ),
-	A("Target Up/Down"   , BIT_ANALOG_REL, &System16AnalogPort3,   "p2 y-axis"    ),
+	A("P2 Target L/R"    , BIT_ANALOG_REL, &System16AnalogPort2,   "p2 x-axis"    ),
+	A("P2 Target U/D"    , BIT_ANALOG_REL, &System16AnalogPort3,   "p2 y-axis"    ),
 	{"P2 Fire 1"         , BIT_DIGITAL   , System16InputPort0 + 7, "p2 fire 1"    },
 
 	{"Service"           , BIT_DIGITAL  , System16InputPort0 + 3 , "service"      },
@@ -1254,7 +1254,7 @@ static struct BurnRomInfo BodyslamRomDesc[] = {
 	{ "epr-10031.c3",  0x08000, 0xea3c4472, SYS16_ROM_7751DATA | BRF_SND },
 	{ "epr-10032.c4",  0x08000, 0x0aabebce, SYS16_ROM_7751DATA | BRF_SND },
 	
-	{ "317-0015.bin",  0x01000, 0x833869e2, BRF_PRG | BRF_OPT },
+	{ "317-0015.bin",  0x01000, 0x833869e2, SYS16_ROM_I8751 | BRF_PRG | BRF_OPT },
 };
 
 
@@ -1554,7 +1554,7 @@ static struct BurnRomInfo Quartet2RomDesc[] = {
 	{ "epr-7474.3c",   0x08000, 0xdbf853b8, SYS16_ROM_7751DATA | BRF_SND },
 	{ "epr-7476.4c",   0x08000, 0x5eba655a, SYS16_ROM_7751DATA | BRF_SND },
 	
-	{ "317-0010.bin",  0x01000, 0x8c2033ea, BRF_PRG | BRF_OPT },
+	{ "317-0010.bin",  0x01000, 0x8c2033ea, SYS16_ROM_I8751 | BRF_PRG | BRF_OPT },
 };
 
 
@@ -2063,8 +2063,6 @@ STD_ROM_FN(Wb35d)
 Memory Handlers
 ====================================================*/
 
-static bool Mjleague = false;
-
 void System16APPI0WritePortA(UINT8 data)
 {
 	System16SoundLatch = data & 0xff;
@@ -2074,7 +2072,14 @@ void System16APPI0WritePortB(UINT8 data)
 {
 	System16VideoControl = data;
 	System16VideoEnable = data & 0x10;
-	if (Mjleague) System16ScreenFlip = data & 0x80;
+	System16ScreenFlip = data & 0x80;
+	
+	if (System16I8751RomNum) {
+		if (data & 0x40) {
+			mcs51_set_irq_line(MCS51_INT1_LINE, CPU_IRQSTATUS_ACK);
+			mcs51_set_irq_line(MCS51_INT1_LINE, CPU_IRQSTATUS_NONE);
+		}
+	}
 }
 
 void System16APPI0WritePortC(UINT8 data)
@@ -2212,6 +2217,138 @@ void __fastcall System16AWriteByte(UINT32 a, UINT8 d)
 #endif
 }
 
+UINT8 System16A_I8751ReadPort(INT32 port)
+{
+	if (port >= 0x0000 && port <= 0xffff) {
+		switch ((System16MCUData >> 3) & 7) {
+			case 0: {
+				if (port <= 0x3fff) {
+					// watchdog reset
+					return 0;
+				}
+				
+				if (port >= 0x4000 && port < 0x8000) {
+					return SekReadByte(0xffc001 ^ (port & 0x3fff));
+				}
+				
+				if (port >= 0x8000 && port < 0xc000) {
+					return SekReadByte(0xc40001 ^ (port & 0x3fff));
+				}
+				
+				return 0xff;
+			}
+			
+			case 1: {
+				if (port >= 0x8000 && port < 0x9000) {
+					return SekReadByte(0x410001 ^ (port & 0xfff));
+				}
+				
+				return 0xff;
+			}
+			
+			case 3: {
+				return SekReadByte(0x840001 ^ port);
+			}
+			
+			case 5: {
+				return System16Rom[0x00000 + port];
+			}
+			
+			case 6: {
+				return System16Rom[0x10000 + port];
+			}
+			
+			case 7: {
+				return System16Rom[0x20000 + port];
+			}
+		}
+	}
+	
+	switch (port) {
+		case MCS51_PORT_P3: {
+			// nop
+			return 0xff;
+		}
+	}
+	
+	return 0xff;
+}
+
+void System16A_I8751WritePort(INT32 port, UINT8 data)
+{
+	if (port >= 0x0000 && port <= 0xffff) {
+		switch ((System16MCUData >> 3) & 7) {
+			case 0: {
+				if (port >= 0x4000 && port < 0x8000) {
+					SekWriteByte(0xffc001 ^ (port & 0x3fff), data);
+					return;
+				}
+				
+				if (port >= 0x8000 && port < 0xc000) {
+					SekWriteByte(0xc40001 ^ (port & 0x3fff), data);
+					return;
+				}
+				
+				return;
+			}
+			
+			case 1: {
+				if (port >= 0x8000 && port < 0x9000) {
+					SekWriteByte(0x410001 ^ (port & 0xfff), data);
+					return;
+				}
+				
+				return;
+			}
+			
+			case 3: {
+				SekWriteByte(0x840001 ^ port, data);
+				return;
+			}
+		}
+		
+		return;
+	}
+	
+	switch (port) {
+		case MCS51_PORT_P1: {
+			if (SekGetActive() > -1) {
+				if (data & 0x40) {
+					System1668KEnable = false;
+					
+					SekReset();
+					
+					System16VideoEnable = 1;
+				} else {
+					System1668KEnable = true;
+				}
+				
+				for (INT32 irqline = 1; irqline <= 7; irqline++) {
+					if ((~data & 7) == irqline) {
+						if (irqline == 4) {
+							SekSetIRQLine(irqline, CPU_IRQSTATUS_ACK);
+							nSystem16CyclesDone[0] += SekRun(200);
+							SekSetIRQLine(irqline, CPU_IRQSTATUS_NONE);
+						} else {
+							SekSetIRQLine(irqline, CPU_IRQSTATUS_ACK);
+						}
+					} else {
+						SekSetIRQLine(irqline, CPU_IRQSTATUS_NONE);
+					}
+				}
+				
+				if ((System16MCUData ^ data) & 0x40) {
+					nSystem16CyclesDone[0] += SekRun(10000);
+				}
+			}
+			
+			System16MCUData = data;
+			
+			return;
+		}
+	}
+}	
+
 static INT16 AceattacaTrack1X = 0;
 static INT16 AceattacaTrack1Y = 0;
 static INT16 AceattacaTrack2X = 0;
@@ -2219,7 +2356,7 @@ static INT16 AceattacaTrack2Y = 0;
 static INT8 AceattacaDial1 = 0;
 static INT8 AceattacaDial2 = 0;
 
-void AceattacaMakeAnalogInputs()
+static void AceattacaMakeAnalogInputs()
 {
 	if (System16InputPort3[0]) AceattacaTrack1X += 0x40;
 	if (System16InputPort3[1]) AceattacaTrack1X -= 0x40;
@@ -2252,9 +2389,16 @@ void AceattacaMakeAnalogInputs()
 	if (AceattacaDial2 < 0) AceattacaDial2 = 0x0f;
 }
 
-UINT8 __fastcall AceattacaReadByte(UINT32 a)
+static UINT8 __fastcall AceattacaReadByte(UINT32 a)
 {
 	switch (a) {
+		case 0xc40001:
+		case 0xc40003: 
+		case 0xc40005:
+		case 0xc40007: {
+			return ppi8255_r(0, (a - 0xc40000) >> 1);
+		}
+		
 		case 0xc41001: {
 			return 0xff - System16Input[0];
 		}
@@ -2306,7 +2450,7 @@ static INT16 MjleagueTrack2Y = 0;
 static INT16 MjleagueBat1 = 0;
 static INT16 MjleagueBat2 = 0;
 
-void MjleagueMakeAnalogInputs()
+static void MjleagueMakeAnalogInputs()
 {
 	if (System16InputPort3[0]) MjleagueTrack1X -= 0x04;
 	if (System16InputPort3[1]) MjleagueTrack1X += 0x04;
@@ -2332,9 +2476,16 @@ void MjleagueMakeAnalogInputs()
 	MjleagueBat2 = 0x80 + (System16AnalogPort1 >> 4);
 }
 
-UINT8 __fastcall MjleagueReadByte(UINT32 a)
+static UINT8 __fastcall MjleagueReadByte(UINT32 a)
 {
 	switch (a) {
+		case 0xc40001:
+		case 0xc40003: 
+		case 0xc40005:
+		case 0xc40007: {
+			return ppi8255_r(0, (a - 0xc40000) >> 1);
+		}
+		
 		case 0xc41001: {
 			UINT8 buttons = 0x3f - System16Input[0];
 			UINT8 analog1 = (System16VideoControl & 4) ? MjleagueTrack1Y : MjleagueTrack1X;
@@ -2399,11 +2550,18 @@ UINT8 __fastcall MjleagueReadByte(UINT32 a)
 	return 0xff;
 }
 
-UINT8 __fastcall Passsht16aReadByte(UINT32 a)
+static UINT8 __fastcall Passsht16aReadByte(UINT32 a)
 {
 	static INT32 PortNum = 0;
 	
 	switch (a) {
+		case 0xc40001:
+		case 0xc40003: 
+		case 0xc40005:
+		case 0xc40007: {
+			return ppi8255_r(0, (a - 0xc40000) >> 1);
+		}
+		
 		case 0xc41001: {
 			return 0xff - System16Input[0];
 		}
@@ -2437,9 +2595,16 @@ UINT8 __fastcall Passsht16aReadByte(UINT32 a)
 	return 0xff;
 }
 
-UINT8 __fastcall QuartetReadByte(UINT32 a)
+static UINT8 __fastcall QuartetReadByte(UINT32 a)
 {
 	switch (a) {
+		case 0xc40001:
+		case 0xc40003: 
+		case 0xc40005:
+		case 0xc40007: {
+			return ppi8255_r(0, (a - 0xc40000) >> 1);
+		}
+		
 		case 0xc41001: {
 			return 0xff - System16Input[0];
 		}
@@ -2477,7 +2642,7 @@ static INT16 SdiTrack1Y = 0;
 static INT16 SdiTrack2X = 0;
 static INT16 SdiTrack2Y = 0;
 
-void SdiMakeAnalogInputs()
+static void SdiMakeAnalogInputs()
 {
 	SdiTrack1X += (System16AnalogPort0 >> 8) & 0xff;
 	SdiTrack1Y -= (System16AnalogPort1 >> 8) & 0xff;
@@ -2486,9 +2651,16 @@ void SdiMakeAnalogInputs()
 	SdiTrack2Y -= (System16AnalogPort3 >> 8) & 0xff;
 }
 
-UINT8 __fastcall SdiReadByte(UINT32 a)
+static UINT8 __fastcall SdiReadByte(UINT32 a)
 {
 	switch (a) {
+		case 0xc40001:
+		case 0xc40003: 
+		case 0xc40005:
+		case 0xc40007: {
+			return ppi8255_r(0, (a - 0xc40000) >> 1);
+		}
+		
 		case 0xc41001: {
 			return 0xff - System16Input[0];
 		}
@@ -2530,9 +2702,16 @@ UINT16 __fastcall Sjryuko1ReadWord(UINT32 a)
 	return 0xffff;
 }
 
-UINT8 __fastcall Sjryuko1ReadByte(UINT32 a)
+static UINT8 __fastcall Sjryuko1ReadByte(UINT32 a)
 {
 	switch (a) {
+		case 0xc40001:
+		case 0xc40003: 
+		case 0xc40005:
+		case 0xc40007: {
+			return ppi8255_r(0, (a - 0xc40000) >> 1);
+		}
+		
 		case 0xc41001: {
 			return 0xff - System16Input[0];
 		}
@@ -2558,7 +2737,7 @@ UINT8 __fastcall Sjryuko1ReadByte(UINT32 a)
 	return 0xff;
 }
 
-void __fastcall Sjryuko1WriteByte(UINT32 a, UINT8 d)
+static void __fastcall Sjryuko1WriteByte(UINT32 a, UINT8 d)
 {
 	if (a >= 0x400000 && a <= 0x40ffff) {
 		System16ATileByteWrite((a - 0x400000) ^ 1, d);
@@ -2705,7 +2884,7 @@ static INT32 Aliensyn5Init()
 	return nRet;
 }
 
-void Bodyslam_Sim8751()
+static void Bodyslam_Sim8751()
 {
 	UINT8 flag = ((System16Ram[0x200 + 1] << 8) | System16Ram[0x200 + 0]) >> 8;
 	UINT8 tick = ((System16Ram[0x200 + 1] << 8) | System16Ram[0x200 + 0]) & 0xff;
@@ -2884,8 +3063,6 @@ static INT32 MjleagueInit()
 {
 	System16MakeAnalogInputsDo = MjleagueMakeAnalogInputs;
 	
-	Mjleague = true;
-	
 	INT32 nRet = System16Init();
 	
 	if (!nRet) {
@@ -2905,8 +3082,6 @@ static INT32 MjleagueExit()
 	MjleagueTrack2Y = 0;
 	MjleagueBat1 = 0;
 	MjleagueBat2 = 0;
-	
-	Mjleague = false;
 	
 	return System16Exit();
 }
@@ -2929,7 +3104,7 @@ static INT32 MjleagueScan(INT32 nAction,INT32 *pnMin)
 	return System16Scan(nAction, pnMin);;
 }
 
-void Quartet_Sim8751()
+static void Quartet_Sim8751()
 {
 	// X-Scroll Values
 	*((UINT16*)(System16TextRam + 0xff8)) = BURN_ENDIAN_SWAP_INT16(((System16Ram[0x0d14 + 1] << 8) | System16Ram[0x0d14 + 0]));
@@ -3229,7 +3404,7 @@ struct BurnDriver BurnDrvBodyslam = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEM16A, GBF_VSFIGHT, 0,
 	NULL, BodyslamRomInfo, BodyslamRomName, NULL, NULL, System16aInputInfo, BodyslamDIPInfo,
-	BodyslamInit, System16Exit, System16AFrame, NULL, System16Scan,
+	System16Init, System16Exit, System16AFrame, NULL, System16Scan,
 	NULL, 0x1800, 320, 224, 4, 3
 };
 
@@ -3319,7 +3494,7 @@ struct BurnDriver BurnDrvQuartet2 = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_SYSTEM16A, GBF_PLATFORM, 0,
 	NULL, Quartet2RomInfo, Quartet2RomName, NULL, NULL, System16aInputInfo, Quart2DIPInfo,
-	QuartetInit, System16Exit, System16AFrame, NULL, System16Scan,
+	System16Init, System16Exit, System16AFrame, NULL, System16Scan,
 	NULL, 0x1800, 320, 224, 4, 3
 };
 

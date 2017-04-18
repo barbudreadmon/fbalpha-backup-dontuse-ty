@@ -1,3 +1,5 @@
+// Based on MAME source by Juergen Buchmueller
+
 #include "burnint.h"
 #include "tms36xx.h"
 
@@ -41,7 +43,7 @@ struct TMS36XX {
 	int tune_max;		/* end of tune */
 };
 
-struct TMS36XX *tms;
+struct TMS36XX *tms = NULL;
 
 #define C(n)	(int)((FSCALE<<(n-1))*1.18921)	/* 2^(3/12) */
 #define Cx(n)	(int)((FSCALE<<(n-1))*1.25992)	/* 2^(4/12) */

@@ -201,7 +201,7 @@
 #define IDS_SEL_SG1000					(IDS_STRING +  630)
 #define IDS_SEL_COLECO					(IDS_STRING +  632)
 #define IDS_SEL_GG						(IDS_STRING +  634)
-#define IDS_SEL_MSX						(IDS_STRING +  635)
+#define IDS_SEL_MSX						(IDS_STRING +  636)
 
 #define IDS_GENRE						(IDS_STRING +  650)
 #define IDS_GENRE_HORSHOOT				(IDS_STRING +  652)
@@ -236,6 +236,8 @@
 #define IDS_FAMILY_SONICWI				(IDS_STRING +  756)
 #define IDS_FAMILY_PWRINST				(IDS_STRING +  758)
 #define IDS_FAMILY_OTHER				(IDS_STRING +  760)
+
+#define IDS_FAVORITES   				(IDS_STRING +  790)
 
 #define IDS_IPSMANAGER_TITLE			(IDS_STRING +  800)
 

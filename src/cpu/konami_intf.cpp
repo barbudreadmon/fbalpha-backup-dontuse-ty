@@ -4,10 +4,10 @@
 #define MAX_CPU		1
 
 #define MEMORY_SPACE	0x10000
-#define KONAMI_PAGE_SIZE	0x100
-#define KONAMI_PAGE_MASK	0xff
-#define KONAMI_PAGE_SHIFT	8
-#define KONAMI_PAGE_COUNT	MEMORY_SPACE / KONAMI_PAGE_SIZE
+#define PAGE_SIZE	0x100
+#define PAGE_MASK	0xff
+#define PAGE_SHIFT	8
+#define PAGE_COUNT	MEMORY_SPACE / PAGE_SIZE
 
 #define READ		0
 #define WRITE		1
@@ -16,7 +16,7 @@
 INT32 nKonamiCpuCount = 0;
 static INT32 nKonamiCpuActive = -1;
 
-static UINT8 *mem[3][KONAMI_PAGE_COUNT];
+static UINT8 *mem[3][PAGE_COUNT];
 
 static UINT8 (*pkonamiRead)(UINT16 address);
 static void (*pkonamiWrite)(UINT16 address, UINT8 data);
@@ -32,14 +32,14 @@ void konamiMapMemory(UINT8 *src, UINT16 start, UINT16 finish, INT32 type)
 	if (!DebugCPU_KonamiInitted) bprintf(PRINT_ERROR, _T("konamiMapMemory called without init\n"));
 #endif
 
-	UINT16 len = (finish-start) >> KONAMI_PAGE_SHIFT;
+	UINT16 len = (finish-start) >> PAGE_SHIFT;
 
 	for (UINT16 i = 0; i < len+1; i++)
 	{
-		UINT32 offset = i + (start >> KONAMI_PAGE_SHIFT);
-		if (type & (1 <<  READ)) mem[ READ][offset] = src + (i << KONAMI_PAGE_SHIFT);
-		if (type & (1 << WRITE)) mem[WRITE][offset] = src + (i << KONAMI_PAGE_SHIFT);
-		if (type & (1 << FETCH)) mem[FETCH][offset] = src + (i << KONAMI_PAGE_SHIFT);
+		UINT32 offset = i + (start >> PAGE_SHIFT);
+		if (type & (1 <<  READ)) mem[ READ][offset] = src + (i << PAGE_SHIFT);
+		if (type & (1 << WRITE)) mem[WRITE][offset] = src + (i << PAGE_SHIFT);
+		if (type & (1 << FETCH)) mem[FETCH][offset] = src + (i << PAGE_SHIFT);
 	}
 }
 
@@ -83,16 +83,16 @@ static void konami_write_rom(UINT32 address, UINT8 data)
 
 	address &= 0xffff;
 
-	if (mem[READ][address >> KONAMI_PAGE_SHIFT] != NULL) {
-		mem[READ][address >> KONAMI_PAGE_SHIFT][address & KONAMI_PAGE_MASK] = data;
+	if (mem[READ][address >> PAGE_SHIFT] != NULL) {
+		mem[READ][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
 	}
 
-	if (mem[FETCH][address >> KONAMI_PAGE_SHIFT] != NULL) {
-		mem[FETCH][address >> KONAMI_PAGE_SHIFT][address & KONAMI_PAGE_MASK] = data;
+	if (mem[FETCH][address >> PAGE_SHIFT] != NULL) {
+		mem[FETCH][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
 	}
 
-	if (mem[WRITE][address >> KONAMI_PAGE_SHIFT] != NULL) {
-		mem[WRITE][address >> KONAMI_PAGE_SHIFT][address & KONAMI_PAGE_MASK] = data;
+	if (mem[WRITE][address >> PAGE_SHIFT] != NULL) {
+		mem[WRITE][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
 	}
 
 	if (pkonamiWrite != NULL) {
@@ -102,8 +102,8 @@ static void konami_write_rom(UINT32 address, UINT8 data)
 
 void konamiWrite(UINT16 address, UINT8 data)
 {
-	if (mem[WRITE][address >> KONAMI_PAGE_SHIFT] != NULL) {
-		mem[WRITE][address >> KONAMI_PAGE_SHIFT][address & KONAMI_PAGE_MASK] = data;
+	if (mem[WRITE][address >> PAGE_SHIFT] != NULL) {
+		mem[WRITE][address >> PAGE_SHIFT][address & PAGE_MASK] = data;
 		return;
 	}
 
@@ -117,8 +117,8 @@ void konamiWrite(UINT16 address, UINT8 data)
 
 UINT8 konamiRead(UINT16 address)
 {
-	if (mem[ READ][address >> KONAMI_PAGE_SHIFT] != NULL) {
-		return mem[ READ][address >> KONAMI_PAGE_SHIFT][address & KONAMI_PAGE_MASK];
+	if (mem[ READ][address >> PAGE_SHIFT] != NULL) {
+		return mem[ READ][address >> PAGE_SHIFT][address & PAGE_MASK];
 	}
 
 	if (pkonamiRead != NULL) {
@@ -130,8 +130,8 @@ UINT8 konamiRead(UINT16 address)
 
 UINT8 konamiFetch(UINT16 address)
 {
-	if (mem[FETCH][address >> KONAMI_PAGE_SHIFT] != NULL) {
-		return mem[FETCH][address >> KONAMI_PAGE_SHIFT][address & KONAMI_PAGE_MASK];
+	if (mem[FETCH][address >> PAGE_SHIFT] != NULL) {
+		return mem[FETCH][address >> PAGE_SHIFT][address & PAGE_MASK];
 	}
 
 	if (pkonamiRead != NULL) {
@@ -198,7 +198,7 @@ void konamiInit(INT32 /*nCpu*/) // only 1 cpu (No examples exist of multi-cpu ko
 	konami_init(konamiDummyIrqCallback);
 
 	for (INT32 i = 0; i < 3; i++) {
-		for (INT32 j = 0; j < (MEMORY_SPACE / KONAMI_PAGE_SIZE); j++) {
+		for (INT32 j = 0; j < (MEMORY_SPACE / PAGE_SIZE); j++) {
 			mem[i][j] = NULL;
 		}
 	}

@@ -258,7 +258,7 @@ void BurnSampleInit(INT32 bAdd /*add sample to stream?*/)
 #endif
 	snprintf(szTempPath, sizeof(szTempPath), "%s%cfba%csamples%c", g_system_dir, slash, slash, slash);
 #else
- 	sprintf(szTempPath, _TtoA(SAMPLE_DIRECTORY));
+	sprintf(szTempPath, _TtoA(SAMPLE_DIRECTORY));
 #endif
 
 	// test to see if file exists
@@ -456,6 +456,8 @@ void BurnSampleExit()
 #if defined FBA_DEBUG
 	if (!DebugSnd_SamplesInitted) bprintf(PRINT_ERROR, _T("BurnSampleExit called without init\n"));
 #endif
+
+	if (!DebugSnd_SamplesInitted) return;
 
 	for (INT32 i = 0; i < nTotalSamples; i++) {
 		sample_ptr = &samples[i];

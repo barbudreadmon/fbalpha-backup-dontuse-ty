@@ -1776,7 +1776,7 @@ static INT32 CpsGetROMs(bool bLoad)
 		
 		if ((ri.nType & 0x0f) == CPS2_PRG_68K) {
 			if (bLoad) {
-				BurnLoadRom(CpsRomLoad, i, 1);
+				if (BurnLoadRom(CpsRomLoad, i, 1)) return 1;
 				CpsRomLoad += ri.nLen;
 			} else {
 				nCpsRomLen += ri.nLen;
@@ -1786,8 +1786,8 @@ static INT32 CpsGetROMs(bool bLoad)
 		
 		if ((ri.nType & 0x0f) == CPS2_PRG_68K_SIMM) {
 			if (bLoad) {
-				BurnLoadRom(CpsRomLoad + 0x000001, i + 0, 2);
-				BurnLoadRom(CpsRomLoad + 0x000000, i + 1, 2);
+				if (BurnLoadRom(CpsRomLoad + 0x000001, i + 0, 2)) return 1;
+				if (BurnLoadRom(CpsRomLoad + 0x000000, i + 1, 2)) return 1;
 				CpsRomLoad += ri.nLen * 2;
 				i += 2;
 			} else {
@@ -1798,7 +1798,7 @@ static INT32 CpsGetROMs(bool bLoad)
 		
 		if ((ri.nType & 0x0f) == CPS2_PRG_68K_XOR_TABLE) {
 			if (bLoad) {
-				BurnLoadRom(CpsCodeLoad, i, 1);
+				if (BurnLoadRom(CpsCodeLoad, i, 1)) return 1;
 				CpsCodeLoad += ri.nLen;
 			} else {
 				nCpsCodeLen += ri.nLen;
@@ -1929,7 +1929,7 @@ static INT32 CpsGetROMs(bool bLoad)
 		
 		if ((ri.nType & 0x0f) == CPS2_ENCRYPTION_KEY) {
 			if (bLoad) {
-				BurnLoadRom(CpsKeyLoad, i, 1);
+				if (BurnLoadRom(CpsKeyLoad, i, 1)) return 1;
 				CpsKeyLoad += ri.nLen;
 			} else {
 				nCpsKeyLen += ri.nLen;
@@ -1962,7 +1962,7 @@ static INT32 CpsGetROMs(bool bLoad)
 		bprintf(PRINT_IMPORTANT, _T("  - Z80 ROM size:\t0x%08X\n"), nCpsZRomLen);
 		bprintf(PRINT_IMPORTANT, _T("  - Graphics data:\t0x%08X\n"), nCpsGfxLen);
 		bprintf(PRINT_IMPORTANT, _T("  - QSound data:\t0x%08X\n"), nCpsQSamLen);
-		bprintf(PRINT_IMPORTANT, _T("  - Key data:\t0x%08X\n"), nCpsKeyLen);
+		bprintf(PRINT_IMPORTANT, _T("  - Key data:\t\t0x%08X\n"), nCpsKeyLen);
 #endif
 
 		if (/*!nCpsCodeLen ||*/ !nCpsRomLen || !nCpsGfxLen || !nCpsZRomLen || ! nCpsQSamLen) {

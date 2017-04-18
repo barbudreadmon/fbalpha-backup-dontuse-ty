@@ -1,7 +1,8 @@
+// FB Alpha V-Five & Grind Stormer driver module
+// Driver and emulation by Jan Klaassen
+
 #include "toaplan.h"
 #include "nec_intf.h"
-
-// V-Five & Grind Stormer
 
 static UINT8 DrvButton[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
