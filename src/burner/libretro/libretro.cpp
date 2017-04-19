@@ -1537,6 +1537,12 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
       default:
          rotation = 0;
    }
+
+   // Fix issue with konami colors
+   if(BurnDrvGetHardwareCode() & HARDWARE_PREFIX_KONAMI)
+   {
+      nBurnBpp = 4;
+   }
 /*
    if(
          (strcmp("gunbird2", game_zip_name) == 0) ||
