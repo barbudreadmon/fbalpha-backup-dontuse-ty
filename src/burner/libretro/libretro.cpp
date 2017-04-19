@@ -124,8 +124,6 @@ extern INT32 EnableHiscores;
 #define cpsx 1
 #define neogeo 2
 
-static int descriptor_id = 0;
-
 struct ROMFIND
 {
    unsigned int nState;
@@ -230,10 +228,12 @@ static struct RomBiosInfo uni_bioses[] = {
    {NULL, 0, 0, NULL, 0 }
 };
 
+#if 0
 static struct RomBiosInfo unknown_bioses[] = {
    {"neopen.sp1",        0xcb915e76, 0x1c, "NeoOpen BIOS v0.1 beta"         ,  1 },
    {NULL, 0, 0, NULL, 0 }
 };
+#endif
 
 static RomBiosInfo *available_mvs_bios = NULL;
 static RomBiosInfo *available_aes_bios = NULL;
@@ -488,7 +488,7 @@ static int InpDIPSWInit()
          }
          else // ... so, to not hang, we will generate a name based on the position of the dip (DIPSWITCH 1, DIPSWITCH 2...)
          {
-            sprintf(option_name, "DIPSWITCH %d", dipswitch_core_options.size());
+            sprintf(option_name, "DIPSWITCH %d", (int)dipswitch_core_options.size());
             log_cb(RETRO_LOG_WARN, "Error in %sDIPList : The DIPSWITCH '%d' has no name. '%s' name has been generated\n", drvname, dipswitch_core_options.size(), option_name);
          }
          
@@ -590,8 +590,6 @@ static int InpDIPSWInit()
          log_cb(RETRO_LOG_INFO, "'%s' (%d)\n", dip_option->friendly_name, dip_option->values.size() - 1); // -1 to exclude the Default from the DIP Switch count
          for (int dip_value_idx = 0; dip_value_idx < dip_option->values.size(); dip_value_idx++)
          {
-            dipswitch_core_option_value *dip_value = &(dip_option->values[dip_value_idx]);
-   
             dip_option->values_str.append(dip_option->values[dip_value_idx].friendly_name);
             if (dip_value_idx != dip_option->values.size() - 1)
                dip_option->values_str.append("|");
@@ -1585,6 +1583,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    return true;
 }
 
+#if 0
 #if defined(FRONTEND_SUPPORTS_RGB565)		
 static unsigned int HighCol16(int r, int g, int b, int  /* i */)		
 {		
@@ -1596,10 +1595,7 @@ static unsigned int HighCol15(int r, int g, int b, int  /* i */)
    return (((r << 7) & 0x7c00) | ((g << 2) & 0x03e0) | ((b >> 3) & 0x001f));		
 }		
 #endif
-
-static void init_video()
-{
-}
+#endif
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
@@ -2573,7 +2569,7 @@ static void InputMake(void)
       }
    }
 
-   for (unsigned i = 0; i < nMacroCount; i++, pgi++)
+   for (i = 0; i < nMacroCount; i++, pgi++)
    {
       if (pgi->Macro.nMode == 1 && pgi->Macro.nSysMacro == 0)
       { // Macro is defined
@@ -3011,8 +3007,6 @@ static void init_macro_core_options()
 
       for (int macro_value_idx = 0; macro_value_idx < macro_option->values.size(); macro_value_idx++)
       {
-         macro_core_option_value *macro_value = &(macro_option->values[macro_value_idx]);
-
          macro_option->values_str.append(macro_option->values[macro_value_idx].friendly_name);
          if (macro_value_idx != macro_option->values.size() - 1)
             macro_option->values_str.append("|");
@@ -3079,7 +3073,7 @@ static void set_input_descriptors()
       input_descriptors[input_descriptor_idx] = macro_input_descriptors[i];
    }
 
-   input_descriptors[input_descriptor_idx] = { 0 };
+   input_descriptors[input_descriptor_idx].description = NULL;
 
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, input_descriptors);
 }
