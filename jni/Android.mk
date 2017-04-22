@@ -1,4 +1,7 @@
 HAVE_GRIFFIN    := 0
+INCLUDE_CPLUSPLUS11_FILES = 0
+BUILD_X64_EXE = 0
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -88,7 +91,23 @@ BURN_BLACKLIST := $(FBA_BURNER_DIR)/un7z.cpp \
 	$(FBA_BURN_DIR)/drv/capcom/ctv_make.cpp \
 	$(FBA_BURN_DIR)/drv/pgm/pgm_sprite_create.cpp \
 	$(FBA_INTERFACE_DIR)/audio/aud_interface.cpp \
-	$(FBA_CPU_DIR)/i8051/i8051ops.c
+	$(FBA_CPU_DIR)/i8051/mcs51ops.c \
+	$(FBA_CPU_DIR)/upd7810/7810ops.c \
+	$(FBA_CPU_DIR)/upd7810/7810tbl.c \
+	$(FBA_CPU_DIR)/v60/op12.c \
+	$(FBA_CPU_DIR)/v60/am.c \
+	$(FBA_CPU_DIR)/v60/am1.c \
+	$(FBA_CPU_DIR)/v60/am2.c \
+	$(FBA_CPU_DIR)/v60/op7a.c \
+	$(FBA_CPU_DIR)/v60/am3.c \
+	$(FBA_CPU_DIR)/v60/op2.c \
+	$(FBA_CPU_DIR)/v60/op4.c \
+	$(FBA_CPU_DIR)/v60/op6.c \
+	$(FBA_CPU_DIR)/v60/op3.c \
+	$(FBA_CPU_DIR)/v60/op5.c \
+	$(FBA_CPU_DIR)/v60/optable.c \
+	$(FBA_CPU_DIR)/v60/v60mem.c \
+	$(FBA_CPU_DIR)/v60/v60d.c
 
 ifeq ($(HAVE_GRIFFIN), 1)
 	GRIFFIN_CXX_SRC_FILES := $(GRIFFIN_DIR)/cps12.cpp $(GRIFFIN_DIR)/cps3.cpp $(GRIFFIN_DIR)/neogeo.cpp $(GRIFFIN_DIR)/pgm.cpp $(GRIFFIN_DIR)/snes.cpp $(GRIFFIN_DIR)/galaxian.cpp
@@ -102,11 +121,14 @@ else
 	PGM_DIR := $(FBA_BURN_DRIVERS_DIR)/pgm
 	SNES_DIR := $(FBA_BURN_DRIVERS_DIR)/snes
 	SMS_DIR := $(FBA_BURN_DRIVERS_DIR)/sms
-	M68K_DIR := $(FBA_CPU_DIR)/m68k
-	MIPS3_DIR := $(FBA_CPU_DIR)/mips3
 	MD_DIR := $(FBA_BURN_DRIVERS_DIR)/megadrive
 	MIDWAY_DIR := $(FBA_BURN_DRIVERS_DIR)/midway
 	PCE_DIR := $(FBA_BURN_DRIVERS_DIR)/pce
+	M68K_DIR := $(FBA_CPU_DIR)/m68k
+	MIPS3_DIR := $(FBA_CPU_DIR)/mips3
+	MIPS3_X64_DYNAREC_DIR := $(FBA_CPU_DIR)/mips3/x64
+	TMS34010_DIR := $(FBA_CPU_DIR)/tms34010
+	ADSP2100_DIR := $(FBA_CPU_DIR)/adsp2100
 endif
 
 ifeq ($(NO_MD), 1)
@@ -119,6 +141,25 @@ endif
 
 ifeq ($(NO_SMS), 1)
 	SMS_DIR :=
+endif
+
+ifeq ($(INCLUDE_CPLUSPLUS11_FILES), 1)
+	CXXFLAGS += -std=gnu++11
+	ifeq ($(BUILD_X64_EXE), 1)
+		FBA_DEFINES += -DXBYAK_NO_OP_NAMES -DMIPS3_X64_DRC
+	else
+		MIPS3_X64_DYNAREC_DIR :=
+	endif
+else
+	CXXFLAGS += -std=gnu++98
+	MIDWAY_DIR :=
+	MIPS3_DIR :=
+	MIPS3_X64_DYNAREC_DIR :=
+	TMS34010_DIR :=
+	ADSP2100_DIR :=
+	BURN_BLACKLIST += $(FBA_CPU_DIR)/adsp2100_intf.cpp \
+		$(FBA_CPU_DIR)/tms34010_intf.cpp \
+		$(FBA_CPU_DIR)/mips3_intf.cpp
 endif
 
 ifeq ($(NO_CPS), 1)
@@ -181,7 +222,7 @@ FBA_BURN_DIRS := $(FBA_BURN_DIR) \
 	$(FBA_BURN_DRIVERS_DIR)
 
 FBA_CPU_DIRS := $(FBA_CPU_DIR) \
-	$(FBA_CPU_DIR)/adsp2100 \
+	$(ADSP2100_DIR) \
 	$(FBA_CPU_DIR)/arm \
 	$(FBA_CPU_DIR)/arm7 \
 	$(FBA_CPU_DIR)/h6280 \
@@ -195,12 +236,17 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/m6809 \
 	$(M68K_DIR) \
 	$(MIPS3_DIR) \
+	$(MIPS3_X64_DYNAREC_DIR) \
 	$(FBA_CPU_DIR)/nec \
 	$(FBA_CPU_DIR)/pic16c5x \
 	$(FBA_CPU_DIR)/s2650 \
 	$(FBA_CPU_DIR)/sh2 \
 	$(FBA_CPU_DIR)/tlcs90 \
-	$(FBA_CPU_DIR)/tms34010 \
+	$(FBA_CPU_DIR)/tms32010 \
+	$(TMS34010_DIR) \
+	$(FBA_CPU_DIR)/upd7725 \
+	$(FBA_CPU_DIR)/upd7810 \
+	$(FBA_CPU_DIR)/v60 \
 	$(FBA_CPU_DIR)/z80
 
 FBA_LIB_DIRS := $(FBA_LIB_DIR)/zlib
@@ -236,7 +282,12 @@ LOCAL_C_INCLUDES = $(FBA_BURNER_DIR)/win32 \
 	$(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/i8039 \
 	$(FBA_CPU_DIR)/i8051 \
+	$(FBA_CPU_DIR)/tms32010 \
+	$(FBA_CPU_DIR)/upd7725 \
+	$(FBA_CPU_DIR)/upd7810 \
+	$(FBA_CPU_DIR)/v60 \
 	$(FBA_LIB_DIR)/zlib \
+	$(FBA_LIB_DIR)/lib7z \
 	$(FBA_BURN_DIR)/drv/capcom \
 	$(FBA_BURN_DIR)/drv/konami \
 	$(FBA_BURN_DIR)/drv/dataeast \
