@@ -66,4 +66,15 @@ extern HWND hScrnWnd;		// Handle to the screen window
 
 extern void InpDIPSWResetDIPs (void);
 
+/* undefine some system macro */
+#ifdef PAGE_SHIFT
+ #undef PAGE_SHIFT
+#endif
+#ifdef PAGE_SIZE
+ #undef PAGE_SIZE
+#endif
+#ifdef PAGE_MASK
+ #undef PAGE_MASK
+#endif
+
 #endif
