@@ -55,7 +55,6 @@ void TaitoF3VideoReset()
 }
 
 
-
 static INT32 min_x = 0;
 static INT32 max_x = 512;
 static INT32 min_y = 0;
@@ -200,7 +199,6 @@ struct f3_spritealpha_line_inf
 };
 
 
-
 static struct f3_playfield_line_inf m_pf_line_inf[5];
 static struct f3_spritealpha_line_inf m_sa_line_inf[1];
 
@@ -215,8 +213,6 @@ static void clear_f3_stuff()
 static INT32 (*m_dpix_n[8][16])(UINT32 s_pix);
 static INT32 (**m_dpix_lp[5])(UINT32 s_pix);
 static INT32 (**m_dpix_sp[9])(UINT32 s_pix);
-
-
 
 
 static void draw_pf_layer(INT32 layer)
@@ -421,8 +417,6 @@ static void draw_pixel_layer()
 		}
 	}
 }
-
-
 
 
 #define PSET_T					\
@@ -1033,8 +1027,6 @@ static void draw_sprites()
 }
 
 
-
-
 /*============================================================================*/
 
 #define SET_ALPHA_LEVEL(d,s)            \
@@ -1524,7 +1516,7 @@ static void init_alpha_blend_func()
 }
 
 #define UPDATE_PIXMAP_SP(pf_num)	\
-if(cx>=clip_als && cx<clip_ars && !(cx>=clip_bls && cx<clip_brs)) \
+if(cx>=clip_als && cx<clip_ars-1 && !(cx>=clip_bls && cx<clip_brs)) \
 	{ \
 		sprite_pri=sprite[pf_num]&m_pval; \
 		if(sprite_pri) \
@@ -1540,7 +1532,7 @@ if(cx>=clip_als && cx<clip_ars && !(cx>=clip_bls && cx<clip_brs)) \
 	}
 
 #define UPDATE_PIXMAP_LP(pf_num) \
-	if (cx>=m_clip_al##pf_num && cx<m_clip_ar##pf_num && !(cx>=m_clip_bl##pf_num && cx<m_clip_br##pf_num)) 	\
+	if (cx>=m_clip_al##pf_num && cx<m_clip_ar##pf_num-1 && !(cx>=m_clip_bl##pf_num && cx<m_clip_br##pf_num)) 	\
 	{ \
 		m_tval=*m_tsrc##pf_num; \
 		if(m_tval&0xf0) \
@@ -1577,8 +1569,6 @@ static void draw_scanlines(INT32 xsize,INT16 *draw_line_num,
 		yadvp = -yadvp;
 	}
 #endif
-
-	
 
 	dstp0 = TaitoPriorityMap + (ty * 1024) + x;
 
@@ -1844,7 +1834,7 @@ static void calculate_clip(INT32 y, UINT16 pri, UINT32* clip0, UINT32* clip1, in
 		}
 		break;
 	default:
-		// popmessage("Illegal clip mode");
+		// Illegal clip mode
 		break;
 	}
 }
@@ -1955,9 +1945,17 @@ static void get_line_ram_info(INT32 which_map, INT32 sx, INT32 sy, INT32 pos, UI
 		_y_zoom[y] = (line_zoom&0xff) << 9;
 
 		/* Evaluate clipping */
-		if (pri&0x0800)
+		/* Notes:
+		   kludge: line-disable breaks quizhuhu text & landmakr "you win / you lose" text. [april 23, 2017 -dink]
+		   somehow I think 0x0800 has nothing to do with line-disable.
+		   although tcobra2 uses this to clip the sides of the playfield
+		*/
+
+		if (pri&0x0800 && f3_game != QUIZHUHU && f3_game != LANDMAKR)
+		{
 			line_enable=0;
-		else if (pri&0x0330)
+		}
+		else if (pri&0x0330 && f3_game != PBOBBLE4) // kludge: clipping breaks win/lose animation [april 23, 2017 -dink]
 		{
 			//fast path todo - remove line enable
 			calculate_clip(y, pri&0x0330, &line_t->clip0[y], &line_t->clip1[y], &line_enable);
@@ -2009,14 +2007,10 @@ static void get_line_ram_info(INT32 which_map, INT32 sx, INT32 sy, INT32 pos, UI
 			if (extended_layers == 0)
 			{
 				if (which_map == 2) {
-					tmap = bitmap_layer[4]; //m_pf5_tilemap; // pitch -> crowd
-					//pmap = bitmap_flags[4]; // breaks hthero & the footy games. keeping for reference. -dink
-					//map_width = bitmap_width[4];
+					tmap = bitmap_layer[4];
 				}
 				if (which_map == 3) {
-					tmap = bitmap_layer[5]; //m_pf6_tilemap; // corruption on goals -> blank (hthero94)
-					//pmap = bitmap_flags[5]; // "same as above"
-					//map_width = bitmap_width[5];
+					tmap = bitmap_layer[5];
 				}
 			}
 		}
@@ -2029,8 +2023,6 @@ static void get_line_ram_info(INT32 which_map, INT32 sx, INT32 sy, INT32 pos, UI
 		/* set pixmap pointer */
 		UINT16 *srcbitmap = tmap;
 		UINT8 *flagsbitmap = pmap;
-
-//		bprintf (0, _T("%d, %d\n"), which_map, bitmap_width[which_map]);
 
 		if(line_t->alpha_mode[y]!=0)
 		{
@@ -2113,6 +2105,8 @@ static void get_vram_info(INT32 sx, INT32 sy)
 			line_enable=3;
 		else
 			line_enable=1;
+
+		if (f3_game == ARABIANM) line_enable = 1; // kludge: arabianm missing cutscene text
 
 		line_t->pri[y]=pri;
 
@@ -2710,21 +2704,15 @@ void TaitoF3VideoInit()
 
 
 	init_alpha_blend_func();
-
-
 }
-
 
 static void pal16_check_init()
 {
 	if (nBurnBpp < 3 && !pal16) {
-		pal16 = (UINT16 *)BurnMalloc((1<<24) * sizeof (UINT16));
+		pal16 = (UINT16 *)BurnMalloc((1 << 24) * sizeof (UINT16));
 
 		for (INT32 i = 0; i < (1 << 24); i++) {
-			INT32 r = (i >> (16+3)) & 0x1f;
-			INT32 g = (i >> (8+2)) & 0x3f;
-			INT32 b = (i >> (0+3)) & 0x1f;
-			pal16[i] = (r << 11) | (g << 5) | b;
+			pal16[i] = BurnHighCol(i / 0x10000, (i / 0x100) & 0xff, i & 0xff, 0);
 		}
 	}
 }
@@ -2740,7 +2728,6 @@ void TaitoF3VideoExit()
 	}
 
 }
-
 
 void TaitoF3DrawCommon(INT32 scanline_start)
 {
