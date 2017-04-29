@@ -308,8 +308,10 @@ void set_neo_system_bios()
 char g_rom_dir[1024];
 char g_save_dir[1024];
 char g_system_dir[1024];
-static bool driver_inited;
 bool sh2speedhack;
+extern unsigned int (__cdecl *BurnHighCol) (signed int r, signed int g, signed int b, signed int i);
+
+static bool driver_inited;
 
 void retro_get_system_info(struct retro_system_info *info)
 {
@@ -1484,6 +1486,79 @@ int VidRecalcPal()
 
 bool analog_controls_enabled = false;
 
+// Standard callbacks for 16/24/32 bit color:
+static UINT32 __cdecl HighCol15(INT32 r, INT32 g, INT32 b, INT32  /* i */)
+{
+	UINT32 t;
+	t =(r<<7)&0x7c00; // 0rrr rr00 0000 0000
+	t|=(g<<2)&0x03e0; // 0000 00gg ggg0 0000
+	t|=(b>>3)&0x001f; // 0000 0000 000b bbbb
+	return t;
+}
+
+static UINT32 __cdecl HighCol16(INT32 r, INT32 g, INT32 b, INT32 /* i */)
+{
+	UINT32 t;
+	t =(r<<8)&0xf800; // rrrr r000 0000 0000
+	t|=(g<<3)&0x07e0; // 0000 0ggg ggg0 0000
+	t|=(b>>3)&0x001f; // 0000 0000 000b bbbb
+	return t;
+}
+
+// 24-bit/32-bit
+static UINT32 __cdecl HighCol24(INT32 r, INT32 g, INT32 b, INT32  /* i */)
+{
+	UINT32 t;
+	t =(r<<16)&0xff0000;
+	t|=(g<<8 )&0x00ff00;
+	t|=(b    )&0x0000ff;
+
+	return t;
+}
+
+INT32 SetBurnHighCol(INT32 nDepth)
+{
+	VidRecalcPal();
+	
+	if (nDepth == 15) {
+		enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_0RGB1555;
+		if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
+		{
+			nBurnBpp = 2;
+			BurnHighCol = HighCol15;
+		}
+	}
+	
+	if (nDepth == 16) {
+		enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
+		if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
+		{
+			nBurnBpp = 2;
+			BurnHighCol = HighCol16;
+		}
+	}
+	
+	if (nDepth == 24) {
+		enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
+		if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
+		{
+			nBurnBpp = 3;
+			BurnHighCol = HighCol24;
+		}
+	}
+	
+	if (nDepth == 32) {
+		enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
+		if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
+		{
+			nBurnBpp = 4;
+			BurnHighCol = HighCol24;
+		}
+	}
+
+	return 0;
+}
+
 static bool fba_init(unsigned driver, const char *game_zip_name)
 {
    nBurnDrvActive = driver;
@@ -1493,7 +1568,6 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
       return false;
    }
 
-   nBurnBpp = 2;
    nFMInterpolation = 3;
    nInterpolation = 1;
 
@@ -1542,41 +1616,14 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
    environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
 
-   VidRecalcPal();
-   
 #ifdef FRONTEND_SUPPORTS_RGB565
-   if(nBurnBpp == 4)
-   {		
-      enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;		
-
-      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))		
-         log_cb(RETRO_LOG_INFO, "Frontend supports XRGB888 - will use that instead of XRGB1555.\n");		
-   }		
-   else		
-   {		
-      enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;		
-
-      if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))		
-         log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");		
-   }		
+   SetBurnHighCol(16);
+#else
+   SetBurnHighCol(15);
 #endif
 
    return true;
 }
-
-#if 0
-#if defined(FRONTEND_SUPPORTS_RGB565)		
-static unsigned int HighCol16(int r, int g, int b, int  /* i */)		
-{		
-   return (((r << 8) & 0xf800) | ((g << 3) & 0x07e0) | ((b >> 3) & 0x001f));		
-}		
-#else		
-static unsigned int HighCol15(int r, int g, int b, int  /* i */)		
-{		
-   return (((r << 7) & 0x7c00) | ((g << 2) & 0x03e0) | ((b >> 3) & 0x001f));		
-}		
-#endif
-#endif
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
