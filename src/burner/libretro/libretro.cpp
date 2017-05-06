@@ -308,7 +308,7 @@ void set_neo_system_bios()
 char g_rom_dir[1024];
 char g_save_dir[1024];
 char g_system_dir[1024];
-bool sh2speedhack;
+extern INT32 cps3speedhack;
 extern unsigned int (__cdecl *BurnHighCol) (signed int r, signed int g, signed int b, signed int i);
 
 static bool driver_inited;
@@ -1165,9 +1165,9 @@ static void check_variables(void)
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
       if (strcmp(var.value, "fast") == 0)
-         sh2speedhack = true;
+         cps3speedhack = 1;
       else
-         sh2speedhack = false;
+         cps3speedhack = 0;
    }
 #endif
 
