@@ -1,10 +1,13 @@
 // FB Alpha Rohga Armor Force / Wizard Fire / Nitro Ball / Schmeiser Robo driver module
 // Based on MAME driver by Bryan McPhail
 
+// tofix: dataeast logo too fast or missing in rohga
+
 #include "tiles_generic.h"
 #include "m68000_intf.h"
 #include "h6280_intf.h"
 #include "deco16ic.h"
+#include "deco146.h"
 #include "msm6295.h"
 #include "burn_ym2151.h"
 
@@ -29,7 +32,6 @@ static UINT8 *DrvSprRAM;
 static UINT8 *DrvSprRAM2;
 static UINT8 *DrvSprBuf;
 static UINT8 *DrvSprBuf2;
-static UINT8 *DrvPrtRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
@@ -456,11 +458,6 @@ void __fastcall rohga_main_write_word(UINT32 address, UINT16 data)
 
 	switch (address)
 	{
-		case 0x2800a8:
-			deco16_soundlatch = data & 0xff;
-			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
-		return;
-
 		case 0x300000:
 			memcpy (DrvSprBuf2, DrvSprBuf, 0x800);
 			memcpy (DrvSprBuf,  DrvSprRAM, 0x800);
@@ -479,9 +476,8 @@ void __fastcall rohga_main_write_word(UINT32 address, UINT16 data)
 		return;
 	}
 
-	if ((address & 0xffff000) == 0x280000) {
-		deco16_104_rohga_prot_w(address, data, 0xffff);
-
+	if (address >= 0x280000 && address <= 0x283fff) {
+		deco146_104_prot_ww(0, address, data);
 		return;
 	}
 }
@@ -490,11 +486,6 @@ void __fastcall rohga_main_write_byte(UINT32 address, UINT8 data)
 {
 	switch (address)
 	{
-		case 0x2800a9:
-			deco16_soundlatch = data;
-			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
-		return;
-
 		case 0x300000:
 		case 0x300001:
 			memcpy (DrvSprBuf2, DrvSprBuf, 0x800);
@@ -517,8 +508,8 @@ void __fastcall rohga_main_write_byte(UINT32 address, UINT8 data)
 		return;
 	}
 
-	if ((address & 0xffff000) == 0x280000) {
-		deco16_104_rohga_prot_w(address, data, 0x00ff << ((address & 1) << 3));
+	if (address >= 0x280000 && address <= 0x283fff) {
+		deco146_104_prot_wb(0, address, data);
 		return;
 	}
 }
@@ -539,8 +530,8 @@ UINT16 __fastcall rohga_main_read_word(UINT32 address)
 			return 0;
 	}
 
-	if ((address & 0xffff000) == 0x280000) {
-		return deco16_104_rohga_prot_r(address);
+	if (address >= 0x280000 && address <= 0x283fff) {
+		return deco146_104_prot_rw(0, address);
 	}
 
 	return 0;
@@ -566,8 +557,8 @@ UINT8 __fastcall rohga_main_read_byte(UINT32 address)
 			return 0;
 	}
 
-	if ((address & 0xffff000) == 0x280000) {
-		return deco16_104_rohga_prot_r(address) >> ((~address & 1) << 3);
+	if (address >= 0x280000 && address <= 0x283fff) {
+		return deco146_104_prot_rb(0, address);
 	}
 
 	return 0;
@@ -599,22 +590,11 @@ void __fastcall wizdfire_main_write_word(UINT32 address, UINT16 data)
 		case 0x320004:
 			SekSetIRQLine(6, CPU_IRQSTATUS_NONE);
 		return;
-
-		case 0xfe4150:
-		case 0xff4260: // nitrobal
-		case 0xff4a60:
-			deco16_soundlatch = data & 0xff;
-			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
-		return;
 	}
 
-	if ((address & 0xffff000) == 0xfe4000) {
-		deco16_prot_ram[(address & 0x7ff)/2] = data;
-		return;
-	}
-
-	if ((address & 0xffff000) == 0xff4000) {
-		deco16_146_nitroball_prot_w(address, data, 0xffff);
+	if ((address >= 0xff4000 && address <= 0xff7fff) || // wizdfire
+	    (address >= 0xfe4000 && address <= 0xfe7fff)) { // nitrobal
+		deco146_104_prot_ww(0, address, data);
 		return;
 	}
 }
@@ -648,22 +628,11 @@ void __fastcall wizdfire_main_write_byte(UINT32 address, UINT8 data)
 		case 0x320005:
 			SekSetIRQLine(6, CPU_IRQSTATUS_NONE);
 		return;
-
-		case 0xfe4151:
-		case 0xff4261: // nitrobal
-		case 0xff4a61:
-			deco16_soundlatch = data;
-			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
-		return;
 	}
 
-	if ((address & 0xffff000) == 0xfe4000) {
-		DrvPrtRAM[(address & 0x7ff)^1] = data;
-		return;
-	}
-
-	if ((address & 0xffff000) == 0xff4000) {
-		deco16_146_nitroball_prot_w(address, data, 0x00ff << ((address & 1) << 3));
+	if ((address >= 0xff4000 && address <= 0xff7fff) || // wizdfire
+	    (address >= 0xfe4000 && address <= 0xfe7fff)) { // nitrobal
+		deco146_104_prot_wb(0, address, data);
 		return;
 	}
 }
@@ -672,12 +641,9 @@ UINT16 __fastcall wizdfire_main_read_word(UINT32 address)
 {
 	if (address == 0x320000) return DrvInputs[2];
 
-	if ((address & 0xffff800) == 0xfe4000) {
-		return deco16_104_prot_r(address);
-	}
-
-	if ((address & 0xffff000) == 0xff4000) {
-		return deco16_146_nitroball_prot_r(address);
+	if ((address >= 0xff4000 && address <= 0xff7fff) || // wizdfire
+	    (address >= 0xfe4000 && address <= 0xfe7fff)) { // nitrobal
+		return deco146_104_prot_rw(0, address);
 	}
 
 	return 0;
@@ -687,12 +653,9 @@ UINT8 __fastcall wizdfire_main_read_byte(UINT32 address)
 {
 	if (address == 0x320000 || address == 0x320001) return DrvInputs[2] >> ((~address & 1) << 3);
 
-	if ((address & 0xffff800) == 0xfe4000) {
-		return deco16_104_prot_r(address) >> ((~address & 1) << 3);
-	}
-
-	if ((address & 0xffff000) == 0xff4000) {
-		return deco16_146_nitroball_prot_r(address) >> ((~address & 1) << 3);
+	if ((address >= 0xff4000 && address <= 0xff7fff) || // wizdfire
+	    (address >= 0xfe4000 && address <= 0xfe7fff)) { // nitrobal
+		return deco146_104_prot_rb(0, address);
 	}
 
 	return 0;
@@ -765,10 +728,6 @@ static INT32 MemIndex()
 	DrvSprBuf2	= Next; Next += 0x000800;
 	DrvSprBuf	= Next; Next += 0x000800;
 
-	deco16_prot_ram	= (UINT16*)Next;
-	DrvPrtRAM	= Next; Next += 0x000800;
-	deco16_buffer_ram = (UINT16*)Next; Next += 0x000800;
-
 	DrvPalRAM	= Next; Next += 0x002000;
 	DrvPalBuf	= Next; Next += 0x002000;
 
@@ -799,6 +758,27 @@ static INT32 DrvSpriteDecode()
 	BurnFree (tmp);
 
 	return 0;
+}
+
+static UINT16 deco_104_port_a_cb()
+{
+	return DrvInputs[0];
+}
+
+static UINT16 deco_104_port_b_cb()
+{
+	return (DrvInputs[1] & ~8) | deco16_vblank;
+}
+
+static UINT16 deco_104_port_c_cb()
+{
+	return DrvInputs[2];
+}
+
+static void soundlatch_write(UINT16 data)
+{
+	deco16_soundlatch = data & 0xff;
+	h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 }
 
 static INT32 RohgaInit()
@@ -858,6 +838,13 @@ static INT32 RohgaInit()
 	deco16_set_bank_callback(1, rohga_bank_callback);
 	deco16_set_bank_callback(2, rohga_bank_callback);
 	deco16_set_bank_callback(3, rohga_bank_callback);
+
+	// 146_104 prot
+	deco_104_init();
+	deco_146_104_set_port_a_cb(deco_104_port_a_cb);
+	deco_146_104_set_port_b_cb(deco_104_port_b_cb);
+	deco_146_104_set_port_c_cb(deco_104_port_c_cb);
+	deco_146_104_set_soundlatch_cb(soundlatch_write);
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
@@ -963,6 +950,14 @@ static INT32 WizdfireInit()
 	deco16_set_bank_callback(2, rohga_bank_callback);
 	deco16_set_bank_callback(3, rohga_bank_callback);
 
+	// 146_104 prot
+	deco_104_init();
+	deco_146_104_set_interface_scramble_reverse();
+	deco_146_104_set_port_a_cb(deco_104_port_a_cb);
+	deco_146_104_set_port_b_cb(deco_104_port_b_cb);
+	deco_146_104_set_port_c_cb(deco_104_port_c_cb);
+	deco_146_104_set_soundlatch_cb(soundlatch_write);
+
 	SekInit(0, 0x68000);
 	SekOpen(0);
 	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, MAP_ROM);
@@ -1054,6 +1049,13 @@ static INT32 SchmeisrInit()
 	deco16_set_bank_callback(2, rohga_bank_callback);
 	deco16_set_bank_callback(3, rohga_bank_callback);
 
+	// 146_104 prot
+	deco_104_init();
+	deco_146_104_set_port_a_cb(deco_104_port_a_cb);
+	deco_146_104_set_port_b_cb(deco_104_port_b_cb);
+	deco_146_104_set_port_c_cb(deco_104_port_c_cb);
+	deco_146_104_set_soundlatch_cb(soundlatch_write);
+
 	SekInit(0, 0x68000);
 	SekOpen(0);
 	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, MAP_ROM);
@@ -1144,6 +1146,13 @@ static INT32 HangzoInit()
 	deco16_set_bank_callback(1, rohga_bank_callback);
 	deco16_set_bank_callback(2, rohga_bank_callback);
 	deco16_set_bank_callback(3, rohga_bank_callback);
+
+	// 146_104 prot
+	deco_104_init();
+	deco_146_104_set_port_a_cb(deco_104_port_a_cb);
+	deco_146_104_set_port_b_cb(deco_104_port_b_cb);
+	deco_146_104_set_port_c_cb(deco_104_port_c_cb);
+	deco_146_104_set_soundlatch_cb(soundlatch_write);
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
@@ -1249,6 +1258,15 @@ static INT32 NitrobalInit()
 	deco16_set_bank_callback(2, rohga_bank_callback);
 	deco16_set_bank_callback(3, rohga_bank_callback);
 
+	// 146_104 prot
+	deco_146_init();
+	deco_146_104_set_interface_scramble_reverse();
+	deco_146_104_set_use_magic_read_address_xor(1);
+	deco_146_104_set_port_a_cb(deco_104_port_a_cb);
+	deco_146_104_set_port_b_cb(deco_104_port_b_cb);
+	deco_146_104_set_port_c_cb(deco_104_port_c_cb);
+	deco_146_104_set_soundlatch_cb(soundlatch_write);
+
 	SekInit(0, 0x68000);
 	SekOpen(0);
 	SekMapMemory(Drv68KROM,			0x000000, 0x1fffff, MAP_ROM);
@@ -1292,11 +1310,11 @@ static INT32 DrvExit()
 	deco16Exit();
 
 	SekExit();
-	
+
 	deco16SoundExit();
 
 	BurnFree (AllMem);
-	
+
 	DrvIsWizdfireEnglish = 0;
 	DrvHangzo = 0;
 
@@ -1471,10 +1489,8 @@ static void wizdfire_draw_sprites(UINT8 *ram, UINT8 *gfx, INT32 coloff, INT32 mo
 	}
 }
 
-static void nitrobal_draw_sprites(UINT8 *ram, INT32 gfxbank, INT32 /*bpp*/)
+static void nitrobal_draw_sprites(UINT8 *ram, INT32 gfxbank, INT32 alpha_on)
 {
-//	if (bpp != (nBurnBpp & 0x04)) return;
-
 	UINT16 *spriteptr = (UINT16*)ram;
 
 	INT32 offs = 0x3fc;
@@ -1511,13 +1527,13 @@ static void nitrobal_draw_sprites(UINT8 *ram, INT32 gfxbank, INT32 /*bpp*/)
 		if (gfxbank == 3)
 		{
 			switch (BURN_ENDIAN_SWAP_INT16(spriteptr[offs + 2]) & 0xe0)
-			{
+			{ // deco16_priority == 0x20 in alien world, 0 in ghost town
 				case 0xc0: tilemap_pri = 8;   break;
-				case 0x80: tilemap_pri = 32;  break;
+				case 0x80: tilemap_pri = 64;  break; // was 32, fixes horseshoe "ring" under bouncers in first level
 				case 0x20: tilemap_pri = 32;  break;
 				case 0x40: tilemap_pri = 8;   break;
-				case 0xa0: tilemap_pri = 32;  break;
-				case 0x00: tilemap_pri = 128; break;
+				case 0xa0: tilemap_pri = (deco16_priority) ? 8 : 32;  break; // was 32
+				case 0x00: tilemap_pri = 72; break; // was 128, this and above fixes the archways over the player in alien world
 				default:   tilemap_pri = 128; break;
 			}
 
@@ -1584,11 +1600,11 @@ static void nitrobal_draw_sprites(UINT8 *ram, INT32 gfxbank, INT32 /*bpp*/)
 		{
 			for (y = 0; y < h; y++)
 			{
-				//if (!bpp) {
-					deco16_draw_prio_sprite(pTransDraw, gfx, sprite + y + h * x, (colour << 4) + coloff, sx + x_mult * (w-x), sy + y_mult * (h-y), fx, fy, tilemap_pri, sprite_pri);
-				//} else {
-				//	deco16_draw_alphaprio_sprite(DrvPalette, gfx, sprite + y + h * x, (colour << 4) + coloff, sx + x_mult * (w-x), sy + y_mult * (h-y), fx, fy, tilemap_pri, sprite_pri, alpha);
-				//}
+				if (!alpha_on) {
+					deco16_draw_prio_sprite_nitrobal(pTransDraw, gfx, sprite + y + h * x, (colour << 4) + coloff, sx + x_mult * (w-x), sy + y_mult * (h-y), fx, fy, tilemap_pri, sprite_pri);
+				} else {
+					deco16_draw_alphaprio_sprite(DrvPalette, gfx, sprite + y + h * x, (colour << 4) + coloff, sx + x_mult * (w-x), sy + y_mult * (h-y), fx, fy, tilemap_pri, sprite_pri, alpha);
+				}
 			}
 		}
 
@@ -1651,7 +1667,7 @@ static void update_rohga(INT32 is_schmeisr)
 		case 0:
 			if (deco16_priority & 4)
 			{
-				draw_combined_playfield(0x300, DECO16_LAYER_PRIORITY(3));
+				draw_combined_playfield(0x200, DECO16_LAYER_PRIORITY(3));
 			}
 			else
 			{
@@ -1748,25 +1764,27 @@ static INT32 NitrobalDraw()
 		pTransDraw[i] = 0x200;
 	}
 
-	draw_combined_playfield_step1();
-
 	deco16_clear_prio_map();
+
+	draw_combined_playfield_step1();
 
 	draw_combined_playfield(0x200, 0);
 
-//	if (nBurnLayer & 1) deco16_draw_layer(3, pTransDraw, DECO16_LAYER_OPAQUE);
-
 	deco16_draw_layer(1, pTransDraw, 16);
 
-	nitrobal_draw_sprites(DrvSprBuf , 3, 0);
-	nitrobal_draw_sprites(DrvSprBuf2, 4, 0);
+	if (nBurnBpp != 4) { // regular (non-alpha) draw for anything !32bpp
+		nitrobal_draw_sprites(DrvSprBuf , 3, 0);
+		nitrobal_draw_sprites(DrvSprBuf2, 4, 0);
+	}
 
-	deco16_draw_layer(0, pTransDraw, DECO16_LAYER_PRIORITY(0xff)); 
+	deco16_draw_layer(0, pTransDraw, DECO16_LAYER_PRIORITY(0xff));
 
 	BurnTransferCopy(DrvPalette);
 
-//	nitrobal_draw_sprites(DrvSprBuf , 3, 4);
-//	nitrobal_draw_sprites(DrvSprBuf2, 4, 4);
+	if (nBurnBpp == 4) { // draw alpha sprites if 32bpp
+		nitrobal_draw_sprites(DrvSprBuf , 3, 1);
+		nitrobal_draw_sprites(DrvSprBuf2, 4, 1);
+	}
 
 	return 0;
 }
@@ -1778,7 +1796,6 @@ static INT32 DrvFrame()
 	}
 
 	{
-		deco16_prot_inputs = DrvInputs;
 		memset (DrvInputs, 0xff, 4 * sizeof(UINT16)); 
 		for (INT32 i = 0; i < 16; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
@@ -1788,7 +1805,7 @@ static INT32 DrvFrame()
 		DrvInputs[2] = (DrvDips[1] << 8) | (DrvDips[0] << 0);
 	}
 
-	INT32 nInterleave = 232;
+	INT32 nInterleave = 256;
 	INT32 nSoundBufferPos = 0;
 	INT32 nCyclesTotal[2] = { 14000000 / 58, 2685000 / 58 };
 	INT32 nCyclesDone[2] = { 0, 0 };
@@ -1805,18 +1822,19 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += SekRun(nCyclesTotal[0] / nInterleave);
 		nCyclesDone[1] += h6280Run(nCyclesTotal[1] / nInterleave);
 
-		if (i == 206) deco16_vblank = 0x08;
+		if (i == 248) {
+			SekSetIRQLine(6, CPU_IRQSTATUS_ACK);
+			deco16_vblank = 0x08;
+		}
 		
-		if (pBurnSoundOut) {
-			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+		if (pBurnSoundOut && i%8==7) { // rohga is really picky regarding ym2151 timing.
+			INT32 nSegmentLength = nBurnSoundLen / (nInterleave/8);
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 			deco16SoundUpdate(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
 
-	SekSetIRQLine(6, CPU_IRQSTATUS_ACK);
-	
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
@@ -1854,7 +1872,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
-	
+
 		deco16SoundScan(nAction, pnMin);
 
 		deco16Scan();

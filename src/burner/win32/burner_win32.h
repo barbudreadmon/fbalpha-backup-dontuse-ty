@@ -29,7 +29,6 @@
 #include <mmsystem.h>
 #include <shellapi.h>
 #include <shlwapi.h>
-#include "dwmapi_core.h"
 
 INT32 DSCore_Init();
 INT32 DICore_Init();
@@ -206,6 +205,8 @@ void RegisterExtensions(bool bCreateKeys);
 int GetClientScreenRect(HWND hWnd, RECT* pRect);
 int WndInMid(HWND hMid, HWND hBase);
 char* DecorateGameName(unsigned int nBurnDrv);
+void EnableHighResolutionTiming();
+void DisableHighResolutionTiming();
 
 
 // drv.cpp
@@ -227,14 +228,6 @@ int RunIdle();
 int RunMessageLoop();
 int RunReset();
 void ToggleLayer(unsigned char thisLayer);
-
-// mdi.cpp
-#define ID_MDI_START_CHILD		2990
-extern HWND hWndChildFrame;
-extern HWND hVideoWindow;
-BOOL RegNewMDIChild();
-int InitBurnerMDI(HWND hParentWnd);
-void DestroyBurnerMDI(int nAction);
 
 // scrn.cpp
 extern HWND hScrnWnd;								// Handle to the screen window
@@ -474,14 +467,12 @@ void IpsPatchExit();
 // localise_download.cpp
 int LocaliseDownloadCreate(HWND hParentWND);
 
+// choose_monitor.cpp
+int ChooseMonitorCreate();
+
 // Misc
 #define _TtoA(a)	TCHARToANSI(a, NULL, 0)
 #define _AtoT(a)	ANSIToTCHAR(a, NULL, 0)
-
-// numpluscommas.cpp
-TCHAR* FormatCommasNumber(__int64);
-#define _uInt64ToCommaFormattedTCHAR(szOUT, nIN)	\
-	_stprintf(szOUT, _T("%s"), FormatCommasNumber(nIN));
 
 #ifdef INCLUDE_AVI_RECORDING
 // ----------------------------------------------------------------------------

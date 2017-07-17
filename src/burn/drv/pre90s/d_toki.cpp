@@ -507,7 +507,7 @@ static INT32 TokibDoReset()
 
 static void tokib_rom_decode()
 {
-	UINT8 *temp = (UINT8*)malloc(65536 * 2);
+	UINT8 *temp = (UINT8*)BurnMalloc(65536 * 2);
 	INT32 i, offs, len;
 	UINT8 *rom;
 
@@ -544,10 +544,7 @@ static void tokib_rom_decode()
 		}
 	}
 
-	if (temp) {
-		free (temp);
-		temp = NULL;
-	}
+	BurnFree (temp);
 }
 
 
@@ -919,7 +916,7 @@ static INT32 TokibInit()
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)malloc(nLen)) == NULL) return 1;
+	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
@@ -1474,6 +1471,9 @@ static struct BurnRomInfo tokiRomDesc[] = {
 	{ "toki_bk2.ef8",		0x80000, 0xd86ac664, 6 | BRF_GRA },           // 11 Sprites
 
 	{ "9.m1",				0x20000, 0xae7a6b8b, 7 | BRF_SND },           // 12 MSM6295 Samples
+	
+	{ "PROM27.J3",			0x00100, 0xe616ae85, 0 | BRF_OPT },
+	{ "PROM26.B6",			0x00100, 0xea6312c6, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(toki)
@@ -1512,6 +1512,9 @@ static struct BurnRomInfo tokiaRomDesc[] = {
 	{ "toki_bk2.ef8",		0x80000, 0xd86ac664, 6 | BRF_GRA },           // 11 Sprites
 
 	{ "9.m1",				0x20000, 0xae7a6b8b, 7 | BRF_SND },           // 12 MSM6295 Samples
+	
+	{ "PROM27.J3",			0x00100, 0xe616ae85, 0 | BRF_OPT },
+	{ "PROM26.B6",			0x00100, 0xea6312c6, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(tokia)
@@ -1550,6 +1553,9 @@ static struct BurnRomInfo tokiuRomDesc[] = {
 	{ "toki_bk2.ef8",		0x80000, 0xd86ac664, 6 | BRF_GRA },           // 11 Sprites
 
 	{ "9.m1",				0x20000, 0xae7a6b8b, 7 | BRF_SND },           // 12 MSM6295 Samples
+	
+	{ "PROM27.J3",			0x00100, 0xe616ae85, 0 | BRF_OPT },
+	{ "PROM26.B6",			0x00100, 0xea6312c6, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(tokiu)
@@ -1588,6 +1594,9 @@ static struct BurnRomInfo tokiuaRomDesc[] = {
 	{ "toki_bk2.ef8",		0x80000, 0xd86ac664, 6 | BRF_GRA },           // 11 Sprites
 
 	{ "9.m1",				0x20000, 0xae7a6b8b, 7 | BRF_SND },           // 12 MSM6295 Samples
+	
+	{ "PROM27.J3",			0x00100, 0xe616ae85, 0 | BRF_OPT },
+	{ "PROM26.B6",			0x00100, 0xea6312c6, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(tokiua)
@@ -1638,6 +1647,9 @@ static struct BurnRomInfo tokipRomDesc[] = {
 	{ "BACK 2-3.ROM4",		0x20000, 0x6759571f, 6 | BRF_GRA },           // 23
 
 	{ "9 1-M",				0x20000, 0xae7a6b8b, 7 | BRF_SND },           // 24 MSM6295 Samples
+	
+	{ "PROM27.J3",			0x00100, 0xe616ae85, 0 | BRF_OPT },
+	{ "PROM26.B6",			0x00100, 0xea6312c6, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(tokip)
@@ -1676,6 +1688,9 @@ static struct BurnRomInfo jujuRomDesc[] = {
 	{ "toki_bk2.ef8",		0x80000, 0xd86ac664, 6 | BRF_GRA },           // 11 Sprites
 
 	{ "9.m1",				0x20000, 0xae7a6b8b, 7 | BRF_SND },           // 12 MSM6295 Samples
+	
+	{ "PROM27.J3",			0x00100, 0xe616ae85, 0 | BRF_OPT },
+	{ "PROM26.B6",			0x00100, 0xea6312c6, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(juju)

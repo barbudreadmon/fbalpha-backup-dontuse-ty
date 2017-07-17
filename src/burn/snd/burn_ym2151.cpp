@@ -1,6 +1,12 @@
+// FBAlpha YM-2151 sound core interface
 #include "burnint.h"
 #include "burn_sound.h"
 #include "burn_ym2151.h"
+
+// Irq Callback timing notes..
+// Due to the way the internal timing of the ym2151 works, BurnYM2151Render()
+// should not be called more than ~65 times per frame.  See DrvFrame() in
+// drv/konami/d_surpratk.cpp for a simple and effective work-around.
 
 void (*BurnYM2151Render)(INT16* pSoundBuf, INT32 nSegmentLength);
 
@@ -164,10 +170,7 @@ void BurnYM2151Exit()
 
 	YM2151Shutdown();
 
-	if (pBuffer) {
-		free(pBuffer);
-		pBuffer = NULL;
-	}
+	BurnFree(pBuffer);
 	
 	DebugSnd_YM2151Initted = 0;
 }
@@ -197,7 +200,7 @@ INT32 BurnYM2151Init(INT32 nClockFrequency)
 
 	YM2151Init(1, nClockFrequency, nBurnYM2151SoundRate);
 
-	pBuffer = (INT16*)malloc(65536 * 2 * sizeof(INT16));
+	pBuffer = (INT16*)BurnMalloc(65536 * 2 * sizeof(INT16));
 	memset(pBuffer, 0, 65536 * 2 * sizeof(INT16));
 
 	nSampleSize = (UINT32)nBurnYM2151SoundRate * (1 << 16) / nBurnSoundRate;

@@ -156,7 +156,7 @@ static void gijoe_objdma()
 	}
 }
 
-static void _fastcall gijoe_main_write_word(UINT32 address, UINT16 data)
+static void __fastcall gijoe_main_write_word(UINT32 address, UINT16 data)
 {
 	if ((address & 0xfffff8) == 0x110000) {
 		K053246Write((address & 0x06) + 0, data >> 8);
@@ -191,7 +191,7 @@ static void _fastcall gijoe_main_write_word(UINT32 address, UINT16 data)
 	//bprintf(0, _T("%X %X\n"), address, data);
 }
 
-static void _fastcall gijoe_main_write_byte(UINT32 address, UINT8 data)
+static void __fastcall gijoe_main_write_byte(UINT32 address, UINT8 data)
 {
 	if ((address & 0xfffff8) == 0x110000) {
 		K053246Write((address & 0x07) ^ 0, data);
@@ -241,7 +241,7 @@ static void _fastcall gijoe_main_write_byte(UINT32 address, UINT8 data)
 	}
 }
 
-static UINT16 _fastcall gijoe_main_read_word(UINT32 address)
+static UINT16 __fastcall gijoe_main_read_word(UINT32 address)
 {
 	if ((address & 0xffc000) == 0x120000) {
 		return K056832RamReadWord(address & 0x1fff);
@@ -275,7 +275,7 @@ static UINT16 _fastcall gijoe_main_read_word(UINT32 address)
 	return 0;
 }
 
-static UINT8 _fastcall gijoe_main_read_byte(UINT32 address)
+static UINT8 __fastcall gijoe_main_read_byte(UINT32 address)
 {
 	if ((address & 0xffc000) == 0x120000) {
 		return K056832RamReadByte(address & 0x1fff);
@@ -685,7 +685,6 @@ static INT32 DrvFrame()
 	}
 
 	INT32 nInterleave = 256;
-	INT32 nSoundBufferPos = 0;
 	INT32 nCyclesTotal[2] = { 16000000 / 60, 8000000 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
 
@@ -725,23 +724,11 @@ static INT32 DrvFrame()
 				}
 			}
 		}
-
-		if (pBurnSoundOut) {
-			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
-			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			memset (pSoundBuf, 0, nSegmentLength * 2 * 2);
-			K054539Update(0, pSoundBuf, nSegmentLength);
-			nSoundBufferPos += nSegmentLength;
-		}
 	}
 
 	if (pBurnSoundOut) {
-		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
-		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-		if (nSegmentLength) {
-			memset (pSoundBuf, 0, nSegmentLength * 2 * 2);
-			K054539Update(0, pSoundBuf, nSegmentLength);
-		}
+		memset (pBurnSoundOut, 0, nBurnSoundLen * 2 * 2);
+		K054539Update(0, pBurnSoundOut, nBurnSoundLen);
 	}
 
 	ZetClose();

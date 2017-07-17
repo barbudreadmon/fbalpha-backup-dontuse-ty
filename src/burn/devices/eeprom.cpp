@@ -93,23 +93,14 @@ void EEPROMInit(const eeprom_interface *interface)
 	if (intf->cmd_unlock) locked = 1;
 	else locked = 0;
 
-	char output[128];
-#ifdef __LIBRETRO__
-#ifdef _WIN32
-	char slash = '\\';
-#else
-	char slash = '/';
-#endif
-	snprintf (output, sizeof(output),"%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
-#else
- 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
-#endif
+	TCHAR output[MAX_PATH];
+	_stprintf (output, _T("%s%s.nv"), szAppEEPROMPath, BurnDrvGetText(DRV_NAME));
 
 	neeprom_available = 0;
 
 	INT32 len = ((1 << intf->address_bits) * (intf->data_bits >> 3)) & (MEMORY_SIZE-1);
 
-	FILE *fz = fopen(output, "rb");
+	FILE *fz = _tfopen(output, _T("rb"));
 	if (fz != NULL) {
 		neeprom_available = 1;
 		fread (eeprom_data, len, 1, fz);
@@ -125,23 +116,14 @@ void EEPROMExit()
 
 	if (!DebugDev_EEPROMInitted) return;
 
-	char output[128];
-#ifdef __LIBRETRO__
-#ifdef _WIN32
-	char slash = '\\';
-#else
-	char slash = '/';
-#endif
-	snprintf (output, sizeof(output), "%s%c%s.nv", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
-#else
- 	sprintf (output, "config/games/%s.nv", BurnDrvGetTextA(DRV_NAME));
-#endif
+	TCHAR output[MAX_PATH];
+	_stprintf (output, _T("%s%s.nv"), szAppEEPROMPath, BurnDrvGetText(DRV_NAME));
 
 	neeprom_available = 0;
 
 	INT32 len = ((1 << intf->address_bits) * (intf->data_bits >> 3)) & (MEMORY_SIZE-1);
 
-	FILE *fz = fopen(output, "wb");
+	FILE *fz = _tfopen(output, _T("wb"));
 	if (fz) {
 		fwrite (eeprom_data, len, 1, fz);
 		fclose (fz);

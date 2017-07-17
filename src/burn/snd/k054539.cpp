@@ -63,7 +63,8 @@ struct k054539_info {
 static k054539_info Chips[2];
 static k054539_info *info;
 
-static INT32 *soundbuf[2];
+static INT32 *soundbuf[2] = { NULL, NULL };
+static INT16 *mixerbuf = NULL; // for native -> nBurnSoundRate conversion
 
 void K054539_init_flags(INT32 chip, INT32 flags)
 {
@@ -260,7 +261,7 @@ static void k054539_init_chip(INT32 clock, UINT8 *rom, INT32 nLen)
 	info->k054539_flags |= K054539_UPDATE_AT_KEYON; // make it default until proven otherwise
 
 	// Real size of 0x4000, the addon is to simplify the reverb buffer computations
-	info->ram = (UINT8*)malloc(0x4000*2+clock/50*2);
+	info->ram = (UINT8*)BurnMalloc(0x4000*2+clock/50*2);
 	info->reverb_pos = 0;
 	info->cur_ptr = 0;
 	memset(info->ram, 0, 0x4000*2+clock/50*2);
@@ -317,9 +318,11 @@ void K054539Init(INT32 chip, INT32 clock, UINT8 *rom, INT32 nLen)
 
 	k054539_init_chip(clock, rom, nLen);
 
-	if (soundbuf[0] == NULL) soundbuf[0] = (INT32*)malloc(nBurnSoundLen * sizeof(INT32));
-	if (soundbuf[1] == NULL) soundbuf[1] = (INT32*)malloc(nBurnSoundLen * sizeof(INT32));
-	
+	if (soundbuf[0] == NULL) soundbuf[0] = (INT32*)BurnMalloc(nBurnSoundLen * sizeof(INT32));
+	if (soundbuf[1] == NULL) soundbuf[1] = (INT32*)BurnMalloc(nBurnSoundLen * sizeof(INT32));
+
+	if (mixerbuf == NULL) mixerbuf = (INT16 *)BurnMalloc(clock * 2 * sizeof(INT16));
+
 	nNumChips = chip;
 }
 
@@ -345,30 +348,24 @@ void K054539Exit()
 
 	if (!DebugSnd_K054539Initted) return;
 
-	if (soundbuf[0] != NULL) {
-		free (soundbuf[0]);
-		soundbuf[0] = NULL;
-	}
+	BurnFree (soundbuf[0]);
+	BurnFree (soundbuf[1]);
+	soundbuf[0] = NULL;
+	soundbuf[1] = NULL;
 
-	if (soundbuf[1] != NULL) {
-		free (soundbuf[1]);
-		soundbuf[1] = NULL;
-	}
+	BurnFree (mixerbuf);
+	mixerbuf = NULL;
 
 	for (INT32 i = 0; i < 2; i++) {
 		info = &Chips[i];
-		if (info->ram) {
-			free (info->ram);
-			info->ram = NULL;
-		}
+		BurnFree (info->ram);
 	}
 	
 	DebugSnd_K054539Initted = 0;
 	nNumChips = 0;
 }
 
-// ------------ NEW NEW NEW!!!
-void K054539Update(INT32 chip, INT16 *pBuf, INT32 length)
+void K054539Update(INT32 chip, INT16 *outputs, INT32 samples_len) //INT16 *pBuf, INT32 length)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_K054539Initted) bprintf(PRINT_ERROR, _T("K054539Update called without init\n"));
@@ -390,6 +387,13 @@ void K054539Update(INT32 chip, INT16 *pBuf, INT32 length)
 
 	if(!(info->regs[0x22f] & 1))
 		return;
+
+	// re-sampleizer pt.1
+	INT32 length = (((((48000 * 1000) / nBurnFPS) * samples_len) / nBurnSoundLen)) / 10;
+	INT16 *pBuf = mixerbuf;
+
+	memset(mixerbuf, 0, nBurnSoundLen * 2 * sizeof(INT16));
+	if (length > (info->clock * 100) / nBurnFPS) length = (info->clock * 100) / nBurnFPS;
 
 	for(int sample = 0; sample < length; sample++) {
 		double lval, rval;
@@ -569,9 +573,7 @@ void K054539Update(INT32 chip, INT16 *pBuf, INT32 length)
 				}
 			}
 		reverb_pos = (reverb_pos + 1) & 0x1fff;
-		//outputs[0][sample] = INT16(lval);
-		//outputs[1][sample] = INT16(rval);
-		//ffffffffffff
+
 		INT32 nLeftSample = 0, nRightSample = 0;
 		
 		if ((info->output_dir[BURN_SND_K054539_ROUTE_1] & BURN_SND_ROUTE_LEFT) == BURN_SND_ROUTE_LEFT) {
@@ -588,16 +590,24 @@ void K054539Update(INT32 chip, INT16 *pBuf, INT32 length)
 			nRightSample += (INT32)(rval * info->volume[BURN_SND_K054539_ROUTE_2]);
 		}
 		
-		nLeftSample = BURN_SND_CLIP(nLeftSample);
-		nRightSample = BURN_SND_CLIP(nRightSample);
-		
-		pBuf[0] = BURN_SND_CLIP(pBuf[0] + nLeftSample);
-		pBuf[1] = BURN_SND_CLIP(pBuf[1] + nRightSample);
+		pBuf[0] = BURN_SND_CLIP(nLeftSample);
+		pBuf[1] = BURN_SND_CLIP(nRightSample);
 		pBuf += 2;
+	}
+
+	// re-sampleizer pt.2
+	for (INT32 j = 0; j < samples_len; j++)
+	{
+		INT32 k = ((((48000000 / nBurnFPS) * j) / nBurnSoundLen)) / 10;
+
+		outputs[0] = BURN_SND_CLIP(mixerbuf[k*2+0] + outputs[0]);
+		outputs[1] = BURN_SND_CLIP(mixerbuf[k*2+1] + outputs[1]);
+		outputs += 2;
 	}
 }
 
-// OLD version.
+#if 0
+// OLD version.  saving this incase I ever try to resurrect the broken "reverb" feature -dink
 void K054539UpdateOLD(INT32 chip, INT16 *pBuf, INT32 length)
 {
 #if defined FBA_DEBUG
@@ -878,6 +888,7 @@ void K054539UpdateOLD(INT32 chip, INT16 *pBuf, INT32 length)
 	} else
 		memset(rbase + reverb_pos, 0, length*2);
 }
+#endif
 
 INT32 K054539Scan(INT32 nAction)
 {

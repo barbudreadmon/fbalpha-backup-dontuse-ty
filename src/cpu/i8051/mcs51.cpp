@@ -142,8 +142,9 @@
 
 #define VERBOSE 0
 #define CLEAR_LINE	0
+
 #ifdef INLINE
-#undef INLINE
+ #undef INLINE
 #endif
 #define INLINE		inline
 

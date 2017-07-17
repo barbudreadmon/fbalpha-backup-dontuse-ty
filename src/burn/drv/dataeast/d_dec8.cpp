@@ -1989,11 +1989,11 @@ struct BurnDriver BurnDrvGhostb3 = {
 // The Real Ghostbusters (US 3 Players) from caius
 
 static struct BurnRomInfo ghostb3aRomDesc[] = {
-	{ "dz01.1d",		0x08000, 0x1b16890e, 1 }, //  0 maincpu
-	{ "dz02.3d",		0x10000, 0x8e117541, 1 }, //  1
-	{ "dz03.4d",		0x10000, 0x5606a8f4, 1 }, //  2
-	{ "dz04.6d",		0x10000, 0x490b4525, 1 }, //  3
-	{ "dz05.7d",		0x10000, 0xb4971d33, 1 }, //  4
+	{ "dz01-2.1d",		0x08000, 0x1b16890e, 1 }, //  0 maincpu
+	{ "dz02-.3d",		0x10000, 0x8e117541, 1 }, //  1
+	{ "dz03-.4d",		0x10000, 0x5606a8f4, 1 }, //  2
+	{ "dz04-.6d",		0x10000, 0x490b4525, 1 }, //  3
+	{ "dz05-.7d",		0x10000, 0xb4971d33, 1 }, //  4
 
 	{ "dz06.5f",		0x08000, 0x798f56df, 2 }, //  5 audiocpu
 
@@ -2571,7 +2571,7 @@ static INT32 CobraFrame()
 	return 0;
 }
 
-// Cobra-Command (World revision 5)
+// Cobra-Command (World/US revision 5)
 
 static struct BurnRomInfo cobracomRomDesc[] = {
 	{ "el11-5.bin",	0x08000, 0xaf0a8b05, 1 }, //  0 maincpu
@@ -2625,10 +2625,49 @@ static INT32 CobraScan(INT32 nAction, INT32 *pnMin)
 
 struct BurnDriver BurnDrvCobracom = {
 	"cobracom", NULL, NULL, NULL, "1988",
-	"Cobra-Command (World revision 5)\0", NULL, "Data East Corporation", "DEC8",
+	"Cobra-Command (World/US revision 5)\0", NULL, "Data East Corporation", "DEC8",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_PREFIX_DATAEAST, GBF_HORSHOOT, 0,
 	NULL, cobracomRomInfo, cobracomRomName, NULL, NULL, CobracomInputInfo, CobracomDIPInfo,
+	CobraInit, CobraExit, CobraFrame, CobraDraw, CobraScan, &DrvRecalc, 0x100,
+	256, 240, 4, 3
+};
+
+
+// Cobra-Command (World/US revision 4)
+
+static struct BurnRomInfo cobracomaRomDesc[] = {
+	{ "el11-4.bin",	0x08000, 0x6dca6734, 1 }, //  0 maincpu
+	{ "el12-4.bin",	0x10000, 0x7a44ef38, 1 }, //  1
+	{ "el13.bin",	0x10000, 0x04505acb, 1 }, //  2
+
+	{ "el10-4.bin",	0x08000, 0xedfad118, 2 }, //  3 audiocpu
+
+	{ "el14.bin",	0x08000, 0x47246177, 3 }, //  4 gfx1
+
+	{ "el00-4.bin",	0x10000, 0x122da2a8, 4 }, //  5 gfx2
+	{ "el01-4.bin",	0x10000, 0x27bf705b, 4 }, //  6
+	{ "el02-4.bin",	0x10000, 0xc86fede6, 4 }, //  7
+	{ "el03-4.bin",	0x10000, 0x1d8a855b, 4 }, //  8
+
+	{ "el08.bin",	0x10000, 0xcb0dcf4c, 5 }, //  9 gfx4
+	{ "el09.bin",	0x10000, 0x1fae5be7, 5 }, // 10
+
+	{ "el05.bin",	0x10000, 0x1c4f6033, 6 }, // 11 gfx3
+	{ "el06.bin",	0x10000, 0xd24ba794, 6 }, // 12
+	{ "el04.bin",	0x10000, 0xd80a49ce, 6 }, // 13
+	{ "el07.bin",	0x10000, 0x6d771fc3, 6 }, // 14
+};
+
+STD_ROM_PICK(cobracoma)
+STD_ROM_FN(cobracoma)
+
+struct BurnDriver BurnDrvCobracoma = {
+	"cobracoma", "cobracom", NULL, NULL, "1988",
+	"Cobra-Command (World/US revision 4)\0", NULL, "Data East Corporation", "DEC8",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_HORSHOOT, 0,
+	NULL, cobracomaRomInfo, cobracomaRomName, NULL, NULL, CobracomInputInfo, CobracomDIPInfo,
 	CobraInit, CobraExit, CobraFrame, CobraDraw, CobraScan, &DrvRecalc, 0x100,
 	256, 240, 4, 3
 };
@@ -3171,13 +3210,13 @@ static INT32 SrdarwinDraw()
 			DrvPalette[i] = BurnHighCol(r, g, b, 0);
 		}
 	}
+	BurnTransferClear();
+	if (nBurnLayer & 1) Srdarwin_draw_layer(0);
+	if (nSpriteEnable & 1) srdarwin_draw_sprites(0);
+	if (nBurnLayer & 2) Srdarwin_draw_layer(1);
+	if (nSpriteEnable & 2) srdarwin_draw_sprites(1);
 
-	Srdarwin_draw_layer(1);
-	srdarwin_draw_sprites(0);
-	Srdarwin_draw_layer(0);
-	srdarwin_draw_sprites(1);
-
-	srdarwin_txt_draw();
+	if (nBurnLayer & 4) srdarwin_txt_draw();
 
 	BurnTransferCopy(DrvPalette);
 
@@ -5858,7 +5897,7 @@ struct BurnDriver BurnDrvCsilver = {
 };
 
 
-// Captain Silver (Japan)
+// Captain Silver (Japan revision 3)
 
 static struct BurnRomInfo csilverjRomDesc[] = {
 	{ "dx03-3.a4",		0x08000, 0x02dd8cfc, 1 }, //  0 maincpu
@@ -5890,10 +5929,52 @@ STD_ROM_FN(csilverj)
 
 struct BurnDriver BurnDrvCsilverj = {
 	"csilverj", "csilver", NULL, NULL, "1987",
-	"Captain Silver (Japan)\0", "imperfect sound", "Data East Corporation", "DEC8",
+	"Captain Silver (Japan revision 3)\0", "imperfect sound", "Data East Corporation", "DEC8",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_SCRFIGHT, 0,
 	NULL, csilverjRomInfo, csilverjRomName, NULL, NULL, CsilverInputInfo, CsilverDIPInfo,
+	CsilverInit, CsilverExit, CsilverFrame, LastmissDraw, CsilverScan, &DrvRecalc, 0x400,
+	256, 240, 4, 3
+};
+
+
+// Captain Silver (Japan revision 1)
+/* Same IC positions to World set */
+
+static struct BurnRomInfo csilverjaRomDesc[] = {
+	{ "dx03-1.18d",		0x08000, 0xd42905be, 1 }, //  0 maincpu
+	{ "dx01.12d",		0x10000, 0x570fb50c, 1 }, //  1
+	{ "dx02.13d",		0x10000, 0x58625890, 1 }, //  2
+
+	{ "dx04-1.19d",		0x10000, 0x29432691, 2 }, //  3 sub
+
+	{ "dx05.3f",		0x10000, 0xeb32cf25, 3 }, //  4 audiocpu
+
+	{ "dx00.3d",		0x08000, 0xf01ef985, 4 }, //  5 gfx1
+
+	{ "dx14.15k",		0x10000, 0x80f07915, 5 }, //  6 gfx2
+	{ "dx13.13k",		0x10000, 0xd32c02e7, 5 }, //  7
+	{ "dx12.10k",		0x10000, 0xac78b76b, 5 }, //  8
+
+	{ "dx06.5f",		0x10000, 0xb6fb208c, 6 }, //  9 gfx3
+	{ "dx07.7f",		0x10000, 0xee3e1817, 6 }, // 10
+	{ "dx08.8f",		0x10000, 0x705900fe, 6 }, // 11
+	{ "dx09.10f",		0x10000, 0x3192571d, 6 }, // 12
+	{ "dx10.12f",		0x10000, 0x3ef77a32, 6 }, // 13
+	{ "dx11.13f",		0x10000, 0x9cf3d5b8, 6 }, // 14
+
+	{ "id8751h.mcu",	0x01000, 0xca663965, 7 }, // 15 mcu
+};
+
+STD_ROM_PICK(csilverja)
+STD_ROM_FN(csilverja)
+
+struct BurnDriver BurnDrvCsilverja = {
+	"csilverja", "csilver", NULL, NULL, "1987",
+	"Captain Silver (Japan revision 1)\0", "imperfect sound", "Data East Corporation", "DEC8",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_PREFIX_DATAEAST, GBF_SCRFIGHT, 0,
+	NULL, csilverjaRomInfo, csilverjaRomName, NULL, NULL, CsilverInputInfo, CsilverDIPInfo,
 	CsilverInit, CsilverExit, CsilverFrame, LastmissDraw, CsilverScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
 };

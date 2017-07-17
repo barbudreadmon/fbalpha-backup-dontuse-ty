@@ -44,7 +44,18 @@ INT64 nVidBlitterOpt[VID_LEN] = {0, };			// Options for the blitter module (mean
 
 static InterfaceInfo VidInfo = { NULL, NULL, NULL };
 
+#if defined (BUILD_WIN32)
+#if defined BUILD_X64_EXE
+// set DDraw blitter as default for 64-bit builds (in case user doesn't have DX redistributable installed)
 UINT32 nVidSelect = 0;					// Which video output is selected
+#else
+// sec D3D7 Enhanced blitter as default
+UINT32 nVidSelect = 1;					// Which video output is selected
+#endif
+#else
+UINT32 nVidSelect = 0;					// Which video output is selected
+#endif
+
 static UINT32 nVidActive = 0;
 
 bool bVidOkay = false;
@@ -76,8 +87,9 @@ INT32 bVidArcaderesHor = 0;
 INT32 bVidArcaderesVer = 0;
 
 INT32 nVidRotationAdjust = 0;						// & 1: do not rotate the graphics for vertical games,  & 2: Reverse flipping for vertical games
-INT32 bVidForce16bit = 1;							// Emulate the game in 16-bit even when the screen is 32-bit (D3D blitter)
-INT32 bVidForceFlip = 0;							// Force flipping (DDraw blitter, hardware detection seems to fail on all? graphics hardware)
+INT32 bVidForce16bit = 0;							// Emulate the game in 16-bit even when the screen is 32-bit (D3D blitter)
+INT32 bVidForce16bitDx9Alt = 0;						// Emulate the game in 16-bit even when the screen is 32-bit (DX9 Alt blitter)
+INT32 bVidForceFlip = 1;							// Force flipping (DDraw blitter, hardware detection seems to fail on all? graphics hardware)
 INT32 nVidTransferMethod = -1;					// How to transfer the game image to video memory and/or a texture --
 												//  0 = blit from system memory / use driver/DirectX texture management
 												//  1 = copy to a video memory surface, then use bltfast()
@@ -90,6 +102,9 @@ double dVidCubicC = 0.5;						//
 INT32 bVidDX9Bilinear = 1;							// 1 = enable bi-linear filtering (D3D9 Alt blitter)
 INT32 bVidHardwareVertex = 0;			// 1 = use hardware vertex processing
 INT32 bVidMotionBlur = 0;				// 1 = motion blur
+
+wchar_t HorScreen[32] = L"";
+wchar_t VerScreen[32] = L"";
 
 #ifdef BUILD_WIN32
  HWND hVidWnd = NULL;							// Actual window used for video

@@ -1,7 +1,8 @@
 #include "burner.h"
 
-bool bIsWindowsXPorGreater = FALSE;
-bool bIsWindowsXP = FALSE;
+bool bIsWindowsXPorGreater = false;
+bool bIsWindowsXP = false;
+bool bIsWindows8OrGreater = false;
 
 // Detect if we are using Windows XP/Vista/7
 BOOL DetectWindowsVersion()
@@ -18,8 +19,9 @@ BOOL DetectWindowsVersion()
     // osvi.dwMinorVersion returns the minor version, XP and 7 = 1, Vista = 0
     bIsWindowsXPorLater = ((osvi.dwMajorVersion > 5) || ( (osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion >= 1)));
 	bIsWindowsXP = (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1);
-
-    return bIsWindowsXPorLater;
+	bIsWindows8OrGreater = ((osvi.dwMajorVersion > 6) || ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion >= 2)));
+	
+	return bIsWindowsXPorLater;
 }
 
 // Set the current directory to be the application's directory
@@ -253,4 +255,36 @@ int WndInMid(HWND hMid, HWND hBase)
 	SetWindowPos(hMid, NULL, bx, by, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 
 	return 0;
+}
+
+// ---------------------------------------------------------------------------
+
+// Set-up high resolution timing
+
+static int bHighResolutionTimerActive = 0;
+
+void EnableHighResolutionTiming()
+{
+	TIMECAPS hTCaps;
+
+	bHighResolutionTimerActive = 0;
+	
+	if (bIsWindows8OrGreater) {
+#ifdef PRINT_DEBUG_INFO
+		dprintf(_T(" ** Enabling High-Resolution system timer.\n"));
+#endif
+
+		if (timeGetDevCaps(&hTCaps, sizeof(hTCaps)) == TIMERR_NOERROR) {
+			bHighResolutionTimerActive = hTCaps.wPeriodMin;
+			timeBeginPeriod(hTCaps.wPeriodMin);
+		}
+	}
+}
+
+void DisableHighResolutionTiming()
+{
+	if (bHighResolutionTimerActive) {
+		timeEndPeriod(bHighResolutionTimerActive);
+		bHighResolutionTimerActive = 0;
+	}
 }

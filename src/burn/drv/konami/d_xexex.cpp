@@ -125,7 +125,7 @@ static void update_de000()
 
 }
 
-static void _fastcall xexex_main_write_word(UINT32 address, UINT16 data)
+static void __fastcall xexex_main_write_word(UINT32 address, UINT16 data)
 {
 	if ((address & 0xffffc0) == 0x0c0000) {
 		K056832WordWrite(address & 0x3e, data);
@@ -166,7 +166,7 @@ static void _fastcall xexex_main_write_word(UINT32 address, UINT16 data)
 	}
 }
 
-static void _fastcall xexex_main_write_byte(UINT32 address, UINT8 data)
+static void __fastcall xexex_main_write_byte(UINT32 address, UINT8 data)
 {
 	if ((address & 0xffffc0) == 0x0c0000) {
 		K056832ByteWrite(address & 0x3f, data);
@@ -246,7 +246,7 @@ static void _fastcall xexex_main_write_byte(UINT32 address, UINT8 data)
 	}
 }
 
-static UINT16 _fastcall xexex_main_read_word(UINT32 address)
+static UINT16 __fastcall xexex_main_read_word(UINT32 address)
 {
 	if ((address & 0xfffff0) == 0x0c8000) {
 		return K053250RegRead(0, address);
@@ -288,7 +288,7 @@ static UINT16 _fastcall xexex_main_read_word(UINT32 address)
 	return 0;
 }
 
-static UINT8 _fastcall xexex_main_read_byte(UINT32 address)
+static UINT8 __fastcall xexex_main_read_byte(UINT32 address)
 {
 	if ((address & 0xfffff0) == 0x0c8000) {
 		return K053250RegRead(0, address);	
@@ -595,11 +595,7 @@ static INT32 DrvInit()
 
 	EEPROMInit(&xexex_eeprom_interface);
 
-	if (nBurnSoundRate == 44100) {
-		BurnYM2151Init(3700000); // 3.7mhz here to match the tuning of the 48000khz k054539 chip, otherwise the music sounds horrible! - dink Nov.7.2014
-	} else {
-		BurnYM2151Init(4000000);
-	}
+	BurnYM2151Init(4000000);
 	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_1, 0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.50, BURN_SND_ROUTE_BOTH);
 
@@ -770,7 +766,6 @@ static INT32 DrvFrame()
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 			BurnYM2151Render(pSoundBuf, nSegmentLength);
-			K054539Update(0, pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -780,8 +775,8 @@ static INT32 DrvFrame()
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
 			BurnYM2151Render(pSoundBuf, nSegmentLength);
-			K054539Update(0, pSoundBuf, nSegmentLength);
 		}
+		K054539Update(0, pBurnSoundOut, nBurnSoundLen);
 	}
 
 	ZetClose();

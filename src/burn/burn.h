@@ -22,6 +22,7 @@
 extern TCHAR szAppHiscorePath[MAX_PATH];
 extern TCHAR szAppSamplesPath[MAX_PATH];
 extern TCHAR szAppBlendPath[MAX_PATH];
+extern TCHAR szAppEEPROMPath[MAX_PATH];
 
 // Alignment macro, to keep savestates compatible between 32/64bit platforms.
 #ifdef _MSC_VER
@@ -250,6 +251,16 @@ extern UINT32 *pBurnDrvPalette;
 #define PRINT_UI		(1)
 #define PRINT_IMPORTANT (2)
 #define PRINT_ERROR		(3)
+#define PRINT_LEVEL1	(4)
+#define PRINT_LEVEL2	(5)
+#define PRINT_LEVEL3	(6)
+#define PRINT_LEVEL4	(7)
+#define PRINT_LEVEL5	(8)
+#define PRINT_LEVEL6	(9)
+#define PRINT_LEVEL7	(10)
+#define PRINT_LEVEL8	(11)
+#define PRINT_LEVEL9	(12)
+#define PRINT_LEVEL10	(13)
 
 #ifndef bprintf
 extern INT32 (__cdecl *bprintf) (INT32 nStatus, TCHAR* szFormat, ...);
@@ -272,6 +283,10 @@ INT32 BurnSetProgressRange(double dProgressRange);
 INT32 BurnUpdateProgress(double dProgressStep, const TCHAR* pszText, bool bAbs);
 
 void BurnLocalisationSetName(char *szName, TCHAR *szLongName);
+
+UINT16 BurnRandom();                                // State-able Random Number Generator (0-32767)
+void BurnRandomScan(INT32 nAction);                 // Must be called in driver's DrvScan() if BurnRandom() is used
+void BurnRandomInit();                              // Called automatically in BurnDrvInit() / Internal use only
 
 // ---------------------------------------------------------------------------
 // Retrieve driver information

@@ -230,6 +230,8 @@ void pokey_scan(INT32 nAction, INT32* pnMin)
 			pokey[i].serout_w = serout_w;
 			pokey[i].interrupt_cb = interrupt_cb;
 		}
+
+		BurnRandomScan(nAction);
 	}
 }
 
@@ -621,10 +623,10 @@ int PokeyInit(int clock, int num, double vol, int addtostream)
 	intf.baseclock = (clock) ? clock : FREQ_17_EXACT;
 	intf.addtostream = addtostream;
 
-	poly9 = (UINT8 *)malloc(0x1ff+1);
-	rand9 = (UINT8 *)malloc(0x1ff+1);
-    poly17 = (UINT8 *)malloc(0x1ffff+1);
-    rand17 = (UINT8 *)malloc(0x1ffff+1);
+	poly9 = (UINT8 *)BurnMalloc(0x1ff+1);
+	rand9 = (UINT8 *)BurnMalloc(0x1ff+1);
+    poly17 = (UINT8 *)BurnMalloc(0x1ffff+1);
+    rand17 = (UINT8 *)BurnMalloc(0x1ffff+1);
 	if( !poly9 || !rand9 || !poly17 || !rand17 )
 	{
 		PokeyExit();	/* free any allocated memory again */
@@ -686,14 +688,10 @@ int PokeyInit(int clock, int num, double vol, int addtostream)
 
 void PokeyExit(void)
 {
-	if( rand17 ) free(rand17);
-	rand17 = NULL;
-	if( poly17 ) free(poly17);
-	poly17 = NULL;
-	if( rand9 )  free(rand9);
-	rand9 = NULL;
-	if( poly9 )  free(poly9);
-	poly9 = NULL;
+	BurnFree(rand17);
+	BurnFree(poly17);
+	BurnFree(rand9);
+	BurnFree(poly9);
 }
 
 /*static void pokey_timer_expire(int param)
@@ -924,7 +922,7 @@ int pokey_register_r(int chip, int offs)
 		 ****************************************************************/
 		if( p->SKCTL & SK_RESET )
 		{
-			UINT32 adjust = (UINT32)(/*timer_timeelapsed(p->rtimer)*/rand() /*dink*/ * intf.baseclock);
+			UINT32 adjust = (UINT32)(/*timer_timeelapsed(p->rtimer)*/BurnRandom() /*dink*/ * intf.baseclock);
 			p->r9 = (p->r9 + adjust) % 0x001ff;
 			p->r17 = (p->r17 + adjust) % 0x1ffff;
 			if( p->AUDCTL & POLY9 )

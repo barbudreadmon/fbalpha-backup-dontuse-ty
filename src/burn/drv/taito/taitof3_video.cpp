@@ -2106,7 +2106,10 @@ static void get_vram_info(INT32 sx, INT32 sy)
 		else
 			line_enable=1;
 
-		if (f3_game == ARABIANM) line_enable = 1; // kludge: arabianm missing cutscene text
+		if ((f3_game == ARABIANM || f3_game == GSEEKER) && line_enable)
+		{ // force opaque vram & pixel kludge: fixes arabianm missing cutscene text, gseeker missing continue screen april.21&28.2017_dink
+			line_enable = 1;
+		}
 
 		line_t->pri[y]=pri;
 
@@ -2378,9 +2381,10 @@ static void scanline_draw()
 				{
 					if(alpha_type==1)
 					{
-						if (m_f3_alpha_level_2as==0   && m_f3_alpha_level_2ad==255 && f3_game == GSEEKER) {
-							alpha_mode[i]=3; alpha_mode_flag[i] |= 0x80;} /* will display continue screen in gseeker (mt 00026) */
-						else if(m_f3_alpha_level_2as==0   && m_f3_alpha_level_2ad==255) alpha_mode[i]=0;
+						//if (m_f3_alpha_level_2as==0   && m_f3_alpha_level_2ad==255 && f3_game == GSEEKER) {
+						//	alpha_mode[i]=3; alpha_mode_flag[i] |= 0x80;} /* will display continue screen in gseeker (mt 00026) */
+						//else
+						if     (m_f3_alpha_level_2as==0   && m_f3_alpha_level_2ad==255) alpha_mode[i]=0;
 						else if(m_f3_alpha_level_2as==255 && m_f3_alpha_level_2ad==0  ) alpha_mode[i]=1;
 					}
 					else if(alpha_type==2)
@@ -2719,14 +2723,12 @@ static void pal16_check_init()
 
 void TaitoF3VideoExit()
 {
-
 	BurnFree (m_spritelist);
 
 	if (pal16) {
 		BurnFree(pal16);
 		pal16 = NULL;
 	}
-
 }
 
 void TaitoF3DrawCommon(INT32 scanline_start)
@@ -2747,8 +2749,8 @@ void TaitoF3DrawCommon(INT32 scanline_start)
 
 	/* Setup scroll */
 	sy_fix[0]=((m_f3_control_0[4]&0xffff)<< 9) + (1<<16);
-	sy_fix[1]=((m_f3_control_0[5]&0xffff)<< 9) + (1<<16);
-	sy_fix[2]=((m_f3_control_0[6]&0xffff)<< 9) + (1<<16);
+	sy_fix[1]=((m_f3_control_0[5]&0xffff)<< 9) + ((f3_game==LANDMAKR) ? 0 : 1<<16);
+	sy_fix[2]=((m_f3_control_0[6]&0xffff)<< 9) + ((f3_game==LANDMAKR) ? 0 : 1<<16);
 	sy_fix[3]=((m_f3_control_0[7]&0xffff)<< 9) + (1<<16);
 	sx_fix[0]=((m_f3_control_0[0]&0xffc0)<<10) - (6<<16);
 	sx_fix[1]=((m_f3_control_0[1]&0xffc0)<<10) - (10<<16);

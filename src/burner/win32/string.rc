@@ -127,6 +127,7 @@ BEGIN
 	IDS_SPATH_CABINETS			"Cabinets"
 	IDS_SPATH_PCBS				"PCBs"
 	IDS_SPATH_HISTORY			"History.dat"
+	IDS_SPATH_EEPROM			"EEPROM Saves"
 	
 	IDS_ROMPATH_1				"Path #1"
 	IDS_ROMPATH_2				"Path #2"
@@ -345,6 +346,7 @@ BEGIN
 	IDS_ERR_UI_FULL_NOMODE		"No appropriate display mode supported. Please adjust your full-screen settings."
 	IDS_ERR_UI_FULL_PROBLEM		"Problem setting '%dx%dx%dbpp (%dHz)' display mode"
 	IDS_ERR_UI_FULL_CUSTRES		"\n\nThis is not a standard VGA resolution; please make sure it is supported by your video card."
+	IDS_ERR_UI_VID_MODULE		"Couldn't intialise '%s' module. Try installing the Direct X End User runtimes (June 2010)."
 
 	IDS_ERR_DISK_CREATE			"Error creating "
 	IDS_ERR_DISK_LOAD			"Error loading "

@@ -39,10 +39,10 @@ WNDPROC pOldWndProc = NULL;
 
 bool bRescanRoms = false;
 
-//static bool bDrag = false;
+static bool bDrag = false;
 static int nDragX, nDragY;
-//static int nOldWindowX, nOldWindowY;
-//static int nLeftButtonX, nLeftButtonY;
+static int nOldWindowX, nOldWindowY;
+static int nLeftButtonX, nLeftButtonY;
 
 static int OnCreate(HWND, LPCREATESTRUCT);
 static void OnActivateApp(HWND, BOOL, DWORD);
@@ -57,9 +57,9 @@ static void OnExitSizeMove(HWND);
 static void OnEnterIdle(HWND, UINT, HWND);
 static void OnEnterMenuLoop(HWND, BOOL);
 static void OnExitMenuLoop(HWND, BOOL);
-//static int OnMouseMove(HWND, int, int, UINT);
-//static int OnLButtonUp(HWND, int, int, UINT);
-//static int OnLButtonDown(HWND, BOOL, int, int, UINT);
+static int OnMouseMove(HWND, int, int, UINT);
+static int OnLButtonUp(HWND, int, int, UINT);
+static int OnLButtonDown(HWND, BOOL, int, int, UINT);
 static int OnLButtonDblClk(HWND, BOOL, int, int, UINT);
 static int OnRButtonUp(HWND, int, int, UINT);
 static int OnRButtonDown(HWND, BOOL, int, int, UINT);
@@ -329,6 +329,76 @@ int CreateDatfileWindows(int bType)
 	return create_datfile(szChoice, bType);
 }
 
+int CreateAllDatfilesWindows()
+{
+	INT32 nRet = 0;
+
+	LPMALLOC pMalloc = NULL;
+	BROWSEINFO bInfo;
+	ITEMIDLIST* pItemIDList = NULL;
+	TCHAR buffer[MAX_PATH];
+	TCHAR szFilename[MAX_PATH];
+	TCHAR szProgramString[25];	
+	
+	_sntprintf(szProgramString, 25, _T("ClrMame Pro XML"));
+	
+	SHGetMalloc(&pMalloc);
+
+	memset(&bInfo, 0, sizeof(bInfo));
+	bInfo.hwndOwner = hScrnWnd;
+	bInfo.pszDisplayName = buffer;
+	bInfo.lpszTitle = FBALoadStringEx(hAppInst, IDS_ROMS_SELECT_DIR, true);
+	bInfo.ulFlags = BIF_EDITBOX | BIF_RETURNONLYFSDIRS;
+
+	pItemIDList = SHBrowseForFolder(&bInfo);
+	
+	if (pItemIDList) {
+		if (SHGetPathFromIDList(pItemIDList, buffer)) {
+			int strLen = _tcslen(buffer);
+			if (strLen) {
+				if (buffer[strLen - 1] != _T('\\')) {
+					buffer[strLen]		= _T('\\');
+					buffer[strLen + 1]	= _T('\0');
+				}
+			}
+		}
+		pMalloc->Free(pItemIDList);
+	}
+	pMalloc->Release();
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(""));
+	create_datfile(szFilename, DAT_ARCADE_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", Megadrive only"));
+	create_datfile(szFilename, DAT_MEGADRIVE_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", PC-Engine only"));
+	create_datfile(szFilename, DAT_PCENGINE_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", TurboGrafx16 only"));
+	create_datfile(szFilename, DAT_TG16_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", SuprGrafx only"));
+	create_datfile(szFilename, DAT_SGX_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", Sega SG-1000 only"));
+	create_datfile(szFilename, DAT_SG1000_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", ColecoVision only"));
+	create_datfile(szFilename, DAT_COLECO_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", Master System only"));
+	create_datfile(szFilename, DAT_MASTERSYSTEM_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", Game Gear only"));
+	create_datfile(szFilename, DAT_GAMEGEAR_ONLY);
+	
+	_sntprintf(szFilename, MAX_PATH, _T("%s") _T(APP_TITLE) _T(" v%.20s (%s%s).dat"), buffer, szAppBurnVer, szProgramString, _T(", MSX 1 Games only"));
+	create_datfile(szFilename, DAT_MSX_ONLY);
+	
+	return nRet;
+}
+
 // Returns true if a VidInit is needed when the window is resized
 static bool VidInitNeeded()
 {
@@ -389,9 +459,9 @@ static LRESULT CALLBACK ScrnProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
 		HANDLE_MSG(hWnd, WM_EXITSIZEMOVE,	OnExitSizeMove);
 		HANDLE_MSG(hWnd, WM_ENTERIDLE,		OnEnterIdle);
 
-		//HANDLE_MSG(hWnd, WM_MOUSEMOVE,		OnMouseMove);
-		//HANDLE_MSG(hWnd, WM_LBUTTONUP,		OnLButtonUp);
-		//HANDLE_MSG(hWnd, WM_LBUTTONDOWN,	OnLButtonDown);
+		HANDLE_MSG(hWnd, WM_MOUSEMOVE,		OnMouseMove);
+		HANDLE_MSG(hWnd, WM_LBUTTONUP,		OnLButtonUp);
+		HANDLE_MSG(hWnd, WM_LBUTTONDOWN,	OnLButtonDown);
 
 		HANDLE_MSG(hWnd, WM_LBUTTONDBLCLK,	OnLButtonDblClk);
 
@@ -409,8 +479,7 @@ static LRESULT CALLBACK ScrnProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
 		HANDLE_MSG(hWnd, WM_DISPLAYCHANGE,	OnDisplayChange);
 	}
 
-	//return DefWindowProc(hWnd, Msg, wParam, lParam);
-	return nVidFullscreen ? DefWindowProc(hWnd, Msg, wParam, lParam) : DefFrameProc(hWnd, hWndChildFrame, Msg, wParam, lParam);
+	return DefWindowProc(hWnd, Msg, wParam, lParam);
 }
 
 static int OnDisplayChange(HWND, UINT, UINT, UINT)
@@ -454,18 +523,22 @@ static int OnRButtonUp(HWND hwnd, int, int, UINT)
 			POST_INITIALISE_MESSAGE;
 			return 0;
 		}		
-	} 
+	}
+	
+	// If not fullscreen and this event is not related to 'toggle fullscreen' right double-click event
+	if (!nVidFullscreen && !bRDblClick) {
+		bMenuEnabled = !bMenuEnabled;
+		POST_INITIALISE_MESSAGE;
+		return 0;
+	}
+	
 	return 1;
 }
 /*************************************************************************/
 
-/*static int OnMouseMove(HWND hwnd, int x, int y, UINT keyIndicators)
+static int OnMouseMove(HWND hwnd, int x, int y, UINT keyIndicators)
 {
-	//if(hwnd != hScrnWnd) {
-	//	return 1;
-	//}
-
-	if (bDrag && keyIndicators == MK_LBUTTON && !nVidFullscreen && !bMenuEnabled) {
+	if (bDrag && hwnd == hScrnWnd && keyIndicators == MK_LBUTTON && !nVidFullscreen && !bMenuEnabled) {
 		RECT clientRect;
 
 		GetWindowRect(hScrnWnd, &clientRect);
@@ -487,11 +560,7 @@ static int OnRButtonUp(HWND hwnd, int, int, UINT)
 
 static int OnLButtonDown(HWND hwnd, BOOL, int x, int y, UINT)
 {
-	//if(hwnd != hScrnWnd) {
-	//	return 1;
-	//}
-
-	if (!nVidFullscreen && !bMenuEnabled) {
+	if (hwnd == hScrnWnd && !nVidFullscreen && !bMenuEnabled) {
 		RECT clientRect;
 
 		GetWindowRect(hScrnWnd, &clientRect);
@@ -512,50 +581,49 @@ static int OnLButtonDown(HWND hwnd, BOOL, int x, int y, UINT)
 
 static int OnLButtonUp(HWND hwnd, int x, int y, UINT)
 {
-	//if (hwnd != hScrnWnd) {
-	//	return 1;
-	//}
-
 	bDrag = false;
 
-	if (UseDialogs()) {
-		RECT clientRect;
-		GetWindowRect(hScrnWnd, &clientRect);
+	if (nVidFullscreen) {
 
-		TrackPopupMenuEx(hMenuPopup, TPM_LEFTALIGN | TPM_TOPALIGN, clientRect.left + x, clientRect.top + y, hScrnWnd, NULL);
-		return 0;
-	}
+		if (hwnd != hScrnWnd) {
+			return 1;
+		}
 
-	if (!bMenuEnabled) {
-		RECT clientRect;
-		GetWindowRect(hScrnWnd, &clientRect);
+		if (UseDialogs()) {
+			RECT clientRect;
+			GetWindowRect(hScrnWnd, &clientRect);
 
-		if ((nLeftButtonX - (clientRect.left + x)) < nDragX && (nLeftButtonX - (clientRect.left + x)) > -nDragX && (nLeftButtonY - (clientRect.top + y)) < nDragY && (nLeftButtonY - (clientRect.top + y)) > -nDragY) {
 			TrackPopupMenuEx(hMenuPopup, TPM_LEFTALIGN | TPM_TOPALIGN, clientRect.left + x, clientRect.top + y, hScrnWnd, NULL);
 			return 0;
 		}
-	}
+	} else {
+		if (!bMenuEnabled) {
+			RECT clientRect;
+			GetWindowRect(hScrnWnd, &clientRect);
 
-	return 1;
-}*/
-
-static int OnLButtonDblClk(HWND hwnd, BOOL, int, int, UINT)
-{
-	if(nVidFullscreen) {
-		if (hwnd == hScrnWnd && bDrvOkay) {
-			nVidFullscreen = !nVidFullscreen;
-			POST_INITIALISE_MESSAGE;
-			return 0;
+			if ((nLeftButtonX - (clientRect.left + x)) < nDragX && (nLeftButtonX - (clientRect.left + x)) > -nDragX && (nLeftButtonY - (clientRect.top + y)) < nDragY && (nLeftButtonY - (clientRect.top + y)) > -nDragY) {
+				TrackPopupMenuEx(hMenuPopup, TPM_LEFTALIGN | TPM_TOPALIGN, clientRect.left + x, clientRect.top + y, hScrnWnd, NULL);
+				return 0;
+			}
 		}
 	}
+
 	return 1;
 }
 
-static int OnCreate(HWND hWnd, LPCREATESTRUCT /*lpCreateStruct*/)	// HWND hwnd, LPCREATESTRUCT lpCreateStruct
+static int OnLButtonDblClk(HWND hwnd, BOOL, int, int, UINT)
 {
-	if(!nVidFullscreen) {
-		InitBurnerMDI(hWnd);
+	if (bDrvOkay) {
+		nVidFullscreen = !nVidFullscreen;
+		POST_INITIALISE_MESSAGE;
+		return 0;
 	}
+	
+	return 1;
+}
+
+static int OnCreate(HWND, LPCREATESTRUCT)	// HWND hwnd, LPCREATESTRUCT lpCreateStruct
+{
 	return 1;
 }
 
@@ -626,8 +694,6 @@ static void OnDestroy(HWND)
 {
     VidExit();							// Stop using video with the Window
     hScrnWnd = NULL;					// Make sure handle is not used again
-
-	DestroyBurnerMDI(0);
 }
 
 OPENFILENAME	bgFn;
@@ -782,7 +848,7 @@ int BurnerLoadDriver(TCHAR *szDriverName)
 
 int StartFromReset(TCHAR *szDriverName)
 {
-	if (!bDrvOkay) {
+	if (!bDrvOkay || (szDriverName && _tcscmp(szDriverName, BurnDrvGetText(DRV_NAME))) ) {
 		BurnerLoadDriver(szDriverName);
 		return 1;
 	}
@@ -1226,11 +1292,6 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			POST_INITIALISE_MESSAGE;
 			break;
 
-		case MENU_DWMFIX:
-			bVidDWMCore = !bVidDWMCore;
-			POST_INITIALISE_MESSAGE;
-			break;
-
 		case MENU_BLITTER_1:
 			VidSelect(0);
 			POST_INITIALISE_MESSAGE;
@@ -1369,6 +1430,14 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			InputSetCooperativeLevel(false, bAlwaysProcessKeyboardInput);
 			ResCreate(HORIZONTAL_ORIENTED_RES);
 			GameInpCheckMouse();
+			break;
+			
+		case MENU_FULLSCREEN_MONITOR:
+			if (UseDialogs()) {
+				AudBlankSound();
+				ChooseMonitorCreate();
+				GameInpCheckMouse();
+			}
 			break;
 
 		// Vertical 
@@ -2098,6 +2167,12 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 				CreateDatfileWindows(DAT_MSX_ONLY);
 			}
 			break;
+			
+		case MENU_CLRMAME_PRO_ALL_DATS:
+			if (UseDialogs()) {
+				CreateAllDatfilesWindows();
+			}
+			break;
 
 		case MENU_ENABLECHEAT:
 			AudBlankSound();
@@ -2315,7 +2390,7 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 
 		case MENU_WWW_HOME:
 			if (!nVidFullscreen) {
-				ShellExecute(NULL, _T("open"), _T("http://www.fbalpha.com/"), NULL, NULL, SW_SHOWNORMAL);
+				ShellExecute(NULL, _T("open"), _T("https://www.fbalpha.com/"), NULL, NULL, SW_SHOWNORMAL);
 			}
 			break;
 
@@ -2831,6 +2906,11 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 					bVidMotionBlur = !bVidMotionBlur;
 					POST_INITIALISE_MESSAGE;
 					break;
+					
+				case MENU_DX9_ALT_FORCE_16BIT:
+					bVidForce16bitDx9Alt = !bVidForce16bitDx9Alt;
+					POST_INITIALISE_MESSAGE;
+					break;
 			}
 			break;
 	}
@@ -2887,10 +2967,6 @@ static void OnSize(HWND, UINT state, int cx, int cy)
 		bool bSizeChanged = false;
 
 		MoveWindow(hRebar, 0, 0, cx, nMenuHeight, TRUE);
-
-		SetWindowPos(hWndChildFrame, NULL, 0, nMenuHeight, cx, bMenuEnabled ? (cy-nMenuHeight) : cy, SWP_NOREDRAW | SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOZORDER);
-		
-		//MoveWindow(hWndChildFrame, 0, nMenuHeight, cx, bMenuEnabled ? (cy-nMenuHeight) : cy, TRUE );
 		
 		if (hwndChat) {
 			MoveWindow(hwndChat, 0, cy - 32, cx, 32, FALSE);
@@ -3229,8 +3305,6 @@ int ScrnInit()
 		}
 	}
 
-	RegNewMDIChild();
-
 	hScrnWnd = CreateWindowEx(nWindowExStyles, szClass, _T(APP_TITLE), nWindowStyles,
 		0, 0, 0, 0,									   			// size of window
 		NULL, NULL, hAppInst, NULL);
@@ -3291,8 +3365,6 @@ int ScrnExit()
 {
 	// Ensure the window is destroyed
 	DeActivateChat();
-
-	DestroyBurnerMDI(1);
 
 	if (hRebar) {
 		DestroyWindow(hRebar);

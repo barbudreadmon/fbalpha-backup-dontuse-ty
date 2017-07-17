@@ -5492,7 +5492,6 @@ static INT32 Pitfall2Init()
 	DecodeFunction = pitfall2_decode;
 	
 	nRet = System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
-	nCyclesTotal[0] = 3600000 / 60;
 	
 	return nRet;
 }
@@ -5502,7 +5501,6 @@ static INT32 PitfalluInit()
 	INT32 nRet;
 	
 	nRet = System1Init(3, 0x4000, 1, 0x2000, 6, 0x2000, 2, 0x4000, 1);
-	nCyclesTotal[0] = 3600000 / 60;
 	
 	return nRet;
 }
@@ -5694,11 +5692,11 @@ static INT32 WbmlInit()
 
 	DecodeFunction = wbml_decode;
 
-	System1MC8123Key = (UINT8*)malloc(0x2000);
+	System1MC8123Key = (UINT8*)BurnMalloc(0x2000);
 	BurnLoadRom(System1MC8123Key, 15, 1);
 
 	nRet = System2Init(3, 0x8000, 1, 0x8000, 3, 0x8000, 4, 0x8000, 1);
-	free(System1MC8123Key);
+	BurnFree(System1MC8123Key);
 	System1MC8123Key = NULL;
 
 	return nRet;
@@ -5882,7 +5880,9 @@ static void System1DrawSprites()
 {
 	INT32 i, SpriteBottomY, SpriteTopY;
 	UINT8 *SpriteBase;
-	
+
+	if (System1SpriteRam[0] == 0xff) return; // 0xff in first byte of spriteram is all-sprite-disable mode
+
 	memset(SpriteOnScreenMap, 255, 256 * 256);
 	
 	for (i = 0; i < 32; i++) {

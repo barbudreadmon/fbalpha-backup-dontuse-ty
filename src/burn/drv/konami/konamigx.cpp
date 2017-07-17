@@ -4,6 +4,8 @@
 #include "tiles_generic.h"
 #include "konamiic.h"
 
+INT32 konamigx_mystwarr_kludge = 0; // keep layer1 enabled, even if alpha has made it completely invisible
+
 static INT32 konamigx_wrport1_0 = 0;
 
 //static UINT8 m_sound_ctrl;
@@ -98,7 +100,7 @@ void konamigx_mixer_init(INT32 objdma)
 	else
 		gx_spriteram = (UINT16*)K053247Ram;
 
-//	m_palette->set_shadow_dRGB32(3,-80,-80,-80, 0);
+//	m_palette->set_shadow_dRGB32(3,-80,-80,-80, 0); // in k054338 -dink
 	K054338_invert_alpha(1);
 }
 
@@ -111,14 +113,15 @@ void konamigx_mixer_exit()
 	}
 	BurnFree(gx_objpool);
 	m_gx_objdma = 0;
+	konamigx_mystwarr_kludge = 0;
 }
 
 static void gx_wipezbuf(INT32 noshadow)
 {
 #define GX_ZBUFW	512
 
-	INT32 w = (nScreenWidth); // - 1);  - sept.2.2016, fixes lines of pixels
-	INT32 h = (nScreenHeight); // - 1); -  around gaiapolis's intro  - dink
+	INT32 w = (nScreenWidth);
+	INT32 h = (nScreenHeight);
 
 	UINT8 *zptr = gx_objzbuf;
 	INT32 ecx = h;
@@ -168,7 +171,7 @@ static void gx_draw_basic_tilemaps(INT32 mixerflags, INT32 code)
 		{
 			temp4 = K054338_set_alpha_level(temp2);
 
-			if (temp4 <= 0) return;
+			if (temp4 <= 0 && !konamigx_mystwarr_kludge) return; // alpha level so high that layer is completely invisible. mystwarr needs this disabled for tile-based alpha tile counting.
 			if (temp4 < 255) k = K056832_SET_ALPHA(temp4);
 		}
 
@@ -344,6 +347,7 @@ static void konamigx_mixer_draw(INT32 sub1, INT32 sub1flags,INT32 sub2, INT32 su
 			{
 				alpha = color>>K055555_MIXSHIFT & 3;
 				if (alpha) alpha = K054338_set_alpha_level(alpha);
+				//bprintf(0, _T("alpha %X : %X "), alpha, color>>K055555_MIXSHIFT & 3);
 				if (alpha <= 0) continue;
 			}
 			color &= K055555_COLORMASK;
@@ -351,6 +355,7 @@ static void konamigx_mixer_draw(INT32 sub1, INT32 sub1flags,INT32 sub2, INT32 su
 			if (drawmode >= 4) {
 			//	m_palette->set_shadow_mode(order & 0x0f);
 				drawmode |= (order & 0x0f)<<4;
+				//bprintf(0, _T("shad %X. "), order & 0xf);
 			}
 
 			if (!(mixerflags & GXMIX_NOZBUF))
@@ -479,7 +484,7 @@ void konamigx_mixer(INT32 sub1 /*extra tilemap 1*/, INT32 sub1flags, INT32 sub2 
 		for (i=0; i<4; i++) if (!(temp>>i & 1) && spri_min < layerpri[i]) spri_min = layerpri[i]; // HACK
 
 		// update shadows status
-		K054338_update_all_shadows();
+		K054338_update_all_shadows(rushingheroes_hack);
 	}
 
 	// pre-sort layers

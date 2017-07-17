@@ -482,6 +482,33 @@ static struct BurnRomInfo GallagRomDesc[] = {
 STD_ROM_PICK(Gallag)
 STD_ROM_FN(Gallag)
 
+static struct BurnRomInfo NebulbeeRomDesc[] = {
+	{ "nebulbee.01",   0x01000, 0xf405f2c4, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "nebulbee.02",   0x01000, 0x31022b60, BRF_ESS | BRF_PRG }, //	 1
+	{ "gg1_3.2m",      0x01000, 0x753ce503, BRF_ESS | BRF_PRG }, //	 2
+	{ "nebulbee.04",   0x01000, 0xd76788a5, BRF_ESS | BRF_PRG }, //	 3
+	
+	{ "gg1-5",         0x01000, 0x3102fccd, BRF_ESS | BRF_PRG }, //  4	Z80 #2 Program Code
+	
+	{ "gg1-7",         0x01000, 0x8995088d, BRF_ESS | BRF_PRG }, //  5	Z80 #3 Program Code
+	
+	{ "nebulbee.07",   0x01000, 0x035e300c, BRF_ESS | BRF_PRG }, //  6	Z80 #4 Program Code
+	
+	{ "gg1_9.4l",      0x01000, 0x58b2f47c, BRF_GRA },	     //  7	Characters
+	
+	{ "gg1_11.4d",     0x01000, 0xad447c80, BRF_GRA },	     //  8	Sprites
+	{ "gg1_10.4f",     0x01000, 0xdd6f1afc, BRF_GRA },	     //  9
+	
+	{ "prom-5.5n",     0x00020, 0x54603c6b, BRF_GRA },	     //  10	PROMs
+	{ "2n.bin",        0x00100, 0xa547d33b, BRF_GRA },	     //  11
+	{ "1c.bin",        0x00100, 0xb6f585fb, BRF_GRA },	     //  12
+	{ "1d.bin",        0x00100, 0x86d92b24, BRF_GRA },	     //  14
+	{ "5c.bin",        0x00100, 0x8bd565f6, BRF_GRA },	     //  13
+};
+
+STD_ROM_PICK(Nebulbee)
+STD_ROM_FN(Nebulbee)
+
 // Dig Dug (rev 2)
 
 static struct BurnRomInfo digdugRomDesc[] = {
@@ -760,7 +787,7 @@ static void Namco54XXWrite(INT32 Data)
 	}
 }
 
-UINT8 __fastcall GalagaZ80ProgRead(UINT16 a)
+static UINT8 __fastcall GalagaZ80ProgRead(UINT16 a)
 {
 	if (a >= 0xb800 && a <= 0xb83f && digdugmode) { // EAROM Read
 		return earom_read(a - 0xb800);
@@ -911,7 +938,7 @@ UINT8 __fastcall GalagaZ80ProgRead(UINT16 a)
 	return 0;
 }
 
-void __fastcall GalagaZ80ProgWrite(UINT16 a, UINT8 d)
+static void __fastcall GalagaZ80ProgWrite(UINT16 a, UINT8 d)
 {
 	if (a >= 0x6800 && a <= 0x681f) {
 		NamcoSoundWrite(a - 0x6800, d);
@@ -1456,28 +1483,6 @@ static void DrvCalcPaletteDigdug()
 	}
 }
 
-UINT32 transpen_mask(INT32 color, INT32 transcolor) // from MAME
-{
-	UINT32 entry = 0x200 + color; //gfx.colorbase() + (color % gfx.colors()) * gfx.granularity();
-
-	// make sure we are in range
-	//assert(entry < m_indirect_pens.count());
-	//assert(gfx.depth() <= 32);
-
-	// either gfx->color_depth entries or as many as we can get up until the end
-	INT32 count = 0x200 - entry;//MIN(gfx.depth(), m_indirect_pens.count() - entry);
-
-	// set a bit anywhere the transcolor matches
-	UINT32 mask = 0;
-	UINT8 *m_indirect_pens = DrvPromSpriteLookup; // sprites in digdug
-	for (INT32 bit = 0; bit < count; bit++)
-		if (m_indirect_pens[entry++] == transcolor)
-			mask |= 1 << bit;
-
-	// return the final mask
-	return mask;
-}
-
 struct Star {
 	UINT16 x, y;
 	UINT8 Colour, Set;
@@ -1986,7 +1991,6 @@ static void digdug_Sprites()
 				INT32 Code = Sprite + GfxOffset[y ^ (sSize * yFlip)][x ^ (sSize * xFlip)];
 				INT32 xPos = (sx + 16 * x);
 				INT32 yPos = sy + 16 * y;
-				INT32 tmask = transpen_mask(Colour, 0x1f);
 
 				if (xPos < 8) xPos += 0x100; // that's a wrap!
 				if (xPos >= nScreenWidth || yPos >= nScreenHeight) continue;
@@ -1995,29 +1999,29 @@ static void digdug_Sprites()
 				if (xPos > 0 && xPos < 288-16 && yPos > 0 && yPos < 224-16) {
 					if (xFlip) {
 						if (yFlip) {
-							Render16x16Tile_Mask_FlipXY(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask_FlipXY(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						} else {
-							Render16x16Tile_Mask_FlipX(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask_FlipX(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						}
 					} else {
 						if (yFlip) {
-							Render16x16Tile_Mask_FlipY(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask_FlipY(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						} else {
-							Render16x16Tile_Mask(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						}
 					}
 				} else {
 					if (xFlip) {
 						if (yFlip) {
-							Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						} else {
-							Render16x16Tile_Mask_FlipX_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask_FlipX_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						}
 					} else {
 						if (yFlip) {
-							Render16x16Tile_Mask_FlipY_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask_FlipY_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						} else {
-							Render16x16Tile_Mask_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, tmask, 0x200, DrvSprites);
+							Render16x16Tile_Mask_Clip(pTransDraw, Code, xPos, yPos, Colour, 2, 0, 0x200, DrvSprites);
 						}
 					}
 				}
@@ -2298,6 +2302,16 @@ struct BurnDriver BurnDrvGallag = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_VERSHOOT, 0,
 	NULL, GallagRomInfo, GallagRomName, GalagaSampleInfo, GalagaSampleName, DrvInputInfo, DrvDIPInfo,
+	GallagInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 576,
+	224, 288, 3, 4
+};
+
+struct BurnDriver BurnDrvNebulbee = {
+	"nebulbee", "galaga", NULL, "galaga", "1981",
+	"Nebulous Bee\0", NULL, "bootleg", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_VERSHOOT, 0,
+	NULL, NebulbeeRomInfo, NebulbeeRomName, GalagaSampleInfo, GalagaSampleName, DrvInputInfo, DrvDIPInfo,
 	GallagInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 576,
 	224, 288, 3, 4
 };

@@ -180,6 +180,10 @@ INT32 BurnStateLoadEmbed(FILE* fp, INT32 nOffset, INT32 bAll, INT32 (*pLoadGame)
 
 	fseek(fp, nChunkData + nChunkSize, SEEK_SET);
 
+	if (nRet == 0) { // Force the palette to recalculate on state load
+		BurnRecalcPal();
+	}
+
 	if (nRet) {
 		return -1;
 	} else {
@@ -261,10 +265,6 @@ INT32 BurnStateLoad(TCHAR* szName, INT32 bAll, INT32 (*pLoadGame)())
 #endif
 
 	fclose(fp);
-
-	if (nRet == 0) { // Force the palette to recalculate on state load
-		BurnRecalcPal();
-	}
 
 	if (nRet < 0) {
 		return -nRet;
@@ -467,8 +467,8 @@ INT32 BurnStateSave(TCHAR* szName, INT32 bAll)
 	fwrite(&szHeader, 1, 4, fp);
 	nRet = BurnStateSaveEmbed(fp, -1, bAll);
 
-#ifndef __LIBRETRO__
 	// save movie extra info
+#ifndef __LIBRETRO__
 	if(nReplayStatus)
 	{
 		UINT8* huff_buf = NULL;

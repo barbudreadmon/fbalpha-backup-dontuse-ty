@@ -140,6 +140,27 @@ void BurnTransferClear()
 	memset(pPrioDraw, 0, nTransWidth * nTransHeight);
 }
 
+void BurnPrioClear()
+{
+#if defined FBA_DEBUG
+	if (!Debug_BurnTransferInitted) bprintf(PRINT_ERROR, _T("BurnPrioClear called without init\n"));
+#endif
+
+	memset(pPrioDraw, 0, nTransWidth * nTransHeight);
+}
+
+void BurnTransferClear(UINT16 nFillPattern)
+{
+#if defined FBA_DEBUG
+	if (!Debug_BurnTransferInitted) bprintf(PRINT_ERROR, _T("BurnTransferClear called without init\n"));
+#endif
+
+	for (INT32 i = 0; i < nTransWidth * nTransHeight; i++) {
+		pTransDraw[i] = nFillPattern;
+		pPrioDraw[i] = 0;
+	}
+}
+
 INT32 BurnTransferCopy(UINT32* pPalette)
 {
 #if defined FBA_DEBUG
@@ -191,15 +212,8 @@ void BurnTransferExit()
 	if (!Debug_BurnTransferInitted) bprintf(PRINT_ERROR, _T("BurnTransferExit called without init\n"));
 #endif
 
-	if (pTransDraw) {
-		free(pTransDraw);
-		pTransDraw = NULL;
-	}
-
-	if (pPrioDraw) {
-		free(pPrioDraw);
-		pPrioDraw = NULL;
-	}
+	BurnFree(pTransDraw);
+	BurnFree(pPrioDraw);
 
 	Debug_BurnTransferInitted = 0;
 }
@@ -216,12 +230,12 @@ INT32 BurnTransferInit()
 		BurnDrvGetVisibleSize(&nTransWidth, &nTransHeight);
 	}
 
-	pTransDraw = (UINT16*)malloc(nTransWidth * (nTransHeight + nTransOverflow) * sizeof(UINT16));
+	pTransDraw = (UINT16*)BurnMalloc(nTransWidth * (nTransHeight + nTransOverflow) * sizeof(UINT16));
 	if (pTransDraw == NULL) {
 		return 1;
 	}
 
-	pPrioDraw = (UINT8*)malloc(nTransWidth * (nTransHeight + nTransOverflow));
+	pPrioDraw = (UINT8*)BurnMalloc(nTransWidth * (nTransHeight + nTransOverflow));
 	if (pPrioDraw == NULL) {
 		return 1;
 	}

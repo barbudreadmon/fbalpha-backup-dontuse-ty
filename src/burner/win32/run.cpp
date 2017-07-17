@@ -415,9 +415,6 @@ int RunMessageLoop()
 		GameInpCheckLeftAlt();
 		GameInpCheckMouse();															// Hide the cursor
 
-		if(bVidDWMCore) {
-			DWM_StutterFix();
-		}
 
 		while (1) {
 			if (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE)) {
@@ -531,11 +528,19 @@ int RunMessageLoop()
 #if defined (FBA_DEBUG)
 							case 'N':
 								counter--;
-								bprintf(PRINT_IMPORTANT, _T("*** New counter value: %04X.\n"), counter);
+								if (counter < 0) {
+									bprintf(PRINT_IMPORTANT, _T("*** New counter value: %04X (%d).\n"), counter, counter);
+								} else {
+									bprintf(PRINT_IMPORTANT, _T("*** New counter value: %04X.\n"), counter);
+								}
 								break;
 							case 'M':
 								counter++;
-								bprintf(PRINT_IMPORTANT, _T("*** New counter value: %04X.\n"), counter);
+								if (counter < 0) {
+									bprintf(PRINT_IMPORTANT, _T("*** New counter value: %04X (%d).\n"), counter, counter);
+								} else {
+									bprintf(PRINT_IMPORTANT, _T("*** New counter value: %04X.\n"), counter);
+								}
 								break;
 #endif
 							case VK_ESCAPE: {

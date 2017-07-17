@@ -3767,7 +3767,7 @@ static struct BurnDIPInfo GmgalaxDIPList[]=
 
 STDDIPINFO(Gmgalax)
 
-static struct BurnDIPInfo GteikokbDIPList[]=
+static struct BurnDIPInfo GteikokubDIPList[]=
 {
 	// Default Values
 	{0x0b, 0xff, 0xff, 0x00, NULL                     },
@@ -3799,9 +3799,9 @@ static struct BurnDIPInfo GteikokbDIPList[]=
 	{0x0d, 0x01, 0x08, 0x08, "Cocktail"               },
 };
 
-STDDIPINFO(Gteikokb)
+STDDIPINFO(Gteikokub)
 
-static struct BurnDIPInfo Gteikob2DIPList[]=
+static struct BurnDIPInfo Gteikokub2DIPList[]=
 {
 	// Default Values
 	{0x0b, 0xff, 0xff, 0x00, NULL                     },
@@ -3833,7 +3833,7 @@ static struct BurnDIPInfo Gteikob2DIPList[]=
 	{0x0d, 0x01, 0x08, 0x00, "Cocktail"               },
 };
 
-STDDIPINFO(Gteikob2)
+STDDIPINFO(Gteikokub2)
 
 static struct BurnDIPInfo AsideralDIPList[]=
 {
@@ -8399,7 +8399,7 @@ static struct BurnRomInfo GteikokuRomDesc[] = {
 STD_ROM_PICK(Gteikoku)
 STD_ROM_FN(Gteikoku)
 
-static struct BurnRomInfo GteikokbRomDesc[] = {
+static struct BurnRomInfo GteikokubRomDesc[] = {
 	{ "1.bin",         0x00800, 0xbf00252f, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "2.bin",         0x00800, 0xf712b7d5, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "k07_3a.bin",    0x00800, 0x945f4160, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -8417,10 +8417,10 @@ static struct BurnRomInfo GteikokbRomDesc[] = {
 	{ "l06_prom.bin",  0x00020, 0x6a0c7d87, BRF_GRA | GAL_ROM_PROM },
 };
 
-STD_ROM_PICK(Gteikokb)
-STD_ROM_FN(Gteikokb)
+STD_ROM_PICK(Gteikokub)
+STD_ROM_FN(Gteikokub)
 
-static struct BurnRomInfo Gteikob2RomDesc[] = {
+static struct BurnRomInfo Gteikokub2RomDesc[] = {
 	{ "94gnog.bin",    0x00800, 0x67ec3235, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "92gnog.bin",    0x00800, 0x813c41f2, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "k07_3a.bin",    0x00800, 0x945f4160, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -8438,8 +8438,8 @@ static struct BurnRomInfo Gteikob2RomDesc[] = {
 	{ "l06_prom.bin",  0x00020, 0x6a0c7d87, BRF_GRA | GAL_ROM_PROM },
 };
 
-STD_ROM_PICK(Gteikob2)
-STD_ROM_FN(Gteikob2)
+STD_ROM_PICK(Gteikokub2)
+STD_ROM_FN(Gteikokub2)
 
 static struct BurnRomInfo SpacbattRomDesc[] = {
 	{ "sb1",           0x00800, 0xd975af10, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -8759,22 +8759,22 @@ struct BurnDriver BurnDrvGteikoku = {
 	NULL, 392, 224, 256, 3, 4
 };
 
-struct BurnDriver BurnDrvGteikokb = {
-	"gteikokb", "uniwars", NULL, NULL, "1980",
+struct BurnDriver BurnDrvGteikokub = {
+	"gteikokub", "uniwars", NULL, NULL, "1980",
 	"Gingateikoku No Gyakushu (bootleg set 1)\0", NULL, "bootleg", "Galaxian",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_BOOTLEG, 2, HARDWARE_GALAXIAN, GBF_VERSHOOT, 0,
-	NULL, GteikokbRomInfo, GteikokbRomName, NULL, NULL, OmegabInputInfo, GteikokbDIPInfo,
+	NULL, GteikokubRomInfo, GteikokubRomName, NULL, NULL, OmegabInputInfo, GteikokubDIPInfo,
 	PiscesInit, GalExit, GalFrame, NULL, GalScan,
 	NULL, 392, 224, 256, 3, 4
 };
 
-struct BurnDriver BurnDrvGteikob2 = {
-	"gteikob2", "uniwars", NULL, NULL, "1980",
+struct BurnDriver BurnDrvGteikokub2 = {
+	"gteikokub2", "uniwars", NULL, NULL, "1980",
 	"Gingateikoku No Gyakushu (bootleg set 2)\0", NULL, "bootleg", "Galaxian",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_BOOTLEG, 2, HARDWARE_GALAXIAN, GBF_VERSHOOT, 0,
-	NULL, Gteikob2RomInfo, Gteikob2RomName, NULL, NULL, OmegabInputInfo, Gteikob2DIPInfo,
+	NULL, Gteikokub2RomInfo, Gteikokub2RomName, NULL, NULL, OmegabInputInfo, Gteikokub2DIPInfo,
 	PiscesInit, GalExit, GalFrame, NULL, GalScan,
 	NULL, 392, 224, 256, 3, 4
 };
@@ -15610,6 +15610,29 @@ static struct BurnRomInfo ScramrfRomDesc[] = {
 STD_ROM_PICK(Scramrf)
 STD_ROM_FN(Scramrf)
 
+static struct BurnRomInfo OffensivRomDesc[] = {
+	{ "2716-9C.bin",   0x00800, 0xcc2ee7f5, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2716-9E.bin",   0x00800, 0x66ebc070, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2716-9F.bin",   0x00800, 0x317548fd, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2716-9H.bin",   0x00800, 0xdd380a22, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2716-9J.bin",   0x00800, 0xfa4f1a70, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2716-9L.bin",   0x00800, 0x9fd96374, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2716-9M.bin",   0x00800, 0x88ac07a0, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	{ "2716-9P.bin",   0x00800, 0xfe2866f5, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
+	
+	{ "2716-5C.bin",   0x00800, 0xbe037cf6, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+	{ "2716-5D.bin",   0x00800, 0xde7912da, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+	{ "2716-5E.bin",   0x00800, 0xad833f7e, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG2 },
+
+	{ "2716-6F.bin",   0x00800, 0x4708845b, BRF_GRA | GAL_ROM_TILES_SHARED },
+	{ "2716-6H.bin",   0x00800, 0x11fd2887, BRF_GRA | GAL_ROM_TILES_SHARED },
+		
+	{ "82s123-NMI6331-1J-5E.bin",  	0x00020, 0x4e3caeab, BRF_GRA | GAL_ROM_PROM },
+};
+
+STD_ROM_PICK(Offensiv)
+STD_ROM_FN(Offensiv)
+
 static struct BurnRomInfo ScramblebbRomDesc[] = {
 	{ "1",             0x00800, 0x8ba174c4, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
 	{ "2",             0x00800, 0x43cb40a4, BRF_ESS | BRF_PRG | GAL_ROM_Z80_PROG1 },
@@ -17472,6 +17495,16 @@ struct BurnDriver BurnDrvScramrf = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_GALAXIAN, GBF_HORSHOOT, 0,
 	NULL, ScramrfRomInfo, ScramrfRomName, NULL, NULL, ScrambleInputInfo, ScrambleDIPInfo,
+	ScrambleInit, KonamiExit, GalFrame, NULL, GalScan,
+	NULL, 392, 224, 256, 3, 4
+};
+
+struct BurnDriver BurnDrvOffensiv = {
+	"offensiv", "scramble", NULL, NULL, "1981",
+	"Offensive (Spanish bootleg of Scramble)\0", NULL, "bootleg (Video Dens)", "Galaxian",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_GALAXIAN, GBF_HORSHOOT, 0,
+	NULL, OffensivRomInfo, OffensivRomName, NULL, NULL, ScrambleInputInfo, ScrambleDIPInfo,
 	ScrambleInit, KonamiExit, GalFrame, NULL, GalScan,
 	NULL, 392, 224, 256, 3, 4
 };

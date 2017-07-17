@@ -7,6 +7,7 @@
 #include "deco16ic.h"
 #include "msm6295.h"
 #include "burn_ym2151.h"
+#include "deco146.h"
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -22,7 +23,6 @@ static UINT8 *Drv68KRAM;
 static UINT8 *DrvHucRAM;
 static UINT8 *DrvPalRAM;
 static UINT8 *DrvSprRAM;
-static UINT8 *DrvPrtRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
@@ -252,56 +252,61 @@ static struct BurnDIPInfo SotsugyoDIPList[]=
 
 STDDIPINFO(Sotsugyo)
 
-void __fastcall funkyjet_main_write_word(UINT32 address, UINT16 data)
+static void __fastcall funkyjet_main_write_word(UINT32 address, UINT16 data)
 {
 	deco16_write_control_word(0, address, 0x300000, data)
 
-	switch (address)
-	{
-		case 0x18010a:
-			deco16_soundlatch = data & 0xff;
-			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
-		break;
-	}
-
-	if ((address & 0xfff800) == 0x180000) {
-		*((UINT16*)(DrvPrtRAM + (address & 0x7fe))) = BURN_ENDIAN_SWAP_INT16(data);
+	if ((address & 0xffc000) == 0x180000) {
+		deco146_104_prot_ww(0, address, data);
 		return;
 	}
 }
 
-void __fastcall funkyjet_main_write_byte(UINT32 address, UINT8 data)
+static void __fastcall funkyjet_main_write_byte(UINT32 address, UINT8 data)
 {
-	switch (address)
-	{
-		case 0x18010b:
-			deco16_soundlatch = data;
-			h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
-		break;
-	}
-
-	if ((address & 0xfff800) == 0x180000) {
-		DrvPrtRAM[(address & 0x7ff)^1] = data;
+	if ((address & 0xffc000) == 0x180000) {
+		deco146_104_prot_wb(0, address, data);
 		return;
 	}
 }
 
-UINT16 __fastcall funkyjet_main_read_word(UINT32 address)
+static UINT16 __fastcall funkyjet_main_read_word(UINT32 address)
 {
-	if ((address & 0xfff800) == 0x180000) {
-		return deco16_146_funkyjet_prot_r(address);
+	if ((address & 0xffc000) == 0x180000) {
+		return deco146_104_prot_rw(0, address);
 	}
 
 	return 0;
 }
 
-UINT8 __fastcall funkyjet_main_read_byte(UINT32 address)
+static UINT8 __fastcall funkyjet_main_read_byte(UINT32 address)
 {
-	if ((address & 0xfff800) == 0x180000) {
-		return deco16_146_funkyjet_prot_r(address) >> ((~address & 1) << 3);
+	if ((address & 0xffc000) == 0x180000) {
+		return deco146_104_prot_rb(0, address);
 	}
 
 	return 0;
+}
+
+static UINT16 inputs_read()
+{
+	return DrvInputs[0];
+}
+
+static UINT16 system_read()
+{
+	return (DrvInputs[1] & 7) | deco16_vblank;
+}
+
+static UINT16 dips_read()
+{
+	return DrvInputs[2];
+}
+
+static void soundlatch_write(UINT16 data)
+{
+	deco16_soundlatch = data & 0xff;
+	h6280SetIRQLine(0, CPU_IRQSTATUS_ACK);
 }
 
 static INT32 DrvDoReset()
@@ -340,8 +345,6 @@ static INT32 MemIndex()
 	Drv68KRAM	= Next; Next += 0x004000;
 	DrvHucRAM	= Next; Next += 0x002000;
 	DrvSprRAM	= Next; Next += 0x000800;
-	deco16_prot_ram	= (UINT16*)Next;
-	DrvPrtRAM	= Next; Next += 0x000800;
 	DrvPalRAM	= Next; Next += 0x000800;
 
 	flipscreen	= Next; Next += 0x000001;
@@ -405,6 +408,13 @@ static INT32 DrvInit()
 	SekSetReadWordHandler(0,		funkyjet_main_read_word);
 	SekSetReadByteHandler(0,		funkyjet_main_read_byte);
 	SekClose();
+
+	deco_146_init();
+	deco_146_104_set_port_a_cb(inputs_read); // inputs
+	deco_146_104_set_port_b_cb(system_read); // system
+	deco_146_104_set_port_c_cb(dips_read); // dips
+	deco_146_104_set_soundlatch_cb(soundlatch_write);
+	deco_146_104_set_interface_scramble_interleave();
 
 	deco16SoundInit(DrvHucROM, DrvHucRAM, 8055000, 0, NULL, 0.45, 1000000, 0.50, 0, 0);
 	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_1, 0.45, BURN_SND_ROUTE_LEFT);
@@ -550,7 +560,6 @@ static INT32 DrvFrame()
 	}
 
 	{
-		deco16_prot_inputs = DrvInputs;
 		memset (DrvInputs, 0xff, 2 * sizeof(UINT16)); 
 		for (INT32 i = 0; i < 16; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;

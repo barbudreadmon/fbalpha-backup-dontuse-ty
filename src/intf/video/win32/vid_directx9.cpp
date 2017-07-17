@@ -87,6 +87,8 @@ static int nImageWidth, nImageHeight/*, nImageZoom*/;
 
 static RECT Dest;
 
+static unsigned int nD3DAdapter;
+
 // ----------------------------------------------------------------------------
 #ifdef PRINT_DEBUG_INFO
 static TCHAR* TextureFormatString(D3DFORMAT nFormat)
@@ -150,6 +152,22 @@ static void PutPixel(unsigned char** ppSurface, unsigned int nColour)
 }
 */
 
+static UINT dx9GetAdapter(wchar_t* name)
+{
+	for (int a = pD3D->GetAdapterCount() - 1; a >= 0; a--)
+	{
+		D3DADAPTER_IDENTIFIER9 identifier;
+
+		pD3D->GetAdapterIdentifier(a, 0, &identifier);
+		
+		if (identifier.DeviceName[11] == name[11]) {
+			return a;
+		}
+	}
+
+	return 0;
+}
+
 // Select optimal full-screen resolution
 int dx9SelectFullscreenMode(VidSDisplayScoreInfo* pScoreInfo)
 {
@@ -169,8 +187,8 @@ int dx9SelectFullscreenMode(VidSDisplayScoreInfo* pScoreInfo)
 			VidSInitScoreInfo(pScoreInfo);
 
 			// Enumerate the available screenmodes
-			for (int i = pD3D->GetAdapterModeCount(D3DADAPTER_DEFAULT, nFormat) - 1; i >= 0; i--) {
-				if (FAILED(pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT, nFormat, i, &dm))) {
+			for (int i = pD3D->GetAdapterModeCount(nD3DAdapter, nFormat) - 1; i >= 0; i--) {
+				if (FAILED(pD3D->EnumAdapterModes(nD3DAdapter, nFormat, i, &dm))) {
 					return 1;
 				}
 				pScoreInfo->nModeWidth = dm.Width;
@@ -811,7 +829,7 @@ static int dx9Init()
 	dprintf(_T("*** Initialising Direct3D 9 blitter.\n"));
 #endif
 
-	hVidWnd = nVidFullscreen ? hScrnWnd : hVideoWindow;								// Use Screen window for video
+	hVidWnd = hScrnWnd;								// Use Screen window for video
 
 	// Get pointer to Direct3D
 	if ((pD3D = _Direct3DCreate9(D3D_SDK_VERSION)) == NULL) {
@@ -820,6 +838,30 @@ static int dx9Init()
 #endif
 		dx9Exit();
 		return 1;
+	}
+	
+	nRotateGame = 0;
+	if (bDrvOkay) {
+		if (BurnDrvGetFlags() & BDF_ORIENTATION_VERTICAL) {
+			if (nVidRotationAdjust & 1) {
+				nRotateGame |= (nVidRotationAdjust & 2);
+			} else {
+				nRotateGame |= 1;
+			}
+		}
+
+		if (BurnDrvGetFlags() & BDF_ORIENTATION_FLIPPED) {
+			nRotateGame ^= 2;
+		}
+	}
+	
+	nD3DAdapter = D3DADAPTER_DEFAULT;
+	if (nRotateGame & 1 && VerScreen[0]) {
+		nD3DAdapter = dx9GetAdapter(VerScreen);
+	} else {
+		if (HorScreen[0]) {
+			nD3DAdapter = dx9GetAdapter(HorScreen);
+		}
 	}
 
 	memset(&d3dpp, 0, sizeof(d3dpp));
@@ -854,7 +896,7 @@ static int dx9Init()
 	dwBehaviorFlags |= D3DCREATE_DISABLE_DRIVER_MANAGEMENT;
 #endif
 
-	if (FAILED(pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hVidWnd, dwBehaviorFlags, &d3dpp, &pD3DDevice))) {
+	if (FAILED(pD3D->CreateDevice(nD3DAdapter, D3DDEVTYPE_HAL, hVidWnd, dwBehaviorFlags, &d3dpp, &pD3DDevice))) {
 //	if (FAILED(pD3D->CreateDevice(pD3D->GetAdapterCount() - 1, D3DDEVTYPE_REF, hVidWnd, dwBehaviorFlags, &d3dpp, &pD3DDevice))) {
 
 #ifdef PRINT_DEBUG_INFO
@@ -875,7 +917,7 @@ static int dx9Init()
 
 	{
 		D3DDISPLAYMODE dm;
-		pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &dm);
+		pD3D->GetAdapterDisplayMode(nD3DAdapter, &dm);
 		nVidScrnWidth = dm.Width; nVidScrnHeight = dm.Height;
 		nVidScrnDepth = (dm.Format == D3DFMT_R5G6B5) ? 16 : 32;
 	}
@@ -944,7 +986,7 @@ static int dx9Init()
 		RECT rect;
 
 		GetClientScreenRect(hVidWnd, &rect);
-		rect.top += 0 /*nMenuHeight*/; rect.bottom += 0 /*nMenuHeight*/;
+		rect.top += nMenuHeight; rect.bottom += nMenuHeight;
 		pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 		pD3DDevice->Present(&rect, &rect, NULL, NULL);
 	}
@@ -1015,10 +1057,10 @@ static int dx9Scale(RECT* pRect, int nWidth, int nHeight)
 // Copy BlitFXsMem to pddsBlitFX
 static int dx9MemToSurf()
 {
-	GetClientScreenRect(hVidWnd, &Dest);
+	GetClientRect(hVidWnd, &Dest);
 
 	if (nVidFullscreen == 0) {
-		Dest.top += 0 /*nMenuHeight*/;
+		Dest.top += nMenuHeight;
 	}
 
 	if (bVidArcaderes && nVidFullscreen) {
@@ -1315,7 +1357,7 @@ static int dx9Paint(int bValidate)
 
 	if (!nVidFullscreen) {
 		GetClientScreenRect(hVidWnd, &rect);
-		rect.top += 0 /*nMenuHeight*/;
+		rect.top += nMenuHeight;
 
 		dx9Scale(&rect, nGameWidth, nGameHeight);
 
@@ -1577,7 +1619,7 @@ static int dx9AltTextureInit()
 	nVidImageDepth = nVidScrnDepth;
 
 	// Determine if we should use a texture format different from the screen format
-	if ((bDrvOkay && VidSoftFXCheckDepth(nPreScaleEffect, 32) != 32) || (bDrvOkay && bVidForce16bit)) {
+	if ((bDrvOkay && VidSoftFXCheckDepth(nPreScaleEffect, 32) != 32) || (bDrvOkay && bVidForce16bitDx9Alt)) {
 		nVidImageDepth = 16;
 	}
 
@@ -1767,10 +1809,34 @@ static int dx9AltInit()
 		dx9AltExit();
 		return 1;
 	}
+	
+	nRotateGame = 0;
+	if (bDrvOkay) {
+		if (BurnDrvGetFlags() & BDF_ORIENTATION_VERTICAL) {
+			if (nVidRotationAdjust & 1) {
+				nRotateGame |= (nVidRotationAdjust & 2);
+			} else {
+				nRotateGame |= 1;
+			}
+		}
+
+		if (BurnDrvGetFlags() & BDF_ORIENTATION_FLIPPED) {
+			nRotateGame ^= 2;
+		}
+	}
+	
+	nD3DAdapter = D3DADAPTER_DEFAULT;
+	if (nRotateGame & 1 && VerScreen[0]) {
+		nD3DAdapter = dx9GetAdapter(VerScreen);
+	} else {
+		if (HorScreen[0]) {
+			nD3DAdapter = dx9GetAdapter(HorScreen);
+		}
+	}
 
 	// check selected atapter
 	D3DDISPLAYMODE dm;
-	pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &dm);
+	pD3D->GetAdapterDisplayMode(nD3DAdapter, &dm);
 
 	memset(&d3dpp, 0, sizeof(d3dpp));
 	if (nVidFullscreen) {
@@ -1813,7 +1879,7 @@ static int dx9AltInit()
 		dwBehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 	}
 
-	if (FAILED(pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hVidWnd, dwBehaviorFlags, &d3dpp, &pD3DDevice))) {
+	if (FAILED(pD3D->CreateDevice(nD3DAdapter, D3DDEVTYPE_HAL, hVidWnd, dwBehaviorFlags, &d3dpp, &pD3DDevice))) {
 		if (nVidFullscreen) {
 			FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_ERR_UI_FULL_PROBLEM), d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, d3dpp.BackBufferFormat, d3dpp.FullScreen_RefreshRateInHz);
 			if (bVidArcaderes && (d3dpp.BackBufferWidth != 320 && d3dpp.BackBufferHeight != 240)) {
@@ -1986,7 +2052,7 @@ static void VidSCpyImg16(unsigned char* dst, unsigned int dstPitch, unsigned cha
 // Copy BlitFXsMem to pddsBlitFX
 static int dx9AltRender()
 {
-	GetClientScreenRect(hVidWnd, &Dest);
+	GetClientRect(hVidWnd, &Dest);
 
 	if (bVidArcaderes && nVidFullscreen) {
 		Dest.left = (Dest.right + Dest.left) / 2;

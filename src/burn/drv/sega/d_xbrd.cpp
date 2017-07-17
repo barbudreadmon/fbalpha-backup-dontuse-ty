@@ -99,10 +99,10 @@ static struct BurnInputInfo LoffireInputList[] = {
 	{"Coin 1"            , BIT_DIGITAL   , System16InputPort0 + 6, "p1 coin"    },
 	{"Coin 2"            , BIT_DIGITAL   , System16InputPort0 + 7, "p2 coin"    },
 
-	A("P1 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"   ),
-	A("P1 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"   ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort1 + 7, "p1 fire 1" },
-	{"P1 Fire 2"         , BIT_DIGITAL   , System16InputPort1 + 6, "p1 fire 2" },
+	A("P1 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"  ),
+	A("P1 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"  ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort1 + 7, "p1 fire 1"  },
+	{"P1 Fire 2"         , BIT_DIGITAL   , System16InputPort1 + 6, "p1 fire 2"  },
 	
 	A("P2 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort2,   "p2 x-axis"  ),
 	A("P2 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort3,   "p2 y-axis"  ),

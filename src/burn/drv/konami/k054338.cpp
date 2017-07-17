@@ -7,14 +7,24 @@
 #include "konamiic.h"
 
 static UINT16 k54338_regs[32];
-static INT32 m_shd_rgb[9];
+INT32 m_shd_rgb[12];
 
 static INT32 k054338_alphainverted;
 
+static void reset_shadows()
+{
+	m_shd_rgb[0] = m_shd_rgb[1] = m_shd_rgb[2] = -80;   // shadow bank 0
+	m_shd_rgb[3] = m_shd_rgb[4] = m_shd_rgb[5] = -80;   // shadow bank 1
+	m_shd_rgb[6] = m_shd_rgb[7] = m_shd_rgb[8] = -80;   // shadow bank 2
+	m_shd_rgb[9] = m_shd_rgb[10] = m_shd_rgb[11] = -80; // shadow bank 3 (static)
+}
+
 void K054338Reset()
 {
-	memset(k54338_regs, 0, sizeof(UINT16)*32);
-	memset (m_shd_rgb, 0, sizeof(INT32)*9);
+	memset(k54338_regs, 0, sizeof(k54338_regs));
+	memset(m_shd_rgb, 0, sizeof(m_shd_rgb));
+
+	reset_shadows();
 }
 
 void K054338Exit()
@@ -26,15 +36,13 @@ void K054338Scan(INT32 nAction)
 {
 	struct BurnArea ba;
 	
-	if (nAction & ACB_DRIVER_DATA) {
+	if (nAction & ACB_MEMORY_RAM) {
 		memset(&ba, 0, sizeof(ba));
 		ba.Data	  = (UINT8*)k54338_regs;
-		ba.nLen	  = 32 * sizeof(INT16);
+		ba.nLen	  = sizeof(k54338_regs);
 		ba.szName = "K054338 Regs";
 		BurnAcb(&ba);
 	}
-
-//	SCAN_VARS(m_shd_rgb);
 }
 
 void K054338Init()
@@ -64,7 +72,7 @@ INT32 K054338_read_register(INT32 reg)
 	return k54338_regs[reg];
 }
 
-void K054338_update_all_shadows()
+void K054338_update_all_shadows(INT32 rushingheroes_hack)
 {
 	INT32 i, d;
 
@@ -74,6 +82,10 @@ void K054338_update_all_shadows()
 		if (d >= 0x100)
 			d -= 0x200;
 		m_shd_rgb[i] = d;
+	}
+
+	if (rushingheroes_hack) {
+		reset_shadows();
 	}
 }
 
