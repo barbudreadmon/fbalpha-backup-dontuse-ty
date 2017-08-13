@@ -12,6 +12,7 @@ INT32 nAnalogSpeed;
 INT32 nFireButtons = 0;
 
 bool bStreetFighterLayout = false;
+bool bVolumeUpAsFireButton4Layout = false;
 bool bLeftAltkeyMapped = false;
 
 // These are mappable global macros for mapping Pause/FFWD etc to controls in the input mapping dialogue. -dink
@@ -77,6 +78,7 @@ static void GameInpInitMacros()
 	INT32 nPgmButtons[10][6];
 
 	bStreetFighterLayout = false;
+	bVolumeUpAsFireButton4Layout = false;
 	nMacroCount = 0;
 
 	nFireButtons = 0;
@@ -89,6 +91,10 @@ static void GameInpInitMacros()
 		BurnDrvGetInputInfo(&bii, i);
 		if (bii.szName == NULL) {
 			bii.szName = "";
+		}
+		
+		if (_stricmp("Volume Up", bii.szName) == 0 && _stricmp("p1 fire 4", bii.szInfo) == 0) {
+			bVolumeUpAsFireButton4Layout = true;
 		}
 
 		bool bPlayerInInfo = (toupper(bii.szInfo[0]) == 'P' && bii.szInfo[1] >= '1' && bii.szInfo[1] <= '4'); // Because some of the older drivers don't use the standard input naming.
@@ -566,9 +572,11 @@ static void GameInpInitMacros()
 	if ((nPunchx3[0] == 7) && (nKickx3[0] == 7)) {
 		bStreetFighterLayout = true;
 	}
-	if (nFireButtons >= 5 && (BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
+	
+	if (!bVolumeUpAsFireButton4Layout && nFireButtons >= 5 && (BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
 		bStreetFighterLayout = true;
 	}
+	
 }
 
 INT32 GameInpInit()
