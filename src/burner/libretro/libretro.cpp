@@ -1574,17 +1574,15 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
    analog_controls_enabled = init_input();
 
-   InpDIPSWInit();
-   BurnDrvInit();
-   
    // Initialize EEPROM path
    snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%c", g_save_dir, slash);
-   
    // Initialize Hiscore path
    snprintf (szAppHiscorePath, sizeof(szAppHiscorePath), "%s%cfba%c", g_system_dir, slash, slash);
-   
    // Initialize Samples path
    snprintf (szAppSamplesPath, sizeof(szAppSamplesPath), "%s%cfba%csamples%c", g_system_dir, slash, slash, slash);
+
+   InpDIPSWInit();
+   BurnDrvInit();
 
    char input[128];
    snprintf (input, sizeof(input), "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
