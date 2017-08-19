@@ -95,8 +95,7 @@ void EEPROMInit(const eeprom_interface *interface)
 
 	TCHAR output[MAX_PATH];
 	_stprintf (output, _T("%s%s.nv"), szAppEEPROMPath, BurnDrvGetText(DRV_NAME));
-   printf("DEBUG loading %s\n", output);
-   fflush(stdout);
+
 	neeprom_available = 0;
 
 	INT32 len = ((1 << intf->address_bits) * (intf->data_bits >> 3)) & (MEMORY_SIZE-1);
@@ -119,8 +118,6 @@ void EEPROMExit()
 
 	TCHAR output[MAX_PATH];
 	_stprintf (output, _T("%s%s.nv"), szAppEEPROMPath, BurnDrvGetText(DRV_NAME));
-   printf("DEBUG savubg %s\n", output);
-   fflush(stdout);
 
 	neeprom_available = 0;
 

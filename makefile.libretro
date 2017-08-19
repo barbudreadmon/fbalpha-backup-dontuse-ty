@@ -590,27 +590,25 @@ else
    CXXFLAGS += -O3 -DNDEBUG
 endif
 
-ifeq ($(platform), sncps3)
-   WARNINGS_DEFINES =
-else
-   WARNINGS_DEFINES = -Wno-write-strings
-endif
-
-CFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
-CXXFLAGS += $(fpic) $(WARNINGS_DEFINES) $(FBA_DEFINES)
+CFLAGS += $(fpic) $(FBA_DEFINES)
+CXXFLAGS += $(fpic) $(FBA_DEFINES)
 LDFLAGS += $(fpic)
 
 CFLAGS += -std=gnu99 \
 	   -fforce-addr $(INLINE_LIMIT)  \
 	   -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
-	   -Wno-sequence-point -Wno-pedantic -Wno-strict-aliasing
+	   -Wno-sequence-point -Wno-strict-aliasing
 CXXFLAGS += -fforce-addr $(INLINE_LIMIT) \
 	   -fcheck-new \
-	   -Wall -W -pedantic -Wshadow -Wno-long-long -Wno-write-strings \
+	   -Wall -W -Wshadow -Wno-long-long -Wno-write-strings \
 	   -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \
-	   -Wuninitialized -Wpointer-arith -Wno-inline -Wno-address -Wno-unused-value \
-	   -Wno-unused-but-set-variable -Wno-sequence-point -Wno-narrowing -Wno-extra \
-	   -Wno-pedantic -Wno-strict-aliasing
+	   -Wuninitialized -Wpointer-arith -Wno-inline -Wno-unused-value \
+	   -Wno-sequence-point -Wno-extra -Wno-strict-aliasing
+
+ifeq (,$(filter $(platform), ps3 sncps3))
+   CFLAGS += -Wno-write-strings -Wno-pedantic
+   CXXFLAGS += -Wno-write-strings -pedantic -Wno-address -Wno-unused-but-set-variable -Wno-narrowing -Wno-pedantic
+endif
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)
    CFLAGS += -DFRONTEND_SUPPORTS_RGB565
