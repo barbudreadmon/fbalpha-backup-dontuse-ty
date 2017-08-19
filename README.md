@@ -13,12 +13,7 @@ Samples should be put under SYSTEM_DIRECTORY/fba/samples
 
 Move hiscore.dat from /metadata/ to /SYSTEM_DIRECTORY/fba/
 
-## Raspberry Pi 2 users
+## Known issues
 
-Use this command to build :
-<tt>make -f makefile.libretro platform=rpi2</tt>
-
-## Known bugs
-
-- Building with gcc-6.X (won't fix)
-- Unstable load/save states.
+- There is no support for MIDWAY hardware in this port
+- There is no support for unibios 3.3 at the moment (will be included when it is included upstream)
