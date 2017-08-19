@@ -638,6 +638,12 @@ static void evaluate_neogeo_bios_mode(const char* drvname)
          }
       }      
    }
+   
+   // Handling special cases
+   if (strcmp(drvname, "irrmaze") == 0)
+   {
+	  is_neogeo_needs_specific_bios = true;
+   }
   
    if (is_neogeo_needs_specific_bios)
    {
