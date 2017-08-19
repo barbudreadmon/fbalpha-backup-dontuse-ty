@@ -1,5 +1,6 @@
 HAVE_GRIFFIN    := 0
 INCLUDE_CPLUSPLUS11_FILES = 0
+INCLUDE_7Z_SUPPORT = 1
 BUILD_X64_EXE = 0
 
 LOCAL_PATH := $(call my-dir)
@@ -259,6 +260,22 @@ ifeq ($(EXTERNAL_ZLIB), 1)
 	FBA_DEFINES += -DEXTERNAL_ZLIB
 else
 	FBA_SRC_DIRS += $(FBA_LIB_DIRS)
+endif
+
+ifeq ($(INCLUDE_7Z_SUPPORT), 1)
+   FBA_DEFINES += -DINCLUDE_7Z_SUPPORT
+   FBA_SRC_DIRS += $(FBA_LIB_DIR)/lib7z
+   BURN_BLACKLIST += $(FBA_LIB_DIR)/lib7z/LzFindMt.c \
+		$(FBA_LIB_DIR)/lib7z/LzmaEnc.c \
+		$(FBA_LIB_DIR)/lib7z/MtCoder.c \
+		$(FBA_LIB_DIR)/lib7z/Lzma2Enc.c \
+		$(FBA_LIB_DIR)/lib7z/Bcj2Enc.c \
+		$(FBA_LIB_DIR)/lib7z/Threads.c \
+		$(FBA_LIB_DIR)/lib7z/Lzma86Enc.c \
+		$(FBA_LIB_DIR)/lib7z/LzmaLib.c \
+		$(FBA_LIB_DIR)/lib7z/XzEnc.c
+else
+   BURN_BLACKLIST += $(FBA_BURNER_DIR)/un7z.cpp
 endif
 
 LOCAL_SRC_FILES := $(GRIFFIN_CXX_SRC_FILES) $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
