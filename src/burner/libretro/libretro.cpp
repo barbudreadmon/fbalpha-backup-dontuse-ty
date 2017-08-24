@@ -933,38 +933,38 @@ static bool open_archive()
       snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, rom_name);
 
       if (ZipOpen(path) != 0)
-      {
          log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
-         // Handle non-arcade roms with prefix in zip name
-         snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, g_base_name);
-         if (ZipOpen(path) != 0)
-         {
-            log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
-         }
-         else
-         {
-            g_find_list_path.push_back(path);
-         }
-         // Handle msx bios with prefix in zip name
-         const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
-         if (boardrom && strcmp(boardrom, "msx_msx") == 0)
-         {
-            snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, boardrom);
-            if (ZipOpen(path) != 0)
-            {
-               log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
-            }
-            else
-            {
-               g_find_list_path.push_back(path);
-            }
-         }
-      }
       else
-      {
          g_find_list_path.push_back(path);
+ 
+      // Handle non-arcade roms with unofficial zip name (prefixed)
+      snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, g_base_name);
+      if (ZipOpen(path) != 0)
+         log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+      else
+         g_find_list_path.push_back(path);
+
+      // Handle msx bios unofficial zip name (prefixed)
+      const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
+      if (boardrom && strcmp(boardrom, "msx_msx") == 0)
+      {
+         snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, boardrom);
+         if (ZipOpen(path) != 0)
+            log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+         else
+            g_find_list_path.push_back(path);
       }
       
+      // Handle bios for pgm single pcb board (special case)
+      if (strcmp(rom_name, "thegladpcb") == 0 || strcmp(rom_name, "dmnfrntpcb") == 0 || strcmp(rom_name, "svgpcb") == 0)
+      {
+         snprintf(path, sizeof(path), "%s%cpgm", g_rom_dir, slash);
+         if (ZipOpen(path) != 0)
+            log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+         else
+            g_find_list_path.push_back(path);
+      }
+
       ZipClose();
    }
 
