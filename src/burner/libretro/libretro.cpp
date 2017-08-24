@@ -305,6 +305,7 @@ void set_neo_system_bios()
    }
 }
 
+char g_base_name[128];
 char g_rom_dir[1024];
 char g_save_dir[1024];
 char g_system_dir[1024];
@@ -1671,12 +1672,10 @@ static void extract_directory(char *buf, const char *path, size_t size)
 
 bool retro_load_game(const struct retro_game_info *info)
 {
-   char basename[128];
-
    if (!info)
       return false;
 
-   extract_basename(basename, info->path, sizeof(basename));
+   extract_basename(g_base_name, info->path, sizeof(g_base_name));
    extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
 
    const char *dir = NULL;
@@ -1706,7 +1705,7 @@ bool retro_load_game(const struct retro_game_info *info)
       log_cb(RETRO_LOG_ERROR, "System dir not defined => use roms dir %s\n", g_system_dir);
    }
 
-   unsigned i = BurnDrvGetIndexByName(basename);
+   unsigned i = BurnDrvGetIndexByName(g_base_name);
    if (i < nBurnDrvCount)
    {
       INT32 width, height;
@@ -1720,7 +1719,7 @@ bool retro_load_game(const struct retro_game_info *info)
       nBurnSoundRate = AUDIO_SAMPLERATE;
       nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
 
-      if (!fba_init(i, basename))
+      if (!fba_init(i, g_base_name))
          goto error;
 
       driver_inited = true;
