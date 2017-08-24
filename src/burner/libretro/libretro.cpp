@@ -935,6 +935,7 @@ static bool open_archive()
       if (ZipOpen(path) != 0)
       {
          log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+         // Handle non-arcade roms with prefix in zip name
          snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, g_base_name);
          if (ZipOpen(path) != 0)
          {
@@ -943,6 +944,20 @@ static bool open_archive()
          else
          {
             g_find_list_path.push_back(path);
+         }
+         // Handle msx bios with prefix in zip name
+         const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
+         if (boardrom && strcmp(boardrom, "msx_msx") == 0)
+         {
+            snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, boardrom);
+            if (ZipOpen(path) != 0)
+            {
+               log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+            }
+            else
+            {
+               g_find_list_path.push_back(path);
+            }
          }
       }
       else
