@@ -1638,13 +1638,11 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
-   const char *base = strrchr(path, '/');
-   if (!base)
-      base = strrchr(path, '\\');
+   const char *base = strrchr(path, slash);
    if (!base)
       base = path;
 
-   if (*base == '\\' || *base == '/')
+   if (*base == slash)
       base++;
 
    strncpy(buf, base, size - 1);
@@ -1660,9 +1658,7 @@ static void extract_directory(char *buf, const char *path, size_t size)
    strncpy(buf, path, size - 1);
    buf[size - 1] = '\0';
 
-   char *base = strrchr(buf, '/');
-   if (!base)
-      base = strrchr(buf, '\\');
+   char *base = strrchr(buf, slash);
 
    if (base)
       *base = '\0';
