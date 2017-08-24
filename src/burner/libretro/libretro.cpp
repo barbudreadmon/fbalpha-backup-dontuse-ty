@@ -928,11 +928,8 @@ static bool open_archive()
       log_cb(RETRO_LOG_INFO, "[FBA] Archive: %s\n", rom_name);
 
       char path[1024];
-#if defined(_XBOX) || defined(_WIN32)
-      snprintf(path, sizeof(path), "%s\\%s", g_rom_dir, rom_name);
-#else
-      snprintf(path, sizeof(path), "%s/%s", g_rom_dir, rom_name);
-#endif
+      
+      snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, rom_name);
 
       if (ZipOpen(path) != 0)
          log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
