@@ -938,11 +938,14 @@ static bool open_archive()
          g_find_list_path.push_back(path);
  
       // Handle non-arcade roms with unofficial zip name (prefixed)
-      snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, g_base_name);
-      if (ZipOpen(path) != 0)
-         log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
-      else
-         g_find_list_path.push_back(path);
+      if (strcmp(rom_name, g_base_name) != 0)
+      {
+         snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, g_base_name);
+         if (ZipOpen(path) != 0)
+            log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+         else
+            g_find_list_path.push_back(path);
+      }
 
       // Handle msx bios unofficial zip name (prefixed)
       const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
