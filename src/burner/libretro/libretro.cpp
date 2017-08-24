@@ -933,9 +933,22 @@ static bool open_archive()
       snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, rom_name);
 
       if (ZipOpen(path) != 0)
+      {
          log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+         snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, g_base_name);
+         if (ZipOpen(path) != 0)
+         {
+            log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+         }
+         else
+         {
+            g_find_list_path.push_back(path);
+         }
+      }
       else
+      {
          g_find_list_path.push_back(path);
+      }
       
       ZipClose();
    }
