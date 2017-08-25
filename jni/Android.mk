@@ -16,7 +16,8 @@ endif
 
 LOCAL_MODULE	:= libretro
 
-MAIN_FBA_DIR	:= ../src
+ROOT_DIR		:= ..
+MAIN_FBA_DIR	:= $(ROOT_DIR)/src
 
 ifeq ($(TARGET_ARCH),arm)
 	COMMON_FLAGS += -DANDROID_ARM -DARM -marm
@@ -46,6 +47,8 @@ FBA_DEFINES	:=
 include ../makefile.libretro_common
 
 LOCAL_SRC_FILES := $(SOURCES_CXX) $(SOURCES_C)
+
+LOCAL_C_INCLUDES = $(INCFLAGS)
 
 LOCAL_LDLIBS += $(LDFLAGS)
 
