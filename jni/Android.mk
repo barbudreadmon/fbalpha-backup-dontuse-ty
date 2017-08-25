@@ -9,11 +9,6 @@ WANT_NEOGEOCD = 0
 
 include $(CLEAR_VARS)
 
-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
-ifneq ($(GIT_VERSION)," unknown")
-	LOCAL_CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
-endif
-
 LOCAL_MODULE	:= libretro
 
 ROOT_DIR		:= ..
@@ -41,14 +36,13 @@ endif
 
 SOURCES_C   :=
 SOURCES_CXX :=
-INCFLAGS    :=
 FBA_DEFINES	:=
 
 include ../makefile.libretro_common
 
 LOCAL_SRC_FILES := $(SOURCES_CXX) $(SOURCES_C)
 
-LOCAL_C_INCLUDES = $(INCFLAGS)
+LOCAL_C_INCLUDES = $(INCLUDE_DIRS)
 
 LOCAL_LDLIBS += $(LDFLAGS)
 

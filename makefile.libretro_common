@@ -222,37 +222,43 @@ ifeq ($(WANT_NEOGEOCD), 1)
    FBA_DEFINES += -DWANT_NEOGEOCD
 endif
 
-INCFLAGS += -I$(FBA_BURNER_DIR)/win32 \
-	-I$(LIBRETRO_DIR) \
-	-I$(LIBRETRO_DIR)/tchar \
-	-I$(FBA_BURN_DIR) \
-	-I$(MAIN_FBA_DIR)/cpu \
-	-I$(FBA_BURN_DIR)/snd \
-	-I$(FBA_BURN_DIR)/devices \
-	-I$(FBA_INTERFACE_DIR) \
-	-I$(FBA_INTERFACE_DIR)/input \
-	-I$(FBA_INTERFACE_DIR)/cd \
-	-I$(FBA_INTERFACE_DIR)/audio \
-	-I$(FBA_BURNER_DIR) \
-	-I$(FBA_CPU_DIR) \
-	-I$(FBA_CPU_DIR)/i8039 \
-	-I$(FBA_CPU_DIR)/i8051 \
-	-I$(FBA_CPU_DIR)/tms32010 \
-	-I$(FBA_CPU_DIR)/upd7725 \
-	-I$(FBA_CPU_DIR)/upd7810 \
-	-I$(FBA_CPU_DIR)/v60 \
-	-I$(FBA_LIB_DIR)/zlib \
-	-I$(FBA_LIB_DIR)/lib7z \
-	-I$(FBA_BURN_DIR)/drv/capcom \
-	-I$(FBA_BURN_DIR)/drv/konami \
-	-I$(FBA_BURN_DIR)/drv/dataeast \
-	-I$(FBA_BURN_DIR)/drv/cave \
-	-I$(FBA_BURN_DIR)/drv/neogeo \
-	-I$(FBA_BURN_DIR)/drv/psikyo \
-	-I$(FBA_BURN_DIR)/drv/sega \
-	-I$(FBA_BURN_DIR)/drv/toaplan \
-	-I$(FBA_BURN_DIR)/drv/taito \
-	-I$(FBA_GENERATED_DIR) \
-	-I$(FBA_LIB_DIR)
+INCLUDE_DIRS = $(FBA_BURNER_DIR)/win32 \
+	$(LIBRETRO_DIR) \
+	$(LIBRETRO_DIR)/tchar \
+	$(FBA_BURN_DIR) \
+	$(MAIN_FBA_DIR)/cpu \
+	$(FBA_BURN_DIR)/snd \
+	$(FBA_BURN_DIR)/devices \
+	$(FBA_INTERFACE_DIR) \
+	$(FBA_INTERFACE_DIR)/input \
+	$(FBA_INTERFACE_DIR)/cd \
+	$(FBA_INTERFACE_DIR)/audio \
+	$(FBA_BURNER_DIR) \
+	$(FBA_CPU_DIR) \
+	$(FBA_CPU_DIR)/i8039 \
+	$(FBA_CPU_DIR)/i8051 \
+	$(FBA_CPU_DIR)/tms32010 \
+	$(FBA_CPU_DIR)/upd7725 \
+	$(FBA_CPU_DIR)/upd7810 \
+	$(FBA_CPU_DIR)/v60 \
+	$(FBA_LIB_DIR)/zlib \
+	$(FBA_LIB_DIR)/lib7z \
+	$(FBA_BURN_DIR)/drv/capcom \
+	$(FBA_BURN_DIR)/drv/konami \
+	$(FBA_BURN_DIR)/drv/dataeast \
+	$(FBA_BURN_DIR)/drv/cave \
+	$(FBA_BURN_DIR)/drv/neogeo \
+	$(FBA_BURN_DIR)/drv/psikyo \
+	$(FBA_BURN_DIR)/drv/sega \
+	$(FBA_BURN_DIR)/drv/toaplan \
+	$(FBA_BURN_DIR)/drv/taito \
+	$(FBA_GENERATED_DIR) \
+	$(FBA_LIB_DIR)
 
 CFLAGS += -std=gnu99
+
+# GIT HASH
+GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
+ifneq ($(GIT_VERSION)," unknown")
+   CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+endif
