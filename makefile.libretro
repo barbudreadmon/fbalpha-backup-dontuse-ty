@@ -36,9 +36,8 @@ else ifneq (,$(findstring rpi,$(platform)))
 endif
 
 
-MAIN_FBA_DIR := src
-
-include makefile.libretro_common
+MAIN_FBA_DIR	:= src
+VERSION_SCRIPT	:= $(MAIN_FBA_DIR)/burner/libretro/link.T
 
 INLINE_LIMIT=-finline-limit=1200
 
@@ -64,7 +63,7 @@ endif
 ifneq (,$(findstring unix,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
-   SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(LIBRETRO_DIR)/link.T
+   SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(VERSION_SCRIPT)
    PLATFORM_DEFINES := -DUSE_FILE32API
    ENDIANNESS_DEFINES := -DLSB_FIRST
 
@@ -147,7 +146,7 @@ else ifeq ($(platform), theos_ios)
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_$(platform).so
    fpic := -fPIC
-   SHARED := -lcpp -lm -shared -Wl,-no-undefined -Wl,--version-script=$(LIBRETRO_DIR)/link.T
+   SHARED := -lcpp -lm -shared -Wl,-no-undefined -Wl,--version-script=$(VERSION_SCRIPT)
    ENDIANNESS_DEFINES := -DLSB_FIRST
    CC = qcc -Vgcc_ntoarmv7le
    CXX = QCC -Vgcc_ntoarmv7le_cpp
@@ -254,7 +253,7 @@ else
    TARGET := $(TARGET_NAME)_libretro.dll
    CC = gcc
    CXX = g++
-   SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(LIBRETRO_DIR)/link.T
+   SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(VERSION_SCRIPT)
    LDFLAGS += -static-libgcc -static-libstdc++
    ENDIANNESS_DEFINES := -DLSB_FIRST
 
@@ -262,6 +261,8 @@ endif
 
 CC_SYSTEM = gcc
 CXX_SYSTEM = g++
+
+include makefile.libretro_common
 
 FBA_CXXOBJ := $(SOURCES_CXX:.cpp=.o)
 FBA_COBJ := $(SOURCES_C:.c=.o)
