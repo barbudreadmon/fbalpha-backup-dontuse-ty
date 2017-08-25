@@ -195,6 +195,7 @@ else ifeq ($(platform), vita)
    CFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive
    CXXFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive -fno-rtti -fno-exceptions
    EXTERNAL_ZLIB = 1
+   FASTCALL = 0
    STATIC_LINKING = 1
 
 # Xbox 360

@@ -39,13 +39,13 @@ typedef union {
 #include <ppu_intrinsics.h>
 #include <math.h>
 #define BURN_ENDIAN_SWAP_INT8(x)				(x^1)
-#define BURN_ENDIAN_SWAP_INT16(x)				({uint16_t t; __sthbrx(&t, x); t;})
-#define BURN_ENDIAN_SWAP_INT32(x)				({uint32_t t; __stwbrx(&t, x); t;})
+#define BURN_ENDIAN_SWAP_INT16(x)				({uint16_t tt; __sthbrx(&tt, x); tt;})
+#define BURN_ENDIAN_SWAP_INT32(x)				({uint32_t tt; __stwbrx(&tt, x); tt;})
 /* Wii */
 #elif defined(HW_RVL)
 #define BURN_ENDIAN_SWAP_INT8(x)				(x^1)
-#define BURN_ENDIAN_SWAP_INT16(x)				({uint16_t t; __sthbrx(&t, 0, x); t;})
-#define BURN_ENDIAN_SWAP_INT32(x)				({uint32_t t; __stwbrx(&t, 0, x); t;})
+#define BURN_ENDIAN_SWAP_INT16(x)				({uint16_t tt; __sthbrx(&tt, 0, x); tt;})
+#define BURN_ENDIAN_SWAP_INT32(x)				({uint32_t tt; __stwbrx(&tt, 0, x); tt;})
 #endif
 
 #ifdef NO_64BIT_BYTESWAP
