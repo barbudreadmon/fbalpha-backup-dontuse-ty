@@ -38,6 +38,12 @@
 #define MAX_CARTRIDGE_SIZE	0xc00000
 #define MAX_SRAM_SIZE		0x010000
 
+#if defined (__GNUC__)
+#define OPTIMIZE_ATTR __attribute__((optimize("O2")))
+#else
+#define OPTIMIZE_ATTR
+#endif
+
 static INT32 dma_xfers = 0;
 
 typedef void (*MegadriveCb)();
@@ -3903,8 +3909,7 @@ static void DrawSpritesFromCache(INT32 *hc, INT32 sh)
 // v
 // Index + 0  :    hhhhvvvv ab--hhvv yyyyyyyy yyyyyyyy // a: offscreen h, b: offs. v, h: horiz. size
 // Index + 4  :    xxxxxxxx xxxxxxxx pccvhnnn nnnnnnnn // x: x coord + 8
-
-static void __attribute__((optimize("O2"))) PrepareSprites(INT32 full)
+static void OPTIMIZE_ATTR PrepareSprites(INT32 full)
 {
 	INT32 u=0,link=0,sblocks=0;
 	INT32 table=0;
@@ -4249,7 +4254,7 @@ static void MegadriveDraw()
 #define CYCLES_M68K_VINT_LAG  68
 #define CYCLES_M68K_ASD      148
 
-INT32 __attribute__((optimize("O2"))) MegadriveFrame()
+INT32 OPTIMIZE_ATTR MegadriveFrame()
 {
 	if (MegadriveReset) {
 		MegadriveResetDo();

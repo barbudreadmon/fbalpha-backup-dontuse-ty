@@ -6,7 +6,6 @@
 
 #include "libretro.h"
 #include "inp_keys.h"
-#define TCHAR char
 #define _T(x) x
 #define _tfopen fopen
 #define _tcstol strtol
@@ -29,6 +28,13 @@
 #define strcasecmp(x, y) _stricmp(x, y)
 #define snprintf _snprintf
 #else
+
+#ifdef _UNICODE
+typedef wchar_t TCHAR;
+#else
+typedef char	TCHAR;
+#endif
+
 #define _stricmp(x, y) strcasecmp(x,y)
 
 typedef struct { int x, y, width, height; } RECT;
