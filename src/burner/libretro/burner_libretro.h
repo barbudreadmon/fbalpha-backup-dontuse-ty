@@ -3,6 +3,7 @@
 
 #include "gameinp.h"
 #include "input/inp_keys.h"
+#include "streams/file_stream_transforms.h"
 
 extern int bDrvOkay;
 extern int bRunPause;

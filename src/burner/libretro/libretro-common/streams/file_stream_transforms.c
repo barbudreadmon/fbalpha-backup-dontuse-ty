@@ -81,15 +81,6 @@ int rfputc(int character, RFILE * stream)
     return filestream_putc(stream, character);
 }
 
-int rfprintf(RFILE * stream, const char * format, ...)
-{
-    va_list vl;
-    va_start(vl, format);
-    int result = filestream_vprintf(stream, format, vl);
-    va_end(vl);
-    return result;
-}
-
 int rfeof(RFILE* stream)
 {
     return filestream_eof(stream);

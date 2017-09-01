@@ -7,6 +7,7 @@ FBA_INTERFACE_DIR		:= $(MAIN_FBA_DIR)/intf
 FBA_LIB_DIR				:= $(MAIN_FBA_DIR)/dep/libs
 FBA_SCRIPTS_DIR			:= $(MAIN_FBA_DIR)/dep/scripts
 LIBRETRO_DIR			:= $(FBA_BURNER_DIR)/libretro
+LIBRETRO_COMM_DIR		:= $(LIBRETRO_DIR)/libretro-common
 
 CAPCOM_DIR				:= $(FBA_BURN_DRIVERS_DIR)/capcom
 CPS3_DIR				:= $(FBA_BURN_DRIVERS_DIR)/cps3
@@ -209,6 +210,7 @@ else
    BURN_BLACKLIST += $(FBA_BURNER_DIR)/un7z.cpp
 endif
 
+SOURCES_C		+= $(LIBRETRO_COMM_DIR)/streams/file_stream.c $(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c
 SOURCES_C		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
 SOURCES_CXX		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
 SOURCES_CXX		+= $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp $(LIBRETRO_DIR)/gami.cpp $(LIBRETRO_DIR)/gamc.cpp
@@ -223,6 +225,7 @@ ifeq ($(WANT_NEOGEOCD), 1)
 endif
 
 INCLUDE_DIRS := $(FBA_BURNER_DIR)/win32 \
+	$(LIBRETRO_COMM_DIR)/include \
 	$(LIBRETRO_DIR) \
 	$(LIBRETRO_DIR)/tchar \
 	$(FBA_BURN_DIR) \
@@ -256,6 +259,7 @@ INCLUDE_DIRS := $(FBA_BURNER_DIR)/win32 \
 	$(FBA_LIB_DIR)
 
 CFLAGS += -std=gnu99
+FBA_DEFINES += -DUSE_FILE32API
 
 # GIT HASH
 GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"

@@ -81,10 +81,6 @@ bool filestream_write_file(const char *path, const void *data, ssize_t size);
 
 int filestream_putc(RFILE *stream, int c);
 
-int filestream_printf(RFILE *stream, const char* format, ...);
-
-int filestream_vprintf(RFILE *stream, const char* format, va_list args);
-
 int filestream_get_fd(RFILE *stream);
 
 int filestream_flush(RFILE *stream);

@@ -64,7 +64,6 @@ ifneq (,$(findstring unix,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(VERSION_SCRIPT)
-   PLATFORM_DEFINES := -DUSE_FILE32API
    ENDIANNESS_DEFINES := -DLSB_FIRST
 
    # Raspberry Pi
@@ -223,7 +222,7 @@ else ifneq (,$(filter $(platform), ngc wii wiiu))
 
    # Nintendo WiiU
    ifneq (,$(findstring wiiu,$(platform)))
-      PLATFORM_DEFINES += -DUSE_FILE32API -DGEKKO -DWIIU -DHW_RVL -mwup -mcpu=750 -meabi -mhard-float
+      PLATFORM_DEFINES += -DGEKKO -DWIIU -DHW_RVL -mwup -mcpu=750 -meabi -mhard-float
 
    # Nintendo Wii
    else ifneq (,$(findstring wii,$(platform)))
@@ -245,7 +244,6 @@ else ifneq (,$(filter $(platform), ngc wii wiiu))
 # Emscripten
 else ifeq ($(platform), emscripten)
    TARGET := $(TARGET_NAME)_libretro_$(platform).bc
-   PLATFORM_DEFINES := -DUSE_FILE32API
    ENDIANNESS_DEFINES := -DLSB_FIRST -DNO_UNALIGNED_MEM
 
 # Windows
@@ -272,10 +270,6 @@ OBJS := $(FBA_COBJ) $(FBA_CXXOBJ)
 FBA_DEFINES += -D__LIBRETRO__ \
 	$(ENDIANNESS_DEFINES) \
 	$(PLATFORM_DEFINES)
-
-ifneq ($(platform),qnx)
-   FBA_DEFINES += -DINLINE="static inline" -DSH2_INLINE="static inline"
-endif
 
 INCFLAGS := $(foreach dir,$(INCLUDE_DIRS),-I$(dir))
 
