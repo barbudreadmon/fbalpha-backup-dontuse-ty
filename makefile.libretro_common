@@ -210,8 +210,8 @@ else
    BURN_BLACKLIST += $(FBA_BURNER_DIR)/un7z.cpp
 endif
 
-SOURCES_C		+= $(LIBRETRO_COMM_DIR)/streams/file_stream.c $(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c
 SOURCES_C		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
+SOURCES_C		+= $(LIBRETRO_COMM_DIR)/streams/file_stream.c $(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c
 SOURCES_CXX		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
 SOURCES_CXX		+= $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp $(LIBRETRO_DIR)/gami.cpp $(LIBRETRO_DIR)/gamc.cpp
 
@@ -227,7 +227,6 @@ endif
 INCLUDE_DIRS := $(FBA_BURNER_DIR)/win32 \
 	$(LIBRETRO_COMM_DIR)/include \
 	$(LIBRETRO_DIR) \
-	$(LIBRETRO_DIR)/tchar \
 	$(FBA_BURN_DIR) \
 	$(MAIN_FBA_DIR)/cpu \
 	$(FBA_BURN_DIR)/snd \
