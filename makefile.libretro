@@ -197,7 +197,6 @@ else ifeq ($(platform), vita)
    EXTERNAL_ZLIB = 1
    FASTCALL = 0
    STATIC_LINKING = 1
-   USE_FILE32API = 0
    USE_LIBRETRO_FILE32API = 0
 
 # Xbox 360
