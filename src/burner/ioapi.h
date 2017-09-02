@@ -40,14 +40,13 @@
         #endif
 #endif
 
-#ifdef USE_LIBRETRO_FILE32API
- #include "streams/file_stream_transforms.h"
-#else
- #include <stdio.h>
-#endif
-
+#include <stdio.h>
 #include <stdlib.h>
 #include "zlib.h"
+
+#ifdef USE_LIBRETRO_FILE32API
+ #include "streams/file_stream_transforms.h"
+#endif
 
 #if defined(USE_FILE32API)
  #define fopen64 fopen
