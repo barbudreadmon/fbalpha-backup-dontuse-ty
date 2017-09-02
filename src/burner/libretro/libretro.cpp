@@ -1,12 +1,12 @@
+#include <vector>
+#include <string>
+
 #include "libretro.h"
 #include "burner.h"
 
 #ifdef USE_OLD_MAPPING
 	#include "bind_map.h"
 #endif
-
-#include <vector>
-#include <string>
 
 #include "cd/cd_interface.h"
 
@@ -382,7 +382,13 @@ std::vector<retro_input_descriptor> macro_input_descriptors;
 struct macro_core_option_value
 {
    unsigned retro_device_id;
-   char friendly_name[100];
+   const char* friendly_name;
+
+   macro_core_option_value(unsigned device_id, const char* name):
+	   retro_device_id(device_id),
+	   friendly_name(name)
+   {
+   }
 };
 
 struct macro_core_option
@@ -693,7 +699,7 @@ static void set_environment()
 
    log_cb(RETRO_LOG_INFO, "set_environment: SYSTEM: %d, DIPSWITCH: %d, MACRO: %d\n", nbr_vars, nbr_dips, nbr_macros);
 
-   struct retro_variable vars[nbr_vars + nbr_dips + nbr_macros + 1]; // + 1 for the empty ending retro_variable
+   std::vector<retro_variable> vars(nbr_vars + nbr_dips + nbr_macros + 1); // + 1 for the empty ending retro_variable
    
    int idx_var = 0;
 
@@ -721,7 +727,7 @@ static void set_environment()
    }
 
    vars[idx_var] = var_empty;
-   environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars);
+   environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars.data());
 }
 
 // Update DIP switches value  depending of the choice the user made in core options
@@ -2097,7 +2103,8 @@ static bool init_input(void)
 
          char* description = bii.szName + offset_player_x;
          
-         normal_input_descriptors.push_back((retro_input_descriptor){ port, device, index, id, description });
+         retro_input_descriptor descriptor{ port, device, index, id, description };
+         normal_input_descriptors.push_back(descriptor);
 
          log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - assigned to key [%-25s] on port %2d.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode, print_label(keybinds[pgi->Input.Switch.nCode][0]), port);
       }
@@ -3036,32 +3043,32 @@ static void init_macro_core_options()
       macro_core_option *macro_option = &macro_core_options.back();
 
       // Clean the macro name to creation the core option name (removing space and equal characters)
-      char option_name[strlen(pgi->Macro.szName) + 1]; // + 1 for the '\0' ending
-      strcpy(option_name, pgi->Macro.szName);
-      str_char_replace(option_name, ' ', '_');
-      str_char_replace(option_name, '=', '_');
+      std::vector<char> option_name(strlen(pgi->Macro.szName) + 1); // + 1 for the '\0' ending
+      strcpy(option_name.data(), pgi->Macro.szName);
+      str_char_replace(option_name.data(), ' ', '_');
+      str_char_replace(option_name.data(), '=', '_');
 
       macro_option->pgi = pgi;
       strncpy(macro_option->friendly_name, pgi->Macro.szName, sizeof(macro_option->friendly_name));
-      snprintf(macro_option->option_name, sizeof(macro_option->option_name), "fba-macro-%s-%s", drvname, option_name);
+      snprintf(macro_option->option_name, sizeof(macro_option->option_name), "fba-macro-%s-%s", drvname, option_name.data());
 
       // Reserve space for the default value
       int remaining_input_available = nMaxRetroPadButtons - nEffectiveFireButtons;
 
-      macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_EMPTY, "None" });
+      macro_option->values.push_back(macro_core_option_value(RETRO_DEVICE_ID_JOYPAD_EMPTY, "None"));
 
       if (remaining_input_available >= 6)
       {
-         macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_L, "RetroPad L Button" } );
-         macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_R, "RetroPad R Button" } );
+         macro_option->values.push_back(macro_core_option_value(RETRO_DEVICE_ID_JOYPAD_L, "RetroPad L Button"));
+         macro_option->values.push_back(macro_core_option_value(RETRO_DEVICE_ID_JOYPAD_R, "RetroPad R Button"));
       }
       if (remaining_input_available >= 4)
       {
-         macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_L2, "RetroPad L2 Button" } );
-         macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_R2, "RetroPad R2 Button" } );
+         macro_option->values.push_back(macro_core_option_value(RETRO_DEVICE_ID_JOYPAD_L2, "RetroPad L2 Button"));
+         macro_option->values.push_back(macro_core_option_value(RETRO_DEVICE_ID_JOYPAD_R2, "RetroPad R2 Button"));
          
-         macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_L3, "RetroPad L3 Button" } );
-         macro_option->values.push_back((macro_core_option_value) { RETRO_DEVICE_ID_JOYPAD_R3, "RetroPad R3 Button" } );
+         macro_option->values.push_back(macro_core_option_value(RETRO_DEVICE_ID_JOYPAD_L3, "RetroPad L3 Button"));
+         macro_option->values.push_back(macro_core_option_value(RETRO_DEVICE_ID_JOYPAD_R3, "RetroPad R3 Button"));
       }
 
       std::vector<macro_core_option_value, std::allocator<macro_core_option_value> >(macro_option->values).swap(macro_option->values);
@@ -3114,7 +3121,8 @@ static void init_macro_input_descriptors()
 
       char* description = macro_option->friendly_name + offset_player_x;
 
-      macro_input_descriptors.push_back((retro_input_descriptor){ port, device, index, id, description });
+      retro_input_descriptor descriptor { port, device, index, id, description };
+      macro_input_descriptors.push_back(descriptor);
 
       log_cb(RETRO_LOG_INFO, "MACRO [%-15s] Macro.Switch.nCode: 0x%04x Macro.nMode: %d - assigned to key [%-25s] on port %2d.\n",
       	macro_option->friendly_name, macro_option->pgi->Macro.Switch.nCode, macro_option->pgi->Macro.nMode, print_label(id), port);
@@ -3124,7 +3132,7 @@ static void init_macro_input_descriptors()
 // Set the input descriptors by combininng the two lists of 'Normal' and 'Macros' inputs
 static void set_input_descriptors()
 {
-   struct retro_input_descriptor input_descriptors[normal_input_descriptors.size() + macro_input_descriptors.size() + 1]; // + 1 for the empty ending retro_input_descriptor { 0 }
+   std::vector<retro_input_descriptor> input_descriptors(normal_input_descriptors.size() + macro_input_descriptors.size() + 1); // + 1 for the empty ending retro_input_descriptor { 0 }
 
    unsigned input_descriptor_idx = 0;
 
@@ -3140,7 +3148,7 @@ static void set_input_descriptors()
 
    input_descriptors[input_descriptor_idx].description = NULL;
 
-   environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, input_descriptors);
+   environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, input_descriptors.data());
 }
 
 // Activate or deactivate macros depending of the choice the user made in core options

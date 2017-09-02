@@ -23,23 +23,23 @@
 #define _ftprintf fprintf
 
 #ifdef _MSC_VER
-#include <tchar.h>
-#define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
-#define strcasecmp(x, y) _stricmp(x, y)
-#define snprintf _snprintf
+ #include <tchar.h>
+ #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
+ #define strcasecmp(x, y) _stricmp(x, y)
+ #define snprintf _snprintf
+ #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+  typedef struct { int x, y, width, height; } RECT;
+ #endif
 #else
-
-#ifdef _UNICODE
-typedef wchar_t TCHAR;
-#else
-typedef char	TCHAR;
-#endif
-
-#define _stricmp(x, y) strcasecmp(x,y)
-
-typedef struct { int x, y, width, height; } RECT;
-#undef __cdecl
-#define __cdecl
+ #ifdef UNICODE
+  typedef wchar_t TCHAR;
+ #else
+  typedef char	TCHAR;
+ #endif
+ #define _stricmp(x, y) strcasecmp(x,y)
+ typedef struct { int x, y, width, height; } RECT;
+ #undef __cdecl
+ #define __cdecl
 #endif
 
 #ifndef FASTCALL
