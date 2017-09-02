@@ -1,7 +1,9 @@
 #ifndef _LIBRETRO_OPTIMIZATIONS_H_
 #define _LIBRETRO_OPTIMIZATIONS_H_
 
-#include "streams/file_stream_transforms.h"
+#ifdef USE_LIBRETRO_FILE32API
+ #include "streams/file_stream_transforms.h"
+#endif
 
 extern char g_rom_dir[1024];
 extern char g_save_dir[1024];

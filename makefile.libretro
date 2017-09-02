@@ -12,6 +12,8 @@ INCLUDE_7Z_SUPPORT = 1
 PTR64 ?= 1
 INCLUDE_CPLUSPLUS11_FILES = 0
 BUILD_X64_EXE = 0
+USE_FILE32API = 1
+USE_LIBRETRO_FILE32API = 1
 
 # system platform
 ifeq ($(platform),)
@@ -190,11 +192,13 @@ else ifeq ($(platform), vita)
    AR = arm-vita-eabi-ar$(EXE_EXT)
    PLATFORM_DEFINES += -DVITA
    ENDIANNESS_DEFINES := -DLSB_FIRST
-   CFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive
+   CFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant
    CXXFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive -fno-rtti -fno-exceptions
    EXTERNAL_ZLIB = 1
    FASTCALL = 0
    STATIC_LINKING = 1
+   USE_FILE32API = 0
+   USE_LIBRETRO_FILE32API = 0
 
 # Xbox 360
 else ifeq ($(platform), xenon)

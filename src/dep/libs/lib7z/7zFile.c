@@ -5,7 +5,7 @@
 
 #include "7zFile.h"
 
-#ifdef __LIBRETRO__
+#ifdef USE_LIBRETRO_FILE32API
  #include "streams/file_stream_transforms.h"
 #endif
 
