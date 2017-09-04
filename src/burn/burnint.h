@@ -10,7 +10,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "tchar.h"
+#include "fba_tchar.h"
 
 #ifdef __LIBRETRO_OPTIMIZATIONS__
 #include "burn_libretro_opts.h"
