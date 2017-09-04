@@ -8,6 +8,7 @@
 #include "inp_keys.h"
 
 #ifdef _MSC_VER
+	#undef _UNICODE
 	#include <tchar.h>
 	#define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
 	#define strcasecmp(x, y) _stricmp(x, y)
