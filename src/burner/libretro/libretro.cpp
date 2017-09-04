@@ -2103,7 +2103,12 @@ static bool init_input(void)
 
          char* description = bii.szName + offset_player_x;
          
-		 retro_input_descriptor descriptor { port, device, index, id, description };
+         retro_input_descriptor descriptor;
+         descriptor.port = port;
+         descriptor.device = device;
+         descriptor.index = index;
+         descriptor.id = id;
+         descriptor.description = description;
          normal_input_descriptors.push_back(descriptor);
 
          log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - assigned to key [%-25s] on port %2d.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode, print_label(keybinds[pgi->Input.Switch.nCode][0]), port);
@@ -3121,8 +3126,13 @@ static void init_macro_input_descriptors()
 
       char* description = macro_option->friendly_name + offset_player_x;
 
-	  retro_input_descriptor descriptor { port, device, index, id, description };
-      macro_input_descriptors.push_back((retro_input_descriptor)descriptor);
+      retro_input_descriptor descriptor;
+      descriptor.port = port;
+      descriptor.device = device;
+      descriptor.index = index;
+      descriptor.id = id;
+      descriptor.description = description;
+      macro_input_descriptors.push_back(descriptor);
 
       log_cb(RETRO_LOG_INFO, "MACRO [%-15s] Macro.Switch.nCode: 0x%04x Macro.nMode: %d - assigned to key [%-25s] on port %2d.\n",
       	macro_option->friendly_name, macro_option->pgi->Macro.Switch.nCode, macro_option->pgi->Macro.nMode, print_label(id), port);
