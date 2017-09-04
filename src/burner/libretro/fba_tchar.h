@@ -6,31 +6,32 @@
 
 #include "libretro.h"
 #include "inp_keys.h"
-#define _T(x) x
-#define _tfopen fopen
-#define _tcstol strtol
-#define _tcsstr strstr
-#define _istspace(x) isspace(x)
-#define _stprintf sprintf
-#define _tcslen strlen
-#define _tcsicmp(a, b) strcasecmp(a, b)
-#define _tcscpy(to, from) strcpy(to, from)
-#define _fgetts fgets
-#define _strnicmp(s1, s2, n) strncasecmp(s1, s2, n)
-#define _tcsncmp strncmp
-#define _tcsncpy strncpy
-#define _stscanf sscanf
-#define _ftprintf fprintf
 
 #ifdef _MSC_VER
- #include <tchar.h>
- #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
- #define strcasecmp(x, y) _stricmp(x, y)
- #define snprintf _snprintf
- #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
-  typedef struct { int x, y, width, height; } RECT;
- #endif
+	#include <tchar.h>
+	#define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
+	#define strcasecmp(x, y) _stricmp(x, y)
+	#define snprintf _snprintf
+	#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+		typedef struct { int x, y, width, height; } RECT;
+	#endif
 #else
+	#define _T(x) x
+	#define _tfopen fopen
+	#define _tcstol strtol
+	#define _tcsstr strstr
+	#define _istspace(x) isspace(x)
+	#define _stprintf sprintf
+	#define _tcslen strlen
+	#define _tcsicmp(a, b) strcasecmp(a, b)
+	#define _tcscpy(to, from) strcpy(to, from)
+	#define _fgetts fgets
+	#define _strnicmp(s1, s2, n) strncasecmp(s1, s2, n)
+	#define _tcsncmp strncmp
+	#define _tcsncpy strncpy
+	#define _stscanf sscanf
+	#define _ftprintf fprintf
+
  #ifdef UNICODE
   typedef wchar_t TCHAR;
  #else
