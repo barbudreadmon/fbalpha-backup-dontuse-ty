@@ -44,7 +44,7 @@ typedef struct RFILE RFILE;
 #define fprintf rfprintf
 #define feof rfeof
 
-RFILE* rfopen(const char *path, char *mode);
+RFILE* rfopen(const char *path, const char *mode);
 
 int rfclose(RFILE* stream);
 
