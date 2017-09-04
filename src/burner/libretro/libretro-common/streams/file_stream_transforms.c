@@ -90,6 +90,11 @@ int rfprintf(RFILE * stream, const char * format, ...)
 	return result;
 }
 
+int rferror(RFILE* stream)
+{
+    return filestream_error(stream);
+}
+
 int rfeof(RFILE* stream)
 {
     return filestream_eof(stream);

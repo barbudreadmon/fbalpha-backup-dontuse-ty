@@ -87,6 +87,8 @@ int filestream_vprintf(RFILE *stream, const char* format, va_list args);
 
 int filestream_printf(RFILE *stream, const char* format, ...);
 
+int filestream_error(RFILE *stream);
+
 int filestream_get_fd(RFILE *stream);
 
 int filestream_flush(RFILE *stream);

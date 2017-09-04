@@ -551,6 +551,11 @@ int filestream_printf(RFILE *stream, const char* format, ...)
 	return result;
 }
 
+int filestream_error(RFILE *stream)
+{
+	return ferror(stream->fp);
+}
+
 int filestream_close(RFILE *stream)
 {
    if (!stream)
