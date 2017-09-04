@@ -46,6 +46,7 @@
 
 #ifdef USE_LIBRETRO_FILE32API
  #include "streams/file_stream_transforms.h"
+ #define USE_FILE32API
 #endif
 
 #if defined(USE_FILE32API)
