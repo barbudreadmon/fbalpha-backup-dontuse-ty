@@ -1889,7 +1889,20 @@ struct retro_input_descriptor
    /* Human readable description for parameters.
     * The pointer must remain valid until
     * retro_unload_game() is called. */
-   const char *description; 
+   const char *description;
+
+   retro_input_descriptor(unsigned input_port, unsigned input_device, unsigned input_index, unsigned input_id, const char* input_description)
+   {
+      port = input_port;
+      device = input_device;
+      index = input_index;
+      id = input_id;
+      description = input_description;
+   }
+
+   retro_input_descriptor()
+   {
+   }
 };
 
 struct retro_system_info
