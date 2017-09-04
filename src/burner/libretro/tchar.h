@@ -6,8 +6,19 @@
 
 #include "libretro.h"
 #include "inp_keys.h"
+
+#ifdef _MSC_VER
+#include <winapifamily.h>
+#include <string.h>
+	#define strncasecmp _strnicmp
+	#define strcasecmp _stricmp
+	#define snprintf _snprintf
+	#undef UNICODE
+	#undef _UNICODE
+#endif
+
 #define _T(x) x
-#define _tfopen fopen
+#define _tfopen rfopen
 #define _tcstol strtol
 #define _tcsstr strstr
 #define _istspace(x) isspace(x)
@@ -22,29 +33,29 @@
 #define _stscanf sscanf
 #define _ftprintf fprintf
 
-#ifdef _MSC_VER
- #include <tchar.h>
- #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
- #define strcasecmp(x, y) _stricmp(x, y)
- #define snprintf _snprintf
- #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
-  typedef struct { int x, y, width, height; } RECT;
- #endif
+#ifdef UNICODE //Is there any point in this? Can we not just typedef TCHAR to CHAR?
+	typedef wchar_t TCHAR;
 #else
- #ifdef UNICODE
-  typedef wchar_t TCHAR;
- #else
-  typedef char	TCHAR;
- #endif
- #define _stricmp(x, y) strcasecmp(x,y)
- typedef struct { int x, y, width, height; } RECT;
- #undef __cdecl
- #define __cdecl
+	typedef char	TCHAR;
+#endif
+
+#define _stricmp(x, y) strcasecmp(x,y)
+
+#ifndef _MSC_VER
+	typedef struct { int x, y, width, height; } RECT;
+#else
+	#ifdef WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 
+		typedef struct { int x, y, width, height; } RECT;
+	#endif
+#endif
+
+#undef __cdecl
+#define __cdecl
 #endif
 
 #ifndef FASTCALL
- #undef __fastcall
- #define __fastcall
+	#undef __fastcall
+	#define __fastcall
 #endif
 
 #undef _fastcall
@@ -78,6 +89,4 @@ extern void InpDIPSWResetDIPs (void);
 #endif
 #ifdef PAGE_MASK
  #undef PAGE_MASK
-#endif
-
 #endif

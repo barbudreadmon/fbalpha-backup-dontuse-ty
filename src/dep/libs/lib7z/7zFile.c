@@ -5,10 +5,6 @@
 
 #include "7zFile.h"
 
-#ifdef USE_LIBRETRO_FILE32API
- #include "streams/file_stream_transforms.h"
-#endif
-
 #ifndef USE_WINDOWS_FILE
 
 #ifndef UNDER_CE

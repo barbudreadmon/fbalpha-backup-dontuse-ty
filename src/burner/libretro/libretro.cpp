@@ -2103,7 +2103,7 @@ static bool init_input(void)
 
          char* description = bii.szName + offset_player_x;
          
-         normal_input_descriptors.push_back((retro_input_descriptor){ port, device, index, id, description });
+         normal_input_descriptors.push_back(retro_input_descriptor(port, device, index, id, description));
 
          log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - assigned to key [%-25s] on port %2d.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode, print_label(keybinds[pgi->Input.Switch.nCode][0]), port);
       }
@@ -2292,7 +2292,7 @@ static bool init_input(void)
 
          char* description = bii.szName + offset_player_x;
          
-         normal_input_descriptors.push_back((retro_input_descriptor){ port, device, index, id, description });
+         normal_input_descriptors.push_back(retro_input_descriptor(port, device, index, id, description));
 
          log_cb(RETRO_LOG_INFO, "[%-16s] [%-15s] nSwitch.nCode: 0x%04x - assigned to key [%-25s] on port %2d.\n", bii.szName, bii.szInfo, pgi->Input.Switch.nCode, print_label(keybinds[pgi->Input.Switch.nCode][0]), port);
 

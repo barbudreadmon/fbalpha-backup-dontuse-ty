@@ -42,9 +42,10 @@ typedef struct RFILE RFILE;
 #define fwrite rfwrite
 #define fputc rfputc
 #define fprintf rfprintf
+#define ferror rferror
 #define feof rfeof
 
-RFILE* rfopen(const char *path, char *mode);
+RFILE* rfopen(const char *path, const char *mode);
 
 int rfclose(RFILE* stream);
 
@@ -65,6 +66,8 @@ size_t rfwrite(void const* buffer,
 int rfputc(int character, RFILE * stream);
 
 int rfprintf(RFILE * stream, const char * format, ...);
+
+int rferror(RFILE* stream);
 
 int rfeof(RFILE* stream);
 
