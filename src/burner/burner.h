@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "fba_tchar.h"
+#include "tchar.h"
 
 // Macro to make quoted strings
 #define MAKE_STRING_2(s) #s
