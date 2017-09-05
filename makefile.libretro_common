@@ -211,7 +211,11 @@ else
 endif
 
 SOURCES_C		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
+
+ifneq ($(STATIC_LINKING), 1)
 SOURCES_C   	+= $(LIBRETRO_COMM_DIR)/streams/file_stream.c $(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c
+endif
+
 SOURCES_CXX		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
 SOURCES_CXX		+= $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp $(LIBRETRO_DIR)/gami.cpp $(LIBRETRO_DIR)/gamc.cpp
 
