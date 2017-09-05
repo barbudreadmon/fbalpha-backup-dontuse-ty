@@ -18,11 +18,7 @@
 #endif
 
 #define _T(x) x
-#ifdef USE_LIBRETRO_FILE32API
 #define _tfopen rfopen
-#else
-#define _tfopen fopen
-#endif
 #define _tcstol strtol
 #define _tcsstr strstr
 #define _istspace(x) isspace(x)
@@ -47,8 +43,10 @@
 
 #ifndef _MSC_VER
 	typedef struct { int x, y, width, height; } RECT;
-#elif WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 
-	typedef struct { int x, y, width, height; } RECT;
+#else
+	#ifdef WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 
+		typedef struct { int x, y, width, height; } RECT;
+	#endif
 #endif
 
 #undef __cdecl

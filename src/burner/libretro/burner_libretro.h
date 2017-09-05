@@ -4,9 +4,7 @@
 #include "gameinp.h"
 #include "input/inp_keys.h"
 
-#ifdef USE_LIBRETRO_FILE32API
- #include "streams/file_stream_transforms.h"
-#endif
+#include "streams/file_stream_transforms.h"
 
 extern int bDrvOkay;
 extern int bRunPause;
