@@ -2,10 +2,10 @@ DEBUG = 0
 LIBRETRO_OPTIMIZATIONS = 1
 FRONTEND_SUPPORTS_RGB565 = 1
 HAVE_GRIFFIN = 0
-FASTCALL = 1
+# fastcall only works on x86_32
+FASTCALL = 0
 WANT_NEOGEOCD = 0
 USE_SPEEDHACKS = 1
-USE_OLD_MAPPING = 0
 EXTERNAL_ZLIB = 0
 TOAPLAN_SOUND_SAMPLES_HACK = 1
 INCLUDE_7Z_SUPPORT = 1
@@ -193,7 +193,6 @@ else ifeq ($(platform), vita)
    CFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant
    CXXFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive -fno-rtti -fno-exceptions
    EXTERNAL_ZLIB = 1
-   FASTCALL = 0
    STATIC_LINKING = 1
 
 # Xbox 360
@@ -217,7 +216,6 @@ else ifneq (,$(filter $(platform), ngc wii wiiu))
    PLATFORM_DEFINES := -U__INT32_TYPE__ -U __UINT32_TYPE__ -D__INT32_TYPE__=int -UPPC
    EXTERNAL_ZLIB = 1
    STATIC_LINKING = 1
-   FASTCALL = 0
    PTR64 = 0
 
    # Nintendo WiiU
@@ -285,8 +283,7 @@ ifeq ($(USE_SPEEDHACKS), 1)
 endif
 
 ifeq ($(FASTCALL), 1)
-   FBA_DEFINES += -DFASTCALL \
-		-U__fastcall -D__fastcall=""
+   FBA_DEFINES += -DFASTCALL
 endif
 
 ifeq ($(TOAPLAN_SOUND_SAMPLES_HACK), 1)

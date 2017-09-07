@@ -53,13 +53,11 @@
 #define __cdecl
 #endif
 
+/* fastcall only works on x86_32 */
 #ifndef FASTCALL
 	#undef __fastcall
 	#define __fastcall
 #endif
-
-#undef _fastcall
-#define _fastcall			/*same as above - what does this correspond to?*/
 
 #define ANSIToTCHAR(str, foo, bar) (str)
 

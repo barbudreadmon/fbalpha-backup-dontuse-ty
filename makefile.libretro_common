@@ -219,11 +219,6 @@ endif
 SOURCES_CXX		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
 SOURCES_CXX		+= $(LIBRETRO_DIR)/libretro.cpp $(LIBRETRO_DIR)/neocdlist.cpp $(LIBRETRO_DIR)/gami.cpp $(LIBRETRO_DIR)/gamc.cpp
 
-ifeq ($(USE_OLD_MAPPING), 1)
-   FBA_DEFINES += -DUSE_OLD_MAPPING
-   SOURCES_CXX += $(LIBRETRO_DIR)/bind_map.cpp
-endif
-
 ifeq ($(WANT_NEOGEOCD), 1)
    FBA_DEFINES += -DWANT_NEOGEOCD
 endif
