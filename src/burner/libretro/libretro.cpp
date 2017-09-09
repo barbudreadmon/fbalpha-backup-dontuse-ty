@@ -158,7 +158,7 @@ static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "N
 
 // Speedhack core options
 #if defined USE_SPEEDHACKS
-static const struct retro_variable var_fba_sh2_mode = { "fba-sh2-mode", "Psikyo/Kaneko SH2 mode (need 'hard' restart); accurate|fast" };
+static const struct retro_variable var_fba_sh2_mode = { "fba-sh2-mode", "Psikyo/Kaneko SH2 mode; accurate|fast" };
 #endif
 
 void retro_set_environment(retro_environment_t cb)
@@ -1451,8 +1451,6 @@ int VidRecalcPal()
    return BurnRecalcPal();
 }
 
-bool analog_controls_enabled = false;
-
 // Standard callbacks for 16/24/32 bit color:
 static UINT32 __cdecl HighCol15(INT32 r, INT32 g, INT32 b, INT32  /* i */)
 {
@@ -1538,7 +1536,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    nFMInterpolation = 3;
    nInterpolation = 1;
 
-   analog_controls_enabled = init_input();
+   init_input();
 
    // Initialize EEPROM path
    snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%c", g_save_dir, slash);
