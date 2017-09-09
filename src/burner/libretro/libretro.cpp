@@ -129,7 +129,7 @@ struct ROMFIND
 static std::vector<std::string> g_find_list_path;
 static ROMFIND g_find_list[1024];
 static unsigned g_rom_count;
-static unsigned fba_devices[5];
+static unsigned fba_devices[5] = { RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC };
 
 #define AUDIO_SAMPLERATE 48000
 #define AUDIO_SEGMENT_LENGTH 801 // <-- Hardcoded value that corresponds well to 48kHz audio.
@@ -2967,4 +2967,67 @@ static bool apply_macro_from_variables()
    }
 
    return macro_changed;
+}
+
+/**
+ * All in one function to map one game input to a libretro key (WIP)
+ * parameters:
+ * pgi => the game input
+ * nJoy => the joypad number (from 0 to 4)
+ * nInput => the type of control
+ * nAxis => the axis (from 0 to 2, corresponds to x/y/z)
+ * bCentering => boolean (autocenter ?)
+ * nKey => the libretro key
+ * nIndex => can be 0, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_INDEX_ANALOG_RIGHT
+ */
+INT32 GameInp2RetroInputState(struct GameInp* pgi, UINT32 nJoy, UINT8 nInput, UINT8 nAxis, bool bCentering, UINT32 nKey, UINT32 nIndex)
+{
+	UINT32 nDevice = 0;
+	switch (nInput)
+	{
+		case GIT_JOYSLIDER:
+			pgi->nInput = GIT_JOYSLIDER;
+			if (bCentering)
+			{
+				pgi->Input.Slider.nSliderValue = 0x8000;
+				pgi->Input.Slider.nSliderSpeed = 0x0E00;
+				pgi->Input.Slider.nSliderCenter = 10;
+			}
+			else
+			{
+				pgi->Input.Slider.nSliderValue = 0x8000;
+				pgi->Input.Slider.nSliderSpeed = 0x0700;
+				pgi->Input.Slider.nSliderCenter = 0;
+			}
+			pgi->Input.Slider.JoyAxis.nAxis = nAxis;
+			pgi->Input.Slider.JoyAxis.nJoy = (UINT8)nJoy;
+			nDevice = RETRO_DEVICE_ANALOG;
+			break;
+		case GIT_JOYAXIS_NEG:
+			pgi->nInput = GIT_JOYAXIS_NEG;
+			pgi->Input.JoyAxis.nAxis = nAxis;
+			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
+			nDevice = RETRO_DEVICE_ANALOG;
+			break;
+		case GIT_JOYAXIS_POS:
+			pgi->nInput = GIT_JOYAXIS_POS;
+			pgi->Input.JoyAxis.nAxis = nAxis;
+			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
+			nDevice = RETRO_DEVICE_ANALOG;
+			break;
+		case GIT_JOYAXIS_FULL:
+			pgi->nInput = GIT_JOYAXIS_FULL;
+			pgi->Input.JoyAxis.nAxis = nAxis;
+			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
+			nDevice = RETRO_DEVICE_ANALOG;
+			break;
+		case GIT_SWITCH:
+			pgi->nInput = GIT_SWITCH;
+			INT32 nJoyBase = 0x4000;
+			nJoyBase |= nJoy << 8;
+			pgi->Input.Switch.nCode = (UINT16)(nJoyBase + nKey);
+			nDevice = fba_devices[nJoy];
+			break;
+	}
+	return input_cb(nJoy, nDevice, nIndex, nKey);
 }
