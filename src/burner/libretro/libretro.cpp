@@ -1863,7 +1863,7 @@ static bool poll_diag_input()
       
       for (int combo_idx = 0; diag_input[combo_idx] != RETRO_DEVICE_ID_JOYPAD_EMPTY; combo_idx++)
       {
-         if (input_cb(0, fba_devices[0], 0, diag_input[combo_idx]) == false)
+         if (input_cb(0, RETRO_DEVICE_JOYPAD, 0, diag_input[combo_idx]) == false)
             all_diag_input_pressed = false;
          else
             one_diag_input_pressed = true;
@@ -2597,7 +2597,7 @@ static void init_macro_input_descriptors()
 
       char* description = macro_option->friendly_name + offset_player_x;
 
-      macro_input_descriptors.push_back(retro_input_descriptor(port, fba_devices[port], index, id, description));
+      macro_input_descriptors.push_back(retro_input_descriptor(port, RETRO_DEVICE_JOYPAD, index, id, description));
 
       log_cb(RETRO_LOG_INFO, "MACRO [%-15s] Macro.Switch.nCode: 0x%04x Macro.nMode: %d - assigned to key [%-25s] on port %2d.\n",
       	macro_option->friendly_name, macro_option->pgi->Macro.Switch.nCode, macro_option->pgi->Macro.nMode, print_label(id), port);
