@@ -1733,21 +1733,13 @@ size_t retro_get_memory_size(unsigned) { return 0; }
 
 unsigned retro_api_version() { return RETRO_API_VERSION; }
 
-void retro_set_controller_port_device(unsigned port, unsigned device) {
-   switch (device)
-   {
-      case RETROPAD_MODERN:
-         fba_devices[port] = RETROPAD_MODERN;
-         break;
-      case RETROPAD_ARCADE:
-         fba_devices[port] = RETROPAD_ARCADE;
-         break;
-      case RETROPAD_CLASSIC:
-      default:
-         fba_devices[port] = RETROPAD_CLASSIC;
-         break;
-   }
-   init_input();
+void retro_set_controller_port_device(unsigned port, unsigned device)
+{
+	if (fba_devices[port] != device)
+	{
+		fba_devices[port] = device;
+		init_input();
+	}
 }
 
 static const char *print_label(unsigned i)
