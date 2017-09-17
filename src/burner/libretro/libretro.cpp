@@ -1735,7 +1735,7 @@ unsigned retro_api_version() { return RETRO_API_VERSION; }
 
 void retro_set_controller_port_device(unsigned port, unsigned device)
 {
-	if (fba_devices[port] != device)
+	if (port < 5 && fba_devices[port] != device)
 	{
 		fba_devices[port] = device;
 		init_input();
