@@ -183,7 +183,6 @@ static const struct retro_variable var_fba_sh2_mode = { "fba-sh2-mode", "Psikyo/
 void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
-   set_environment();
 }
 
 struct RomBiosInfo {
