@@ -90,7 +90,7 @@ enum neo_geo_modes
 
 #define MAX_KEYBINDS 0x5000
 static uint8_t keybinds[MAX_KEYBINDS][4];
-static uint8_t axibinds[5][8][2];
+static uint8_t axibinds[5][8][3];
 bool bAnalogRightMappingDone[5][2][2];
 
 #define RETRO_DEVICE_ID_JOYPAD_EMPTY 255
@@ -1802,8 +1802,11 @@ static bool init_input(void)
 		keybinds[i][2] = 0;
 	}
 	for (unsigned i = 0; i < 5; i++) {
-		for (unsigned j = 0; j < 8; j++)
-			axibinds[i][j][0] = 0xff;
+		for (unsigned j = 0; j < 8; j++) {
+			axibinds[i][j][0] = 0;
+			axibinds[i][j][1] = 0;
+			axibinds[i][j][2] = 0;
+		}
 	}
 
 	GameInpInit();
@@ -1856,9 +1859,21 @@ static inline INT32 CinpState(INT32 nCode)
 
 static inline int CinpJoyAxis(int i, int axis)
 {
-	INT32 id = axibinds[i][axis][0];
-	INT32 idx = axibinds[i][axis][1];
-	return input_cb(i, RETRO_DEVICE_ANALOG, idx, id);
+	INT32 idx = axibinds[i][axis][0];
+	if(idx != 0xff)
+	{
+		INT32 id = axibinds[i][axis][1];
+		return input_cb(i, RETRO_DEVICE_ANALOG, idx, id);
+	}
+	else
+	{
+		INT32 idpos = axibinds[i][axis][1];
+		INT32 idneg = axibinds[i][axis][2];
+		INT32 spos = input_cb(i, RETRO_DEVICE_JOYPAD, 0, idpos);
+		INT32 sneg = input_cb(i, RETRO_DEVICE_JOYPAD, 0, idneg);
+		return (spos - sneg) * 32768;
+	}
+	return 0;
 }
 
 static inline int CinpMouseAxis(int i, int axis)
@@ -3311,8 +3326,8 @@ INT32 GameInp2RetroInp(struct GameInp* pgi, UINT32 nJoy, UINT8 nInput, UINT8 nAx
 			}
 			pgi->Input.Slider.JoyAxis.nAxis = nAxis;
 			pgi->Input.Slider.JoyAxis.nJoy = (UINT8)nJoy;
-			axibinds[nJoy][nAxis][0] = nKey;
-			axibinds[nJoy][nAxis][1] = nIndex;
+			axibinds[nJoy][nAxis][0] = nIndex;
+			axibinds[nJoy][nAxis][1] = nKey;
 			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
 			break;
 		case GIT_JOYAXIS_NEG:
@@ -3321,8 +3336,8 @@ INT32 GameInp2RetroInp(struct GameInp* pgi, UINT32 nJoy, UINT8 nInput, UINT8 nAx
 			pgi->nInput = GIT_JOYAXIS_NEG;
 			pgi->Input.JoyAxis.nAxis = nAxis;
 			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
-			axibinds[nJoy][nAxis][0] = nKey;
-			axibinds[nJoy][nAxis][1] = nIndex;
+			axibinds[nJoy][nAxis][0] = nIndex;
+			axibinds[nJoy][nAxis][1] = nKey;
 			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
 			break;
 		case GIT_JOYAXIS_POS:
@@ -3331,16 +3346,16 @@ INT32 GameInp2RetroInp(struct GameInp* pgi, UINT32 nJoy, UINT8 nInput, UINT8 nAx
 			pgi->nInput = GIT_JOYAXIS_POS;
 			pgi->Input.JoyAxis.nAxis = nAxis;
 			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
-			axibinds[nJoy][nAxis][0] = nKey;
-			axibinds[nJoy][nAxis][1] = nIndex;
+			axibinds[nJoy][nAxis][0] = nIndex;
+			axibinds[nJoy][nAxis][1] = nKey;
 			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
 			break;
 		case GIT_JOYAXIS_FULL:
 			pgi->nInput = GIT_JOYAXIS_FULL;
 			pgi->Input.JoyAxis.nAxis = nAxis;
 			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
-			axibinds[nJoy][nAxis][0] = nKey;
-			axibinds[nJoy][nAxis][1] = nIndex;
+			axibinds[nJoy][nAxis][0] = nIndex;
+			axibinds[nJoy][nAxis][1] = nKey;
 			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
 			break;
 		case GIT_SWITCH:
@@ -3356,7 +3371,11 @@ INT32 GameInp2RetroInp(struct GameInp* pgi, UINT32 nJoy, UINT8 nInput, UINT8 nAx
 }
 
 // [WIP]
-// I have to deal with mapping input buttons to retropad axis in a special way
+// Map 2 digital buttons (game side) to 1 axis on the right analog (retropad side) then create 1 input descriptor
+// Need to be run once for each of the 2 pgi (the 2 game inputs)
+// nJoy (player) and nKey (axis) needs to be the same for each of the 2 buttons
+// position is either JOY_POS or JOY_NEG (the position expected on axis to trigger the button)
+// szn is the descriptor text
 INT32 GameInpSwitch2RetroInpAnalogRight(struct GameInp* pgi, UINT32 nJoy, UINT32 nKey, UINT32 position, char *szn)
 {
 	if(bButtonMapped) return 0;
@@ -3370,6 +3389,24 @@ INT32 GameInpSwitch2RetroInpAnalogRight(struct GameInp* pgi, UINT32 nJoy, UINT32
 	if(bAnalogRightMappingDone[nJoy][nKey][JOY_POS] && bAnalogRightMappingDone[nJoy][nKey][JOY_NEG]) {
 		normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, nKey, szn));
 	}
+	bButtonMapped = true;
+	return 0;
+}
+
+// [WIP]
+// Map 1 axis (game side) to 2 digital buttons (retropad side)
+// Needs pgi, player, axis, 2 buttons retropad id and 2 descriptions
+INT32 GameInpAxis2RetroInpDualButtons(struct GameInp* pgi, UINT32 nJoy, UINT8 nAxis, UINT32 nKeyPos, UINT32 nKeyNeg, char *sznpos, char *sznneg)
+{
+	if(bButtonMapped) return 0;
+	pgi->nInput = GIT_JOYAXIS_FULL;
+	pgi->Input.JoyAxis.nAxis = nAxis;
+	pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
+	axibinds[nJoy][nAxis][0] = 0xff;
+	axibinds[nJoy][nAxis][1] = nKeyPos;
+	axibinds[nJoy][nAxis][2] = nKeyNeg;
+	normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_JOYPAD, 0, nKeyPos, sznpos));
+	normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_JOYPAD, 0, nKeyNeg, sznneg));
 	bButtonMapped = true;
 	return 0;
 }
@@ -3397,8 +3434,11 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	
 	// Fix part of issue #102
 	// Super Hang On default controls are kinda hard with normal mapping
+	// Use same layout for Hang On Junior (which only have the accelerate)
 	if ((parentrom && strcmp(parentrom, "shangon") == 0) ||
-		(drvname && strcmp(drvname, "shangon") == 0)
+		(drvname && strcmp(drvname, "shangon") == 0) ||
+		(parentrom && strcmp(parentrom, "hangonjr") == 0) ||
+		(drvname && strcmp(drvname, "hangonjr") == 0)
 	) {
 		if (strcmp("Accelerate", description) == 0) {
 			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
@@ -3454,16 +3494,13 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_X, JOY_POS, "Left / Right (Right Stick)");
 	}
 	
-	// [WIP]
-	// Handle hangonjr accelerator
-	// For now i will tell GameInp2RetroInp it is already mapped (bButtonMapped = true)
-	// I can't find the right settings, will play around with fba standalone to try figuring it out
-	if ((parentrom && strcmp(parentrom, "hangonjr") == 0) ||
-		(drvname && strcmp(drvname, "hangonjr") == 0)
+	// Fix part of issue #102
+	// Map After burner 's z-axis (which controls speed) to L/R
+	if ((parentrom && strcmp(parentrom, "aburner2") == 0) ||
+		(drvname && strcmp(drvname, "aburner2") == 0)
 	) {
-		if (strcmp("Accelerate", description) == 0) {
-			bButtonMapped = true;
-			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 2, false, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		if (strcmp("Throttle", description) == 0) {
+			GameInpAxis2RetroInpDualButtons(pgi, nPlayer, 2, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_L, "Speed Up", "Speed Down");
 		}
 	}
 	return 0;
