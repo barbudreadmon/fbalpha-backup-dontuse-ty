@@ -3412,6 +3412,22 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	}
 	
 	// Fix part of issue #102
+	// Golden Axe default controls are kinda hard with normal mapping
+	if ((parentrom && strcmp(parentrom, "goldnaxe") == 0) ||
+		(drvname && strcmp(drvname, "goldnaxe") == 0)
+	) {
+		if (strcmp("Fire 1", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, "Magic");
+		}
+		if (strcmp("Fire 2", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, "Attack");
+		}
+		if (strcmp("Fire 3", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, "Jump");
+		}
+	}
+	
+	// Fix part of issue #102
 	// Map Twin stick games to right analog
 	if ((strcmp("Up 2", description) == 0) ||
 		(strcmp("Up (right)", description) == 0) ||
