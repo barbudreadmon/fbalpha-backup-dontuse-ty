@@ -88,8 +88,10 @@ enum neo_geo_modes
    NEO_GEO_MODE_DIPSWITCH = 3,
 };
 
-static uint8_t keybinds[0x5000][2];
+#define MAX_KEYBINDS 0x5000
+static uint8_t keybinds[MAX_KEYBINDS][4];
 static uint8_t axibinds[5][8][2];
+bool bAnalogRightMappingDone[5][2][2];
 
 #define RETRO_DEVICE_ID_JOYPAD_EMPTY 255
 static UINT8 diag_input_hold_frame_delay = 0;
@@ -141,6 +143,9 @@ static unsigned fba_devices[5] = { RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_
 static uint32_t *g_fba_frame;
 static int16_t g_audio_buf[AUDIO_SEGMENT_LENGTH * 2];
 
+#define JOY_NEG 0
+#define JOY_POS 1
+
 // Mapping of PC inputs to game inputs
 struct GameInp* GameInp = NULL;
 UINT32 nGameInpCount = 0;
@@ -151,13 +156,6 @@ INT32 nFireButtons = 0;
 bool bStreetFighterLayout = false;
 bool bButtonMapped = false;
 bool bVolumeIsFireButton = false;
-
-// These are mappable global macros for mapping Pause/FFWD etc to controls in the input mapping dialogue. -dink
-UINT8 macroSystemPause = 0;
-UINT8 macroSystemFFWD = 0;
-UINT8 macroSystemSaveState = 0;
-UINT8 macroSystemLoadState = 0;
-UINT8 macroSystemUNDOState = 0;
 
 // libretro globals
 void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
@@ -1796,38 +1794,40 @@ static const char *print_label(unsigned i)
 
 static bool init_input(void)
 {
-   switch_ncode = 0;
+	switch_ncode = 0;
 
-   normal_input_descriptors.clear();
-   for (unsigned i = 0; i < 0x5000; i++)
-      keybinds[i][0] = 0xff;
-   for (unsigned i = 0; i < 5; i++) {
-	   for (unsigned j = 0; j < 8; j++)
-	      axibinds[i][j][0] = 0xff;
-   }
-   
-   GameInpInit();
-   GameInpDefault();
+	normal_input_descriptors.clear();
+	for (unsigned i = 0; i < MAX_KEYBINDS; i++) {
+		keybinds[i][0] = 0xff;
+		keybinds[i][2] = 0;
+	}
+	for (unsigned i = 0; i < 5; i++) {
+		for (unsigned j = 0; j < 8; j++)
+			axibinds[i][j][0] = 0xff;
+	}
 
-   init_macro_core_options();
+	GameInpInit();
+	GameInpDefault();
 
-   // Update core option for diagnostic and macro inputs
-   set_environment();
-   // Read the user core option values
-   check_variables();
-   apply_macro_from_variables();
+	init_macro_core_options();
 
-   // Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
-   init_macro_input_descriptors();
-   // The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
-   set_input_descriptors();
+	// Update core option for diagnostic and macro inputs
+	set_environment();
+	// Read the user core option values
+	check_variables();
+	apply_macro_from_variables();
 
-   /* serialization quirks for netplay, cps3 seems problematic, neogeo, cps1 and 2 seem to be good to go 
-   uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
-   if(!strcmp(systemname, "CPS-3"))
-      environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);*/
+	// Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
+	init_macro_input_descriptors();
+	// The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
+	set_input_descriptors();
 
-   return 0;
+	/* serialization quirks for netplay, cps3 seems problematic, neogeo, cps1 and 2 seem to be good to go 
+	uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
+	if(!strcmp(systemname, "CPS-3"))
+	environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);*/
+
+	return 0;
 }
 
 //#define DEBUG_INPUT
@@ -1835,9 +1835,23 @@ static bool init_input(void)
 
 static inline INT32 CinpState(INT32 nCode)
 {
-   INT32 id = keybinds[nCode][0];
-   UINT32 port = keybinds[nCode][1];
-   return input_cb(port, RETRO_DEVICE_JOYPAD, 0, id);
+	INT32 id = keybinds[nCode][0];
+	UINT32 port = keybinds[nCode][1];
+	INT32 idx = keybinds[nCode][2];
+	if(idx == 0)
+	{
+		return input_cb(port, RETRO_DEVICE_JOYPAD, 0, id);
+	}
+	else
+	{
+		INT32 s = input_cb(port, RETRO_DEVICE_ANALOG, idx, id);
+		INT32 position = keybinds[nCode][3];
+		if(s < -1000 && position == JOY_NEG)
+			return 1;
+		if(s > 1000 && position == JOY_POS)
+			return 1;
+	}
+	return 0;
 }
 
 static inline int CinpJoyAxis(int i, int axis)
@@ -2490,8 +2504,6 @@ static void init_macro_core_options()
 {
    const char * drvname = BurnDrvGetTextA(DRV_NAME);
 
-   int nCode = 0x4900; // nCode from 0x4900 to 0x5000 for macros is enought
-
    macro_core_options.clear(); 
 
    int nMaxRetroPadButtons = 10; // 10 = RetroPad max available buttons (A, B, X, Y, L, R, L2, R2, L3, R3)
@@ -2512,7 +2524,7 @@ static void init_macro_core_options()
       }
 
       // Assign an unique nCode for the macto
-      pgi->Macro.Switch.nCode = nCode++;
+      pgi->Macro.Switch.nCode = switch_ncode++;
 
       macro_core_options.push_back(macro_core_option());
       macro_core_option *macro_option = &macro_core_options.back();
@@ -2833,58 +2845,7 @@ static void GameInpInitMacros()
 	}
 
 	pgi = GameInp + nGameInpCount;
-
-	{ // Mappable system macros -dink
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System Pause");
-			pgi->Macro.pVal[0] = &macroSystemPause;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System FFWD");
-			pgi->Macro.pVal[0] = &macroSystemFFWD;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System Load State");
-			pgi->Macro.pVal[0] = &macroSystemLoadState;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System Save State");
-			pgi->Macro.pVal[0] = &macroSystemSaveState;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-
-			pgi->nInput = GIT_MACRO_AUTO;
-			pgi->nType = BIT_DIGITAL;
-			pgi->Macro.nMode = 0;
-			pgi->Macro.nSysMacro = 1;
-			sprintf(pgi->Macro.szName, "System UNDO State");
-			pgi->Macro.pVal[0] = &macroSystemUNDOState;
-			pgi->Macro.nVal[0] = 1;
-			nMacroCount++;
-			pgi++;
-	}
+	
 	{ // Autofire!!!
 			for (INT32 nPlayer = 0; nPlayer < nMaxPlayers; nPlayer++) {
 				for (INT32 i = 0; i < nFireButtons; i++) {
@@ -3395,6 +3356,25 @@ INT32 GameInp2RetroInp(struct GameInp* pgi, UINT32 nJoy, UINT8 nInput, UINT8 nAx
 }
 
 // [WIP]
+// I have to deal with mapping input buttons to retropad axis in a special way
+INT32 GameInpSwitch2RetroInpAnalogRight(struct GameInp* pgi, UINT32 nJoy, UINT32 nKey, UINT32 position, char *szn)
+{
+	if(bButtonMapped) return 0;
+	pgi->nInput = GIT_SWITCH;
+	pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
+	keybinds[pgi->Input.Switch.nCode][0] = nKey;
+	keybinds[pgi->Input.Switch.nCode][1] = nJoy;
+	keybinds[pgi->Input.Switch.nCode][2] = RETRO_DEVICE_INDEX_ANALOG_RIGHT;
+	keybinds[pgi->Input.Switch.nCode][3] = position;
+	bAnalogRightMappingDone[nJoy][nKey][position] = true;
+	if(bAnalogRightMappingDone[nJoy][nKey][JOY_POS] && bAnalogRightMappingDone[nJoy][nKey][JOY_NEG]) {
+		normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, nKey, szn));
+	}
+	bButtonMapped = true;
+	return 0;
+}
+
+// [WIP]
 // All inputs which needs special handling need to go in the next function
 INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn, char *description)
 {
@@ -3428,38 +3408,31 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// [WIP]
-	// Handle Twin stick games
-	// For now i will tell GameInp2RetroInp they are already mapped (bButtonMapped = true)
-	// I need to figure out how exactly using a relationship between analog and simple up/down/left/right inputs works
-	// Both on libretro's side and fba's side
+	// Fix part of issue #102
+	// Map Twin stick games to right analog
 	if ((strcmp("Up 2", description) == 0) ||
 		(strcmp("Up (right)", description) == 0) ||
 		(strcmp("Right Up", description) == 0)
 	) {
-		bButtonMapped = true;
-		GameInp2RetroInp(pgi, nPlayer, GIT_JOYAXIS_POS, 1, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_Y, JOY_NEG, "Up / Down (Right Stick)");
 	}
 	if ((strcmp("Down 2", description) == 0) ||
 		(strcmp("Down (right)", description) == 0) ||
 		(strcmp("Right Down", description) == 0)
 	) {
-		bButtonMapped = true;
-		GameInp2RetroInp(pgi, nPlayer, GIT_JOYAXIS_NEG, 1, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_Y, JOY_POS, "Up / Down (Right Stick)");
 	}
 	if ((strcmp("Left 2", description) == 0) ||
 		(strcmp("Left (right)", description) == 0) ||
 		(strcmp("Right Left", description) == 0)
 	) {
-		bButtonMapped = true;
-		GameInp2RetroInp(pgi, nPlayer, GIT_JOYAXIS_POS, 0, true, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_X, JOY_NEG, "Left / Right (Right Stick)");
 	}
 	if ((strcmp("Right 2", description) == 0) ||
 		(strcmp("Right (right)", description) == 0) ||
 		(strcmp("Right Right", description) == 0)
 	) {
-		bButtonMapped = true;
-		GameInp2RetroInp(pgi, nPlayer, GIT_JOYAXIS_NEG, 0, true, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_X, JOY_POS, "Left / Right (Right Stick)");
 	}
 	return 0;
 }
