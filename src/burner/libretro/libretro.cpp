@@ -3386,7 +3386,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	//INT32        hardware   = BurnDrvGetHardwareCode();
 	
 	// Fix issue #133
-	// The y axis just need to be set as slider without autocentering 
+	// Night striker's y-axis needs to be set as slider without autocentering 
 	if ((parentrom && strcmp(parentrom, "nightstr") == 0) ||
 		(drvname && strcmp(drvname, "nightstr") == 0)
 	) {
@@ -3395,16 +3395,19 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// [WIP]
-	// Handle hangonjr accelerator
-	// For now i will tell GameInp2RetroInp it is already mapped (bButtonMapped = true)
-	// I can't find the right settings, will play around with fba standalone to try figuring it out
-	if ((parentrom && strcmp(parentrom, "hangonjr") == 0) ||
-		(drvname && strcmp(drvname, "hangonjr") == 0)
+	// Fix part of issue #102
+	// Super Hang On default controls are kinda hard with normal mapping
+	if ((parentrom && strcmp(parentrom, "shangon") == 0) ||
+		(drvname && strcmp(drvname, "shangon") == 0)
 	) {
 		if (strcmp("Accelerate", description) == 0) {
-			bButtonMapped = true;
-			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 2, false, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("Brake", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+		}
+		if (strcmp("Super Charger", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
 		}
 	}
 	
@@ -3433,6 +3436,19 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		(strcmp("Right Right", description) == 0)
 	) {
 		GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_X, JOY_POS, "Left / Right (Right Stick)");
+	}
+	
+	// [WIP]
+	// Handle hangonjr accelerator
+	// For now i will tell GameInp2RetroInp it is already mapped (bButtonMapped = true)
+	// I can't find the right settings, will play around with fba standalone to try figuring it out
+	if ((parentrom && strcmp(parentrom, "hangonjr") == 0) ||
+		(drvname && strcmp(drvname, "hangonjr") == 0)
+	) {
+		if (strcmp("Accelerate", description) == 0) {
+			bButtonMapped = true;
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 2, false, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		}
 	}
 	return 0;
 }
