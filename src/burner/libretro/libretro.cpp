@@ -3468,6 +3468,34 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	}
 	
 	// Fix part of issue #102
+	// ddsom & ddtod need a layout similar to other beat 'em up
+	// Also we don't want volume to get in the way
+	if ((parentrom && strcmp(parentrom, "ddsom") == 0) ||
+		(drvname && strcmp(drvname, "ddsom") == 0) ||
+		(parentrom && strcmp(parentrom, "ddtod") == 0) ||
+		(drvname && strcmp(drvname, "ddtod") == 0)
+	) {
+		if (strcmp("Attack", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+		}
+		if (strcmp("Jump", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("Select", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_X, 0, description);
+		}
+		if (strcmp("Use", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+		}
+		if (strcmp("Volume Up", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+		if (strcmp("Volume Down", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_L, 0, description);
+		}
+	}
+	
+	// Fix part of issue #102
 	// Map Twin stick games to right analog
 	if ((strcmp("Up 2", description) == 0) ||
 		(strcmp("Up (right)", description) == 0) ||
