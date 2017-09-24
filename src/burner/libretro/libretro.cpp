@@ -3512,6 +3512,24 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	}
 	
 	// Fix part of issue #102
+	// SDI - Strategic Defense Initiative needs some new layout
+	// I'm moving 2nd directional controls to analog right for convenience
+	// Also moving fire button to the R button for convenience
+	if ((parentrom && strcmp(parentrom, "sdi") == 0) ||
+		(drvname && strcmp(drvname, "sdi") == 0)
+	) {
+		if (strcmp("Target L/R", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		}
+		if (strcmp("Target U/D", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		}
+		if (strcmp("Fire 1", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+	}
+	
+	// Fix part of issue #102
 	// Map Twin stick games to right analog
 	if ((strcmp("Up 2", description) == 0) ||
 		(strcmp("Up (right)", description) == 0) ||
