@@ -3514,7 +3514,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	// Fix part of issue #102
 	// SDI - Strategic Defense Initiative needs some new layout
 	// I'm moving 2nd directional controls to analog right for convenience
-	// Also moving fire button to the R button for convenience
+	// Also moving fire button to the R button for convenience (can't really expect people to use A/B/X/Y when their thumb is on the right analog)
 	if ((parentrom && strcmp(parentrom, "sdi") == 0) ||
 		(drvname && strcmp(drvname, "sdi") == 0)
 	) {
@@ -3526,6 +3526,28 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 		if (strcmp("Fire 1", description) == 0) {
 			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+	}
+	
+	// Fix part of issue #102
+	// Blades of Steel needs some new layout for the same reason as SDI
+	if ((parentrom && strcmp(parentrom, "bladestl") == 0) ||
+		(drvname && strcmp(drvname, "bladestl") == 0)
+	) {
+		if (strcmp("Trackball X", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		}
+		if (strcmp("Trackball Y", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		}
+		if (strcmp("Button 1", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+		if (strcmp("Button 2", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R2, 0, description);
+		}
+		if (strcmp("Button 3", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_L, 0, description);
 		}
 	}
 	
