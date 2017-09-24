@@ -3522,7 +3522,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
 		}
 		if (strcmp("Target U/D", description) == 0) {
-			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 1, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
 		}
 		if (strcmp("Fire 1", description) == 0) {
 			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
@@ -3538,7 +3538,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
 		}
 		if (strcmp("Trackball Y", description) == 0) {
-			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 1, true, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
 		}
 		if (strcmp("Button 1", description) == 0) {
 			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
@@ -3548,6 +3548,25 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 		if (strcmp("Button 3", description) == 0) {
 			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_L, 0, description);
+		}
+	}
+	
+	// Fix part of issue #102
+	// Forgotten Worlds needs some new layout for the same reason as SDI
+	if ((parentrom && strcmp(parentrom, "forgottn") == 0) ||
+		(drvname && strcmp(drvname, "forgottn") == 0)
+	) {
+		if (strcmp("Turn (analog)", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_JOYSLIDER, 0, true, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description);
+		}
+		if (strcmp("Attack", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+		if (strcmp("Turn - (digital)", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_L2, 0, description);
+		}
+		if (strcmp("Turn + (digital)", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R2, 0, description);
 		}
 	}
 	
