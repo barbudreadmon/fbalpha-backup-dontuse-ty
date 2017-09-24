@@ -3496,6 +3496,22 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	}
 	
 	// Fix part of issue #102
+	// Dynasty Wars needs some fine tuning, this layout makes more sense on arcade stick and feels the same on joypad
+	if ((parentrom && strcmp(parentrom, "dynwar") == 0) ||
+		(drvname && strcmp(drvname, "dynwar") == 0)
+	) {
+		if (strcmp("Attack Left", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("Attack Right", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+		}
+		if (strcmp("Special", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+		}
+	}
+	
+	// Fix part of issue #102
 	// Map Twin stick games to right analog
 	if ((strcmp("Up 2", description) == 0) ||
 		(strcmp("Up (right)", description) == 0) ||
