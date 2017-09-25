@@ -3421,9 +3421,8 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	//const char * systemname = BurnDrvGetTextA(DRV_SYSTEM);
 	//INT32        genre      = BurnDrvGetGenreFlags();
 	//INT32        hardware   = BurnDrvGetHardwareCode();
-	
-	// Fix issue #133
-	// Night striker's y-axis needs to be set as slider without autocentering 
+
+	// Fix issue #133 (Night striker)
 	if ((parentrom && strcmp(parentrom, "nightstr") == 0) ||
 		(drvname && strcmp(drvname, "nightstr") == 0)
 	) {
@@ -3432,9 +3431,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// Super Hang On default controls are kinda hard with normal mapping
-	// Use same layout for Hang On Junior (which only have the accelerate)
+	// Fix part of issue #102 (Super Hang On & Hang On Junior)
 	if ((parentrom && strcmp(parentrom, "shangon") == 0) ||
 		(drvname && strcmp(drvname, "shangon") == 0) ||
 		(parentrom && strcmp(parentrom, "hangonjr") == 0) ||
@@ -3451,8 +3448,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// Golden Axe default controls are kinda hard with normal mapping
+	// Fix part of issue #102 (Golden Axe)
 	if ((parentrom && strcmp(parentrom, "goldnaxe") == 0) ||
 		(drvname && strcmp(drvname, "goldnaxe") == 0)
 	) {
@@ -3467,9 +3463,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// ddsom & ddtod need a layout similar to other beat 'em up
-	// Also we don't want volume to get in the way
+	// Fix part of issue #102 (D&D:Shadow over Mystara & Tower of Doom)
 	if ((parentrom && strcmp(parentrom, "ddsom") == 0) ||
 		(drvname && strcmp(drvname, "ddsom") == 0) ||
 		(parentrom && strcmp(parentrom, "ddtod") == 0) ||
@@ -3495,8 +3489,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// Dynasty Wars needs some fine tuning, this layout makes more sense on arcade stick and feels the same on joypad
+	// Fix part of issue #102 (Dynasty Wars)
 	if ((parentrom && strcmp(parentrom, "dynwar") == 0) ||
 		(drvname && strcmp(drvname, "dynwar") == 0)
 	) {
@@ -3511,10 +3504,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// SDI - Strategic Defense Initiative needs some new layout
-	// I'm moving 2nd directional controls to analog right for convenience
-	// Also moving fire button to the R button for convenience (can't really expect people to use A/B/X/Y when their thumb is on the right analog)
+	// Fix part of issue #102 (SDI - Strategic Defense Initiative)
 	if ((parentrom && strcmp(parentrom, "sdi") == 0) ||
 		(drvname && strcmp(drvname, "sdi") == 0)
 	) {
@@ -3529,8 +3519,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// Blades of Steel needs some new layout for the same reason as SDI
+	// Fix part of issue #102 (Blades of Steel)
 	if ((parentrom && strcmp(parentrom, "bladestl") == 0) ||
 		(drvname && strcmp(drvname, "bladestl") == 0)
 	) {
@@ -3551,8 +3540,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// Forgotten Worlds needs some new layout for the same reason as SDI
+	// Fix part of issue #102 (Forgotten Worlds)
 	if ((parentrom && strcmp(parentrom, "forgottn") == 0) ||
 		(drvname && strcmp(drvname, "forgottn") == 0)
 	) {
@@ -3570,8 +3558,25 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// Map Puzz Loop 2
+	// Fix part of issue #102 (VS Block Breaker)
+	if ((parentrom && strcmp(parentrom, "vblokbrk") == 0) ||
+		(drvname && strcmp(drvname, "vblokbrk") == 0)
+	) {
+		if (strcmp("Paddle", description) == 0) {
+			GameInpAxis2RetroInpDualButtons(pgi, nPlayer, 0, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_L, "Paddle Up", "Paddle Down");
+		}
+		if (strcmp("Button 1", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("Button 2", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+		}
+		if (strcmp("Button 3", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+		}
+	}
+	
+	// Fix part of issue #102 (Puzz Loop 2)
 	if ((parentrom && strcmp(parentrom, "pzloop2") == 0) ||
 		(drvname && strcmp(drvname, "pzloop2") == 0)
 	) {
@@ -3589,8 +3594,16 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102
-	// Map Twin stick games to right analog
+	// Fix part of issue #102 (After burner 1 & 2)
+	if ((parentrom && strcmp(parentrom, "aburner2") == 0) ||
+		(drvname && strcmp(drvname, "aburner2") == 0)
+	) {
+		if (strcmp("Throttle", description) == 0) {
+			GameInpAxis2RetroInpDualButtons(pgi, nPlayer, 2, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_L, "Speed Up", "Speed Down");
+		}
+	}
+
+	// Fix part of issue #102 (Twin stick games)
 	if ((strcmp("Up 2", description) == 0) ||
 		(strcmp("Up (right)", description) == 0) ||
 		(strcmp("Right Up", description) == 0)
@@ -3614,16 +3627,6 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		(strcmp("Right Right", description) == 0)
 	) {
 		GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_X, JOY_POS, "Left / Right (Right Stick)");
-	}
-	
-	// Fix part of issue #102
-	// Map After burner 's z-axis (which controls speed) to L/R
-	if ((parentrom && strcmp(parentrom, "aburner2") == 0) ||
-		(drvname && strcmp(drvname, "aburner2") == 0)
-	) {
-		if (strcmp("Throttle", description) == 0) {
-			GameInpAxis2RetroInpDualButtons(pgi, nPlayer, 2, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_L, "Speed Up", "Speed Down");
-		}
 	}
 	return 0;
 }
