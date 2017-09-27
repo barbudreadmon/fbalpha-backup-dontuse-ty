@@ -3487,6 +3487,24 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
+	// Fix part of issue #102 (Chase HQ)
+	if ((parentrom && strcmp(parentrom, "chasehq") == 0) ||
+		(drvname && strcmp(drvname, "chasehq") == 0)
+	) {
+		if (strcmp("Brake", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+		}
+		if (strcmp("Accelerate", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("Turbo", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+		}
+		if (strcmp("Gear", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+	}
+	
 	// Fix part of issue #102 (D&D:Shadow over Mystara & Tower of Doom)
 	if ((parentrom && strcmp(parentrom, "ddsom") == 0) ||
 		(drvname && strcmp(drvname, "ddsom") == 0) ||
