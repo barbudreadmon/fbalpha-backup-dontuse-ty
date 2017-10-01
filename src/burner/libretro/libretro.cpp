@@ -3416,7 +3416,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	const char * parentrom	= BurnDrvGetTextA(DRV_PARENT);
 	const char * drvname	= BurnDrvGetTextA(DRV_NAME);
 	//const char * boardrom   = BurnDrvGetTextA(DRV_BOARDROM);
-	//const char * systemname = BurnDrvGetTextA(DRV_SYSTEM);
+	const char * systemname = BurnDrvGetTextA(DRV_SYSTEM);
 	//INT32        genre      = BurnDrvGetGenreFlags();
 	//INT32        family     = BurnDrvGetFamilyFlags();
 	//INT32        hardware   = BurnDrvGetHardwareCode();
@@ -3431,6 +3431,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	}
 	
 	// Fix part of issue #102 (Super Hang On & Hang On Junior)
+	// Use same layout as megadrive cores
 	if ((parentrom && strcmp(parentrom, "shangon") == 0) ||
 		(drvname && strcmp(drvname, "shangon") == 0) ||
 		(parentrom && strcmp(parentrom, "hangonjr") == 0) ||
@@ -3440,25 +3441,26 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
 		}
 		if (strcmp("Brake", description) == 0) {
-			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
 		}
 		if (strcmp("Super Charger", description) == 0) {
-			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
 		}
 	}
 	
 	// Fix part of issue #102 (Golden Axe)
+	// Use same layout as megadrive cores
 	if ((parentrom && strcmp(parentrom, "goldnaxe") == 0) ||
 		(drvname && strcmp(drvname, "goldnaxe") == 0)
 	) {
 		if (strcmp("Fire 1", description) == 0) {
-			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, "Magic");
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, "Magic");
 		}
 		if (strcmp("Fire 2", description) == 0) {
-			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, "Attack");
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, "Attack");
 		}
 		if (strcmp("Fire 3", description) == 0) {
-			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, "Jump");
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, "Jump");
 		}
 	}
 	
@@ -3608,6 +3610,45 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	) {
 		if (strcmp("Throttle", description) == 0) {
 			GameInpAxis2RetroInpDualButtons(pgi, nPlayer, 2, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_L, "Speed Up", "Speed Down");
+		}
+	}
+	
+	// Handle megadrive
+	if ((systemname && strcmp(systemname, "Sega Megadrive") == 0)) {
+		// Street Fighter 2 mapping (which is the only 6 button megadrive game ?)
+		// Use same layout as arcade
+		if ((parentrom && strcmp(parentrom, "md_sf2") == 0) ||
+			(drvname && strcmp(drvname, "md_sf2") == 0)
+		) {
+			if (strcmp("Button A", description) == 0) {
+				GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, "Weak Kick");
+			}
+			if (strcmp("Button B", description) == 0) {
+				GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, "Medium Kick");
+			}
+			if (strcmp("Button C", description) == 0) {
+				GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, (fba_devices[nPlayer] == RETROPAD_MODERN ? RETRO_DEVICE_ID_JOYPAD_R2 : RETRO_DEVICE_ID_JOYPAD_R), 0, "Strong Kick");
+			}
+			if (strcmp("Button X", description) == 0) {
+				GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, "Weak Punch");
+			}
+			if (strcmp("Button Y", description) == 0) {
+				GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_X, 0, "Medium Punch");
+			}
+			if (strcmp("Button Z", description) == 0) {
+				GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, (fba_devices[nPlayer] == RETROPAD_MODERN ? RETRO_DEVICE_ID_JOYPAD_R : RETRO_DEVICE_ID_JOYPAD_L), 0, "Strong Punch");
+			}
+		}
+		// Generic megadrive mapping
+		// Use same layout as megadrive cores
+		if (strcmp("Button A", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+		}
+		if (strcmp("Button B", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("Button C", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
 		}
 	}
 
