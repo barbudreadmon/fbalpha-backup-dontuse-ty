@@ -3448,6 +3448,18 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 
+	// Fix part of issue #102 (Last Survivor)
+	if ((parentrom && strcmp(parentrom, "lastsurv") == 0) ||
+		(drvname && strcmp(drvname, "lastsurv") == 0)
+	) {
+		if (strcmp("Turn Left", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_L, 0, description);
+		}
+		if (strcmp("Turn Right", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+	}
+
 	// Fix issue #133 (Night striker)
 	if ((parentrom && strcmp(parentrom, "nightstr") == 0) ||
 		(drvname && strcmp(drvname, "nightstr") == 0)
