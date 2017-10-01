@@ -3420,6 +3420,33 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	//INT32        genre      = BurnDrvGetGenreFlags();
 	//INT32        family     = BurnDrvGetFamilyFlags();
 	//INT32        hardware   = BurnDrvGetHardwareCode();
+	
+	// Fix part of issue #102 (Crazy Fight)
+	// Can't really manage to have a decent mapping on this one if you don't have a stick/pad with the following 2 rows of 3 buttons :
+	// Y X R1
+	// B A R2
+	if ((parentrom && strcmp(parentrom, "crazyfgt") == 0) ||
+		(drvname && strcmp(drvname, "crazyfgt") == 0)
+	) {
+		if (strcmp("top-left", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+		}
+		if (strcmp("top-center", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_X, 0, description);
+		}
+		if (strcmp("top-right", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+		if (strcmp("bottom-left", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("bottom-center", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+		}
+		if (strcmp("bottom-right", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R2, 0, description);
+		}
+	}
 
 	// Fix issue #133 (Night striker)
 	if ((parentrom && strcmp(parentrom, "nightstr") == 0) ||
