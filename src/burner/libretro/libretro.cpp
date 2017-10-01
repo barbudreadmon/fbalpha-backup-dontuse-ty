@@ -3651,6 +3651,46 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
 		}
 	}
+	
+	// Handle MSX
+	if ((systemname && strcmp(systemname, "MSX") == 0)) {
+		if (strcmp("Button 1", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_B, 0, description);
+		}
+		if (strcmp("Button 2", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_A, 0, description);
+		}
+		if (strcmp("Key F1", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_START, 0, description);
+		}
+		if (strcmp("Key F2", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_SELECT, 0, description);
+		}
+		if (strcmp("Key F3", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_Y, 0, description);
+		}
+		if (strcmp("Key F4", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_X, 0, description);
+		}
+		if (strcmp("Key F5", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_R, 0, description);
+		}
+		if (strcmp("Key F6", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_L, 0, description);
+		}
+		if (strcmp("Key UP", description) == 0) {
+			GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_Y, JOY_NEG, "Key UP / Key DOWN");
+		}
+		if (strcmp("Key DOWN", description) == 0) {
+			GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_Y, JOY_POS, "Key UP / Key DOWN");
+		}
+		if (strcmp("Key LEFT", description) == 0) {
+			GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_X, JOY_NEG, "Key LEFT / Key RIGHT");
+		}
+		if (strcmp("Key RIGHT", description) == 0) {
+			GameInpSwitch2RetroInpAnalogRight(pgi, nPlayer, RETRO_DEVICE_ID_ANALOG_X, JOY_POS, "Key LEFT / Key RIGHT");
+		}
+	}
 
 	// Fix part of issue #102 (Twin stick games)
 	if ((strcmp("Up 2", description) == 0) ||
