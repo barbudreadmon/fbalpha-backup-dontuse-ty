@@ -3448,6 +3448,17 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 
+	// Fix part of issue #102 (Bikkuri Card)
+	// Coin 2 overwrited Coin 1, which is probably part of the issue
+	// I managed to pass the payout tests once, but i don't know how
+	if ((parentrom && strcmp(parentrom, "bikkuric") == 0) ||
+		(drvname && strcmp(drvname, "bikkuric") == 0)
+	) {
+		if (strcmp("Coin 2", description) == 0) {
+			GameInp2RetroInp(pgi, nPlayer, GIT_SWITCH, 0, false, RETRO_DEVICE_ID_JOYPAD_START, 0, description);
+		}
+	}
+
 	// Fix part of issue #102 (Jackal)
 	if ((parentrom && strcmp(parentrom, "jackal") == 0) ||
 		(drvname && strcmp(drvname, "jackal") == 0)
