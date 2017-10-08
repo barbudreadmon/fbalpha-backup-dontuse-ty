@@ -3473,6 +3473,21 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 
+	// Car steer a little too much with default setting + use L/R for Shift Down/Up (Super Monaco GP)
+	if ((parentrom && strcmp(parentrom, "smgp") == 0) ||
+		(drvname && strcmp(drvname, "smgp") == 0)
+	) {
+		if (strcmp("Left/Right", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, GIT_JOYSLIDER, 0x8000, 0x0C00, 10);
+		}
+		if (strcmp("Shift Down", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_L, description);
+		}
+		if (strcmp("Shift Up", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_R, description);
+		}
+	}
+
 	// Fix issue #133 (Night striker)
 	if ((parentrom && strcmp(parentrom, "nightstr") == 0) ||
 		(drvname && strcmp(drvname, "nightstr") == 0)
@@ -3773,7 +3788,7 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	// Default racing games's Steering control to the joyslider type of analog control
 	// Joyslider is some sort of "wheel" emulation
 	if ((BurnDrvGetGenreFlags() & GBF_RACING)) {
-		if (strcmp("Steering", description) == 0) {
+		if (strcmp("x-axis", szi + 3) == 0) {
 			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, GIT_JOYSLIDER);
 		}
 	}
