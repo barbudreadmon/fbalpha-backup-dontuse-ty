@@ -3497,21 +3497,21 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102 (Super Hang On & Hang On Junior)
-	// Use same layout as megadrive cores
-	if ((parentrom && strcmp(parentrom, "shangon") == 0) ||
-		(drvname && strcmp(drvname, "shangon") == 0) ||
-		(parentrom && strcmp(parentrom, "hangonjr") == 0) ||
+	// Fix part of issue #102 (Hang On Junior)
+	if ((parentrom && strcmp(parentrom, "hangonjr") == 0) ||
 		(drvname && strcmp(drvname, "hangonjr") == 0)
 	) {
 		if (strcmp("Accelerate", description) == 0) {
 			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
 		}
-		if (strcmp("Brake", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_Y, description);
-		}
-		if (strcmp("Super Charger", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
+	}
+	
+	// Fix part of issue #102 (Out Run)
+	if ((parentrom && strcmp(parentrom, "outrun") == 0) ||
+		(drvname && strcmp(drvname, "outrun") == 0)
+	) {
+		if (strcmp("Gear", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_R, description);
 		}
 	}
 	
