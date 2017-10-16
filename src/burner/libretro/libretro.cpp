@@ -3573,32 +3573,6 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Fix part of issue #102 (D&D:Shadow over Mystara & Tower of Doom)
-	if ((parentrom && strcmp(parentrom, "ddsom") == 0) ||
-		(drvname && strcmp(drvname, "ddsom") == 0) ||
-		(parentrom && strcmp(parentrom, "ddtod") == 0) ||
-		(drvname && strcmp(drvname, "ddtod") == 0)
-	) {
-		if (strcmp("Attack", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_Y, description);
-		}
-		if (strcmp("Jump", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
-		}
-		if (strcmp("Select", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_X, description);
-		}
-		if (strcmp("Use", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
-		}
-		if (strcmp("Volume Up", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_R, description);
-		}
-		if (strcmp("Volume Down", description) == 0) {
-			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_L, description);
-		}
-	}
-	
 	// Fix part of issue #102 (SDI - Strategic Defense Initiative)
 	if ((parentrom && strcmp(parentrom, "sdi") == 0) ||
 		(drvname && strcmp(drvname, "sdi") == 0)
