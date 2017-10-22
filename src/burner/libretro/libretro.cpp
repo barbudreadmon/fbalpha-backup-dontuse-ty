@@ -172,7 +172,7 @@ static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-
 static const struct retro_variable var_fba_hiscores = { "fba-hiscores", "Hiscores; enabled|disabled" };
 
 // Neo Geo core options
-static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Neo Geo mode; MVS|AES|UNIBIOS|DIPSWITCH" };
+static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Force Neo Geo mode (if available); MVS|AES|UNIBIOS|DIPSWITCH" };
 
 // Speedhack core options
 #if defined USE_SPEEDHACKS
@@ -627,43 +627,45 @@ static int InpDIPSWInit()
 
 static void evaluate_neogeo_bios_mode(const char* drvname)
 {
-   if (!is_neogeo_game)
-      return;
-   
-   bool is_neogeo_needs_specific_bios = false;
-   
-   // search the BIOS dipswitch
-   for (int dip_idx = 0; dip_idx < dipswitch_core_options.size(); dip_idx++)
-   {
-      if (strcasecmp(dipswitch_core_options[dip_idx].friendly_name, "BIOS") == 0)
-      {
-         if (dipswitch_core_options[dip_idx].values.size() > 0)
-         {
-            // values[0] is the default value of the dipswitch
-            // if the default is different than 0, this means that a different Bios is needed
-            if (dipswitch_core_options[dip_idx].values[0].bdi.nSetting != 0x00)
-            {
-               is_neogeo_needs_specific_bios = true;
-               break;
-            }
-         }
-      }      
-   }
-   
-   // Handling special cases
-   if (strcmp(drvname, "irrmaze") == 0)
-   {
-	  is_neogeo_needs_specific_bios = true;
-   }
-  
-   if (is_neogeo_needs_specific_bios)
-   {
-      // disable the NeoGeo mode core option
-      allow_neogeo_mode = false;
+	if (!is_neogeo_game)
+		return;
 
-      // set the NeoGeo mode to DIPSWITCH to rely on the Default Bios Dipswitch
-      g_opt_neo_geo_mode = NEO_GEO_MODE_DIPSWITCH;
-   }   
+	bool is_neogeo_needs_specific_bios = false;
+	bool is_bios_dipswitch_found = false;
+
+	// search the BIOS dipswitch
+	for (int dip_idx = 0; dip_idx < dipswitch_core_options.size(); dip_idx++)
+	{
+		if (strcasecmp(dipswitch_core_options[dip_idx].friendly_name, "BIOS") == 0)
+		{
+			is_bios_dipswitch_found = true;
+			if (dipswitch_core_options[dip_idx].values.size() > 0)
+			{
+				// values[0] is the default value of the dipswitch
+				// if the default is different than 0, this means that a different Bios is needed
+				if (dipswitch_core_options[dip_idx].values[0].bdi.nSetting != 0x00)
+				{
+					is_neogeo_needs_specific_bios = true;
+					break;
+				}
+			}
+		}
+	}
+
+	// Games without the BIOS dipswitch don't handle alternative bioses very well
+	if (!is_bios_dipswitch_found)
+	{
+		is_neogeo_needs_specific_bios = true;
+	}
+
+	if (is_neogeo_needs_specific_bios)
+	{
+		// disable the NeoGeo mode core option
+		allow_neogeo_mode = false;
+
+		// set the NeoGeo mode to DIPSWITCH to rely on the Default Bios Dipswitch
+		g_opt_neo_geo_mode = NEO_GEO_MODE_DIPSWITCH;
+	}
 }
 
 static void set_controller_infos()
@@ -687,112 +689,134 @@ static void set_controller_infos()
 
 static void set_environment()
 {
-   std::vector<const retro_variable*> vars_systems;
+	std::vector<const retro_variable*> vars_systems;
 
-   // Add the Global core options
-   vars_systems.push_back(&var_fba_aspect);
-   vars_systems.push_back(&var_fba_cpu_speed_adjust);
-   vars_systems.push_back(&var_fba_sh2_mode);
-   vars_systems.push_back(&var_fba_hiscores);
+	// Add the Global core options
+	vars_systems.push_back(&var_fba_aspect);
+	vars_systems.push_back(&var_fba_cpu_speed_adjust);
+	vars_systems.push_back(&var_fba_sh2_mode);
+	vars_systems.push_back(&var_fba_hiscores);
 
-   if (pgi_diag)
-   {
-      vars_systems.push_back(&var_fba_diagnostic_input);
-   }
+	if (pgi_diag)
+	{
+		vars_systems.push_back(&var_fba_diagnostic_input);
+	}
 
-   if (is_neogeo_game)
-   {
-      // Add the Neo Geo core options
-      if (allow_neogeo_mode)
-         vars_systems.push_back(&var_fba_neogeo_mode);
-   }
+	if (is_neogeo_game)
+	{
+		// Add the Neo Geo core options
+		if (allow_neogeo_mode)
+			vars_systems.push_back(&var_fba_neogeo_mode);
+	}
 
-   int nbr_vars = vars_systems.size();
-   int nbr_dips = dipswitch_core_options.size();
-   int nbr_macros = macro_core_options.size();
+	int nbr_vars = vars_systems.size();
+	int nbr_dips = dipswitch_core_options.size();
+	int nbr_macros = macro_core_options.size();
 
-   log_cb(RETRO_LOG_INFO, "set_environment: SYSTEM: %d, DIPSWITCH: %d, MACRO: %d\n", nbr_vars, nbr_dips, nbr_macros);
+#if 0
+	log_cb(RETRO_LOG_INFO, "set_environment: SYSTEM: %d, DIPSWITCH: %d, MACRO: %d\n", nbr_vars, nbr_dips, nbr_macros);
+#endif
 
-   std::vector<retro_variable> vars(nbr_vars + nbr_dips + nbr_macros + 1); // + 1 for the empty ending retro_variable
-   
-   int idx_var = 0;
+	std::vector<retro_variable> vars(nbr_vars + nbr_dips + nbr_macros + 1); // + 1 for the empty ending retro_variable
 
-   // Add the System core options
-   for (int i = 0; i < nbr_vars; i++, idx_var++)
-   {
-      vars[idx_var] = *vars_systems[i];
-      log_cb(RETRO_LOG_INFO, "retro_variable (SYSTEM)    { '%s', '%s' }\n", vars[idx_var].key, vars[idx_var].value);
-   }
+	int idx_var = 0;
 
-   // Add the DIP switches core options
-   for (int dip_idx = 0; dip_idx < nbr_dips; dip_idx++, idx_var++)
-   {
-      vars[idx_var].key = dipswitch_core_options[dip_idx].option_name;
-      vars[idx_var].value = dipswitch_core_options[dip_idx].values_str.c_str();
-      log_cb(RETRO_LOG_INFO, "retro_variable (DIPSWITCH) { '%s', '%s' }\n", vars[idx_var].key, vars[idx_var].value);
-   }
+	// Add the System core options
+	for (int i = 0; i < nbr_vars; i++, idx_var++)
+	{
+		vars[idx_var] = *vars_systems[i];
+#if 0
+		log_cb(RETRO_LOG_INFO, "retro_variable (SYSTEM)    { '%s', '%s' }\n", vars[idx_var].key, vars[idx_var].value);
+#endif
+	}
 
-   // Add the macro inputs core options
-   for (int macro_idx = 0; macro_idx < nbr_macros; macro_idx++, idx_var++)
-   {
-      vars[idx_var].key = macro_core_options[macro_idx].option_name;
-      vars[idx_var].value = macro_core_options[macro_idx].values_str.c_str();
-      log_cb(RETRO_LOG_INFO, "retro_variable (MACRO)     { '%s', '%s' }\n", vars[idx_var].key, vars[idx_var].value);
-   }
+	// Add the DIP switches core options
+	for (int dip_idx = 0; dip_idx < nbr_dips; dip_idx++)
+	{
+		// Filter out the BIOS dipswitch if present while the game needs specific bios
+		if (!is_neogeo_game || allow_neogeo_mode || strcasecmp(dipswitch_core_options[dip_idx].friendly_name, "BIOS") != 0)
+		{
+			vars[idx_var].key = dipswitch_core_options[dip_idx].option_name;
+			vars[idx_var].value = dipswitch_core_options[dip_idx].values_str.c_str();
+#if 0
+			log_cb(RETRO_LOG_INFO, "retro_variable (DIPSWITCH) { '%s', '%s' }\n", vars[idx_var].key, vars[idx_var].value);
+#endif
+			idx_var++;
+		}
+	}
 
-   vars[idx_var] = var_empty;
-   environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars.data());
+	// Add the macro inputs core options
+	for (int macro_idx = 0; macro_idx < nbr_macros; macro_idx++, idx_var++)
+	{
+		vars[idx_var].key = macro_core_options[macro_idx].option_name;
+		vars[idx_var].value = macro_core_options[macro_idx].values_str.c_str();
+#if 0
+		log_cb(RETRO_LOG_INFO, "retro_variable (MACRO)     { '%s', '%s' }\n", vars[idx_var].key, vars[idx_var].value);
+#endif
+	}
+
+	vars[idx_var] = var_empty;
+	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars.data());
 }
 
 // Update DIP switches value  depending of the choice the user made in core options
 static bool apply_dipswitch_from_variables()
 {
-   bool dip_changed = false;
-   
-   log_cb(RETRO_LOG_INFO, "Apply DIP switches value from core options.\n");
-   struct retro_variable var = {0};
-   
-   for (int dip_idx = 0; dip_idx < dipswitch_core_options.size(); dip_idx++)
-   {
-      dipswitch_core_option *dip_option = &dipswitch_core_options[dip_idx];
+	bool dip_changed = false;
+#if 0
+	log_cb(RETRO_LOG_INFO, "Apply DIP switches value from core options.\n");
+#endif
+	struct retro_variable var = {0};
 
-      var.key = dip_option->option_name;
-      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) == false)
-         continue;
+	for (int dip_idx = 0; dip_idx < dipswitch_core_options.size(); dip_idx++)
+	{
+		dipswitch_core_option *dip_option = &dipswitch_core_options[dip_idx];
 
-      for (int dip_value_idx = 0; dip_value_idx < dip_option->values.size(); dip_value_idx++)
-      {
-         dipswitch_core_option_value *dip_value = &(dip_option->values[dip_value_idx]);
+		// Games which needs a specific bios don't handle alternative bioses very well
+		if (is_neogeo_game && !allow_neogeo_mode && strcasecmp(dip_option->friendly_name, "BIOS") == 0)
+			continue;
 
-         if (strcasecmp(var.value, dip_value->friendly_name) != 0)
-            continue;
+		var.key = dip_option->option_name;
+		if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) == false)
+			continue;
 
-         int old_nConst = dip_value->pgi->Input.Constant.nConst;
+		for (int dip_value_idx = 0; dip_value_idx < dip_option->values.size(); dip_value_idx++)
+		{
+			dipswitch_core_option_value *dip_value = &(dip_option->values[dip_value_idx]);
 
-         dip_value->pgi->Input.Constant.nConst = (dip_value->pgi->Input.Constant.nConst & ~dip_value->bdi.nMask) | (dip_value->bdi.nSetting & dip_value->bdi.nMask);
-         dip_value->pgi->Input.nVal = dip_value->pgi->Input.Constant.nConst;
-         if (dip_value->pgi->Input.pVal)
-            *(dip_value->pgi->Input.pVal) = dip_value->pgi->Input.nVal;
+			if (strcasecmp(var.value, dip_value->friendly_name) != 0)
+				continue;
 
-         if (dip_value->pgi->Input.Constant.nConst == old_nConst)
-         {
-            log_cb(RETRO_LOG_INFO, "DIP switch at PTR: [%-10d] [0x%02x] -> [0x%02x] - No change - '%s' '%s' [0x%02x]\n",
-               dip_value->pgi->Input.pVal, old_nConst, dip_value->pgi->Input.Constant.nConst, dip_option->friendly_name, dip_value->friendly_name, dip_value->bdi.nSetting);
-         }
-         else
-         {
-            dip_changed = true;
-            log_cb(RETRO_LOG_INFO, "DIP switch at PTR: [%-10d] [0x%02x] -> [0x%02x] - Changed   - '%s' '%s' [0x%02x]\n",
-               dip_value->pgi->Input.pVal, old_nConst, dip_value->pgi->Input.Constant.nConst, dip_option->friendly_name, dip_value->friendly_name, dip_value->bdi.nSetting);
-         }
-      }
-   }
-   
-   // Override the NeoGeo bios DIP Switch by the main one (for the moment)
-   if (is_neogeo_game)
-      set_neo_system_bios();
+			int old_nConst = dip_value->pgi->Input.Constant.nConst;
 
-   return dip_changed;
+			dip_value->pgi->Input.Constant.nConst = (dip_value->pgi->Input.Constant.nConst & ~dip_value->bdi.nMask) | (dip_value->bdi.nSetting & dip_value->bdi.nMask);
+			dip_value->pgi->Input.nVal = dip_value->pgi->Input.Constant.nConst;
+			if (dip_value->pgi->Input.pVal)
+				*(dip_value->pgi->Input.pVal) = dip_value->pgi->Input.nVal;
+
+			if (dip_value->pgi->Input.Constant.nConst == old_nConst)
+			{
+#if 0
+				log_cb(RETRO_LOG_INFO, "DIP switch at PTR: [%-10d] [0x%02x] -> [0x%02x] - No change - '%s' '%s' [0x%02x]\n",
+				dip_value->pgi->Input.pVal, old_nConst, dip_value->pgi->Input.Constant.nConst, dip_option->friendly_name, dip_value->friendly_name, dip_value->bdi.nSetting);
+#endif
+			}
+			else
+			{
+				dip_changed = true;
+#if 0
+				log_cb(RETRO_LOG_INFO, "DIP switch at PTR: [%-10d] [0x%02x] -> [0x%02x] - Changed   - '%s' '%s' [0x%02x]\n",
+				dip_value->pgi->Input.pVal, old_nConst, dip_value->pgi->Input.Constant.nConst, dip_option->friendly_name, dip_value->friendly_name, dip_value->bdi.nSetting);
+#endif
+			}
+		}
+	}
+
+	// Override the NeoGeo bios DIP Switch by the main one (for the moment)
+	if (is_neogeo_game)
+		set_neo_system_bios();
+
+	return dip_changed;
 }
 
 int InputSetCooperativeLevel(const bool bExclusive, const bool bForeGround) { return 0; }
