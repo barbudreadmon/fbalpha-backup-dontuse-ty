@@ -1186,16 +1186,6 @@ struct retro_controller_info
 {
    const struct retro_controller_description *types;
    unsigned num_types;
-   
-   retro_controller_info(const struct retro_controller_description *info_types, unsigned info_num_types)
-   {
-      types = info_types;
-      num_types = info_num_types;
-   }
-
-   retro_controller_info()
-   {
-   }
 };
 
 struct retro_subsystem_memory_info
