@@ -679,10 +679,12 @@ static void set_controller_infos()
 
 	for (int i = 0; i < nMaxPlayers; i++)
 	{
-		controller_infos[i] = retro_controller_info(controller_description, 2);
+		controller_infos[i].types = controller_description;
+		controller_infos[i].num_types = sizeof(controller_description)/sizeof(*controller_description);
 	}
 
-	controller_infos[nMaxPlayers] = retro_controller_info();
+	controller_infos[nMaxPlayers].types = NULL;
+	controller_infos[nMaxPlayers].num_types = 0;
 
 	environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, controller_infos.data());
 }
