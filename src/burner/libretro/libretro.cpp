@@ -174,11 +174,6 @@ static const struct retro_variable var_fba_hiscores = { "fba-hiscores", "Hiscore
 // Neo Geo core options
 static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Force Neo Geo mode (if available); MVS|AES|UNIBIOS|DIPSWITCH" };
 
-// Speedhack core options
-#if defined USE_SPEEDHACKS
-static const struct retro_variable var_fba_sh2_mode = { "fba-sh2-mode", "Psikyo/Kaneko SH2 mode; accurate|fast" };
-#endif
-
 void retro_set_environment(retro_environment_t cb)
 {
 	environ_cb = cb;
@@ -313,7 +308,6 @@ char g_base_name[128];
 char g_rom_dir[1024];
 char g_save_dir[1024];
 char g_system_dir[1024];
-extern INT32 cps3speedhack;
 extern unsigned int (__cdecl *BurnHighCol) (signed int r, signed int g, signed int b, signed int i);
 
 static bool driver_inited;
@@ -696,7 +690,6 @@ static void set_environment()
 	// Add the Global core options
 	vars_systems.push_back(&var_fba_aspect);
 	vars_systems.push_back(&var_fba_cpu_speed_adjust);
-	vars_systems.push_back(&var_fba_sh2_mode);
 	vars_systems.push_back(&var_fba_hiscores);
 
 	if (pgi_diag)
@@ -1194,6 +1187,10 @@ void retro_reset()
       *(pgi_reset->Input.pVal) = pgi_reset->Input.nVal;
    }
 
+   check_variables();
+
+   apply_dipswitch_from_variables();
+
    ForceFrameStep();
 }
 
@@ -1227,17 +1224,6 @@ static void check_variables(void)
       else
          nBurnCPUSpeedAdjust = 0x0100;
    }
-
-#if defined USE_SPEEDHACKS
-   var.key = var_fba_sh2_mode.key;
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
-   {
-      if (strcmp(var.value, "fast") == 0)
-         cps3speedhack = 1;
-      else
-         cps3speedhack = 0;
-   }
-#endif
 
    var.key = var_fba_aspect.key;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
