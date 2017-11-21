@@ -224,7 +224,7 @@ static struct BurnDIPInfo SoldividDIPList[]=
 	{0x15, 0x01, 0x01, 0x00, "Japan"		},
 	{0x15, 0x01, 0x01, 0x01, "World"		},
 	
-	{0   , 0xfe, 0   ,    2, "Speed Hacks (Break music)"},
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"},
 	{0x16, 0x01, 0x01, 0x00, "No"			},
 	{0x16, 0x01, 0x01, 0x01, "Yes"	},
 };
@@ -249,7 +249,7 @@ static struct BurnDIPInfo SoldividkDIPList[]=
 //	{0x15, 0x01, 0x01, 0x00, "Japan"		},
 //	{0x15, 0x01, 0x01, 0x01, "World"		},
 	
-	{0   , 0xfe, 0   ,    2, "Speed Hacks (Break music)"},
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"},
 	{0x16, 0x01, 0x01, 0x00, "No"			},
 	{0x16, 0x01, 0x01, 0x01, "Yes"	},
 };
@@ -614,6 +614,14 @@ static INT32 DrvDoReset()
 	if (EEPROMAvailable() == 0) {
 		EEPROMFill(DrvEEPROM, 0, 0x100);
 	}
+	
+	if (strcmp(BurnDrvGetTextA(DRV_NAME), "soldivid") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "soldividk") == 0) {
+		cpu_rate = ((DrvDips[2] & 1) ? 7600000 : 28636350/2);
+		sh2_soldivid_speedhack = (DrvDips[2] & 1);
+	}
+	else {
+		cps3speedhack = (DrvDips[2] & 1);
+	}
 
 	BurnYMF278BReset();
 
@@ -621,8 +629,6 @@ static INT32 DrvDoReset()
 	previous_graphics_bank = -1;
 
 	HiscoreReset();
-
-	cps3speedhack = (DrvDips[2] & 1);
 
 	return 0;
 }
@@ -764,10 +770,6 @@ static INT32 DrvInit(INT32 (*LoadCallback)(), INT32 type, INT32 gfx_max, INT32 g
 	}
 
 	cpu_rate = 28636350;
-	
-	if (strcmp(BurnDrvGetTextA(DRV_NAME), "soldivid") == 0 || strcmp(BurnDrvGetTextA(DRV_NAME), "soldividk") == 0) {
-		cpu_rate = 28636350/2; // sol divide plays the music at the right speed this way.
-	}
 
 	Sh2MapHandler(1, 0x06000000 | speedhack_address, 0x0600ffff | speedhack_address, MAP_ROM);
 	Sh2SetReadByteHandler (1,		hack_read_byte);

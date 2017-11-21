@@ -34,6 +34,7 @@
 
 int has_sh2;
 INT32 cps3speedhack; // must be set _after_ Sh2Init();
+INT32 sh2_soldivid_speedhack;
 INT32 sh2_suprnova_speedhack;
 INT32 sh2_busyloop_speedhack_mode2;
 
@@ -481,6 +482,7 @@ int Sh2Init(int nCount)
 
 	has_sh2 = 1;
 	cps3speedhack = 0;
+	sh2_soldivid_speedhack = 0;
 	sh2_suprnova_speedhack = 0;
 	sh2_busyloop_speedhack_mode2 = 0;
 
@@ -3291,7 +3293,7 @@ int Sh2Run(int cycles)
 		}
 
 		sh2->sh2_total_cycles++;
-		sh2->sh2_icount -= (sh2_suprnova_speedhack) ? 4 : 1;
+		sh2->sh2_icount -= (sh2_suprnova_speedhack) ? 4 : ((sh2_soldivid_speedhack) ? 2 : 1);
 		
 		// timer check 
 		

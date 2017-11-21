@@ -13,6 +13,7 @@ typedef void (__fastcall *pSh2WriteLongHandler)(unsigned int a, unsigned int d);
 
 extern int has_sh2;
 extern INT32 cps3speedhack;
+extern INT32 sh2_soldivid_speedhack;
 extern INT32 sh2_suprnova_speedhack;
 extern INT32 sh2_busyloop_speedhack_mode2;
 
