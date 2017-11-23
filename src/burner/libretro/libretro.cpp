@@ -2632,7 +2632,13 @@ static void init_macro_input_descriptors()
 
       char* description = macro_option->friendly_name + offset_player_x;
 
-      macro_input_descriptors.push_back(retro_input_descriptor(port, RETRO_DEVICE_JOYPAD, index, id, description));
+      retro_input_descriptor descriptor;
+      descriptor.port = port;
+      descriptor.device = RETRO_DEVICE_JOYPAD;
+      descriptor.index = index;
+      descriptor.id = id;
+      descriptor.description = description;
+      macro_input_descriptors.push_back(descriptor);
 
       log_cb(RETRO_LOG_INFO, "MACRO [%-15s] Macro.Switch.nCode: 0x%04x Macro.nMode: %d - assigned to key [%-25s] on port %2d.\n",
       	macro_option->friendly_name, macro_option->pgi->Macro.Switch.nCode, macro_option->pgi->Macro.nMode, print_label(id), port);
@@ -3310,14 +3316,23 @@ INT32 GameInpAnalog2RetroInpAnalog(struct GameInp* pgi, UINT32 nJoy, UINT8 nAxis
 	switch (nInput)
 	{
 		case GIT_JOYAXIS_FULL:
+		{
 			pgi->nInput = GIT_JOYAXIS_FULL;
 			pgi->Input.JoyAxis.nAxis = nAxis;
 			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
 			axibinds[nJoy][nAxis][0] = nIndex;
 			axibinds[nJoy][nAxis][1] = nKey;
-			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
+			retro_input_descriptor descriptor;
+			descriptor.port = nJoy;
+			descriptor.device = RETRO_DEVICE_ANALOG;
+			descriptor.index = nIndex;
+			descriptor.id = nKey;
+			descriptor.description = szn;
+			normal_input_descriptors.push_back(descriptor);
 			break;
+		}
 		case GIT_JOYSLIDER:
+		{
 			pgi->nInput = GIT_JOYSLIDER;
 			pgi->Input.Slider.nSliderValue = nSliderValue;
 			pgi->Input.Slider.nSliderSpeed = nSliderSpeed;
@@ -3326,25 +3341,48 @@ INT32 GameInpAnalog2RetroInpAnalog(struct GameInp* pgi, UINT32 nJoy, UINT8 nAxis
 			pgi->Input.Slider.JoyAxis.nJoy = (UINT8)nJoy;
 			axibinds[nJoy][nAxis][0] = nIndex;
 			axibinds[nJoy][nAxis][1] = nKey;
-			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
+			retro_input_descriptor descriptor;
+			descriptor.port = nJoy;
+			descriptor.device = RETRO_DEVICE_ANALOG;
+			descriptor.index = nIndex;
+			descriptor.id = nKey;
+			descriptor.description = szn;
+			normal_input_descriptors.push_back(descriptor);
 			break;
+		}
 		// I'm not sure the 2 following settings are needed in the libretro port
 		case GIT_JOYAXIS_NEG:
+		{
 			pgi->nInput = GIT_JOYAXIS_NEG;
 			pgi->Input.JoyAxis.nAxis = nAxis;
 			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
 			axibinds[nJoy][nAxis][0] = nIndex;
 			axibinds[nJoy][nAxis][1] = nKey;
-			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
+			retro_input_descriptor descriptor;
+			descriptor.port = nJoy;
+			descriptor.device = RETRO_DEVICE_ANALOG;
+			descriptor.index = nIndex;
+			descriptor.id = nKey;
+			descriptor.description = szn;
+			normal_input_descriptors.push_back(descriptor);
 			break;
+		}
 		case GIT_JOYAXIS_POS:
+		{
 			pgi->nInput = GIT_JOYAXIS_POS;
 			pgi->Input.JoyAxis.nAxis = nAxis;
 			pgi->Input.JoyAxis.nJoy = (UINT8)nJoy;
 			axibinds[nJoy][nAxis][0] = nIndex;
 			axibinds[nJoy][nAxis][1] = nKey;
-			normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, nIndex, nKey, szn));
+			retro_input_descriptor descriptor;
+			descriptor.port = nJoy;
+			descriptor.device = RETRO_DEVICE_ANALOG;
+			descriptor.index = nIndex;
+			descriptor.id = nKey;
+			descriptor.description = szn;
+			normal_input_descriptors.push_back(descriptor);
 			break;
+		}
 	}
 	bButtonMapped = true;
 	return 0;
@@ -3358,7 +3396,13 @@ INT32 GameInpDigital2RetroInpKey(struct GameInp* pgi, UINT32 nJoy, UINT32 nKey, 
 	pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
 	keybinds[pgi->Input.Switch.nCode][0] = nKey;
 	keybinds[pgi->Input.Switch.nCode][1] = nJoy;
-	normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_JOYPAD, 0, nKey, szn));
+	retro_input_descriptor descriptor;
+	descriptor.port = nJoy;
+	descriptor.device = RETRO_DEVICE_JOYPAD;
+	descriptor.index = 0;
+	descriptor.id = nKey;
+	descriptor.description = szn;
+	normal_input_descriptors.push_back(descriptor);
 	bButtonMapped = true;
 	return 0;
 }
@@ -3379,7 +3423,13 @@ INT32 GameInpDigital2RetroInpAnalogRight(struct GameInp* pgi, UINT32 nJoy, UINT3
 	keybinds[pgi->Input.Switch.nCode][3] = position;
 	bAnalogRightMappingDone[nJoy][nKey][position] = true;
 	if(bAnalogRightMappingDone[nJoy][nKey][JOY_POS] && bAnalogRightMappingDone[nJoy][nKey][JOY_NEG]) {
-		normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, nKey, szn));
+		retro_input_descriptor descriptor;
+		descriptor.port = nJoy;
+		descriptor.device = RETRO_DEVICE_ANALOG;
+		descriptor.index = RETRO_DEVICE_INDEX_ANALOG_RIGHT;
+		descriptor.id = nKey;
+		descriptor.description = szn;
+		normal_input_descriptors.push_back(descriptor);
 	}
 	bButtonMapped = true;
 	return 0;
@@ -3396,8 +3446,23 @@ INT32 GameInpAnalog2RetroInpDualKeys(struct GameInp* pgi, UINT32 nJoy, UINT8 nAx
 	axibinds[nJoy][nAxis][0] = 0xff;
 	axibinds[nJoy][nAxis][1] = nKeyPos;
 	axibinds[nJoy][nAxis][2] = nKeyNeg;
-	normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_JOYPAD, 0, nKeyPos, sznpos));
-	normal_input_descriptors.push_back(retro_input_descriptor(nJoy, RETRO_DEVICE_JOYPAD, 0, nKeyNeg, sznneg));
+
+	retro_input_descriptor descriptor;
+
+	descriptor.port = nJoy;
+	descriptor.device = RETRO_DEVICE_JOYPAD;
+	descriptor.index = 0;
+	descriptor.id = nKeyPos;
+	descriptor.description = sznpos;
+	normal_input_descriptors.push_back(descriptor);
+
+	descriptor.port = nJoy;
+	descriptor.device = RETRO_DEVICE_JOYPAD;
+	descriptor.index = 0;
+	descriptor.id = nKeyNeg;
+	descriptor.description = sznneg;
+	normal_input_descriptors.push_back(descriptor);
+
 	bButtonMapped = true;
 	return 0;
 }
