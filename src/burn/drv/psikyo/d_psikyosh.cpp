@@ -621,6 +621,7 @@ static INT32 DrvDoReset()
 	}
 	else {
 		cps3speedhack = (DrvDips[2] & 1);
+		Sh2SetEatCycles(1);
 	}
 
 	BurnYMF278BReset();
