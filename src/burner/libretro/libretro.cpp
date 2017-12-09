@@ -829,8 +829,7 @@ static void ForceFrameStep()
    nBurnLayer = 0xff;
 
    pBurnSoundOut = g_audio_buf;
-   nBurnSoundRate = AUDIO_SAMPLERATE;
-   nBurnSoundLen = nAudSegLen;
+   
 #ifdef FBA_DEBUG
    nFramesEmulated++;
 #endif
@@ -1469,11 +1468,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
       log_cb(RETRO_LOG_INFO, "retro_get_system_av_info: base_width: %d, base_height: %d, max_width: %d, max_height: %d, aspect_ratio: %f\n", geom.base_width, geom.base_height, geom.max_width, geom.max_height, geom.aspect_ratio);
    }
 
-#ifdef FBACORES_CPS
-   struct retro_system_timing timing = { 59.629403, 59.629403 * nAudSegLen };
-#else
    struct retro_system_timing timing = { (nBurnFPS / 100.0), (nBurnFPS / 100.0) * nAudSegLen };
-#endif
 
    info->geometry = geom;
    info->timing   = timing;
@@ -1628,7 +1623,9 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
 
    nAudSegLen = (AUDIO_SAMPLERATE * 100 + (nBurnFPS >> 1)) / nBurnFPS;
-   g_audio_buf = (int16_t*)malloc(nAudSegLen * 2 * sizeof(int16_t));
+   g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
+   nBurnSoundRate = AUDIO_SAMPLERATE;
+   nBurnSoundLen = nAudSegLen;
 
 #ifdef FRONTEND_SUPPORTS_RGB565
    SetBurnHighCol(16);
@@ -1722,7 +1719,7 @@ bool retro_load_game(const struct retro_game_info *info)
       check_variables();
 
       nAudSegLen = (AUDIO_SAMPLERATE * 100 + (6000 >> 1)) / 6000;
-      g_audio_buf = (int16_t*)malloc(nAudSegLen * 2 * sizeof(int16_t));
+      g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
       
       pBurnSoundOut = g_audio_buf;
       nBurnSoundRate = AUDIO_SAMPLERATE;
