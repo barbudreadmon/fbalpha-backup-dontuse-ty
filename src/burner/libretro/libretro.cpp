@@ -137,10 +137,10 @@ static unsigned g_rom_count;
 static unsigned fba_devices[5] = { RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC };
 
 #define AUDIO_SAMPLERATE 48000
-#define AUDIO_SEGMENT_LENGTH 801 // <-- Hardcoded value that corresponds well to 48kHz audio.
+INT32 nAudSegLen = 0;
 
 static uint32_t *g_fba_frame;
-static int16_t g_audio_buf[AUDIO_SEGMENT_LENGTH * 2];
+static int16_t *g_audio_buf;
 
 #define JOY_NEG 0
 #define JOY_POS 1
@@ -827,9 +827,10 @@ void Reinitialise(void)
 static void ForceFrameStep()
 {
    nBurnLayer = 0xff;
+
    pBurnSoundOut = g_audio_buf;
    nBurnSoundRate = AUDIO_SAMPLERATE;
-   //nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
+   nBurnSoundLen = nAudSegLen;
 #ifdef FBA_DEBUG
    nFramesEmulated++;
 #endif
@@ -1469,9 +1470,9 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    }
 
 #ifdef FBACORES_CPS
-   struct retro_system_timing timing = { 59.629403, 59.629403 * AUDIO_SEGMENT_LENGTH };
+   struct retro_system_timing timing = { 59.629403, 59.629403 * nAudSegLen };
 #else
-   struct retro_system_timing timing = { (nBurnFPS / 100.0), (nBurnFPS / 100.0) * AUDIO_SEGMENT_LENGTH };
+   struct retro_system_timing timing = { (nBurnFPS / 100.0), (nBurnFPS / 100.0) * nAudSegLen };
 #endif
 
    info->geometry = geom;
@@ -1626,6 +1627,9 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
    environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
 
+   nAudSegLen = (AUDIO_SAMPLERATE * 100 + (nBurnFPS >> 1)) / nBurnFPS;
+   g_audio_buf = (int16_t*)malloc(nAudSegLen * 2 * sizeof(int16_t));
+
 #ifdef FRONTEND_SUPPORTS_RGB565
    SetBurnHighCol(16);
 #else
@@ -1717,9 +1721,12 @@ bool retro_load_game(const struct retro_game_info *info)
       set_environment();
       check_variables();
 
+      nAudSegLen = (AUDIO_SAMPLERATE * 100 + (6000 >> 1)) / 6000;
+      g_audio_buf = (int16_t*)malloc(nAudSegLen * 2 * sizeof(int16_t));
+      
       pBurnSoundOut = g_audio_buf;
       nBurnSoundRate = AUDIO_SAMPLERATE;
-      nBurnSoundLen = AUDIO_SEGMENT_LENGTH;
+      nBurnSoundLen = nAudSegLen;
 
       if (!fba_init(i, g_base_name))
          goto error;
