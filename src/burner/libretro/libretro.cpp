@@ -1,5 +1,7 @@
 #include <vector>
 #include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "libretro.h"
 #include "burner.h"
@@ -1165,7 +1167,7 @@ void retro_deinit()
 
    if (driver_inited)
    {
-      snprintf (output, sizeof(output), "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+      snprintf (output, sizeof(output), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
       BurnStateSave(output, 0);
       BurnDrvExit();
    }
@@ -1567,7 +1569,13 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    init_input();
 
    // Initialize EEPROM path
-   snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%c", g_save_dir, slash);
+   snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%cfba%c", g_save_dir, slash, slash);
+   // Create EEPROM path if it does not exist
+#if defined(_XBOX) || defined(_WIN32)
+   mkdir(szAppEEPROMPath);
+#else
+   mkdir(szAppEEPROMPath, 0700);
+#endif
    // Initialize Hiscore path
    snprintf (szAppHiscorePath, sizeof(szAppHiscorePath), "%s%cfba%c", g_system_dir, slash, slash);
    // Initialize Samples path
@@ -1583,7 +1591,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    BurnDrvInit();
 
    char input[128];
-   snprintf (input, sizeof(input), "%s%c%s.fs", g_save_dir, slash, BurnDrvGetTextA(DRV_NAME));
+   snprintf (input, sizeof(input), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
    BurnStateLoad(input, 0, NULL);
 
    int width, height;
