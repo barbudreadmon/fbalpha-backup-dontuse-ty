@@ -6,6 +6,8 @@
 #include "libretro.h"
 #include "burner.h"
 
+#include <file/file_path.h>
+
 #include "cd/cd_interface.h"
 
 #define FBA_VERSION "v0.2.97.42"
@@ -1571,11 +1573,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    // Initialize EEPROM path
    snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%cfba%c", g_save_dir, slash, slash);
    // Create EEPROM path if it does not exist
-#if defined(_XBOX) || defined(_WIN32)
-   mkdir(szAppEEPROMPath);
-#else
-   mkdir(szAppEEPROMPath, 0700);
-#endif
+   path_mkdir(szAppEEPROMPath);
    // Initialize Hiscore path
    snprintf (szAppHiscorePath, sizeof(szAppHiscorePath), "%s%cfba%c", g_system_dir, slash, slash);
    // Initialize Samples path
