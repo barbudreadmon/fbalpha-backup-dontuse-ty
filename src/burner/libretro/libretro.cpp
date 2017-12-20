@@ -7,6 +7,7 @@
 #include "burner.h"
 
 #include <file/file_path.h>
+#include <streams/file_stream.h>
 
 #include "cd/cd_interface.h"
 
@@ -690,6 +691,7 @@ static void set_controller_infos()
 static void set_environment()
 {
 	std::vector<const retro_variable*> vars_systems;
+	struct retro_vfs_interface_info vfs_iface_info;
 
 	// Add the Global core options
 	vars_systems.push_back(&var_fba_aspect);
@@ -756,6 +758,13 @@ static void set_environment()
 
 	vars[idx_var] = var_empty;
 	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars.data());
+
+	// Initialize VFS
+	vfs_iface_info.required_interface_version = FILESTREAM_REQUIRED_VFS_VERSION;
+	vfs_iface_info.iface                      = NULL;
+	// DISABLED since path_mkdir is not VFS aware. Enable once a workaround to remove it is found
+	//if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+	//	filestream_vfs_init(&vfs_iface_info);
 }
 
 // Update DIP switches value  depending of the choice the user made in core options
