@@ -57,7 +57,7 @@ struct AY8910
 	ALIGN_VAR(8) read8_handler PortBread;
 	ALIGN_VAR(8) write8_handler PortAwrite;
 	ALIGN_VAR(8) write8_handler PortBwrite;
-	INT32 register_latch;
+	ALIGN_VAR(8) INT32 register_latch;
 	UINT8 Regs[16];
 	INT32 lastEnable;
 	UINT32 UpdateStep;
