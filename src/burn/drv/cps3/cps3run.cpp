@@ -2091,13 +2091,11 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 		ba.szName	= "Palette";
 		BurnAcb(&ba);
 
-#ifndef __LIBRETRO__
 		ba.Data		= RamCRam;
 		ba.nLen		= 0x0800000;
 		ba.nAddress = 0;
 		ba.szName	= "Sprite ROM";
 		BurnAcb(&ba);
-#endif
 
 /*		// so huge. need not backup it while NOCD
 		// otherwize, need backup gfx also

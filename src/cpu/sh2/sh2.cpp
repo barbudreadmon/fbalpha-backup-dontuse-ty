@@ -179,7 +179,7 @@ typedef struct
 	pSh2ReadLongHandler ReadLong[SH2_MAXHANDLER];
 	pSh2WriteLongHandler WriteLong[SH2_MAXHANDLER];
 	
-	unsigned char * opbase;
+	ALIGN_VAR(8) unsigned char * opbase;
 	int suspend;
 } SH2EXT;
 
@@ -3508,7 +3508,7 @@ int Sh2Scan(int nAction)
 			Sh2Ext[i].sh2.irq_callback = irq_callback;
 			
 			SCAN_VAR (Sh2Ext[i].suspend);
-			SCAN_VAR (Sh2Ext[i].opbase);
+			ScanVar(& (Sh2Ext[i].opbase), 8, "Sh2Ext[i].opbase" );
 			
 #if FAST_OP_FETCH
 			//	Sh2Ext[i].opbase
