@@ -760,11 +760,16 @@ static void set_environment()
 	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars.data());
 
 	// Initialize VFS
+	// Only on UWP for now, since EEPROM saving is not VFS aware
+#ifdef _MSC_VER
+#if WINAPI_FAMILY_PARTITION(WINAPI_FAMILY_APP)
 	vfs_iface_info.required_interface_version = FILESTREAM_REQUIRED_VFS_VERSION;
 	vfs_iface_info.iface                      = NULL;
-	// DISABLED since path_mkdir is not VFS aware. Enable once a workaround to remove it is found
-	//if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
-	//	filestream_vfs_init(&vfs_iface_info);
+
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+		filestream_vfs_init(&vfs_iface_info);
+#endif
+#endif
 }
 
 // Update DIP switches value  depending of the choice the user made in core options
