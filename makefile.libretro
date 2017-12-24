@@ -340,7 +340,7 @@ else ifneq (,$(findstring windows_msvc2017,$(platform)))
 
 	export INCLUDE := $(INCLUDE);$(WindowsSDKSharedIncludeDir);$(WindowsSDKUCRTIncludeDir);$(WindowsSDKUMIncludeDir)
 	export LIB := $(LIB);$(WindowsSDKUCRTLibDir);$(WindowsSDKUMLibDir)
-	TARGET := $(TARGET_NAME)_libretro.dll
+	TARGET := $(TARGET_NAME)_libretro.dll $(TARGET_NAME)_libretro.lib $(TARGET_NAME)_libretro.pdb
 	PSS_STYLE :=2
 	LDFLAGS += -DLL
 
@@ -514,7 +514,7 @@ $(TARGET): $(OBJS)
 ifeq ($(STATIC_LINKING), 1)
 	@$(AR) rcs $@ $(OBJS)
 else
-	@$(LD) $(LINKOUT)$@ $(SHARED) $(OBJS) $(LDFLAGS)
+	@$(LD) $(LINKOUT)$@ $(SHARED) $(OBJS) $(LDFLAGS) $(LIBS)
 endif
 
 clean-objs:
