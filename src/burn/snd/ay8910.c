@@ -65,7 +65,7 @@ struct AY8910
 	INT32 CountA,CountB,CountC,CountN,CountE;
 	UINT32 VolA,VolB,VolC,VolE;
 	UINT8 EnvelopeA,EnvelopeB,EnvelopeC;
-	UINT8 OutputA,OutputB,OutputC,OutputN;
+	ALIGN_VAR(8) UINT8 OutputA,OutputB,OutputC,OutputN;
 	INT8 CountEnv;
 	UINT8 Hold,Alternate,Attack,Holding;
 	INT32 RNG;
