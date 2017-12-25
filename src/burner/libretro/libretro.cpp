@@ -762,7 +762,7 @@ static void set_environment()
 	// Initialize VFS
 	// Only on UWP for now, since EEPROM saving is not VFS aware
 #ifdef _MSC_VER
-#if WINAPI_FAMILY_PARTITION(WINAPI_FAMILY_APP)
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 	vfs_iface_info.required_interface_version = FILESTREAM_REQUIRED_VFS_VERSION;
 	vfs_iface_info.iface                      = NULL;
 
