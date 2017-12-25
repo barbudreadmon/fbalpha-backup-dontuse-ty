@@ -57,7 +57,7 @@ struct AY8910
 	ALIGN_VAR(8) read8_handler PortBread;
 	ALIGN_VAR(8) write8_handler PortAwrite;
 	ALIGN_VAR(8) write8_handler PortBwrite;
-	INT32 register_latch;
+	ALIGN_VAR(8) INT32 register_latch;
 	UINT8 Regs[16];
 	INT32 lastEnable;
 	UINT32 UpdateStep;
@@ -65,7 +65,7 @@ struct AY8910
 	INT32 CountA,CountB,CountC,CountN,CountE;
 	UINT32 VolA,VolB,VolC,VolE;
 	UINT8 EnvelopeA,EnvelopeB,EnvelopeC;
-	ALIGN_VAR(8) UINT8 OutputA,OutputB,OutputC,OutputN;
+	UINT8 OutputA,OutputB,OutputC,OutputN;
 	INT8 CountEnv;
 	UINT8 Hold,Alternate,Attack,Holding;
 	INT32 RNG;
