@@ -3926,7 +3926,7 @@ static INT32 GameInpAutoOne(struct GameInp* pgi, char* szi, char *szn)
 			// The "Modern" mapping on neogeo (which mimic mapping from remakes and further opus of the series)
 			// doesn't make sense and is kinda harmful on games other than kof, fatal fury and samourai showdown
 			// So we restrain it to those 3 series.
-			if ((BurnDrvGetFamilyFlags() & (FBF_KOF | FBF_FATFURY | FBF_SAMSHO)) && fba_devices[nPlayer] == RETROPAD_MODERN) {
+			if ((BurnDrvGetGenreFlags() & GBF_VSFIGHT) && is_neogeo_game && fba_devices[nPlayer] == RETROPAD_MODERN) {
 				switch (nButton) {
 					case 1:
 						GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_Y, description);
