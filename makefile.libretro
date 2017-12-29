@@ -388,27 +388,29 @@ ifeq ($(DEBUG), 1)
    CFLAGS += -O0 -g -DFBA_DEBUG
    CXXFLAGS += -O0 -g -DFBA_DEBUG
 else
-   CFLAGS += -O3 -DNDEBUG
-   CXXFLAGS += -O3 -DNDEBUG
+   CFLAGS += -O2 -DNDEBUG
+   CXXFLAGS += -O2 -DNDEBUG
 endif
 
 CFLAGS += $(fpic) $(FBA_DEFINES)
 CXXFLAGS += $(fpic) $(FBA_DEFINES)
 LDFLAGS += $(fpic)
 
-CFLAGS += -fforce-addr $(INLINE_LIMIT)  \
-	   -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
-	   -Wno-sequence-point -Wno-strict-aliasing
-CXXFLAGS += -fforce-addr $(INLINE_LIMIT) \
-	   -fcheck-new \
-	   -Wall -W -Wshadow -Wno-long-long -Wno-write-strings \
-	   -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \
-	   -Wuninitialized -Wpointer-arith -Wno-inline -Wno-unused-value \
-	   -Wno-sequence-point -Wno-extra -Wno-strict-aliasing
+ifeq (,$(findstring msvc,$(platform)))
+   CFLAGS += -fforce-addr $(INLINE_LIMIT)  \
+      -Wall -Wno-long-long -Wno-sign-compare -Wno-uninitialized -Wno-unused \
+      -Wno-sequence-point -Wno-strict-aliasing
+   CXXFLAGS += -fforce-addr $(INLINE_LIMIT) \
+      -fcheck-new \
+      -Wall -W -Wshadow -Wno-long-long -Wno-write-strings \
+      -Wunknown-pragmas -Wundef -Wno-conversion -Wno-missing-braces -Wno-multichar \
+      -Wuninitialized -Wpointer-arith -Wno-inline -Wno-unused-value \
+      -Wno-sequence-point -Wno-extra -Wno-strict-aliasing
 
-ifeq (,$(filter $(platform), ps3 sncps3))
-   CFLAGS += -Wno-write-strings -Wno-pedantic
-   CXXFLAGS += -Wno-write-strings -pedantic -Wno-address -Wno-unused-but-set-variable -Wno-narrowing -Wno-pedantic
+   ifeq (,$(filter $(platform), ps3 sncps3))
+      CFLAGS += -Wno-write-strings -Wno-pedantic
+      CXXFLAGS += -Wno-write-strings -pedantic -Wno-address -Wno-unused-but-set-variable -Wno-narrowing -Wno-pedantic
+   endif
 endif
 
 ifeq ($(FRONTEND_SUPPORTS_RGB565), 1)
@@ -479,11 +481,27 @@ generate-files:
 	@echo ""
 	$(EXE_PREFIX)$(CTVMAKE_EXE) > $(FBA_GENERATED_DIR)/ctv.h
 
+OBJOUT   = -o
+LINKOUT  = -o
+
+ifneq (,$(findstring msvc,$(platform)))
+	OBJOUT = -Fo
+	LINKOUT = -out:
+ifeq ($(STATIC_LINKING),1)
+	LD ?= lib.exe
+	STATIC_LINKING=0
+else
+	LD = link.exe
+endif
+else
+	LD = $(CXX)
+endif
+
 %.o: %.c
-	$(CC) $(CFLAGS) $(INCFLAGS) -c $^ -o $@
+	$(CC) -c $(OBJOUT)$@ $< $(CFLAGS) $(INCFLAGS)
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c $^ -o $@
+	$(CXX) -c $(OBJOUT)$@ $< $(CXXFLAGS) $(INCFLAGS)
 
 $(TARGET): $(OBJS)
 	@echo "LD $@"
