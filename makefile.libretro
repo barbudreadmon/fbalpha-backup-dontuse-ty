@@ -506,11 +506,10 @@ endif
 	$(CXX) -c $(OBJOUT)$@ $< $(CXXFLAGS) $(INCFLAGS)
 
 $(TARGET): $(OBJS)
-	@echo "LD $@"
 ifeq ($(STATIC_LINKING), 1)
-	@$(AR) rcs $@ $(OBJS)
+	$(AR) rcs $@ $(OBJS)
 else
-	@$(CXX) -o $@ $(SHARED) $(OBJS) $(LDFLAGS)
+	$(LD) $(LINKOUT)$@ $(SHARED) $^ $(LDFLAGS) $(LIBS)
 endif
 
 clean-objs:
