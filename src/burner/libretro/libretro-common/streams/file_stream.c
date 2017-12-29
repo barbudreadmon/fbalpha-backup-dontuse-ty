@@ -213,7 +213,6 @@ int filestream_eof(RFILE *stream)
    return 0;
 }
 
-
 ssize_t filestream_tell(RFILE *stream)
 {
    ssize_t output;
