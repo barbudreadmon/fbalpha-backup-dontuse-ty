@@ -1242,6 +1242,12 @@ static void check_variables(void)
       else
          nBurnCPUSpeedAdjust = 0x0100;
    }
+   
+   if ((BurnDrvGetTextA(DRV_PARENT) && strcmp(BurnDrvGetTextA(DRV_PARENT), "karnovr") == 0) ||
+      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "karnovr") == 0)
+   ) {
+      nBurnCPUSpeedAdjust = 0x010a;
+   }
 
    var.key = var_fba_aspect.key;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
