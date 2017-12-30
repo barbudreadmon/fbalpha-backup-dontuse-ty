@@ -1,7 +1,7 @@
-/* Copyright  (C) 2010-2016 The RetroArch team
+/* Copyright  (C) 2010-2017 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
- * The following license statement only applies to this file (compat_getopt.h).
+ * The following license statement only applies to this file (getopt.h).
  * ---------------------------------------------------------------------------------------
  *
  * Permission is hereby granted, free of charge,
@@ -38,9 +38,9 @@
  * prefer to use the actual name. */
 #define getopt_long(argc, argv, optstring, longopts, longindex) __getopt_long_retro(argc, argv, optstring, longopts, longindex)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <retro_common_api.h>
+
+RETRO_BEGIN_DECLS
 
 struct option
 {
@@ -57,9 +57,8 @@ int getopt_long(int argc, char *argv[],
       const char *optstring, const struct option *longopts, int *longindex);
 extern char *optarg;
 extern int optind, opterr, optopt;
-#ifdef __cplusplus
-}
-#endif
+
+RETRO_END_DECLS
 
 /* If these are variously #defined, then we have bigger problems */
 #ifndef no_argument
