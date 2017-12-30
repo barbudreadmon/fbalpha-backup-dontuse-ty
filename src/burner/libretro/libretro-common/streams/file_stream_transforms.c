@@ -28,17 +28,36 @@
 
 RFILE* rfopen(const char *path, const char *mode)
 {
-   unsigned int retro_mode = 0;
-   if (strstr(mode, "r"))
-      if (strstr(mode, "b"))
-         retro_mode = RETRO_VFS_FILE_ACCESS_READ;
+   unsigned int retro_mode = RETRO_VFS_FILE_ACCESS_READ;
+   bool position_to_end = false;
 
    if (strstr(mode, "w"))
-      retro_mode = RETRO_VFS_FILE_ACCESS_WRITE;
-   if (strstr(mode, "+"))
-      retro_mode = RETRO_VFS_FILE_ACCESS_READ_WRITE;
+   {
+	   retro_mode = RETRO_VFS_FILE_ACCESS_WRITE;
+   }
 
-   return filestream_open(path, retro_mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+   if (strstr(mode, "a"))
+   {
+	   retro_mode = RETRO_VFS_FILE_ACCESS_READ_WRITE & RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING;
+	   position_to_end = true;
+   }
+
+   if (strstr(mode, "+"))
+   {
+	   retro_mode = RETRO_VFS_FILE_ACCESS_READ_WRITE;
+	   if (strstr(mode, "r"))
+	   {
+		   retro_mode = retro_mode & RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING;
+	   }
+   }
+
+   RFILE* output = filestream_open(path, retro_mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+   if (output != NULL && position_to_end)
+   {
+	   filestream_seek(output, 0, RETRO_VFS_SEEK_POSITION_END);
+   }
+
+   return output;
 }
 
 int rfclose(RFILE* stream)
