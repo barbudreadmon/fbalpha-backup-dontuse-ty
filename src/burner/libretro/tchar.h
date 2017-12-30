@@ -44,9 +44,9 @@
 #ifndef _MSC_VER
 	typedef struct { int x, y, width, height; } RECT;
 #else
-	#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 
-		typedef struct { int x, y, width, height; } RECT;
-	#endif
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+	typedef struct { int x, y, width, height; } RECT;
+#endif
 #endif
 
 #undef __cdecl
