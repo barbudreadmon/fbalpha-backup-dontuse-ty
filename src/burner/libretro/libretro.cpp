@@ -310,9 +310,9 @@ void set_neo_system_bios()
 }
 
 char g_base_name[128];
-char g_rom_dir[1024];
-char g_save_dir[1024];
-char g_system_dir[1024];
+char g_rom_dir[MAX_PATH];
+char g_save_dir[MAX_PATH];
+char g_system_dir[MAX_PATH];
 extern unsigned int (__cdecl *BurnHighCol) (signed int r, signed int g, signed int b, signed int i);
 
 static bool driver_inited;
@@ -964,7 +964,7 @@ static int archive_load_rom(uint8_t *dest, int *wrote, int i)
 
 static void locate_archive(std::vector<std::string>& pathList, const char* const romName)
 {
-   static char path[1024];
+   static char path[MAX_PATH];
 
    snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, romName);
    if (ZipOpen(path) == 0)
@@ -1178,7 +1178,7 @@ void retro_init()
 
 void retro_deinit()
 {
-   char output[128];
+   char output[MAX_PATH];
 
    if (driver_inited)
    {
@@ -1241,7 +1241,7 @@ static void check_variables(void)
       else
          nBurnCPUSpeedAdjust = 0x0100;
    }
-   
+
    if ((BurnDrvGetTextA(DRV_PARENT) && strcmp(BurnDrvGetTextA(DRV_PARENT), "karnovr") == 0) ||
       (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "karnovr") == 0)
    ) {
@@ -1584,6 +1584,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
       return false;
    }
 
+   nBurnSoundRate = AUDIO_SAMPLERATE;
    nFMInterpolation = 3;
    nInterpolation = 1;
 
@@ -1607,7 +1608,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    InpDIPSWInit();
    BurnDrvInit();
 
-   char input[128];
+   char input[MAX_PATH];
    snprintf (input, sizeof(input), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
    BurnStateLoad(input, 0, NULL);
 
@@ -1646,11 +1647,6 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    log_cb(RETRO_LOG_INFO, "Game: %s\n", game_zip_name);
 
    environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
-
-   nAudSegLen = (AUDIO_SAMPLERATE * 100 + (nBurnFPS >> 1)) / nBurnFPS;
-   g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
-   nBurnSoundRate = AUDIO_SAMPLERATE;
-   nBurnSoundLen = nAudSegLen;
 
 #ifdef FRONTEND_SUPPORTS_RGB565
    SetBurnHighCol(16);
@@ -1743,17 +1739,14 @@ bool retro_load_game(const struct retro_game_info *info)
       set_environment();
       check_variables();
 
-      nAudSegLen = (AUDIO_SAMPLERATE * 100 + (6000 >> 1)) / 6000;
-      g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
-      
-      pBurnSoundOut = g_audio_buf;
-      nBurnSoundRate = AUDIO_SAMPLERATE;
-      nBurnSoundLen = nAudSegLen;
-
       if (!fba_init(i, g_base_name))
          goto error;
 
       driver_inited = true;
+
+      nAudSegLen = (nBurnSoundRate * 100 + (nBurnFPS >> 1)) / nBurnFPS;
+      g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
+      nBurnSoundLen = nAudSegLen;
 
       BurnDrvGetFullSize(&width, &height);
 
