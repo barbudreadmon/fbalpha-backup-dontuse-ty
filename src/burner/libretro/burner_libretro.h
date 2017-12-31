@@ -5,14 +5,14 @@
 #include "input/inp_keys.h"
 
 #include "streams/file_stream_transforms.h"
+#include "compat/msvc.h"
 
 extern int bDrvOkay;
 extern int bRunPause;
 extern bool bAlwaysProcessKeyboardInput;
 
-#ifdef _MSC_VER
-#define snprintf _snprintf
-#define ANSIToTCHAR(str, foo, bar) (str)
+#ifndef MAX_PATH
+#define MAX_PATH PATH_MAX
 #endif
 
 extern void InpDIPSWResetDIPs (void);
