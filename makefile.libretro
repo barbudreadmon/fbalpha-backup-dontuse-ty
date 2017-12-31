@@ -1,4 +1,6 @@
 DEBUG = 0
+DEBUG_ASAN = 0
+DEBUG_UBSAN = 0
 LIBRETRO_OPTIMIZATIONS = 1
 FRONTEND_SUPPORTS_RGB565 = 1
 HAVE_GRIFFIN = 0
@@ -288,6 +290,21 @@ endif
 
 ifeq ($(TOAPLAN_SOUND_SAMPLES_HACK), 1)
    FBA_DEFINES += -DTOAPLAN_SOUND_SAMPLES_HACK
+endif
+
+ifeq ($(DEBUG_ASAN), 1)
+   DEBUG = 1
+   DEBUG_UBSAN = 0
+   CFLAGS += -lasan -fsanitize=address
+   CXXFLAGS += -lasan -fsanitize=address
+   LDFLAGS += -lasan -fsanitize=address
+endif
+
+ifeq ($(DEBUG_UBSAN), 1)
+   DEBUG = 1
+   CFLAGS += -lubsan -fsanitize=undefined
+   CXXFLAGS += -lubsan -fsanitize=undefined
+   LDFLAGS += -lubsan -fsanitize=undefined
 endif
 
 ifeq ($(DEBUG), 1)
