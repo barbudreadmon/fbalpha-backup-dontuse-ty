@@ -1575,6 +1575,14 @@ INT32 SetBurnHighCol(INT32 nDepth)
 	return 0;
 }
 
+static void init_audio_buffer(INT32 sample_rate, INT32 fps)
+{
+   nAudSegLen = (sample_rate * 100 + (fps >> 1)) / fps;
+   free(g_audio_buf);
+   g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
+   nBurnSoundLen = nAudSegLen;
+}
+
 static bool fba_init(unsigned driver, const char *game_zip_name)
 {
    nBurnDrvActive = driver;
@@ -1587,6 +1595,9 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    nBurnSoundRate = AUDIO_SAMPLERATE;
    nFMInterpolation = 3;
    nInterpolation = 1;
+   
+   // CPS3 won't run without defining nBurnSoundLen
+   init_audio_buffer(nBurnSoundRate, 6000);
 
    init_input();
 
@@ -1607,6 +1618,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
    InpDIPSWInit();
    BurnDrvInit();
+   init_audio_buffer(nBurnSoundRate, nBurnFPS);
 
    char input[MAX_PATH];
    snprintf (input, sizeof(input), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
@@ -1743,10 +1755,6 @@ bool retro_load_game(const struct retro_game_info *info)
          goto error;
 
       driver_inited = true;
-
-      nAudSegLen = (nBurnSoundRate * 100 + (nBurnFPS >> 1)) / nBurnFPS;
-      g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
-      nBurnSoundLen = nAudSegLen;
 
       BurnDrvGetFullSize(&width, &height);
 
