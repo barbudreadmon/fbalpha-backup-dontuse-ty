@@ -7,9 +7,9 @@
 #include "burner.h"
 
 #include <file/file_path.h>
+#include <streams/file_stream.h>
 
 #include "cd/cd_interface.h"
-#include <streams/file_stream.h>
 
 #define FBA_VERSION "v0.2.97.42"
 
@@ -758,13 +758,14 @@ static void set_environment()
 
 	vars[idx_var] = var_empty;
 	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars.data());
-	
+
 	// Initialize VFS
 	// Only on UWP for now, since EEPROM saving is not VFS aware
 #ifdef _MSC_VER
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 	vfs_iface_info.required_interface_version = FILESTREAM_REQUIRED_VFS_VERSION;
 	vfs_iface_info.iface                      = NULL;
+
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
 		filestream_vfs_init(&vfs_iface_info);
 #endif
