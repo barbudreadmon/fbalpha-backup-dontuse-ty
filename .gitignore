@@ -4,4 +4,5 @@
 *.lib
 *.pdb
 *.exp
+*.manifest
 /nul
