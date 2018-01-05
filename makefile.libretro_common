@@ -109,14 +109,18 @@ ifeq ($(NO_NEOGEO), 1)
 endif
 
 ifeq ($(INCLUDE_CPLUSPLUS11_FILES), 1)
-	CXXFLAGS					+= -std=gnu++11
+	ifeq (,$(findstring msvc,$(platform)))
+		CXXFLAGS					+= -std=gnu++11
+	endif
 	ifeq ($(BUILD_X64_EXE), 1)
 		FBA_DEFINES				+= -DXBYAK_NO_OP_NAMES -DMIPS3_X64_DRC
 	else
 		MIPS3_X64_DYNAREC_DIR	:=
 	endif
 else
-	CXXFLAGS					+= -std=gnu++98
+	ifeq (,$(findstring msvc,$(platform)))
+		CXXFLAGS					+= -std=gnu++98
+	endif
 	ADSP2100_DIR				:=
 	MIDWAY_DIR 					:=
 	MIPS3_DIR 					:=
@@ -265,7 +269,9 @@ INCLUDE_DIRS := $(FBA_BURNER_DIR)/win32 \
 	$(FBA_GENERATED_DIR) \
 	$(FBA_LIB_DIR)
 
-CFLAGS += -std=gnu99
+ifeq (,$(findstring msvc,$(platform)))
+	CFLAGS += -std=gnu99
+endif
 
 # GIT HASH
 GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
