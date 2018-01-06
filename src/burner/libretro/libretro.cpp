@@ -30,6 +30,7 @@ static void set_controller_infos();
 static void set_environment();
 static bool apply_dipswitch_from_variables();
 
+static void init_audio_buffer(INT32 sample_rate, INT32 fps);
 static void init_macro_core_options();
 static void init_macro_input_descriptors();
 static void set_input_descriptors();
@@ -141,7 +142,7 @@ static ROMFIND g_find_list[1024];
 static unsigned g_rom_count;
 static unsigned fba_devices[5] = { RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC, RETROPAD_CLASSIC };
 
-#define AUDIO_SAMPLERATE 48000
+INT32 g_audio_samplerate = 48000;
 INT32 nAudSegLen = 0;
 
 static uint32_t *g_fba_frame;
@@ -175,6 +176,9 @@ static const struct retro_variable var_fba_aspect = { "fba-aspect", "Core-provid
 static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" };
 static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-input", "Diagnostic Input; None|Hold Start|Start + A + B|Hold Start + A + B|Start + L + R|Hold Start + L + R|Hold Select|Select + A + B|Hold Select + A + B|Select + L + R|Hold Select + L + R" };
 static const struct retro_variable var_fba_hiscores = { "fba-hiscores", "Hiscores; enabled|disabled" };
+static const struct retro_variable var_fba_samplerate = { "fba-samplerate", "Samplerate (need to quit retroarch); 48000|44100|22050|11025" };
+static const struct retro_variable var_fba_sample_interpolation = { "fba-sample-interpolation", "Sample Interpolation; 4-point 3rd order|2-point 1st order" };
+static const struct retro_variable var_fba_fm_interpolation = { "fba-fm-interpolation", "FM Interpolation; 4-point 3rd order|disabled" };
 
 // Neo Geo core options
 static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Force Neo Geo mode (if available); MVS|AES|UNIBIOS|DIPSWITCH" };
@@ -697,6 +701,9 @@ static void set_environment()
 	vars_systems.push_back(&var_fba_aspect);
 	vars_systems.push_back(&var_fba_cpu_speed_adjust);
 	vars_systems.push_back(&var_fba_hiscores);
+	vars_systems.push_back(&var_fba_samplerate);
+	vars_systems.push_back(&var_fba_sample_interpolation);
+	vars_systems.push_back(&var_fba_fm_interpolation);
 
 	if (pgi_diag)
 	{
@@ -1241,13 +1248,7 @@ static void check_variables(void)
       else
          nBurnCPUSpeedAdjust = 0x0100;
    }
-/*
-   if ((BurnDrvGetTextA(DRV_PARENT) && strcmp(BurnDrvGetTextA(DRV_PARENT), "karnovr") == 0) ||
-      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "karnovr") == 0)
-   ) {
-      nBurnCPUSpeedAdjust = 0x010a;
-   }
-*/
+
    var.key = var_fba_aspect.key;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
@@ -1344,6 +1345,43 @@ static void check_variables(void)
       else
          EnableHiscores = false;
    }
+
+   var.key = var_fba_samplerate.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+      if (strcmp(var.value, "48000") == 0)
+         g_audio_samplerate = 48000;
+      else if (strcmp(var.value, "44100") == 0)
+         g_audio_samplerate = 44100;
+      else if (strcmp(var.value, "22050") == 0)
+         g_audio_samplerate = 22050;
+      else if (strcmp(var.value, "11025") == 0)
+         g_audio_samplerate = 11025;
+      else
+         g_audio_samplerate = 48000;
+   }
+
+   var.key = var_fba_sample_interpolation.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+	   if (strcmp(var.value, "4-point 3rd order") == 0)
+	      nInterpolation = 3;
+	   else if (strcmp(var.value, "2-point 1st order") == 0)
+	      nInterpolation = 1;
+	   else
+	      nInterpolation = 3;
+	}
+
+   var.key = var_fba_fm_interpolation.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+	   if (strcmp(var.value, "4-point 3rd order") == 0)
+	      nFMInterpolation = 3;
+	   else if (strcmp(var.value, "disabled") == 0)
+	      nFMInterpolation = 0;
+	   else
+	      nFMInterpolation = 3;
+	}
 }
 
 void retro_run()
@@ -1591,10 +1629,8 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
       log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
       return false;
    }
-
-   nBurnSoundRate = AUDIO_SAMPLERATE;
-   nFMInterpolation = 3;
-   nInterpolation = 1;
+   
+   nBurnSoundRate = g_audio_samplerate;
    
    // CPS3 won't run without defining nBurnSoundLen
    init_audio_buffer(nBurnSoundRate, 6000);
