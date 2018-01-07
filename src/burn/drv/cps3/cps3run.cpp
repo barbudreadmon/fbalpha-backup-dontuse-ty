@@ -1066,6 +1066,7 @@ static INT32 Cps3Reset()
 	cps3_current_eeprom_read = 0;	
 	cps3SndReset();	
 	cps3_reset = 0;	
+	HiscoreReset();
 	return 0;
 }
 

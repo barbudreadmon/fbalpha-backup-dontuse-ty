@@ -851,8 +851,6 @@ void Reinitialise(void)
 static void ForceFrameStep()
 {
    nBurnLayer = 0xff;
-
-   pBurnSoundOut = g_audio_buf;
    
 #ifdef FBA_DEBUG
    nFramesEmulated++;
@@ -1619,6 +1617,7 @@ static void init_audio_buffer(INT32 sample_rate, INT32 fps)
    free(g_audio_buf);
    g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
    nBurnSoundLen = nAudSegLen;
+   pBurnSoundOut = g_audio_buf;
 }
 
 static bool fba_init(unsigned driver, const char *game_zip_name)
