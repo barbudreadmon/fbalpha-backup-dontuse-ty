@@ -32,6 +32,9 @@ static const char copyright_notice[] =
 /* ================================ INCLUDES ============================== */
 /* ======================================================================== */
 
+#include <stdint.h>
+#include <stddef.h>
+
 extern void m68040_fpu_op0(void);
 extern void m68040_fpu_op1(void);
 
@@ -983,7 +986,7 @@ unsigned int m68k_context_size()
 /* Used to calculate the context size minus the system-specific pointers, for savestates */
 unsigned int m68k_context_size_no_pointers()
 {
-	return (int)&m68ki_cpu.pointer_block_divider - (int)&m68ki_cpu;
+	return offsetof(struct _m68ki_cpu_core, pointer_block_divider);
 }
 
 unsigned int m68k_get_context(void* dst)
