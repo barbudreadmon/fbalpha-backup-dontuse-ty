@@ -782,8 +782,8 @@ static INT32 DrvInit()
 	filter_rc_set_route(3, 0.25, FLT_RC_PANNEDRIGHT);
 	filter_rc_set_route(4, 0.25, FLT_RC_PANNEDRIGHT);
 	filter_rc_set_route(5, 0.25, FLT_RC_PANNEDRIGHT);
-	filter_rc_set_route(6, 0.25, BURN_SND_ROUTE_LEFT ); // master out l
-	filter_rc_set_route(7, 0.25, BURN_SND_ROUTE_RIGHT); // master out r
+	filter_rc_set_route(6, 0.55, BURN_SND_ROUTE_LEFT ); // master out l
+	filter_rc_set_route(7, 0.55, BURN_SND_ROUTE_RIGHT); // master out r
 
 	GenericTilesInit();
 
