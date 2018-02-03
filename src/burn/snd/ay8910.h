@@ -13,7 +13,7 @@ struct AY8910interface
     read8_handler portBread[MAX_8910];
     write8_handler portAwrite[MAX_8910];
     write8_handler portBwrite[MAX_8910];
-	ALIGN_VAR(8) void (*handler[MAX_8910])(INT32 irq);	/* IRQ handler for the YM2203 */
+	void (*handler[MAX_8910])(INT32 irq);	/* IRQ handler for the YM2203 */
 };
 
 extern INT32 ay8910burgertime_mode;
