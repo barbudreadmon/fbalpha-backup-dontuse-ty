@@ -70,7 +70,7 @@ typedef struct _v25_state_t v25_state_t;
 struct _v25_state_t
 {
 	internalram ram;
-	offs_t	fetch_xor;
+	UINT32	fetch_xor;
 
 	UINT16	ip;
 
