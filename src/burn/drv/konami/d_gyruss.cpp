@@ -745,7 +745,7 @@ static INT32 DrvInit()
 	I8039SetIOWriteHandler(gyruss_i8039_write_port);
 
 	DACInit(0, 0, 1, DrvSyncDAC);
-	DACSetRoute(0, 0.15, BURN_SND_ROUTE_BOTH);
+	DACSetRoute(0, 0.35, BURN_SND_ROUTE_BOTH);
 
 	AY8910Init(0, 1789750, nBurnSoundRate, NULL, NULL, NULL, &AY8910_0_portBwrite);
 	AY8910Init(1, 1789750, nBurnSoundRate, NULL, NULL, NULL, &AY8910_1_portBwrite);
@@ -767,23 +767,23 @@ static INT32 DrvInit()
 	filter_rc_init(6, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1); // master out l
 	filter_rc_init(7, FLT_RC_LOWPASS, 1000, 5100, 0, CAP_P(0), 1); // master out r
 
-	filter_rc_set_src_gain(0, 0.70);
-	filter_rc_set_src_gain(1, 0.60);
-	filter_rc_set_src_gain(2, 0.45);
-	filter_rc_set_src_gain(3, 0.70);
-	filter_rc_set_src_gain(4, 0.60);
-	filter_rc_set_src_gain(5, 0.45);
-	filter_rc_set_src_gain(6, 1.00);
-	filter_rc_set_src_gain(7, 1.00);
+	filter_rc_set_src_gain(0, 0.22);
+	filter_rc_set_src_gain(1, 0.22);
+	filter_rc_set_src_gain(2, 0.22);
+	filter_rc_set_src_gain(3, 0.22);
+	filter_rc_set_src_gain(4, 0.22);
+	filter_rc_set_src_gain(5, 0.22);
+	filter_rc_set_src_gain(6, 0.64);
+	filter_rc_set_src_gain(7, 0.64);
 
-	filter_rc_set_route(0, 0.25, FLT_RC_PANNEDLEFT);
-	filter_rc_set_route(1, 0.25, FLT_RC_PANNEDLEFT);
-	filter_rc_set_route(2, 0.25, FLT_RC_PANNEDLEFT);
-	filter_rc_set_route(3, 0.25, FLT_RC_PANNEDRIGHT);
-	filter_rc_set_route(4, 0.25, FLT_RC_PANNEDRIGHT);
-	filter_rc_set_route(5, 0.25, FLT_RC_PANNEDRIGHT);
-	filter_rc_set_route(6, 0.55, BURN_SND_ROUTE_LEFT ); // master out l
-	filter_rc_set_route(7, 0.55, BURN_SND_ROUTE_RIGHT); // master out r
+	filter_rc_set_route(0, 1.00, FLT_RC_PANNEDLEFT);
+	filter_rc_set_route(1, 1.00, FLT_RC_PANNEDLEFT);
+	filter_rc_set_route(2, 1.00, FLT_RC_PANNEDLEFT);
+	filter_rc_set_route(3, 1.00, FLT_RC_PANNEDRIGHT);
+	filter_rc_set_route(4, 1.00, FLT_RC_PANNEDRIGHT);
+	filter_rc_set_route(5, 1.00, FLT_RC_PANNEDRIGHT);
+	filter_rc_set_route(6, 1.00, BURN_SND_ROUTE_LEFT ); // master out l
+	filter_rc_set_route(7, 1.00, BURN_SND_ROUTE_RIGHT); // master out r
 
 	GenericTilesInit();
 
