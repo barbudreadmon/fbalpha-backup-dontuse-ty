@@ -34,6 +34,12 @@ __extension__ typedef unsigned long long	UINT64;
 __extension__ typedef long long				INT64;
 #endif
 
+// Fix for MSVC' issues with offsetof
+#ifdef _MSC_VER
+#undef offsetof
+#define offsetof(s, m) ((size_t)&(((s *)0)->m))
+#endif
+
 // Macro to determine the size of a struct up to a member (included)
 #define STRUCT_SIZE_HELPER(type, member) offsetof(type, member) + sizeof(((type*)0)->member)
 
