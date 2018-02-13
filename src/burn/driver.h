@@ -38,7 +38,6 @@ __extension__ typedef long long				INT64;
 #ifdef _MSC_VER
 #undef offsetof
 #define offsetof(s, m) ((size_t)&(((s *)0)->m))
-//#define offsetof(s,m) ((size_t)(((s*)0)->m))
 #endif
 
 // Macro to determine the size of a struct up to a member (included)
