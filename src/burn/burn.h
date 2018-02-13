@@ -24,6 +24,13 @@ extern TCHAR szAppSamplesPath[MAX_PATH];
 extern TCHAR szAppBlendPath[MAX_PATH];
 extern TCHAR szAppEEPROMPath[MAX_PATH];
 
+// Fix for MSVC' issues with offsetof
+#ifdef _MSC_VER
+#undef offsetof
+#define offsetof(s, m) ((size_t)&(((s *)0)->m))
+//#define offsetof(s,m) ((size_t)(((s*)0)->m))
+#endif
+
 // Macro to determine the size of a struct up to a member (included)
 #define STRUCT_SIZE_HELPER(type, member) offsetof(type, member) + sizeof(((type*)0)->member)
 
