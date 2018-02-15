@@ -82,6 +82,13 @@ ifneq (,$(findstring unix,$(platform)))
       PLATFORM_DEFINES := -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -ffast-math
    endif
 
+   # Solaris
+   ifneq (,$(findstring SunOS,$(shell uname -s)))
+      CC := gcc
+      SHARED := -shared 
+      PLATFORM_DEFINES += -USS
+   endif
+
    # Generic ARM
    ifneq (,$(findstring armv,$(platform)))
       PLATFORM_DEFINES :=
