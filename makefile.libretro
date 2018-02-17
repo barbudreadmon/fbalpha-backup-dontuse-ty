@@ -75,6 +75,11 @@ ifneq (,$(findstring unix,$(platform)))
    SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(VERSION_SCRIPT)
    ENDIANNESS_DEFINES := -DLSB_FIRST
 
+   ifneq (,$(findstring SunOS,$(shell uname -s)))
+   CC := gcc
+   SHARED := -shared 
+   endif
+
    # Raspberry Pi
    ifneq (,$(findstring rpi2,$(platform)))
       PLATFORM_DEFINES := -marm -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -ffast-math
