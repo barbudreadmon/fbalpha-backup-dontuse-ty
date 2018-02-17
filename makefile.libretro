@@ -83,10 +83,9 @@ ifneq (,$(findstring unix,$(platform)))
    endif
 
    # Solaris
-   ifneq (,$(findstring SunOS,$(shell uname -s)))
+   ifneq (,$(findstring solaris,$(platform)))
       CC := gcc
-      SHARED := -shared 
-      PLATFORM_DEFINES += -USS
+      SHARED := -shared
    endif
 
    # Generic ARM
