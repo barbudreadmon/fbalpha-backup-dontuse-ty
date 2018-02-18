@@ -303,6 +303,8 @@ void m68k_pulse_reset(void);
 
 /* execute num_cycles worth of instructions.  returns number of cycles used */
 int m68k_execute(int num_cycles);
+int m68k_executeMD(int num_cycles);     /* slight modification for Megadrive */
+void m68k_megadrive_sr_checkint_mode(int onoff); /* enable check cycles before servicing interrupts in m68ki_set_sr() */
 
 /* These functions let you read/write/modify the number of cycles left to run
  * while m68k_execute() is running.
@@ -311,6 +313,7 @@ int m68k_execute(int num_cycles);
  */
 int m68k_cycles_run(void);              /* Number of cycles run so far */
 int m68k_cycles_remaining(void);        /* Number of cycles left */
+void m68k_cycles_remaining_set(int cycles); /* for megadrive, similar to modify_timeslice() but without changing initial cycles */
 void m68k_modify_timeslice(int cycles); /* Modify cycles left */
 void m68k_end_timeslice(void);          /* End timeslice now */
 void m68k_burn_until_irq(int enabled);  /* Sleep until INT (speedhacks) */
@@ -320,6 +323,7 @@ void m68k_burn_until_irq(int enabled);  /* Sleep until INT (speedhacks) */
  * Setting IRQ to 0 will clear an interrupt request.
  */
 void m68k_set_irq(unsigned int int_level);
+void m68k_set_irq_delay(unsigned int int_level);
 
 /* Set the virtual irq lines, where the highest level
  * active line is automatically selected.  If you use this function,

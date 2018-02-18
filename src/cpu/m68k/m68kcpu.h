@@ -933,6 +933,7 @@ extern const uint8    m68ki_ea_idx_cycle_table[];
 extern uint           m68ki_aerr_address;
 extern uint           m68ki_aerr_write_mode;
 extern uint           m68ki_aerr_fc;
+extern int            megadrive_sr_checkint_mode;
 
 /* Read data immediately after the program counter */
 INLINE uint m68ki_read_imm_16(void);
@@ -1536,7 +1537,12 @@ INLINE void m68ki_set_sr_noint_nosp(uint value)
 INLINE void m68ki_set_sr(uint value)
 {
 	m68ki_set_sr_noint(value);
-	m68ki_check_interrupts();
+	if (megadrive_sr_checkint_mode) {
+		if (GET_CYCLES() >= 0)
+			m68ki_check_interrupts();
+	} else {
+			m68ki_check_interrupts();
+	}
 }
 
 

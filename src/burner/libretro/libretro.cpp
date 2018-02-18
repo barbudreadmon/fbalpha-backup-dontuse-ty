@@ -3933,8 +3933,8 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 // Use GameInp2RetroInp for the actual mapping
 static INT32 GameInpAutoOne(struct GameInp* pgi, char* szi, char *szn)
 {
-	bool bPlayerInInfo = (toupper(szi[0]) == 'P' && szi[1] >= '1' && szi[1] <= '4'); // Because some of the older drivers don't use the standard input naming.
-	bool bPlayerInName = (szn[0] == 'P' && szn[1] >= '1' && szn[1] <= '4');
+	bool bPlayerInInfo = (toupper(szi[0]) == 'P' && szi[1] >= '1' && szi[1] <= '5'); // Because some of the older drivers don't use the standard input naming.
+	bool bPlayerInName = (szn[0] == 'P' && szn[1] >= '1' && szn[1] <= '5');
 
 	if (bPlayerInInfo || bPlayerInName) {
 		INT32 nPlayer = -1;

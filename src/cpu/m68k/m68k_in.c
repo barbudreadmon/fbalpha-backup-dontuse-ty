@@ -918,13 +918,14 @@ M68KMAKE_OP(abcd, 8, rr, .)
 	uint src = DY;
 	uint dst = *r_dst;
 	uint res = LOW_NIBBLE(src) + LOW_NIBBLE(dst) + XFLAG_AS_1();
-
-	FLAG_V = ~res; /* Undefined V behavior */
+	uint corf = 0;
 
 	if(res > 9)
-		res += 6;
+		corf = 6;
 	res += HIGH_NIBBLE(src) + HIGH_NIBBLE(dst);
-	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	FLAG_V = ~res; /* Undefined V behavior */
+	res += corf;
+	FLAG_X = FLAG_C = (res > 0x9f) << 8;
 	if(FLAG_C)
 		res -= 0xa0;
 
@@ -944,13 +945,14 @@ M68KMAKE_OP(abcd, 8, mm, ax7)
 	uint ea  = EA_A7_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(src) + LOW_NIBBLE(dst) + XFLAG_AS_1();
-
-	FLAG_V = ~res; /* Undefined V behavior */
+	uint corf = 0;
 
 	if(res > 9)
-		res += 6;
+		corf = 6;
 	res += HIGH_NIBBLE(src) + HIGH_NIBBLE(dst);
-	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	FLAG_V = ~res; /* Undefined V behavior */
+	res += corf;
+	FLAG_X = FLAG_C = (res > 0x9f) << 8;
 	if(FLAG_C)
 		res -= 0xa0;
 
@@ -970,13 +972,14 @@ M68KMAKE_OP(abcd, 8, mm, ay7)
 	uint ea  = EA_AX_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(src) + LOW_NIBBLE(dst) + XFLAG_AS_1();
-
-	FLAG_V = ~res; /* Undefined V behavior */
+	uint corf = 0;
 
 	if(res > 9)
-		res += 6;
+		corf = 6;
 	res += HIGH_NIBBLE(src) + HIGH_NIBBLE(dst);
-	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	FLAG_V = ~res; /* Undefined V behavior */
+	res += corf;
+	FLAG_X = FLAG_C = (res > 0x9f) << 8;
 	if(FLAG_C)
 		res -= 0xa0;
 
@@ -996,13 +999,14 @@ M68KMAKE_OP(abcd, 8, mm, axy7)
 	uint ea  = EA_A7_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(src) + LOW_NIBBLE(dst) + XFLAG_AS_1();
-
-	FLAG_V = ~res; /* Undefined V behavior */
+	uint corf = 0;
 
 	if(res > 9)
-		res += 6;
+		corf = 6;
 	res += HIGH_NIBBLE(src) + HIGH_NIBBLE(dst);
-	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	FLAG_V = ~res; /* Undefined V behavior */
+	res += corf;
+	FLAG_X = FLAG_C = (res > 0x9f) << 8;
 	if(FLAG_C)
 		res -= 0xa0;
 
@@ -1022,13 +1026,14 @@ M68KMAKE_OP(abcd, 8, mm, .)
 	uint ea  = EA_AX_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(src) + LOW_NIBBLE(dst) + XFLAG_AS_1();
-
-	FLAG_V = ~res; /* Undefined V behavior */
+	uint corf = 0;
 
 	if(res > 9)
-		res += 6;
+		corf = 6;
 	res += HIGH_NIBBLE(src) + HIGH_NIBBLE(dst);
-	FLAG_X = FLAG_C = (res > 0x99) << 8;
+	FLAG_V = ~res; /* Undefined V behavior */
+	res += corf;
+	FLAG_X = FLAG_C = (res > 0x9f) << 8;
 	if(FLAG_C)
 		res -= 0xa0;
 
@@ -2341,7 +2346,7 @@ M68KMAKE_OP(bchg, 8, r, .)
 M68KMAKE_OP(bchg, 32, s, d)
 {
 	uint* r_dst = &DY;
-	uint mask = 1 << (OPER_I_8() & 0x1f);
+	uint mask = ((uint)1 << (OPER_I_8() & 0x1f));
 
 	FLAG_Z = *r_dst & mask;
 	*r_dst ^= mask;
@@ -2383,7 +2388,7 @@ M68KMAKE_OP(bclr, 8, r, .)
 M68KMAKE_OP(bclr, 32, s, d)
 {
 	uint* r_dst = &DY;
-	uint mask = 1 << (OPER_I_8() & 0x1f);
+	uint mask = ((uint)1 << (OPER_I_8() & 0x1f));
 
 	FLAG_Z = *r_dst & mask;
 	*r_dst &= ~mask;
@@ -3191,7 +3196,7 @@ M68KMAKE_OP(bset, 8, r, .)
 M68KMAKE_OP(bset, 32, s, d)
 {
 	uint* r_dst = &DY;
-	uint mask = 1 << (OPER_I_8() & 0x1f);
+	uint mask = ((uint)1 << (OPER_I_8() & 0x1f));
 
 	FLAG_Z = *r_dst & mask;
 	*r_dst |= mask;
@@ -7790,19 +7795,19 @@ M68KMAKE_OP(mull, 32, ., .)
 M68KMAKE_OP(nbcd, 8, ., d)
 {
 	uint* r_dst = &DY;
-	uint dst = *r_dst;
-	uint res = MASK_OUT_ABOVE_8(0x9a - dst - XFLAG_AS_1());
+	uint dst = MASK_OUT_ABOVE_8(*r_dst);
+	uint res = -dst - XFLAG_AS_1();
 
-	if(res != 0x9a)
+	if(res != 0)
 	{
-		FLAG_V = ~res; /* Undefined V behavior */
+		FLAG_V = res; /* Undefined V behavior */
 
-		if((res & 0x0f) == 0xa)
-			res = (res & 0xf0) + 0x10;
+		if(((res|dst) & 0x0f) == 0)
+			res = (res & 0xf0) | 6;
 
-		res = MASK_OUT_ABOVE_8(res);
+		res = MASK_OUT_ABOVE_8(res + 0x9a);
 
-		FLAG_V &= res; /* Undefined V behavior part II */
+		FLAG_V &= ~res; /* Undefined V behavior part II */
 
 		*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
 
@@ -7824,18 +7829,18 @@ M68KMAKE_OP(nbcd, 8, ., .)
 {
 	uint ea = M68KMAKE_GET_EA_AY_8;
 	uint dst = m68ki_read_8(ea);
-	uint res = MASK_OUT_ABOVE_8(0x9a - dst - XFLAG_AS_1());
+	uint res = -dst - XFLAG_AS_1();
 
-	if(res != 0x9a)
+	if(res != 0)
 	{
-		FLAG_V = ~res; /* Undefined V behavior */
+		FLAG_V = res; /* Undefined V behavior */
 
-		if((res & 0x0f) == 0xa)
-			res = (res & 0xf0) + 0x10;
+		if(((res|dst) & 0x0f) == 0)
+			res = (res & 0xf0) | 6;
 
-		res = MASK_OUT_ABOVE_8(res);
+		res = MASK_OUT_ABOVE_8(res + 0x9a);
 
-		FLAG_V &= res; /* Undefined V behavior part II */
+		FLAG_V &= ~res; /* Undefined V behavior part II */
 
 		m68ki_write_8(ea, MASK_OUT_ABOVE_8(res));
 
@@ -9355,26 +9360,26 @@ M68KMAKE_OP(sbcd, 8, rr, .)
 	uint src = DY;
 	uint dst = *r_dst;
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
+	uint corf = 0;
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to assume cleared. */
-
-	if(res > 9)
-		res -= 6;
+	if(res > 0xf)
+		corf = 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
+	FLAG_V = res; /* Undefined V behavior */
+	if(res > 0xff)
 	{
 		res += 0xa0;
 		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
 	}
+	else if(res < corf)
+		FLAG_X = FLAG_C = CFLAG_SET;
 	else
 		FLAG_N = FLAG_X = FLAG_C = 0;
 
-	res = MASK_OUT_ABOVE_8(res);
+	res = MASK_OUT_ABOVE_8(res - corf);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= ~res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	*r_dst = MASK_OUT_BELOW_8(*r_dst) | res;
@@ -9387,26 +9392,26 @@ M68KMAKE_OP(sbcd, 8, mm, ax7)
 	uint ea  = EA_A7_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
+	uint corf = 0;
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
-
-	if(res > 9)
-		res -= 6;
+	if(res > 0xf)
+		corf = 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
+	FLAG_V = res; /* Undefined V behavior */
+	if(res > 0xff)
 	{
 		res += 0xa0;
 		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
 	}
+	else if(res < corf)
+		FLAG_X = FLAG_C = CFLAG_SET;
 	else
 		FLAG_N = FLAG_X = FLAG_C = 0;
 
-	res = MASK_OUT_ABOVE_8(res);
+	res = MASK_OUT_ABOVE_8(res - corf);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= ~res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
@@ -9419,26 +9424,26 @@ M68KMAKE_OP(sbcd, 8, mm, ay7)
 	uint ea  = EA_AX_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
+	uint corf = 0;
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
-
-	if(res > 9)
-		res -= 6;
+	if(res > 0xf)
+		corf = 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
+	FLAG_V = res; /* Undefined V behavior */
+	if(res > 0xff)
 	{
 		res += 0xa0;
 		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
 	}
+	else if(res < corf)
+		FLAG_X = FLAG_C = CFLAG_SET;
 	else
 		FLAG_N = FLAG_X = FLAG_C = 0;
 
-	res = MASK_OUT_ABOVE_8(res);
+	res = MASK_OUT_ABOVE_8(res - corf);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= ~res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
@@ -9451,26 +9456,26 @@ M68KMAKE_OP(sbcd, 8, mm, axy7)
 	uint ea  = EA_A7_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
+	uint corf = 0;
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
-
-	if(res > 9)
-		res -= 6;
+	if(res > 0xf)
+		corf = 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
+	FLAG_V = res; /* Undefined V behavior */
+	if(res > 0xff)
 	{
 		res += 0xa0;
 		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
 	}
+	else if(res < corf)
+		FLAG_X = FLAG_C = CFLAG_SET;
 	else
 		FLAG_N = FLAG_X = FLAG_C = 0;
 
-	res = MASK_OUT_ABOVE_8(res);
+	res = MASK_OUT_ABOVE_8(res - corf);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= ~res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
@@ -9483,26 +9488,26 @@ M68KMAKE_OP(sbcd, 8, mm, .)
 	uint ea  = EA_AX_PD_8();
 	uint dst = m68ki_read_8(ea);
 	uint res = LOW_NIBBLE(dst) - LOW_NIBBLE(src) - XFLAG_AS_1();
+	uint corf = 0;
 
-//  FLAG_V = ~res; /* Undefined V behavior */
-	FLAG_V = VFLAG_CLEAR;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to return zero. */
-
-	if(res > 9)
-		res -= 6;
+	if(res > 0xf)
+		corf = 6;
 	res += HIGH_NIBBLE(dst) - HIGH_NIBBLE(src);
-	if(res > 0x99)
+	FLAG_V = res; /* Undefined V behavior */
+	if(res > 0xff)
 	{
 		res += 0xa0;
 		FLAG_X = FLAG_C = CFLAG_SET;
-		FLAG_N = NFLAG_SET;	/* Undefined in Motorola's M68000PM/AD rev.1 and safer to follow carry. */
 	}
+	else if(res < corf)
+		FLAG_X = FLAG_C = CFLAG_SET;
 	else
 		FLAG_N = FLAG_X = FLAG_C = 0;
 
-	res = MASK_OUT_ABOVE_8(res);
+	res = MASK_OUT_ABOVE_8(res - corf);
 
-//  FLAG_V &= res; /* Undefined V behavior part II */
-//  FLAG_N = NFLAG_8(res); /* Undefined N behavior */
+	FLAG_V &= ~res; /* Undefined V behavior part II */
+	FLAG_N = NFLAG_8(res); /* Undefined N behavior */
 	FLAG_Z |= res;
 
 	m68ki_write_8(ea, res);
