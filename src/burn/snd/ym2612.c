@@ -146,6 +146,11 @@
 #include <stddef.h>
 #include <math.h>
 
+#if defined _MSC_VER
+ #define _USE_MATH_DEFINES
+ #include <cmath>
+#endif
+
 #ifndef __RAINE__
 #include "driver.h"		/* use M.A.M.E. */
 #include "state.h"
