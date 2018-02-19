@@ -146,10 +146,6 @@
 #include <stddef.h>
 #include <math.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327
-#endif
-
 #ifndef __RAINE__
 #include "driver.h"		/* use M.A.M.E. */
 #include "state.h"
