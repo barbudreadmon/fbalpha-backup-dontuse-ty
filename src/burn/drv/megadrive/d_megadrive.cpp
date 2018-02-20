@@ -41,6 +41,53 @@ static struct BurnInputInfo MegadriveInputList[] = {
 
 STDINPUTINFO(Megadrive)
 
+static struct BurnInputInfo Megadrive3pInputList[] = {
+	{"P1 Start",		BIT_DIGITAL,	MegadriveJoy1 +  7, "p1 start"  },
+	{"P1 Up",		BIT_DIGITAL,	MegadriveJoy1 +  0, "p1 up"     },
+	{"P1 Down",		BIT_DIGITAL,	MegadriveJoy1 +  1, "p1 down"   },
+	{"P1 Left",		BIT_DIGITAL,	MegadriveJoy1 +  2, "p1 left"   },
+	{"P1 Right",		BIT_DIGITAL,	MegadriveJoy1 +  3, "p1 right"  },
+	{"P1 Button A",		BIT_DIGITAL,	MegadriveJoy1 +  6, "p1 fire 1" },
+	{"P1 Button B",		BIT_DIGITAL,	MegadriveJoy1 +  4, "p1 fire 2" },
+	{"P1 Button C",		BIT_DIGITAL,	MegadriveJoy1 +  5, "p1 fire 3" },
+	{"P1 Button X",		BIT_DIGITAL,	MegadriveJoy1 + 10, "p1 fire 4" },
+	{"P1 Button Y",		BIT_DIGITAL,	MegadriveJoy1 +  9, "p1 fire 5" },
+	{"P1 Button Z",		BIT_DIGITAL,	MegadriveJoy1 +  8, "p1 fire 6" },
+	{"P1 Mode",		BIT_DIGITAL,	MegadriveJoy1 + 11, "p1 select" },
+
+	{"P2 Start",		BIT_DIGITAL,	MegadriveJoy2 +  7, "p2 start"  },
+	{"P2 Up",		BIT_DIGITAL,	MegadriveJoy2 +  0, "p2 up"     },
+	{"P2 Down",		BIT_DIGITAL,	MegadriveJoy2 +  1, "p2 down"   },
+	{"P2 Left",		BIT_DIGITAL,	MegadriveJoy2 +  2, "p2 left"   },
+	{"P2 Right",		BIT_DIGITAL,	MegadriveJoy2 +  3, "p2 right"  },
+	{"P2 Button A",		BIT_DIGITAL,	MegadriveJoy2 +  6, "p2 fire 1" },
+	{"P2 Button B",		BIT_DIGITAL,	MegadriveJoy2 +  4, "p2 fire 2" },
+	{"P2 Button C",		BIT_DIGITAL,	MegadriveJoy2 +  5, "p2 fire 3" },
+	{"P2 Button X",		BIT_DIGITAL,	MegadriveJoy2 + 10, "p2 fire 4" },
+	{"P2 Button Y",		BIT_DIGITAL,	MegadriveJoy2 +  9, "p2 fire 5" },
+	{"P2 Button Z",		BIT_DIGITAL,	MegadriveJoy2 +  8, "p2 fire 6" },
+	{"P2 Mode",		BIT_DIGITAL,	MegadriveJoy2 + 11, "p2 select" },
+
+	{"P3 Start",		BIT_DIGITAL,	MegadriveJoy3 +  7, "p3 start"  },
+	{"P3 Up",		BIT_DIGITAL,	MegadriveJoy3 +  0, "p3 up"     },
+	{"P3 Down",		BIT_DIGITAL,	MegadriveJoy3 +  1, "p3 down"   },
+	{"P3 Left",		BIT_DIGITAL,	MegadriveJoy3 +  2, "p3 left"   },
+	{"P3 Right",		BIT_DIGITAL,	MegadriveJoy3 +  3, "p3 right"  },
+	{"P3 Button A",		BIT_DIGITAL,	MegadriveJoy3 +  6, "p3 fire 1" },
+	{"P3 Button B",		BIT_DIGITAL,	MegadriveJoy3 +  4, "p3 fire 2" },
+	{"P3 Button C",		BIT_DIGITAL,	MegadriveJoy3 +  5, "p3 fire 3" },
+	{"P3 Button X",		BIT_DIGITAL,	MegadriveJoy3 + 10, "p3 fire 4" },
+	{"P3 Button Y",		BIT_DIGITAL,	MegadriveJoy3 +  9, "p3 fire 5" },
+	{"P3 Button Z",		BIT_DIGITAL,	MegadriveJoy3 +  8, "p3 fire 6" },
+	{"P3 Mode",		BIT_DIGITAL,	MegadriveJoy3 + 11, "p3 select" },
+
+	{"Reset",		BIT_DIGITAL,	&MegadriveReset,     "reset"    },
+	{"Dip A",		BIT_DIPSWITCH,	MegadriveDIP  + 0,   "dip"      },
+	{"Dip B",		BIT_DIPSWITCH,	MegadriveDIP  + 1,   "dip"      },
+};
+
+STDINPUTINFO(Megadrive3p)
+
 static struct BurnInputInfo Megadrive4pInputList[] = {
 	{"P1 Start",		BIT_DIGITAL,	MegadriveJoy1 +  7, "p1 start"  },
 	{"P1 Up",		BIT_DIGITAL,	MegadriveJoy1 +  0, "p1 up"     },
@@ -210,6 +257,30 @@ static struct BurnDIPInfo UNTSCRegionDIPList[] = {
 	{0x19,	0xff,  0xff,	0x20|0x80,   NULL},
 };
 
+static struct BurnDIPInfo Megadrive3pDIPList[] = {
+	{0x26,	0xff, 0xff, 0x01,  NULL               },
+
+	{0,	0xfe, 0,       5, "Hardware"          },
+	{0x25,	0x01, 0xc1, 0x01, "Auto Detect"       },
+	{0x25,	0x01, 0xc1, 0x00, "Japan NTSC"        },
+	{0x25,	0x01, 0xc1, 0x40, "Japan PAL"         },
+	{0x25,	0x01, 0xc1, 0x80, "USA"               },
+	{0x25,	0x01, 0xc1, 0xc0, "Europe"            },
+#if 0
+	{0,	0xfe, 0,       2, "CD-ROM"            },
+	{0x25,	0x01, 0x20, 0x20, "No"                },
+	{0x25,	0x01, 0x20, 0x00, "Yes"               },
+#endif
+	{0,	0xfe, 0,       3, "32-Col Mode Draw"  },
+	{0x26,	0x01, 0x03, 0x00, "No Change"         },
+	{0x26,	0x01, 0x03, 0x01, "Center"            },
+	{0x26,	0x01, 0x03, 0x02, "Inner Zoom"        },
+};
+
+static struct BurnDIPInfo AutoDetectRegion3pDIPList[] = {
+	{0x25,	0xff,  0xff,	0x21,   NULL},
+};
+
 static struct BurnDIPInfo Megadrive4pDIPList[] = {
 	{0x32,	0xff, 0xff, 0x01,  NULL               },
 
@@ -262,6 +333,7 @@ STDDIPINFOEXT(Megadrive, AutoDetectRegion, Megadrive)
 STDDIPINFOEXT(MegadrivePAL, PALRegion, Megadrive)
 STDDIPINFOEXT(MegadriveJNTSC, JNTSCRegion, Megadrive)
 STDDIPINFOEXT(MegadriveUSANTSC, UNTSCRegion, Megadrive)
+STDDIPINFOEXT(Megadrive3p, AutoDetectRegion3p, Megadrive3p)
 STDDIPINFOEXT(Megadrive4p, AutoDetectRegion4p, Megadrive4p)
 STDDIPINFOEXT(Megadrive5p, AutoDetectRegion5p, Megadrive5p)
 
@@ -10042,8 +10114,8 @@ struct BurnDriver BurnDrvmd_dragon = {
 	"md_dragon", NULL, NULL, NULL, "1993",
 	"Dragon - The Bruce Lee Story (Euro)\0", NULL, "Virgin Interactive", "Sega Megadrive",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY, 4, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_TEAMPLAYER, GBF_MISC, 0,
-	MegadriveGetZipName, md_dragonRomInfo, md_dragonRomName, NULL, NULL, Megadrive4pInputInfo, Megadrive4pDIPInfo,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 3, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_TEAMPLAYER, GBF_MISC, 0,
+	MegadriveGetZipName, md_dragonRomInfo, md_dragonRomName, NULL, NULL, Megadrive3pInputInfo, Megadrive3pDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
@@ -10060,8 +10132,8 @@ struct BurnDriver BurnDrvmd_dragonu = {
 	"md_dragonu", "md_dragon", NULL, NULL, "1994",
 	"Dragon - The Bruce Lee Story (USA)\0", NULL, "Acclaim Entertainment", "Sega Megadrive",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_CLONE, 4, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_TEAMPLAYER, GBF_MISC, 0,
-	MegadriveGetZipName, md_dragonuRomInfo, md_dragonuRomName, NULL, NULL, Megadrive4pInputInfo, Megadrive4pDIPInfo,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_CLONE, 3, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_TEAMPLAYER, GBF_MISC, 0,
+	MegadriveGetZipName, md_dragonuRomInfo, md_dragonuRomName, NULL, NULL, Megadrive3pInputInfo, Megadrive3pDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
