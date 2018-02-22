@@ -19760,10 +19760,10 @@ STD_ROM_FN(md_mk3)
 
 struct BurnDriver BurnDrvmd_mk3 = {
 	"md_mk3", NULL, NULL, NULL, "1995",
-	"Mortal Kombat 3 (Euro)\0", NULL, "Acclaim Entertainment", "Sega Megadrive",
+	"Mortal Kombat 3 (Euro)\0", "Press A+C+Start for 4P mode.", "Acclaim Entertainment", "Sega Megadrive",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
-	MegadriveGetZipName, md_mk3RomInfo, md_mk3RomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 4, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_TEAMPLAYER, GBF_MISC, 0,
+	MegadriveGetZipName, md_mk3RomInfo, md_mk3RomName, NULL, NULL, Megadrive4pInputInfo, Megadrive4pDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
@@ -19778,10 +19778,10 @@ STD_ROM_FN(md_mk3u)
 
 struct BurnDriver BurnDrvmd_mk3u = {
 	"md_mk3u", "md_mk3", NULL, NULL, "1995",
-	"Mortal Kombat 3 (USA)\0", NULL, "Williams", "Sega Megadrive",
+	"Mortal Kombat 3 (USA)\0", "Press A+C+Start for 4P mode.", "Williams", "Sega Megadrive",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_CLONE, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
-	MegadriveGetZipName, md_mk3uRomInfo, md_mk3uRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_CLONE, 4, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_TEAMPLAYER, GBF_MISC, 0,
+	MegadriveGetZipName, md_mk3uRomInfo, md_mk3uRomName, NULL, NULL, Megadrive4pInputInfo, Megadrive4pDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
