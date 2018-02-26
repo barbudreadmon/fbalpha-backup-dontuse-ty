@@ -4486,6 +4486,25 @@ struct BurnDriver BurnDrvmd_btlmanid = {
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
 
+// Battle Mania Daiginjou (Hack, English)
+// Source : http://www.romhacking.net/translations/1075/
+static struct BurnRomInfo md_btlmanideRomDesc[] = {
+	{ "battle mania daiginjou (english translation).bin", 0x100000, 0xfab20c39, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_btlmanide)
+STD_ROM_FN(md_btlmanide)
+
+struct BurnDriver BurnDrvmd_btlmanide = {
+	"md_btlmanide", "md_btlmanid", NULL, NULL, "2006",
+	"Battle Mania Daiginjou (Hack, English)\0", NULL, "Vic Tokai", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_btlmanideRomInfo, md_btlmanideRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
 // Battle Squadron (Euro, USA)
 static struct BurnRomInfo md_battlesqRomDesc[] = {
 	{ "battle squadron (euro, usa).bin", 0x080000, 0x0feaa8bf, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
@@ -10606,6 +10625,25 @@ struct BurnDriver BurnDrvmd_dheadp1 = {
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
 
+// Dynamite Headdy (Hack, English)
+// Source : http://www.romhacking.net/translations/1113/
+static struct BurnRomInfo md_dheadeRomDesc[] = {
+	{ "dynamite headdy (english translation).bin", 0x200000, 0x003e54e5, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_dheade)
+STD_ROM_FN(md_dheade)
+
+struct BurnDriver BurnDrvmd_dheade = {
+	"md_dheade", "md_dhead", NULL, NULL, "2007",
+	"Dynamite Headdy (Hack, English)\0", NULL, "Sega", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_CLONE, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_dheadeRomInfo, md_dheadeRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
 // EA Hockey (Euro)
 static struct BurnRomInfo md_eahockeyRomDesc[] = {
 	{ "ea hockey (euro).bin", 0x080000, 0x9bfc279c, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
@@ -13518,6 +13556,25 @@ struct BurnDriver BurnDrvmd_gleylanc = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
 	MegadriveGetZipName, md_gleylancRomInfo, md_gleylancRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
+// GleyLancer (Hack, English)
+// Source : http://www.romhacking.net/translations/1173/
+static struct BurnRomInfo md_gleylanceRomDesc[] = {
+	{ "advanced busterhawk gleylancer (english translation).bin", 0x100000, 0x1b744d15, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_gleylance)
+STD_ROM_FN(md_gleylance)
+
+struct BurnDriver BurnDrvmd_gleylance = {
+	"md_gleylance", "md_gleylanc", NULL, NULL, "2007",
+	"GleyLancer (Hack, English)\0", NULL, "NCS", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_gleylanceRomInfo, md_gleylanceRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
@@ -16456,6 +16513,25 @@ struct BurnDriver BurnDrvmd_kingcol = {
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
 
+// Tougiou King Colossus (Hack, English)
+// Source : http://www.romhacking.net/translations/914/
+static struct BurnRomInfo md_kingcoleRomDesc[] = {
+	{ "tougiou king colossus (english translation).bin", 0x100000, 0x016afd40, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_kingcole)
+STD_ROM_FN(md_kingcole)
+
+struct BurnDriver BurnDrvmd_kingcole = {
+	"md_kingcole", "md_kingcol", NULL, NULL, "2006",
+	"Tougiou King Colossus (Hack, English)\0", NULL, "Sega", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_PCB_SEGA_SRAM, GBF_MISC, 0,
+	MegadriveGetZipName, md_kingcoleRomInfo, md_kingcoleRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
 // King of the Monsters (Euro)
 static struct BurnRomInfo md_kotmRomDesc[] = {
 	{ "king of the monsters (euro).bin", 0x100000, 0x7a94fd49, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
@@ -16902,6 +16978,25 @@ struct BurnDriver BurnDrvmd_langris2b = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_CLONE, 2, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_PCB_SEGA_SRAM, GBF_MISC, 0,
 	MegadriveGetZipName, md_langris2bRomInfo, md_langris2bRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
+// Langrisser II (Hack, English)
+// Source : http://www.romhacking.net/translations/1314/
+static struct BurnRomInfo md_langris2eRomDesc[] = {
+	{ "langrisser ii (english translation).bin", 0x200000, 0xe8f28522, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_langris2e)
+STD_ROM_FN(md_langris2e)
+
+struct BurnDriver BurnDrvmd_langris2e = {
+	"md_langris2e", "md_langris2", NULL, NULL, "2011",
+	"Langrisser II (Hack, English)\0", NULL, "NCS", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_PCB_SEGA_SRAM, GBF_MISC, 0,
+	MegadriveGetZipName, md_langris2eRomInfo, md_langris2eRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
@@ -24790,6 +24885,25 @@ struct BurnDriver BurnDrvmd_pulseman = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
 	MegadriveGetZipName, md_pulsemanRomInfo, md_pulsemanRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
+// Pulseman (Hack, English)
+// Source : http://www.romhacking.net/translations/1099/
+static struct BurnRomInfo md_pulsemaneRomDesc[] = {
+	{ "pulseman (english translation).bin", 0x200000, 0xa8e0de99, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_pulsemane)
+STD_ROM_FN(md_pulsemane)
+
+struct BurnDriver BurnDrvmd_pulsemane = {
+	"md_pulsemane", "md_pulseman", NULL, NULL, "2007",
+	"Pulseman (Hack, English)\0", NULL, "Sega", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_pulsemaneRomInfo, md_pulsemaneRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
@@ -34083,6 +34197,25 @@ struct BurnDriver BurnDrvmd_twinklet = {
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
 
+// Twinkle Tale (Hack, English)
+// Source : http://www.romhacking.net/translations/1103/
+static struct BurnRomInfo md_twinkleteRomDesc[] = {
+	{ "twinkle tale (english translation).bin", 0x100000, 0x0c43b66b, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_twinklete)
+STD_ROM_FN(md_twinklete)
+
+struct BurnDriver BurnDrvmd_twinklete = {
+	"md_twinklete", "md_twinklet", NULL, NULL, "2007",
+	"Twinkle Tale (Hack, English)\0", NULL, "Toyo Records", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_twinkleteRomInfo, md_twinkleteRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
 // Twin Hawk (Euro) ~ Daisenpuu (Jpn)
 static struct BurnRomInfo md_twinhawkRomDesc[] = {
 	{ "twin hawk -- daisenpuu (euro, jpn).bin", 0x080000, 0xa2ec8c67, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
@@ -34367,6 +34500,25 @@ struct BurnDriver BurnDrvmd_undead = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
 	MegadriveGetZipName, md_undeadRomInfo, md_undeadRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
+	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
+	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+};
+
+// Undead Line (Hack, English)
+// Source : http://www.romhacking.net/translations/1223/
+static struct BurnRomInfo md_undeadeRomDesc[] = {
+	{ "undead line (english translation).bin", 0x100000, 0x53b9e72f, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
+};
+
+STD_ROM_PICK(md_undeade)
+STD_ROM_FN(md_undeade)
+
+struct BurnDriver BurnDrvmd_undeade = {
+	"md_undeade", "md_undead", NULL, NULL, "2007",
+	"Undead Line (Hack, English)\0", NULL, "Palsoft", "Sega Megadrive",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
+	MegadriveGetZipName, md_undeadeRomInfo, md_undeadeRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
 	MegadriveInit, MegadriveExit, MegadriveFrame, MegadriveDraw, MegadriveScan,
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
