@@ -1,6 +1,6 @@
 This list contains all games supported by FB Alpha.
 
-10697 games supported in total; X = excluded from build; D = included in debug build only; NW = not working
+10705 games supported in total; X = excluded from build; D = included in debug build only; NW = not working
 
   name		  status  full name						  parent	  year	  company	  hardware	  remarks
 +---------------+-------+-------------------------------------------------------+---------------+-------+---------------+---------------+---------------------------------------+
@@ -170,8 +170,8 @@ This list contains all games supported by FB Alpha.
 | aeroboto	|  	| Aeroboto						| formatz	| 1984	| Jaleco (Willia| Miscellaneous	| 					|
 | aburner	|  	| After Burner						| aburner2	| 1987	| Sega		| X-Board	| 					|
 | sms_aburner	|  	| After Burner (World)					| 		| 1987	| Sega		| Sega Master Sy| 					|
-| pce_aburner2	|  	| After Burner II					| 		| 1990	| NEC Avenue	| PC Engine	| 					|
 | aburner2	|  	| After Burner II					| 		| 1987	| Sega		| X-Board	| 					|
+| pce_aburner2	|  	| After Burner II					| 		| 1990	| NEC Avenue	| PC Engine	| 					|
 | md_aburner2	|  	| After Burner II (Euro, USA)				| 		| 1990	| Sega		| Sega Megadrive| 					|
 | aburner2g	|  	| After Burner II (German)				| aburner2	| 1987	| Sega		| X-Board	| 					|
 | md_aburner2j	|  	| After Burner II (Jpn)					| md_aburner2	| 1990	| Denpa Shinbuns| Sega Megadrive| 					|
@@ -502,16 +502,16 @@ This list contains all games supported by FB Alpha.
 | asterixeac	|  	| Asterix (ver EAC)					| asterix	| 1992	| Konami	| GX068		| 					|
 | asterix	|  	| Asterix (ver EAD)					| 		| 1992	| Konami	| GX068		| 					|
 | asterixj	|  	| Asterix (ver JAD)					| asterix	| 1992	| Konami	| GX068		| 					|
-| gg_astergre	|  	| Asterix and the Great Rescue (Euro)			| 		| 1993	| Sega		| Sega Game Gear| 					|
 | md_astergre	|  	| Asterix and the Great Rescue (Euro)			| 		| 1993	| Sega		| Sega Megadrive| 					|
+| gg_astergre	|  	| Asterix and the Great Rescue (Euro)			| 		| 1993	| Sega		| Sega Game Gear| 					|
 | sms_astergre	|  	| Asterix and the Great Rescue (Euro, Bra)		| 		| 1993	| Sega		| Sega Master Sy| 					|
 | gg_astergrep3	|  	| Asterix and the Great Rescue (Prototype, 19940125)	| gg_astergre	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_astergrep5	|  	| Asterix and the Great Rescue (Prototype, 19940216)	| gg_astergre	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_astergrep4	|  	| Asterix and the Great Rescue (Prototype, 19940222)	| gg_astergre	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_astergrep2	|  	| Asterix and the Great Rescue (Prototype, 19940313)	| gg_astergre	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_astergrep1	|  	| Asterix and the Great Rescue (Prototype, 19940315)	| gg_astergre	| 1994	| Sega		| Sega Game Gear| 					|
-| gg_astergreu	|  	| Asterix and the Great Rescue (USA)			| gg_astergre	| 1994	| Sega		| Sega Game Gear| 					|
 | md_astergreu	|  	| Asterix and the Great Rescue (USA)			| md_astergre	| 1994	| Sega		| Sega Megadrive| 					|
+| gg_astergreu	|  	| Asterix and the Great Rescue (USA)			| gg_astergre	| 1994	| Sega		| Sega Game Gear| 					|
 | md_asterpg	|  	| Asterix and the Power of the Gods (Euro)		| 		| 1995	| Sega		| Sega Megadrive| 					|
 | md_asterpgp	|  	| Asterix and the Power of the Gods (Euro, Prototype)	| md_asterpg	| 1995	| Sega		| Sega Megadrive| 					|
 | gg_astermis	|  	| Asterix and the Secret Mission (Euro)			| 		| 1993	| Sega		| Sega Game Gear| 					|
@@ -621,8 +621,8 @@ This list contains all games supported by FB Alpha.
 | msx_backtof	|  	| Back to the Future (Jpn)				| 		| 1986	| Pony Canyon	| MSX		| 					|
 | msx_backtofa	|  	| Back to the Future (Jpn, Alt)				| msx_backtof	| 1986	| Pony Canyon	| MSX		| 					|
 | sms_backtof2	|  	| Back to the Future Part II (Euro, Bra)		| 		| 1990	| Image Works	| Sega Master Sy| 					|
-| sms_backtof3	|  	| Back to the Future Part III (Euro)			| 		| 1992	| Image Works	| Sega Master Sy| 					|
 | md_backtof3	|  	| Back to the Future Part III (Euro)			| 		| 1991	| Imageworks	| Sega Megadrive| 					|
+| sms_backtof3	|  	| Back to the Future Part III (Euro)			| 		| 1992	| Image Works	| Sega Master Sy| 					|
 | md_backtof3u	|  	| Back to the Future Part III (USA)			| md_backtof3	| 1991	| Arena Entertai| Sega Megadrive| 					|
 | backfire	|  	| Backfire! (set 1)					| 		| 1995	| Data East Corp| DECO IC16	| 					|
 | backfirea	| D NW	| Backfire! (set 2)					| backfire	| 1995	| Data East Corp| DECO IC16	| Set inputs to \"Joystick\" in test mod|
@@ -646,8 +646,8 @@ This list contains all games supported by FB Alpha.
 | ballboy	|  	| Ball Boy						| snowbro3	| 2003	| bootleg	| Kaneko Pandora| 					|
 | md_balljack	|  	| Ball Jacks (Euro, Jpn)				| 		| 1993	| Namco		| Sega Megadrive| 					|
 | msx_ballblzr	|  	| Ballblazer						| 		| 1988	| Pony Canyon	| MSX		| Keyboard control only.		|
-| tg_ballistx	|  	| Ballistix						| 		| 1992	| NEC		| TurboGrafx 16	| 					|
 | pce_ballistx	|  	| Ballistix						| 		| 1991	| Coconuts Japan| PC Engine	| 					|
+| tg_ballistx	|  	| Ballistix						| 		| 1992	| NEC		| TurboGrafx 16	| 					|
 | ballbros	|  	| Balloon Brothers					| 		| 1992	| East Technolog| Taito-X	| 					|
 | msx_balloonpunch|  	| Balloon Punch						| 		| 1989	| Satico	| MSX		| 					|
 | md_ballz3d	|  	| Ballz 3D (Euro, USA)					| 		| 1994	| Accolade	| Sega Megadrive| 					|
@@ -692,8 +692,8 @@ This list contains all games supported by FB Alpha.
 | md_bassmpro	|  	| BASS Masters Classic - Pro Edition (USA)		| 		| 1996	| THQ		| Sega Megadrive| 					|
 | pce_batman	|  	| Batman						| 		| 1990	| Sunsoft	| PC Engine	| 					|
 | md_batman	|  	| Batman (Euro)						| 		| 1990	| Sega		| Sega Megadrive| 					|
-| msx_batman	|  	| Batman (Jpn)						| 		| 1987	| Pack-In-Video	| MSX		| 					|
 | md_batmanj	|  	| Batman (Jpn)						| md_batman	| 1990	| Sunsoft	| Sega Megadrive| 					|
+| msx_batman	|  	| Batman (Jpn)						| 		| 1987	| Pack-In-Video	| MSX		| 					|
 | md_batmanu	|  	| Batman (USA)						| md_batman	| 1990	| Sunsoft	| Sega Megadrive| 					|
 | msx_batman10	|  	| Batman (v1.0 special s/l rom)				| msx_batman	| 1987	| Ocean		| MSX		| 					|
 | md_batmanrj	|  	| Batman - Revenge of the Joker (USA)			| 		| 1992	| Sunsoft	| Sega Megadrive| 					|
@@ -702,8 +702,8 @@ This list contains all games supported by FB Alpha.
 | md_batmanf	|  	| Batman Forever (World)				| 		| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | batman2	|  	| Batman Part 2						| phoenix	| 1981	| bootleg	| Galaxian	| 					|
 | sms_batmanrn	|  	| Batman Returns (Euro, Bra)				| 		| 1993	| Sega		| Sega Master Sy| 					|
-| md_batmanrn	|  	| Batman Returns (World)				| 		| 1992	| Sega		| Sega Megadrive| 					|
 | gg_batmanrn	|  	| Batman Returns (World)				| 		| 1992	| Sega		| Sega Game Gear| 					|
+| md_batmanrn	|  	| Batman Returns (World)				| 		| 1992	| Sega		| Sega Megadrive| 					|
 | batsugunb	|  	| Batsugun (Korean PCB)					| batsugun	| 1993	| Toaplan	| Dual Toaplan G| 					|
 | batsugun	|  	| Batsugun (set 1)					| 		| 1993	| Toaplan	| Dual Toaplan G| 					|
 | batsuguna	|  	| Batsugun (set 2)					| batsugun	| 1993	| Toaplan	| Dual Toaplan G| 					|
@@ -918,8 +918,8 @@ This list contains all games supported by FB Alpha.
 | blockcar	|  	| Block Carnival / Thunder & Lightning 2		| 		| 1992	| Visco		| Seta		| 					|
 | blockgal	|  	| Block Gal (MC-8123B, 317-0029)			| 		| 1987	| Sega / Vic Tok| System 1	| 					|
 | blockhl	|  	| Block Hole						| 		| 1989	| Konami	| GX973		| 					|
-| msx_blockhol	|  	| Block Hole (Kor)					| 		| 1990	| Zemina	| MSX		| 					|
 | sms_blockhol	|  	| Block Hole (Kor)					| 		| 1990	| Zemina	| Sega Master Sy| 					|
+| msx_blockhol	|  	| Block Hole (Kor)					| 		| 1990	| Zemina	| MSX		| 					|
 | blockoutj	|  	| Block Out (Japan)					| blockout	| 1989	| Technos + Cali| Miscellaneous	| 					|
 | blockout	|  	| Block Out (set 1)					| 		| 1989	| Technos + Cali| Miscellaneous	| 					|
 | blockout2	|  	| Block Out (set 2)					| blockout	| 1989	| Technos + Cali| Miscellaneous	| 					|
@@ -994,10 +994,10 @@ This list contains all games supported by FB Alpha.
 | bbmanwja	|  	| Bomber Man World (Japan, revised sound hardware)	| bbmanw	| 1992	| Irem		| M90		| 					|
 | bbmanw	|  	| Bomber Man World / New Dyna Blaster - Global Quest	| 		| 1992	| Irem		| M90		| 					|
 | sms_bombraid	|  	| Bomber Raid (World)					| 		| 1989	| Sega		| Sega Master Sy| 					|
-| pce_bombman	|  	| Bomberman						| 		| 1990	| Hudson	| PC Engine	| 					|
 | tg_bombman	|  	| Bomberman						| 		| 1991	| NEC		| TurboGrafx 16	| 					|
-| tg_bombmn93	|  	| Bomberman '93						| 		| 1990	| Hudson Soft	| TurboGrafx 16	| 					|
+| pce_bombman	|  	| Bomberman						| 		| 1990	| Hudson	| PC Engine	| 					|
 | pce_bombmn93	|  	| Bomberman '93						| 		| 1992	| Hudson	| PC Engine	| 					|
+| tg_bombmn93	|  	| Bomberman '93						| 		| 1990	| Hudson Soft	| TurboGrafx 16	| 					|
 | pce_bombmn93s	|  	| Bomberman '93 (Special Version)			| pce_bombmn93	| 1992	| Hudson	| PC Engine	| 					|
 | pce_bombmn94	|  	| Bomberman '94						| 		| 1993	| Hudson	| PC Engine	| 					|
 | pce_bombmnub	|  	| Bomberman - Users Battle				| 		| 19??	| Hudson	| PC Engine	| 					|
@@ -1069,8 +1069,8 @@ This list contains all games supported by FB Alpha.
 | sms_dracula	|  	| Bram Stoker's Dracula (Euro)				| 		| 1993	| Sony Imagesoft| Sega Master Sy| 					|
 | gg_dracula	|  	| Bram Stoker's Dracula (Euro)				| 		| 1994	| Sony Imagesoft| Sega Game Gear| 					|
 | md_dracula	|  	| Bram Stoker's Dracula (Euro)				| 		| 1993	| Sony Imagesoft| Sega Megadrive| 					|
-| gg_draculau	|  	| Bram Stoker's Dracula (USA)				| gg_dracula	| 1992	| Sony Imagesoft| Sega Game Gear| 					|
 | md_draculau	|  	| Bram Stoker's Dracula (USA)				| md_dracula	| 1993	| Sony Imagesoft| Sega Megadrive| 					|
+| gg_draculau	|  	| Bram Stoker's Dracula (USA)				| gg_dracula	| 1992	| Sony Imagesoft| Sega Game Gear| 					|
 | tg_bravoman	|  	| Bravoman						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | pce_breakin	|  	| Break In						| 		| 1989	| Naxat		| PC Engine	| 					|
 | msx_breakinj	|  	| Break In (Jpn)					| 		| 1987	| Jaleco	| MSX		| 					|
@@ -1192,8 +1192,8 @@ This list contains all games supported by FB Alpha.
 | msx_buzzoff	|  	| Buzz Off! (Euro)					| 		| 1984	| Electric Softw| MSX		| 					|
 | buzzard	|  	| Buzzard						| gyrodine	| 1984	| Crux		| Kyugo		| 					|
 | bygone	|  	| Bygone						| 		| 1985	| Taito Corporat| Miscellaneous	| Imperfect sound			|
-| msx_cso	|  	| C_So! (Jpn)						| 		| 1985	| Pony Canyon	| MSX		| 					|
 | sg1k_cso	|  	| C_So! (Jpn)						| 		| 1985	| Sega		| Sega SG-1000	| 					|
+| msx_cso	|  	| C_So! (Jpn)						| 		| 1985	| Pony Canyon	| MSX		| 					|
 | sms_cso	|  	| C_So! (Kor)						| 		| 198?	| Joy Soft	| Sega Master Sy| 					|
 | msx_csok	|  	| C_So! (Kor)						| msx_cso	| 198?	| Zemina	| MSX		| 					|
 | cabala	|  	| Cabal (korea?, Joystick)				| cabal		| 1988	| TAD Corporatio| Miscellaneous	| 					|
@@ -1221,8 +1221,8 @@ This list contains all games supported by FB Alpha.
 | md_cadash	|  	| Cadash (USA, Asia, Kor)				| 		| 1992	| Taito		| Sega Megadrive| 					|
 | cadash	|  	| Cadash (World)					| 		| 1989	| Taito Corporat| Taito Misc	| 					|
 | cadashp	|  	| Cadash (World, prototype)				| cadash	| 1989	| Taito Corporat| Taito Misc	| 					|
-| pce_cadash	|  	| Cadash						| 		| 1991	| Taito		| PC Engine	| Bad graphics				|
 | tg_cadash	|  	| Cadash						| 		| 1991	| Working Design| TurboGrafx 16	| Bad graphics				|
+| pce_cadash	|  	| Cadash						| 		| 1991	| Taito		| PC Engine	| Bad graphics				|
 | dino		|  	| Cadillacs & Dinosaurs (930201 etc)			| 		| 1993	| Capcom	| CPS1 / QSound	| 					|
 | dinou		|  	| Cadillacs & Dinosaurs (930201 USA)			| dino		| 1993	| Capcom	| CPS1 / QSound	| 					|
 | dinoa		|  	| Cadillacs & Dinosaurs (930223 Asia TW)		| dino		| 1993	| Capcom	| CPS1 / QSound	| 					|
@@ -1364,8 +1364,8 @@ This list contains all games supported by FB Alpha.
 | sg1k_chackn	|  	| Chack'n Pop (Jpn)					| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | msx_chackna	|  	| Chack'n Pop (Jpn, Alt)				| msx_chackn	| 1984	| Taito		| MSX		| 					|
 | chainrec	|  	| Chain Reaction (World, Version 2.2, 1995.09.25)	| 		| 1995	| Data East	| Simple 156	| 					|
-| gg_chakan	|  	| Chakan (Euro, USA)					| 		| 1992	| Sega		| Sega Game Gear| 					|
 | md_chakan	|  	| Chakan (Euro, USA)					| 		| 1992	| Sega		| Sega Megadrive| 					|
+| gg_chakan	|  	| Chakan (Euro, USA)					| 		| 1992	| Sega		| Sega Game Gear| 					|
 | sg1k_chaldrby	|  	| Challenge Derby (Jpn, OMV)				| 		| 1984	| Tsukuda Origin| Sega SG-1000	| 					|
 | sg1k_chaldrbya|  	| Challenge Derby (Jpn, OMV, Alt)			| sg1k_chaldrby	| 1984	| Tsukuda Origin| Sega SG-1000	| 					|
 | sg1k_chaldrbyb|  	| Challenge Derby (Jpn, OMV, Hacked)			| sg1k_chaldrby	| 1984	| Tsukuda Origin| Sega SG-1000	| 					|
@@ -1375,25 +1375,25 @@ This list contains all games supported by FB Alpha.
 | sg1k_champbasa|  	| Champion Baseball (Jpn, Older)			| sg1k_champbas	| 1983	| Sega		| Sega SG-1000	| 					|
 | sg1k_champbast|  	| Champion Baseball (Tw)				| sg1k_champbas	| 1985?	| Aaronix	| Sega SG-1000	| 					|
 | sg1k_champbil	|  	| Champion Billiards (Jpn)				| 		| 1986	| Sega		| Sega SG-1000	| 					|
-| sg1k_champbox	|  	| Champion Boxing (Jpn)					| 		| 1984	| Sega		| Sega SG-1000	| 					|
 | msx_champbox	|  	| Champion Boxing (Jpn)					| 		| 1985	| Pony Canyon	| MSX		| 					|
+| sg1k_champbox	|  	| Champion Boxing (Jpn)					| 		| 1984	| Sega		| Sega SG-1000	| 					|
 | sg1k_champbox1|  	| Champion Boxing (Jpn, MyCard)				| sg1k_champbox	| 1984	| Sega		| Sega SG-1000	| 					|
 | sg1k_champboxt|  	| Champion Boxing (Tw)					| sg1k_champbox	| 1984?	| Aaronix	| Sega SG-1000	| 					|
 | sg1k_champglf	|  	| Champion Golf (Jpn)					| 		| 1983	| Sega		| Sega SG-1000	| 					|
 | sg1k_champglf1|  	| Champion Golf (Jpn, MyCard)				| sg1k_champglf	| 1983	| Sega		| Sega SG-1000	| 					|
 | sg1k_champglfk|  	| Champion Golf (Kor)					| sg1k_champglf	| 198?	| Samsung	| Sega SG-1000	| 					|
-| sg1k_champice	|  	| Champion Ice Hockey (Jpn)				| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | msx_champice	|  	| Champion Ice Hockey (Jpn)				| 		| 1986	| Pony Canyon	| MSX		| 					|
+| sg1k_champice	|  	| Champion Ice Hockey (Jpn)				| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | sg1k_champicek|  	| Champion Ice Hockey (Kor)				| sg1k_champice	| 198?	| Samsung	| Sega SG-1000	| 					|
 | msx_champken	|  	| Champion Kendou (Jpn)					| 		| 1986	| Pony Canyon	| MSX		| 					|
 | sg1k_champken	|  	| Champion Kendou (Jpn)					| 		| 1986	| Sega		| Sega SG-1000	| 					|
 | msx_champkena	|  	| Champion Kendou (Jpn, Alt)				| msx_champken	| 1986	| Pony Canyon	| MSX		| 					|
-| sg1k_champpwr	|  	| Champion Pro Wrestling (Jpn)				| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | msx_champpwr	|  	| Champion Pro Wrestling (Jpn)				| 		| 1985	| Pony Canyon	| MSX		| 					|
+| sg1k_champpwr	|  	| Champion Pro Wrestling (Jpn)				| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | msx_champpwrb	|  	| Champion Pro Wrestling (Jpn, Alt 2)			| msx_champpwr	| 1985	| Pony Canyon	| MSX		| 					|
 | msx_champpwra	|  	| Champion Pro Wrestling (Jpn, Alt)			| msx_champpwr	| 1985	| Pony Canyon	| MSX		| 					|
-| msx_champscr	|  	| Champion Soccer (Jpn)					| 		| 1985	| Pony Canyon	| MSX		| 					|
 | sg1k_champscr	|  	| Champion Soccer (Jpn)					| 		| 1984	| Sega		| Sega SG-1000	| 					|
+| msx_champscr	|  	| Champion Soccer (Jpn)					| 		| 1985	| Pony Canyon	| MSX		| 					|
 | sg1k_champscrt|  	| Champion Soccer (Tw)					| sg1k_champscr	| 1984?	| Aaronix	| Sega SG-1000	| 					|
 | sg1k_champtns	|  	| Champion Tennis (Jpn)					| 		| 1983	| Sega		| Sega SG-1000	| 					|
 | pce_champwrs	|  	| Champion Wrestler					| 		| 1990	| Taito		| PC Engine	| 					|
@@ -1404,8 +1404,8 @@ This list contains all games supported by FB Alpha.
 | sms_champeur	|  	| Champions of Europe (Euro, Bra)			| 		| 1992	| TecMagik	| Sega Master Sy| 					|
 | md_champwcs	|  	| Champions World Class Soccer (World)			| 		| 1993	| Flying Edge	| Sega Megadrive| 					|
 | md_champbwl	|  	| Championship Bowling (USA)				| 		| 1993	| Mentrix Softwa| Sega Megadrive| 					|
-| gg_champhck	|  	| Championship Hockey (Euro)				| 		| 1992	| U.S. Gold	| Sega Game Gear| 					|
 | sms_champhck	|  	| Championship Hockey (Euro)				| 		| 1994	| U.S. Gold	| Sega Master Sy| 					|
+| gg_champhck	|  	| Championship Hockey (Euro)				| 		| 1992	| U.S. Gold	| Sega Game Gear| 					|
 | sg1k_cloderun	|  	| Championship Lode Runner (Jpn)			| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | msx_cloderun	|  	| Championship Lode Runner (Jpn)			| 		| 1985	| Sony		| MSX		| 					|
 | md_champool	|  	| Championship Pool (USA)				| 		| 1993	| Mindscape	| Sega Megadrive| 					|
@@ -1506,8 +1506,8 @@ This list contains all games supported by FB Alpha.
 | msx_choplift	|  	| Choplifter (Jpn)					| 		| 1985	| Sony		| MSX		| 					|
 | msx_chopliftb	|  	| Choplifter (Jpn, Alt 2)				| msx_choplift	| 1985	| Sony		| MSX		| 					|
 | msx_choplifta	|  	| Choplifter (Jpn, Alt)					| msx_choplift	| 1985	| Sony		| MSX		| 					|
-| sms_chopliftj	|  	| Choplifter (Jpn, Prototype)				| sms_choplift	| 1986	| Sega		| Sega Master Sy| 					|
 | sg1k_chopliftp|  	| Choplifter (Jpn, Prototype)				| sg1k_choplift	| 1985	| Sega		| Sega SG-1000	| 					|
+| sms_chopliftj	|  	| Choplifter (Jpn, Prototype)				| sms_choplift	| 1986	| Sega		| Sega Master Sy| 					|
 | sg1k_chopliftk|  	| Choplifter (Kor)					| sg1k_choplift	| 1985?	| Sega?		| Sega SG-1000	| 					|
 | sg1k_chopliftt|  	| Choplifter (Tw)					| sg1k_choplift	| 1985?	| Aaronix	| Sega SG-1000	| 					|
 | chopliftu	|  	| Choplifter (unprotected)				| choplift	| 1985	| Sega		| System 1	| 					|
@@ -1543,11 +1543,11 @@ This list contains all games supported by FB Alpha.
 | gg_chuckrckp	|  	| Chuck Rock (World, Prototype)				| gg_chuckrck	| 1992	| Sega		| Sega Game Gear| 					|
 | md_chukrck2j	|  	| Chuck Rock II (Jpn)					| md_chukrck2	| 1994	| Virgin Games	| Sega Megadrive| 					|
 | sms_chukrck2b	|  	| Chuck Rock II - Son of Chuck (Bra)			| sms_chukrck2	| 1993	| Tec Toy	| Sega Master Sy| 					|
-| sms_chukrck2	|  	| Chuck Rock II - Son of Chuck (Euro)			| 		| 1993	| Core Design	| Sega Master Sy| 					|
 | gg_chukrck2	|  	| Chuck Rock II - Son of Chuck (Euro)			| 		| 1994	| Virgin Interac| Sega Game Gear| 					|
 | md_chukrck2	|  	| Chuck Rock II - Son of Chuck (Euro)			| 		| 1993	| Core Design	| Sega Megadrive| 					|
-| md_chukrck2u	|  	| Chuck Rock II - Son of Chuck (USA)			| md_chukrck2	| 1993	| Virgin Games	| Sega Megadrive| 					|
+| sms_chukrck2	|  	| Chuck Rock II - Son of Chuck (Euro)			| 		| 1993	| Core Design	| Sega Master Sy| 					|
 | gg_chukrck2u	|  	| Chuck Rock II - Son of Chuck (USA)			| gg_chukrck2	| 1994	| Virgin Interac| Sega Game Gear| 					|
+| md_chukrck2u	|  	| Chuck Rock II - Son of Chuck (USA)			| md_chukrck2	| 1993	| Virgin Games	| Sega Megadrive| 					|
 | md_chukrck2up	|  	| Chuck Rock II - Son of Chuck (USA, Prototype)		| md_chukrck2	| 1993	| Virgin Games	| Sega Megadrive| 					|
 | md_excelart	|  	| Chuck's Excellent Art Tool Animator (USA)		| 		| 199?	| <unknown>	| Sega Megadrive| 					|
 | msx_chuckie	|  	| Chuckie Egg (Euro, AandF Software)			| 		| 1984	| AandF Software| MSX		| 					|
@@ -1702,8 +1702,8 @@ This list contains all games supported by FB Alpha.
 | condor	|  	| Condor (Sidam bootleg of Phoenix)			| phoenix	| 1981	| bootleg (Sidam| Miscellaneous	| 					|
 | msx_confused	|  	| Confused? (Euro)					| 		| 198?	| Eaglesoft	| MSX		| 					|
 | md_congo	|  	| Congo (Prototype)					| 		| 199?	| <unknown>	| Sega Megadrive| 					|
-| congo		|  	| Congo Bongo						| 		| 1983	| Sega		| Zaxxon	| 					|
 | cv_congo	|  	| Congo Bongo						| 		| 1984	| Coleco	| ColecoVision	| 					|
+| congo		|  	| Congo Bongo						| 		| 1983	| Sega		| Zaxxon	| 					|
 | msx_congobongo|  	| Congo Bongo						| 		| 1983	| Sega		| MSX		| 					|
 | sg1k_congoa	|  	| Congo Bongo (Euro, Jpn, v1 Alt)			| sg1k_congo	| 1983	| Sega		| Sega SG-1000	| 					|
 | sg1k_congo	|  	| Congo Bongo (Euro, Jpn, v1)				| 		| 1983	| Sega		| Sega SG-1000	| 					|
@@ -1729,12 +1729,12 @@ This list contains all games supported by FB Alpha.
 | cookbiba	|  	| Cookie & Bibi (set 2)					| cookbib	| 1995	| SemiCom	| Miscellaneous	| 					|
 | cookbib2	|  	| Cookie & Bibi 2					| 		| 1996	| SemiCom	| Kaneko Pandora| 					|
 | cookbib3	|  	| Cookie & Bibi 3					| 		| 1997	| SemiCom	| Kaneko Pandora| 					|
+| gg_coolspot	|  	| Cool Spot (Euro)					| 		| 1993	| Virgin Interac| Sega Game Gear| 					|
 | md_coolspot	|  	| Cool Spot (Euro)					| 		| 1994	| Virgin Games	| Sega Megadrive| 					|
 | sms_coolspot	|  	| Cool Spot (Euro)					| 		| 1993	| Virgin Interac| Sega Master Sy| 					|
-| gg_coolspot	|  	| Cool Spot (Euro)					| 		| 1993	| Virgin Interac| Sega Game Gear| 					|
 | md_coolspotj	|  	| Cool Spot (Jpn, Kor)					| md_coolspot	| 1994	| Virgin Games	| Sega Megadrive| 					|
-| md_coolspotu	|  	| Cool Spot (USA)					| md_coolspot	| 1994	| Virgin Games	| Sega Megadrive| 					|
 | gg_coolspotu	|  	| Cool Spot (USA)					| gg_coolspot	| 1993	| Virgin Interac| Sega Game Gear| 					|
+| md_coolspotu	|  	| Cool Spot (USA)					| md_coolspot	| 1994	| Virgin Games	| Sega Megadrive| 					|
 | md_coolspotup	|  	| Cool Spot (USA, Prototype)				| md_coolspot	| 1994	| Virgin Games	| Sega Megadrive| 					|
 | clbowl	|  	| Coors Light Bowling					| capbowl	| 1989	| Incredible Tec| Miscellaneous	| 					|
 | copsnrob	| D	| Cops'n Robbers					| 		| 1976	| Atari		| Miscellaneous	| No sound				|
@@ -1743,14 +1743,14 @@ This list contains all games supported by FB Alpha.
 | pce_coryoon	|  	| Coryoon - Child of Dragon				| 		| 1991	| Naxat		| PC Engine	| 					|
 | pce_coryoon1	|  	| Coryoon - Child of Dragon (Alt)			| pce_coryoon	| 1991	| Naxat		| PC Engine	| 					|
 | msx_cosanost	|  	| Cosa Nostra (Spa)					| 		| 1986	| Opera Soft	| MSX		| 					|
-| cv_cavenger	|  	| Cosmic Avenger					| 		| 1982	| Coleco	| ColecoVision	| 					|
 | cavenger	|  	| Cosmic Avenger					| 		| 1981	| Universal	| Miscellaneous	| 					|
+| cv_cavenger	|  	| Cosmic Avenger					| 		| 1982	| Coleco	| ColecoVision	| 					|
 | cv_cavengera	|  	| Cosmic Avenger (Alt)					| cv_cavenger	| 1982	| Coleco	| ColecoVision	| 					|
 | cosmccop	|  	| Cosmic Cop (World)					| 		| 1991	| Irem		| M84		| 					|
 | cv_ccrisis	|  	| Cosmic Crisis						| 		| 1983	| Telegames	| ColecoVision	| 					|
 | msx_csheriff	|  	| Cosmic Sheriff (Spa)					| 		| 1989	| Dinamic Softwa| MSX		| 					|
-| gg_cosmic	|  	| Cosmic Spacehead (Euro)				| 		| 1993	| Codemasters	| Sega Game Gear| 					|
 | sms_cosmic	|  	| Cosmic Spacehead (Euro)				| 		| 1993	| Codemasters	| Sega Master Sy| 					|
+| gg_cosmic	|  	| Cosmic Spacehead (Euro)				| 		| 1993	| Codemasters	| Sega Game Gear| 					|
 | md_cosmic	|  	| Cosmic Spacehead (Euro, USA)				| 		| 1993	| Codemasters	| Sega Megadrive| 					|
 | msx_cosmo	|  	| Cosmo (Jpn)						| 		| 1984	| ASCII		| MSX		| 					|
 | msx_cosmoa	|  	| Cosmo (Jpn, Alt)					| msx_cosmo	| 1984	| ASCII		| MSX		| 					|
@@ -1868,13 +1868,13 @@ This list contains all games supported by FB Alpha.
 | cutefght	|  	| Cute Fighter						| 		| 1998	| SemiCom	| Miscellaneous	| 					|
 | cutieq	|  	| Cutie Q						| 		| 1979	| Namco		| Miscellaneous	| 					|
 | md_cutiesuz	|  	| Cutie Suzuki no Ringside Angel (Jpn)			| 		| 1990	| Asmik Ace	| Sega Megadrive| 					|
-| md_cutthr	|  	| CutThroat Island (Euro, USA)				| 		| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | gg_cutthr	|  	| Cutthroat Island (Euro, USA)				| 		| 1995	| Acclaim Entert| Sega Game Gear| 					|
+| md_cutthr	|  	| CutThroat Island (Euro, USA)				| 		| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | md_cutthrp	|  	| CutThroat Island (Prototye)				| md_cutthr	| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | gg_cutthrp	|  	| Cutthroat Island (Prototype 19950916)			| gg_cutthr	| 1995	| Acclaim Entert| Sega Game Gear| 					|
 | cybattlr	|  	| Cybattler						| 		| 1993	| Jaleco	| Mega System 1	| 					|
-| tg_cybrcore	|  	| Cyber Core						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | pce_cybrcore	|  	| Cyber Core						| 		| 1990	| IGS		| PC Engine	| 					|
+| tg_cybrcore	|  	| Cyber Core						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | pce_cyberdod	|  	| Cyber Dodge						| 		| 1992	| Tonkin House	| PC Engine	| 					|
 | pce_cyknight	|  	| Cyber Knight						| 		| 1990	| Tonkin House	| PC Engine	| 					|
 | md_eswatj	|  	| Cyber Police ESWAT (Jpn, Rev. 0)			| md_eswat	| 1990	| Sega		| Sega Megadrive| 					|
@@ -1892,8 +1892,8 @@ This list contains all games supported by FB Alpha.
 | sms_cyborgh	|  	| Cyborg Hunter (Euro, USA, Bra)			| 		| 1988	| Sega		| Sega Master Sy| 					|
 | md_cyborgj	|  	| Cyborg Justice (Euro, USA)				| 		| 1993	| Sega		| Sega Megadrive| 					|
 | md_cyborgjp	|  	| Cyborg Justice (Prototype)				| md_cyborgj	| 1993	| Sega		| Sega Megadrive| 					|
-| sms_cyborgz	|  	| Cyborg Z (Kor)					| 		| 1991	| Zemina	| Sega Master Sy| 					|
 | msx_cyborgz	|  	| Cyborg Z (Kor)					| 		| 1991	| Zemina	| MSX		| 					|
+| sms_cyborgz	|  	| Cyborg Z (Kor)					| 		| 1991	| Zemina	| Sega Master Sy| 					|
 | cyvernj	|  	| Cyvern (Japan)					| cyvern	| 1998	| Kaneko	| Super Kaneko N| 					|
 | cyvern	|  	| Cyvern (US)						| 		| 1998	| Kaneko	| Super Kaneko N| 					|
 | dcon		|  	| D-Con							| 		| 1992	| Success	| Miscellaneous	| 					|
@@ -2157,8 +2157,8 @@ This list contains all games supported by FB Alpha.
 | md_aladdin	|  	| Disney's Aladdin (Euro)				| 		| 1993	| Sega		| Sega Megadrive| 					|
 | sms_aladdin	|  	| Disney's Aladdin (Euro, Bra, Kor)			| 		| 1994	| Sega		| Sega Master Sy| 					|
 | gg_aladdin	|  	| Disney's Aladdin (Euro, USA, Bra)			| 		| 1994	| Sega		| Sega Game Gear| 					|
-| gg_aladdinj	|  	| Disney's Aladdin (Jpn)				| gg_aladdin	| 1994	| Sega		| Sega Game Gear| 					|
 | md_aladdinj	|  	| Disney's Aladdin (Jpn)				| md_aladdin	| 1993	| Sega		| Sega Megadrive| 					|
+| gg_aladdinj	|  	| Disney's Aladdin (Jpn)				| gg_aladdin	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_aladdinp3	|  	| Disney's Aladdin (Prototype, 19931229)		| gg_aladdin	| 1993	| Sega		| Sega Game Gear| 					|
 | gg_aladdinp2	|  	| Disney's Aladdin (Prototype, 19940111)		| gg_aladdin	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_aladdinp1	|  	| Disney's Aladdin (Prototype, 19940113)		| gg_aladdin	| 1994	| Sega		| Sega Game Gear| 					|
@@ -2308,8 +2308,8 @@ This list contains all games supported by FB Alpha.
 | ddragon2	|  	| Double Dragon II - The Revenge (World)		| 		| 1988	| Technos	| Miscellaneous	| 					|
 | md_ddragon5	|  	| Double Dragon V - The Shadow Falls (USA)		| 		| 1994	| Tradewest	| Sega Megadrive| 					|
 | md_ddribble	|  	| Double Dribble - The Playoff Edition (USA)		| md_hyperdnk	| 1994	| Konami	| Sega Megadrive| 					|
-| tg_ddungw	|  	| Double Dungeons - W					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | pce_ddungw	|  	| Double Dungeons - W					| 		| 1989	| NCS		| PC Engine	| 					|
+| tg_ddungw	|  	| Double Dungeons - W					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
 | sms_doublhwk	|  	| Double Hawk (Euro)					| 		| 1990	| Sega		| Sega Master Sy| 					|
 | sms_doublhwkp	|  	| Double Hawk (Euro, Prototype)				| sms_doublhwk	| 1990	| Sega		| Sega Master Sy| 					|
 | dblpoint	|  	| Double Point						| 		| 1995	| Min Corp.	| Miscellaneous	| 					|
@@ -2336,11 +2336,11 @@ This list contains all games supported by FB Alpha.
 | drtoppel	|  	| Dr. Toppel's Adventure (World)			| 		| 1987	| Taito Corporat| Miscellaneous	| 					|
 | drtoppela	|  	| Dr. Toppel's Adventure (World, alt?)			| drtoppel	| 1987	| Taito Corporat| Miscellaneous	| 					|
 | drtoppelj	|  	| Dr. Toppel's Tankentai (Japan)			| drtoppel	| 1987	| Taito Corporat| Miscellaneous	| 					|
-| gg_dragon	|  	| Dragon - The Bruce Lee Story (Euro)			| 		| 1994	| Virgin Interac| Sega Game Gear| 					|
 | sms_dragon	|  	| Dragon - The Bruce Lee Story (Euro)			| 		| 1994	| Virgin Interac| Sega Master Sy| 					|
 | md_dragon	|  	| Dragon - The Bruce Lee Story (Euro)			| 		| 1993	| Virgin Interac| Sega Megadrive| 					|
-| gg_dragonu	|  	| Dragon - The Bruce Lee Story (USA)			| gg_dragon	| 1995	| Acclaim Entert| Sega Game Gear| 					|
+| gg_dragon	|  	| Dragon - The Bruce Lee Story (Euro)			| 		| 1994	| Virgin Interac| Sega Game Gear| 					|
 | md_dragonu	|  	| Dragon - The Bruce Lee Story (USA)			| md_dragon	| 1994	| Acclaim Entert| Sega Megadrive| 					|
+| gg_dragonu	|  	| Dragon - The Bruce Lee Story (USA)			| gg_dragon	| 1995	| Acclaim Entert| Sega Game Gear| 					|
 | msx_drgnatck	|  	| Dragon Attack (Jpn)					| 		| 1983	| HAL Kenkyuujo	| MSX		| 					|
 | msx_drgnatcka	|  	| Dragon Attack (Jpn, Alt)				| msx_drgnatck	| 1983	| HAL Kenkyuujo	| MSX		| 					|
 | md_dbz	|  	| Dragon Ball Z - Buyuu Retsuden (Jpn)			| 		| 1994	| Bandai	| Sega Megadrive| 					|
@@ -2497,11 +2497,11 @@ This list contains all games supported by FB Alpha.
 | dduxjd	|  	| Dynamite Dux (set 2, Japan, FD1094 317-0094 decrypted)| ddux		| 1989	| Sega		| System 16B	| 					|
 | dduxj		|  	| Dynamite Dux (set 2, Japan, FD1094 317-0094)		| ddux		| 1989	| Sega		| System 16B	| 					|
 | sms_dhead	|  	| Dynamite Headdy (Bra)					| 		| 1994	| Tec Toy	| Sega Master Sy| 					|
-| gg_dhead	|  	| Dynamite Headdy (Euro, USA)				| 		| 1994	| Sega		| Sega Game Gear| 					|
 | md_dhead	|  	| Dynamite Headdy (Euro, USA)				| 		| 1994	| Sega		| Sega Megadrive| 					|
+| gg_dhead	|  	| Dynamite Headdy (Euro, USA)				| 		| 1994	| Sega		| Sega Game Gear| 					|
 | md_dheade	|  	| Dynamite Headdy (Hack, English)			| md_dhead	| 2007	| Sega		| Sega Megadrive| 					|
-| gg_dheadj	|  	| Dynamite Headdy (Jpn)					| gg_dhead	| 1994	| Sega		| Sega Game Gear| 					|
 | md_dheadj	|  	| Dynamite Headdy (Jpn)					| md_dhead	| 1994	| Sega		| Sega Megadrive| 					|
+| gg_dheadj	|  	| Dynamite Headdy (Jpn)					| gg_dhead	| 1994	| Sega		| Sega Game Gear| 					|
 | md_dheadjp	|  	| Dynamite Headdy (Jpn, Prototype)			| md_dhead	| 1994	| Sega		| Sega Megadrive| 					|
 | md_dheadp3	|  	| Dynamite Headdy (Prototype, 19940614-CABEZA)		| md_dhead	| 1994	| Sega		| Sega Megadrive| 					|
 | gg_dheadp3	|  	| Dynamite Headdy (Prototype, 19940615)			| gg_dhead	| 1994	| Sega		| Sega Game Gear| 					|
@@ -2541,8 +2541,8 @@ This list contains all games supported by FB Alpha.
 | msx_eaglefgt	|  	| Eagle Fighter (Jpn)					| 		| 1985	| Casio		| MSX		| 					|
 | msx_eaglefgta	|  	| Eagle Fighter (Jpn, Alt)				| msx_eaglefgt	| 1985	| Casio		| MSX		| 					|
 | eaglshot	|  	| Eagle Shot Golf					| 		| 1994	| Sammy		| SSV		| 					|
-| msx_eagle5	|  	| Eagles 5 (Kor)					| 		| 1990	| Zemina	| MSX		| 					|
 | sms_eagles5	|  	| Eagles 5 (Kor)					| 		| 1990	| Zemina	| Sega Master Sy| 					|
+| msx_eagle5	|  	| Eagles 5 (Kor)					| 		| 1990	| Zemina	| MSX		| 					|
 | md_earnest	|  	| Earnest Evans (USA)					| 		| 1992	| Renovation	| Sega Megadrive| 					|
 | sms_ejim	|  	| Earthworm Jim (Bra)					| 		| 1996	| Tec Toy	| Sega Master Sy| 					|
 | gg_ejim	|  	| Earthworm Jim (Euro)					| 		| 1995	| Virgin Interac| Sega Game Gear| 					|
@@ -2711,8 +2711,8 @@ This list contains all games supported by FB Alpha.
 | pce_f1pilot	|  	| F-1 Pilot - You're King of Kings			| 		| 1989	| Pack-In-Video	| PC Engine	| 					|
 | msx_f1spirit	|  	| F-1 Spirit - The Way to Formula-1 (Jpn)		| 		| 1987	| Konami	| MSX		| 					|
 | msx_f1spirita	|  	| F-1 Spirit - The Way to Formula-1 (Jpn, Alt)		| msx_f1spirit	| 1987	| Konami	| MSX		| 					|
-| msx_f1spiritk	|  	| F-1 Spirit - The Way to Formula-1 (Kor)		| msx_f1spirit	| 19??	| Zemina	| MSX		| 					|
 | sms_f1spirit	|  	| F-1 Spirit - The way to Formula-1 (Kor)		| 		| 1987	| Zemina	| Sega Master Sy| 					|
+| msx_f1spiritk	|  	| F-1 Spirit - The Way to Formula-1 (Kor)		| msx_f1spirit	| 19??	| Zemina	| MSX		| 					|
 | md_f117	|  	| F-117 Night Storm (Euro, USA)				| 		| 1993	| Electronic Art| Sega Megadrive| 					|
 | md_f117j	|  	| F-117 Stealth - Operation Night Storm (Jpn)		| md_f117	| 1994	| Electronic Art| Sega Megadrive| 					|
 | gg_f15se	|  	| F-15 Strike Eagle (Euro, USA)				| 		| 1993	| Microprose	| Sega Game Gear| 					|
@@ -2745,8 +2745,8 @@ This list contains all games supported by FB Alpha.
 | gg_f1wce	|  	| F1 World Championship Edition (Euro)			| 		| 1995	| Domark	| Sega Game Gear| 					|
 | sg1k_faguiqib	|  	| Fa Gui Qibing (Tw)					| sg1k_pitfall2	| 1985?	| Aaronix	| Sega SG-1000	| 					|
 | sg1k_faguiqiba|  	| Fa Gui Qibing (Tw, Alt)				| sg1k_pitfall2	| 1985?	| Aaronix	| Sega SG-1000	| 					|
-| msx_fatetris	|  	| FA Tetris (Kor)					| 		| 1989	| FA Soft	| MSX		| 					|
 | sms_fatetris	|  	| FA Tetris (Kor)					| 		| 1989	| FA Soft	| Sega Master Sy| 					|
+| msx_fatetris	|  	| FA Tetris (Kor)					| 		| 1989	| FA Soft	| MSX		| 					|
 | msx_fatetrisb	|  	| FA Tetris (Kor, Alt 2)				| msx_fatetris	| 1989	| FA Soft	| MSX		| 					|
 | msx_fatetrisa	|  	| FA Tetris (Kor, Alt)					| msx_fatetris	| 1989	| FA Soft	| MSX		| 					|
 | faceoff	|  	| Face Off (Japan 2 Players)				| 		| 1988	| Namco		| System 1	| 					|
@@ -2779,8 +2779,8 @@ This list contains all games supported by FB Alpha.
 | fantsy95	|  	| Fantasy '95						| newfant	| 1995	| Hi-max Technol| Miscellaneous	| 					|
 | fantland	|  	| Fantasy Land (set 1)					| 		| 19??	| Electronic Dev| Miscellaneous	| 					|
 | fantlanda	|  	| Fantasy Land (set 2)					| fantland	| 19??	| Electronic Dev| Miscellaneous	| 					|
-| pce_fantzone	|  	| Fantasy Zone						| 		| 1988	| NEC		| PC Engine	| 					|
 | tg_fantzone	|  	| Fantasy Zone						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
+| pce_fantzone	|  	| Fantasy Zone						| 		| 1988	| NEC		| PC Engine	| 					|
 | fantzonep	|  	| Fantasy Zone (317-5000)				| fantzone	| 1986	| Sega		| System 16A	| 					|
 | msx_fantzone	|  	| Fantasy Zone (Jpn)					| 		| 1986	| Pony Canyon	| MSX		| 					|
 | sms_fantzonej	|  	| Fantasy Zone (Jpn, v0)				| sms_fantzone	| 1986	| Sega		| Sega Master Sy| 					|
@@ -2832,8 +2832,8 @@ This list contains all games supported by FB Alpha.
 | md_fengshen	|  	| Feng Shen Ying Jie Chuan (Chi)			| 		| 1996	| Chuanpu Techno| Sega Megadrive| 					|
 | md_fengshena	|  	| Feng Shen Ying Jie Zhuan (Chi, Alt?)			| md_fengshen	| 1996	| Chuanpu Techno| Sega Megadrive| 					|
 | fenix		|   NW	| Fenix (bootleg of Phoenix)				| phoenix	| 1980	| bootleg	| Miscellaneous	| 					|
-| md_ferias	|  	| Ferias Frustradas do Pica-Pau (Bra)			| 		| 1995	| Tec Toy	| Sega Megadrive| 					|
 | sms_ferias	|  	| Ferias Frustradas do Pica-Pau (Bra)			| 		| 1996	| Tec Toy	| Sega Master Sy| 					|
+| md_ferias	|  	| Ferias Frustradas do Pica-Pau (Bra)			| 		| 1995	| Tec Toy	| Sega Megadrive| 					|
 | md_ferrari	|  	| Ferrari Grand Prix Challenge (Euro, Rev. A)		| 		| 1992	| Flying Edge	| Sega Megadrive| 					|
 | md_ferrarip	|  	| Ferrari Grand Prix Challenge (Prototype)		| md_ferrari	| 1992	| Flying Edge	| Sega Megadrive| 					|
 | md_ferrariu	|  	| Ferrari Grand Prix Challenge (USA)			| md_ferrari	| 1992	| Flying Edge	| Sega Megadrive| 					|
@@ -3031,8 +3031,8 @@ This list contains all games supported by FB Alpha.
 | forgottnuc	|  	| Forgotten Worlds (US, B-Board 88618B-2, Rev C)	| forgottn	| 1988	| Capcom	| CPS1		| 					|
 | forgottnue	|  	| Forgotten Worlds (US, B-Board 88618B-2, Rev E)	| forgottn	| 1988	| Capcom	| CPS1		| 					|
 | forgottnu	|  	| Forgotten Worlds (US, B-Board 88621B-2, rev C)	| forgottn	| 1988	| Capcom	| CPS1		| 					|
-| forgottna	|  	| Forgotten Worlds (World)				| forgottn	| 1988	| Capcom	| CPS1		| 					|
 | md_forgottn1	|  	| Forgotten Worlds (World)				| md_forgottn	| 1989	| Sega		| Sega Megadrive| 					|
+| forgottna	|  	| Forgotten Worlds (World)				| forgottn	| 1988	| Capcom	| CPS1		| 					|
 | forgottn	|  	| Forgotten Worlds (World, newer)			| 		| 1988	| Capcom	| CPS1		| 					|
 | md_forgottn	|  	| Forgotten Worlds (World, v1.1)			| 		| 1989	| Sega		| Sega Megadrive| 					|
 | pce_fsoccr90	|  	| Formation Soccer - Human Cup '90			| 		| 1990	| Human		| PC Engine	| 					|
@@ -3216,8 +3216,8 @@ This list contains all games supported by FB Alpha.
 | galpansu	|  	| Gals Panic SU (Korea)					| galpans2	| 1999	| Kaneko	| Super Kaneko N| 					|
 | galspnbl	|  	| Gals Pinball						| 		| 1996	| Comad		| Miscellaneous	| 					|
 | gg_gamble	|  	| Gamble Panic (Jpn)					| 		| 1995	| Sega		| Sega Game Gear| 					|
-| msx_gambler	|  	| Gambler Jikochuushinha (Jpn)				| 		| 1988	| Game Arts	| MSX		| 					|
 | gg_gambler	|  	| Gambler Jikochuushinha (Jpn)				| 		| 1992	| Sega		| Sega Game Gear| 					|
+| msx_gambler	|  	| Gambler Jikochuushinha (Jpn)				| 		| 1988	| Game Arts	| MSX		| 					|
 | md_gambler	|  	| Gambler Jikochuushinha - Katayama Masayuki no Mahjong | 		| 1990	| Game Arts	| Sega Megadrive| 					|
 | sms_gamebox	|  	| Game Box Serie Esportes Radicais (Bra)		| 		| 19??	| Tec Toy	| Sega Master Sy| 					|
 | md_ggenie1	|  	| Game Genie (Euro, USA)				| md_ggenie	| 199?	| <unknown>	| Sega Megadrive| 					|
@@ -3321,8 +3321,8 @@ This list contains all games supported by FB Alpha.
 | md_genghis2	|  	| Genghis Khan II - Clan of the Gray Wolf (USA)		| 		| 1993	| Koei		| Sega Megadrive| 					|
 | genix		|  	| Genix Family						| 		| 1994	| NIX		| Miscellaneous	| 					|
 | pce_genjitsu	|  	| Genji Tsuushin Agedama				| 		| 1991	| NEC Home Elect| PC Engine	| 					|
-| pce_genpei	|  	| Genpei Toumaden					| 		| 1990	| Namcot	| PC Engine	| 					|
 | genpeitd	|  	| Genpei ToumaDen					| 		| 1986	| Namco		| System 86	| 					|
+| pce_genpei	|  	| Genpei Toumaden					| 		| 1990	| Namcot	| PC Engine	| 					|
 | pce_genpemak	|  	| Genpei Toumaden ni no Maki				| 		| 1992	| Namcot	| PC Engine	| 					|
 | gensitou	|  	| Genshi-Tou 1930's (Japan)				| prehisle	| 1989	| SNK		| Prehistoric Is| 					|
 | md_georgeko	|  	| George Foreman's KO Boxing (Euro)			| 		| 1992	| Flying Edge	| Sega Megadrive| 					|
@@ -3568,11 +3568,11 @@ This list contains all games supported by FB Alpha.
 | gulfstrmb	|  	| Gulf Storm (set 3)					| gulfstrm	| 1991	| Dooyong	| Miscellaneous	| 					|
 | gulfwar2	|  	| Gulf War II (set 1)					| 		| 1991	| Comad		| Miscellaneous	| 					|
 | gulfwar2a	|  	| Gulf War II (set 2)					| gulfwar2	| 1991	| Comad		| Miscellaneous	| 					|
-| sg1k_gulkave	|  	| Gulkave (Jpn)						| 		| 1986	| Sega		| Sega SG-1000	| 					|
 | msx_gulkave	|  	| Gulkave (Jpn)						| 		| 1986	| Pony Canyon	| MSX		| 					|
+| sg1k_gulkave	|  	| Gulkave (Jpn)						| 		| 1986	| Sega		| Sega SG-1000	| 					|
 | msx_gulkavea	|  	| Gulkave (Jpn, Alt)					| msx_gulkave	| 1986	| Pony Canyon	| MSX		| 					|
-| sg1k_gulkavek	|  	| Gulkave (Kor)						| sg1k_gulkave	| 198?	| Unknown	| Sega SG-1000	| 					|
 | msx_gulkavek	|  	| Gulkave (Kor)						| msx_gulkave	| 198?	| ProSoft	| MSX		| 					|
+| sg1k_gulkavek	|  	| Gulkave (Kor)						| sg1k_gulkave	| 198?	| Unknown	| Sega SG-1000	| 					|
 | gumbo		|  	| Gumbo							| 		| 1994	| Min Corp.	| Miscellaneous	| 					|
 | gunfront	|  	| Gun & Frontier (World)				| 		| 1990	| Taito Corporat| Taito-F2	| 					|
 | gunball	|  	| Gun Ball (Japan)					| nitrobal	| 1992	| Data East Corp| DECO IC16	| 					|
@@ -3610,8 +3610,8 @@ This list contains all games supported by FB Alpha.
 | gunnail	|  	| GunNail (28th May. 1992)				| 		| 1993	| NMK / Tecmo	| NMK16		| 					|
 | md_gunship	|  	| Gunship (Euro)					| 		| 1993	| U.S. Gold	| Sega Megadrive| 					|
 | md_gunstar	|  	| Gunstar Heroes (Euro)					| 		| 1993	| Sega		| Sega Megadrive| 					|
-| md_gunstarj	|  	| Gunstar Heroes (Jpn)					| md_gunstar	| 1993	| Sega		| Sega Megadrive| 					|
 | gg_gunstar	|  	| Gunstar Heroes (Jpn)					| 		| 1995	| Sega		| Sega Game Gear| 					|
+| md_gunstarj	|  	| Gunstar Heroes (Jpn)					| md_gunstar	| 1993	| Sega		| Sega Megadrive| 					|
 | md_gunstarjs	|  	| Gunstar Heroes (Jpn, Sample)				| md_gunstar	| 1993	| Sega		| Sega Megadrive| 					|
 | md_gunstaru	|  	| Gunstar Heroes (USA)					| md_gunstar	| 1993	| Sega		| Sega Megadrive| 					|
 | gururin	|  	| Gururin						| 		| 1994	| Face		| Neo Geo MVS	| 					|
@@ -3795,8 +3795,8 @@ This list contains all games supported by FB Alpha.
 | honeydol	|  	| Honey Dolls						| 		| 1995	| Barko Corp	| Kaneko Pandora| 					|
 | sms_hongkildong|  	| Hong Kil Dong (Kor)					| 		| 1991	| Clover	| Sega Master Sy| 					|
 | pce_ddanpei	|  	| Honoo no Toukyuuji - Dodge Danpei			| 		| 1992	| Hudson	| PC Engine	| 					|
-| gg_ddanpei	|  	| Honoo no Toukyuuji - Dodge Danpei (Jpn)		| 		| 1992	| Sega		| Sega Game Gear| 					|
 | md_ddanpei	|  	| Honoo no Toukyuuji - Dodge Danpei (Jpn)		| 		| 1992	| Sega		| Sega Megadrive| 					|
+| gg_ddanpei	|  	| Honoo no Toukyuuji - Dodge Danpei (Jpn)		| 		| 1992	| Sega		| Sega Game Gear| 					|
 | gg_hook	|  	| Hook (Euro)						| 		| 1992	| Sony Imagesoft| Sega Game Gear| 					|
 | md_hook	|  	| Hook (Euro)						| 		| 1992	| Sony Imagesoft| Sega Megadrive| 					|
 | sms_hook	|  	| Hook (Euro, Prototype)				| 		| 19??	| Sega		| Sega Master Sy| 					|
@@ -3831,8 +3831,8 @@ This list contains all games supported by FB Alpha.
 | msx_hundra	|  	| Hundra (Spa)						| 		| 1988	| Dinamic Softwa| MSX		| 					|
 | sg1k_huohuli	|  	| Huo Hu Li (Tw)					| sg1k_zoom909	| 1985?	| Aaronix	| Sega SG-1000	| 					|
 | sg1k_huojiche	|  	| Huojian Che (Tw)					| sg1k_roadfght	| 1986?	| Jumbo		| Sega SG-1000	| 					|
-| md_hurrican	|  	| Hurricanes (Euro)					| 		| 1994	| U.S. Gold	| Sega Megadrive| 					|
 | gg_hurrican	|  	| Hurricanes (Euro)					| 		| 1994	| U.S. Gold	| Sega Game Gear| 					|
+| md_hurrican	|  	| Hurricanes (Euro)					| 		| 1994	| U.S. Gold	| Sega Megadrive| 					|
 | msx_hfox	|  	| Hurry Fox MSX Special (Jpn)				| 		| 1986	| MicroCabin	| MSX		| 					|
 | sg1k_hustle	|  	| Hustle Chumy (Jpn)					| 		| 1984	| Compile	| Sega SG-1000	| 					|
 | msx_hustle	|  	| Hustle! Chumy (Jpn)					| 		| 1984	| General	| MSX		| 					|
@@ -4321,8 +4321,8 @@ This list contains all games supported by FB Alpha.
 | kizuna	|  	| Kizuna Encounter - Super Tag Battle / Fu'un Super Tag | 		| 1996	| SNK		| Neo Geo MVS	| 					|
 | pce_klax	|  	| Klax							| 		| 1990	| Tengen	| PC Engine	| 					|
 | tg_klax	|  	| Klax							| 		| 1990	| Tengen	| TurboGrafx 16	| 					|
-| msx_klax	|  	| Klax (Euro)						| 		| 1990	| Domark	| MSX		| 					|
 | sms_klax	|  	| Klax (Euro)						| 		| 1991	| Tengen	| Sega Master Sy| 					|
+| msx_klax	|  	| Klax (Euro)						| 		| 1990	| Domark	| MSX		| 					|
 | md_klax	|  	| Klax (Euro, USA)					| 		| 1990	| Tengen	| Sega Megadrive| 					|
 | gg_klax	|  	| Klax (Euro, USA)					| 		| 1992	| Tengen	| Sega Game Gear| 					|
 | md_klaxj	|  	| Klax (Jpn)						| md_klax	| 1990	| Namcot	| Sega Megadrive| 					|
@@ -4567,9 +4567,9 @@ This list contains all games supported by FB Alpha.
 | leds2011u	|  	| Led Storm Rally 2011 (US)				| leds2011	| 1988	| Capcom	| Miscellaneous	| 					|
 | leds2011	|  	| Led Storm Rally 2011 (World)				| 		| 1988	| Capcom	| Miscellaneous	| 					|
 | legend	|  	| Legend						| 		| 1986	| Sega / Corelan| Kyugo		| 					|
-| pce_loht	|  	| Legend of Hero Tonma					| 		| 1991	| Irem		| PC Engine	| 					|
-| tg_loht	|  	| Legend of Hero Tonma					| 		| 1991	| TTI		| TurboGrafx 16	| 					|
 | loht		|  	| Legend of Hero Tonma					| 		| 1989	| Irem		| M72		| 					|
+| tg_loht	|  	| Legend of Hero Tonma					| 		| 1991	| TTI		| TurboGrafx 16	| 					|
+| pce_loht	|  	| Legend of Hero Tonma					| 		| 1991	| Irem		| PC Engine	| 					|
 | lohtb		|  	| Legend of Hero Tonma (bootleg, set 1)			| loht		| 1989	| bootleg	| M72		| 					|
 | lohtb2	|  	| Legend of Hero Tonma (bootleg, set 2)			| loht		| 1989	| bootleg	| M72		| 					|
 | lohtj		|  	| Legend of Hero Tonma (Japan)				| loht		| 1989	| Irem		| M72		| 					|
@@ -4600,8 +4600,8 @@ This list contains all games supported by FB Alpha.
 | gg_lemmings	|  	| Lemmings (World)					| 		| 1992	| Sega		| Sega Game Gear| 					|
 | gg_lemmingsp	|  	| Lemmings (World, Prototype)				| gg_lemmings	| 1992	| Sega		| Sega Game Gear| 					|
 | md_lemming2	|  	| Lemmings 2 - The Tribes (Euro)			| 		| 1994	| Psygnosis	| Sega Megadrive| 					|
-| sms_lemming2	|  	| Lemmings 2 - The Tribes (Euro, Prototype)		| 		| 1994	| Psygnosis	| Sega Master Sy| 					|
 | gg_lemming2	|  	| Lemmings 2 - The Tribes (Euro, Prototype)		| 		| 1994	| Psygnosis	| Sega Game Gear| 					|
+| sms_lemming2	|  	| Lemmings 2 - The Tribes (Euro, Prototype)		| 		| 1994	| Psygnosis	| Sega Master Sy| 					|
 | md_lemming2u	|  	| Lemmings 2 - The Tribes (USA)				| md_lemming2	| 1994	| Psygnosis	| Sega Megadrive| 					|
 | crshrace	|  	| Lethal Crash Race (set 1)				| 		| 1993	| Video System C| Miscellaneous	| 					|
 | crshrace2	|  	| Lethal Crash Race (set 2)				| crshrace	| 1993	| Video System C| Miscellaneous	| 					|
@@ -4859,14 +4859,14 @@ This list contains all games supported by FB Alpha.
 | sms_maougolvp	|  	| Maou Golvellius (Jpn, Prototype)			| sms_golvell	| 1988	| Sega		| Sega Master Sy| 					|
 | md_maouren	|  	| Maou Renjishi (Jpn)					| md_mysticf	| 1991	| Taito		| Sega Megadrive| 					|
 | mappyj	|  	| Mappy (Japan)						| mappy		| 1983	| Namco		| Miscellaneous	| 					|
-| gg_mappy	|  	| Mappy (Jpn)						| 		| 1991	| Namcot	| Sega Game Gear| 					|
 | msx_mappy	|  	| Mappy (Jpn)						| 		| 1984	| Namcot	| MSX		| 					|
+| gg_mappy	|  	| Mappy (Jpn)						| 		| 1991	| Namcot	| Sega Game Gear| 					|
 | msx_mappyb	|  	| Mappy (Jpn, Alt 2)					| msx_mappy	| 1984	| Namcot	| MSX		| 					|
 | msx_mappya	|  	| Mappy (Jpn, Alt)					| msx_mappy	| 1984	| Namcot	| MSX		| 					|
 | mappy		|  	| Mappy (US)						| 		| 1983	| Namco		| Miscellaneous	| 					|
 | sms_marble	|  	| Marble Madness (Euro)					| 		| 1992	| Virgin Interac| Sega Master Sy| 					|
-| md_marble	|  	| Marble Madness (Euro, USA)				| 		| 1993	| Electronic Art| Sega Megadrive| 					|
 | gg_marble	|  	| Marble Madness (Euro, USA)				| 		| 1992	| Tengen	| Sega Game Gear| 					|
+| md_marble	|  	| Marble Madness (Euro, USA)				| 		| 1993	| Electronic Art| Sega Megadrive| 					|
 | pce_marchen	|  	| Marchen Maze						| 		| 1990	| Namcot	| PC Engine	| 					|
 | mmaze		|  	| Marchen Maze (Japan)					| 		| 1988	| Namco		| System 1	| Error on first boot is normal		|
 | mmaze2	|  	| Marchen Maze (Japan, hack?)				| mmaze		| 1988	| Namco		| System 1	| Error on first boot is normal		|
@@ -5123,8 +5123,8 @@ This list contains all games supported by FB Alpha.
 | gg_mickeyuc	|  	| Mickey's Ultimate Challenge (Euro, USA)		| 		| 1994	| Hi Tech Expres| Sega Game Gear| 					|
 | md_mickeyuc	|  	| Mickey's Ultimate Challenge (USA)			| 		| 1994	| Hi Tech Expres| Sega Megadrive| 					|
 | md_micromacc	|  	| Micro Machines (Can)					| md_micromac	| 1993	| Codemasters	| Sega Megadrive| 					|
-| gg_micromac	|  	| Micro Machines (Euro)					| 		| 1993	| Codemasters	| Sega Game Gear| 					|
 | sms_micromac	|  	| Micro Machines (Euro)					| 		| 1994	| Codemasters	| Sega Master Sy| 					|
+| gg_micromac	|  	| Micro Machines (Euro)					| 		| 1993	| Codemasters	| Sega Game Gear| 					|
 | md_micromac	|  	| Micro Machines (Euro, USA)				| 		| 1993	| Codemasters	| Sega Megadrive| 					|
 | md_micromacb	|  	| Micro Machines (Euro, USA, Alt 2)			| md_micromac	| 1993	| Codemasters	| Sega Megadrive| 					|
 | md_micromaca	|  	| Micro Machines (Euro, USA, Alt)			| md_micromac	| 1993	| Codemasters	| Sega Megadrive| 					|
@@ -5269,8 +5269,8 @@ This list contains all games supported by FB Alpha.
 | msx_monkeyaca	|  	| Monkey Academy (Jpn, Alt)				| msx_monkeyac	| 1984	| Konami	| MSX		| 					|
 | monkelf	|  	| Monky Elf (Korean bootleg of Avenging Spirit)		| avspirit	| 1990	| bootleg	| Mega System 1	| imperfect graphics			|
 | sms_monopoly	|  	| Monopoly (Euro)					| 		| 1988	| Sega		| Sega Master Sy| 					|
-| sms_monopolyu	|  	| Monopoly (USA)					| sms_monopoly	| 1988	| Sega		| Sega Master Sy| 					|
 | md_monopoly	|  	| Monopoly (USA)					| 		| 1992	| Parker Brother| Sega Megadrive| 					|
+| sms_monopolyu	|  	| Monopoly (USA)					| sms_monopoly	| 1988	| Sega		| Sega Master Sy| 					|
 | sms_monopolyp	|  	| Monopoly (USA, Prototype)				| sms_monopoly	| 1988	| Sega		| Sega Master Sy| 					|
 | md_monopolyp	|  	| Monopoly (USA, Prototype)				| md_monopoly	| 1992	| Parker Brother| Sega Megadrive| 					|
 | msx_monsterhunter|  	| Monster Hunter					| 		| 2006	| Nerlaska Studi| MSX		| 					|
@@ -5346,12 +5346,12 @@ This list contains all games supported by FB Alpha.
 | md_mk3u	|  	| Mortal Kombat 3 (USA)					| md_mk3	| 1995	| Williams	| Sega Megadrive| Press A+C+Start for 4P mode.		|
 | md_mk3m	|  	| Mortal Kombat 3 Mini (Hack)				| md_mk3	| 2011	| 2011 Nemesis_c| Sega Megadrive| 					|
 | sms_mk2	|  	| Mortal Kombat II (Euro, Bra)				| 		| 1994	| Acclaim Entert| Sega Master Sy| 					|
-| md_mk2	|  	| Mortal Kombat II (World)				| 		| 1994	| Acclaim Entert| Sega Megadrive| 					|
 | gg_mk2	|  	| Mortal Kombat II (World)				| 		| 1994	| Acclaim Entert| Sega Game Gear| 					|
+| md_mk2	|  	| Mortal Kombat II (World)				| 		| 1994	| Acclaim Entert| Sega Megadrive| 					|
 | md_mk2wu	|  	| Mortal Kombat II (World) Unlimited (Hack, v1.0)	| md_mk2	| 1994	| 2011 Smoke	| Sega Megadrive| 					|
 | md_mkr	|  	| Mortal Kombat Revelations (Hack, Version 1.0)		| md_umk3t	| 2012	| 2012 SMOKE	| Sega Megadrive| 					|
-| tg_motoroad	|  	| Moto Roader						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | pce_motoroad	|  	| Moto Roader						| 		| 1989	| NCS		| PC Engine	| 					|
+| tg_motoroad	|  	| Moto Roader						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | pce_motorod2	|  	| Moto Roader II					| 		| 1991	| Masiya	| PC Engine	| 					|
 | pce_motorod2a	|  	| Moto Roader II (Alt)					| pce_motorod2	| 1991	| Masiya	| PC Engine	| 					|
 | cv_mtcracer	|  	| Motocross Racer					| 		| 1984	| Xonox		| ColecoVision	| 					|
@@ -5605,12 +5605,12 @@ This list contains all games supported by FB Alpha.
 | md_nbajam1	|  	| NBA Jam (Euro, USA)					| md_nbajam	| 1993	| Arena		| Sega Megadrive| 					|
 | gg_nbajam1	|  	| NBA Jam (Euro, USA)					| gg_nbajam	| 1993	| Arena		| Sega Game Gear| 					|
 | md_nbajam	|  	| NBA Jam (Euro, USA, v1.1)				| 		| 1993	| Arena		| Sega Megadrive| 					|
-| gg_nbajamj	|  	| NBA Jam (Jpn)						| gg_nbajam	| 1994	| Acclaim Entert| Sega Game Gear| 					|
 | md_nbajamj	|  	| NBA Jam (Jpn)						| md_nbajam	| 1994	| Acclaim Japan	| Sega Megadrive| 					|
+| gg_nbajamj	|  	| NBA Jam (Jpn)						| gg_nbajam	| 1994	| Acclaim Entert| Sega Game Gear| 					|
 | md_nbajamjp	|  	| NBA Jam (Jpn, Prototype)				| md_nbajam	| 1994	| Acclaim Japan	| Sega Megadrive| 					|
 | gg_nbajam	|  	| NBA Jam (USA, v1.1)					| 		| 1993	| Arena		| Sega Game Gear| 					|
-| md_nbajamte	|  	| NBA Jam Tournament Edition (World)			| 		| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | gg_nbajamte	|  	| NBA Jam Tournament Edition (World)			| 		| 1994	| Acclaim Entert| Sega Game Gear| 					|
+| md_nbajamte	|  	| NBA Jam Tournament Edition (World)			| 		| 1995	| Acclaim Entert| Sega Megadrive| 					|
 | md_nbajamtef	|  	| NBA Jam Tournament Edition (World, 2002 Fix Release)	| md_nbajamte	| 2002?	| Acclaim Entert| Sega Megadrive| 					|
 | md_nbaliv95	|  	| NBA Live 95 (Euro, USA)				| 		| 1994	| Electronic Art| Sega Megadrive| 					|
 | md_nbaliv95k	|  	| NBA Live 95 (Kor)					| md_nbaliv95	| 1994	| Electronic Art| Sega Megadrive| 					|
@@ -5670,10 +5670,10 @@ This list contains all games supported by FB Alpha.
 | neotet	|  	| NeoGeo 2-Player Tetris				| 		| 2013	| Crim/Stephen	| Neo Geo	| 					|
 | neo3ddmo	|  	| NeoGeo 3D! Demo					| 		| 2012	| Oxygene	| Neo Geo	| 					|
 | msx_nkoshien	|  	| Nessen Koushien (Jpn)					| 		| 1984	| Casio		| MSX		| 					|
-| pce_neutopia	|  	| Neutopia						| 		| 1989	| Hudson	| PC Engine	| 					|
 | tg_neutopia	|  	| Neutopia						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
-| tg_neutopi2	|  	| Neutopia II						| 		| 1992	| NEC		| TurboGrafx 16	| 					|
+| pce_neutopia	|  	| Neutopia						| 		| 1989	| Hudson	| PC Engine	| 					|
 | pce_neutopi2	|  	| Neutopia II						| 		| 1991	| Hudson	| PC Engine	| 					|
+| tg_neutopi2	|  	| Neutopia II						| 		| 1992	| NEC		| TurboGrafx 16	| 					|
 | md_n3dgdevi	|  	| New 3D Golf Simulation - Devil's Course (Jpn)		| 		| 1994	| Sega		| Sega Megadrive| 					|
 | md_n3dgaugu	|  	| New 3D Golf Simulation - Harukanaru Augusta (Jpn)	| 		| 1993	| T & E Soft	| Sega Megadrive| 					|
 | md_n3dgpebb	|  	| New 3D Golf Simulation - Pebble Beach no Hatou (Jpn)	| md_pebble	| 1993	| Sega		| Sega Megadrive| 					|
@@ -5709,8 +5709,8 @@ This list contains all games supported by FB Alpha.
 | gg_nfl95p12	|  	| NFL '95 (Prototype, 19940825-A)			| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_nfl95p10	|  	| NFL '95 (Prototype, 19940826)				| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
 | md_nfl95p13	|  	| NFL '95 (Prototype, 19940830)				| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
-| md_nfl95p12	|  	| NFL '95 (Prototype, 19940831)				| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
 | gg_nfl95p09	|  	| NFL '95 (Prototype, 19940831)				| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
+| md_nfl95p12	|  	| NFL '95 (Prototype, 19940831)				| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
 | md_nfl95p11	|  	| NFL '95 (Prototype, 19940901)				| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
 | gg_nfl95p08	|  	| NFL '95 (Prototype, 19940902)				| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
 | md_nfl95p10	|  	| NFL '95 (Prototype, 19940902)				| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
@@ -5724,8 +5724,8 @@ This list contains all games supported by FB Alpha.
 | md_nfl95p03	|  	| NFL '95 (Prototype, 19940909)				| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
 | gg_nfl95p06	|  	| NFL '95 (Prototype, 19940910)				| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
 | md_nfl95p01	|  	| NFL '95 (Prototype, 19940911)				| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
-| md_nfl95p02	|  	| NFL '95 (Prototype, 19940911-B)			| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
 | gg_nfl95p05	|  	| NFL '95 (Prototype, 19940911-B)			| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
+| md_nfl95p02	|  	| NFL '95 (Prototype, 19940911-B)			| md_nfl95	| 1994	| Sega		| Sega Megadrive| 					|
 | gg_nfl95p04	|  	| NFL '95 (Prototype, 19940911-C)			| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_nfl95p03	|  	| NFL '95 (Prototype, 19940912)				| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_nfl95p01	|  	| NFL '95 (Prototype, 19940914)				| gg_nfl95	| 1994	| Sega		| Sega Game Gear| 					|
@@ -5892,8 +5892,8 @@ This list contains all games supported by FB Alpha.
 | sg1k_matchpg	|  	| Okamoto Ayako no Match Play Golf (Jpn, OMV)		| 		| 1984?	| Tsukuda Origin| Sega SG-1000	| 					|
 | sg1k_matchpga	|  	| Okamoto Ayako no Match Play Golf (Jpn, OMV, Alt)	| sg1k_matchpg	| 1984?	| Tsukuda Origin| Sega SG-1000	| 					|
 | sg1k_matchpgt	|  	| Okamoto Ayako no Match Play Golf (Tw)			| sg1k_matchpg	| 1984?	| Aaronix	| Sega SG-1000	| 					|
-| md_olympgld	|  	| Olympic Gold (Euro)					| 		| 1992	| U.S. Gold	| Sega Megadrive| 					|
 | sms_olympgld	|  	| Olympic Gold (Euro)					| 		| 1992	| U.S. Gold	| Sega Master Sy| 					|
+| md_olympgld	|  	| Olympic Gold (Euro)					| 		| 1992	| U.S. Gold	| Sega Megadrive| 					|
 | gg_olympgld	|  	| Olympic Gold (Euro, v1, SMS Mode)			| 		| 1992	| U.S. Gold	| Sega Game Gear| 					|
 | md_olympgldj	|  	| Olympic Gold (Jpn, Kor)				| md_olympgld	| 1992	| Sega		| Sega Megadrive| 					|
 | gg_olympglda	|  	| Olympic Gold (Jpn, USA, v0, SMS Mode)			| gg_olympgld	| 1992	| U.S. Gold	| Sega Game Gear| 					|
@@ -5923,8 +5923,8 @@ This list contains all games supported by FB Alpha.
 | othunderu	|  	| Operation Thunderbolt (US, rev 1)			| othunder	| 1988	| Taito America | Taito Misc	| 					|
 | othundero	|  	| Operation Thunderbolt (World)				| othunder	| 1988	| Taito Corporat| Taito Misc	| 					|
 | othunder	|  	| Operation Thunderbolt (World, rev 1)			| 		| 1988	| Taito Corporat| Taito Misc	| 					|
-| msx_opwolf	|  	| Operation Wolf					| 		| 2009	| TOYBOX	| MSX		| 					|
 | pce_opwolf	|  	| Operation Wolf					| 		| 1990	| NEC Avenue	| PC Engine	| 					|
+| msx_opwolf	|  	| Operation Wolf					| 		| 2009	| TOYBOX	| MSX		| 					|
 | sms_opwolf	|  	| Operation Wolf (Euro, Bra)				| 		| 1990	| Sega		| Sega Master Sy| 					|
 | opwolfj	|  	| Operation Wolf (Japan)				| opwolf	| 1987	| Taito Corporat| Taito Misc	| 					|
 | opwolfjsc	|  	| Operation Wolf (Japan, SC)				| opwolf	| 1987	| Taito Corporat| Taito Misc	| 					|
@@ -5937,8 +5937,8 @@ This list contains all games supported by FB Alpha.
 | orbitron	|  	| Orbitron						| 		| 19??	| Signatron USA	| Galaxian	| 					|
 | orbs		|  	| Orbs (10/7/94 prototype?)				| 		| 1994	| American Sammy| Seta		| 					|
 | tg_griffon	|  	| Order of the Griffon					| 		| 1992	| TTI		| TurboGrafx 16	| 					|
-| pce_ordyne	|  	| Ordyne						| 		| 1989	| Namcot	| PC Engine	| 					|
 | tg_ordyne	|  	| Ordyne						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
+| pce_ordyne	|  	| Ordyne						| 		| 1989	| Namcot	| PC Engine	| 					|
 | ordynej	|  	| Ordyne (Japan)					| ordyne	| 1988	| Namco		| System 2	| 					|
 | ordyne	|  	| Ordyne (Japan, English Version)			| 		| 1988	| Namco		| System 2	| 					|
 | sg1k_orguss	|  	| Orguss (Euro, Jpn)					| 		| 1984	| Sega		| Sega SG-1000	| 					|
@@ -6014,8 +6014,8 @@ This list contains all games supported by FB Alpha.
 | md_pacattak	|  	| Pac-Attack (USA)					| md_pacpanic	| 1993	| Namco		| Sega Megadrive| 					|
 | pacgal	|  	| Pac-Gal						| mspacman	| 1981	| hack		| Pac-man	| 					|
 | gg_pacintim	|  	| Pac-In-Time (Prototype)				| 		| 199?	| Unknown	| Sega Game Gear| 					|
-| pce_pacland	|  	| Pac-land						| 		| 1989	| Namcot	| PC Engine	| 					|
 | tg_pacland	|  	| Pac-Land						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_pacland	|  	| Pac-land						| 		| 1989	| Namcot	| PC Engine	| 					|
 | paclandj	|  	| Pac-Land (Japan new)					| pacland	| 1984	| Namco		| Miscellaneous	| 					|
 | paclandjo	|  	| Pac-Land (Japan old)					| pacland	| 1984	| Namco		| Miscellaneous	| 					|
 | paclandjo2	|  	| Pac-Land (Japan older)				| pacland	| 1984	| Namco		| Miscellaneous	| 					|
@@ -6025,8 +6025,8 @@ This list contains all games supported by FB Alpha.
 | pacmanbl	|  	| Pac-Man (Galaxian hardware, set 1)			| puckman	| 1981	| bootleg	| Galaxian	| 					|
 | pacmanbla	|  	| Pac-Man (Galaxian hardware, set 2)			| puckman	| 1981	| bootleg	| Galaxian	| 					|
 | pacheart	|  	| Pac-Man (Hearts)					| puckman	| 1981	| hack		| Pac-man	| 					|
-| gg_pacmanj	|  	| Pac-Man (Jpn)						| gg_pacman	| 1991	| Namcot	| Sega Game Gear| 					|
 | msx_pacman	|  	| Pac-Man (Jpn)						| 		| 1984	| Namcot	| MSX		| 					|
+| gg_pacmanj	|  	| Pac-Man (Jpn)						| gg_pacman	| 1991	| Namcot	| Sega Game Gear| 					|
 | msx_pacmanb	|  	| Pac-Man (Jpn, Alt 2)					| msx_pacman	| 1984	| Namcot	| MSX		| 					|
 | msx_pacmana	|  	| Pac-Man (Jpn, Alt)					| msx_pacman	| 1984	| Namcot	| MSX		| 					|
 | pacman	|  	| Pac-Man (Midway)					| puckman	| 1980	| Namco (Midway | Pac-man	| 					|
@@ -6039,8 +6039,8 @@ This list contains all games supported by FB Alpha.
 | pacplus	|  	| Pac-Man Plus						| 		| 1982	| [Namco] (Midwa| Pac-man	| 					|
 | pacmania	|  	| Pac-Mania						| 		| 1987	| Namco		| System 1	| 					|
 | pacmaniao	|  	| Pac-Mania (111187 sound program)			| pacmania	| 1987	| Namco		| System 1	| 					|
-| msx_pacmania	|  	| Pac-Mania (Euro)					| 		| 1988	| Grandslam Ente| MSX		| 					|
 | sms_pacmania	|  	| Pac-Mania (Euro)					| 		| 1991	| Tengen	| Sega Master Sy| 					|
+| msx_pacmania	|  	| Pac-Mania (Euro)					| 		| 1988	| Grandslam Ente| MSX		| 					|
 | md_pacmania	|  	| Pac-Mania (Euro, USA)					| 		| 1991	| Tengen	| Sega Megadrive| 					|
 | pacmaniaj	|  	| Pac-Mania (Japan)					| pacmania	| 1987	| Namco		| System 1	| 					|
 | md_pacpanic	|  	| Pac-Panic (Euro)					| 		| 1993	| Namco		| Sega Megadrive| 					|
@@ -6192,8 +6192,8 @@ This list contains all games supported by FB Alpha.
 | md_sampras1	|  	| Pete Sampras Tennis (Euro, USA, J-Cart, Alt)		| md_sampras	| 1994	| Codemasters	| Sega Megadrive| 					|
 | ppan		|  	| Peter Pan (bootleg of Hook)				| hook		| 1992	| bootleg	| M92		| 					|
 | md_pgaeuro	|  	| PGA European Tour (Euro, USA)				| 		| 1994	| Electronic Art| Sega Megadrive| 					|
-| gg_pga96	|  	| PGA Tour 96 (Euro, USA)				| 		| 1996	| Black Pearl	| Sega Game Gear| 					|
 | md_pga96	|  	| PGA Tour 96 (Euro, USA)				| 		| 1995	| Electronic Art| Sega Megadrive| 					|
+| gg_pga96	|  	| PGA Tour 96 (Euro, USA)				| 		| 1996	| Black Pearl	| Sega Game Gear| 					|
 | sms_pgatour	|  	| PGA Tour Golf (Euro)					| 		| 1991	| Tengen	| Sega Master Sy| 					|
 | gg_pgatourt	|  	| PGA Tour Golf (Euro, USA)				| 		| 1991	| Tengen	| Sega Game Gear| 					|
 | md_pgaa	|  	| PGA Tour Golf (Euro, USA, v1.1)			| md_pga	| 1991	| Electronic Art| Sega Megadrive| 					|
@@ -6225,14 +6225,22 @@ This list contains all games supported by FB Alpha.
 | md_pstar2br	|  	| Phantasy Star II (Bra)				| md_pstar2	| 199?	| Tec Toy	| Sega Megadrive| 					|
 | md_pstar2a	|  	| Phantasy Star II (Euro, USA)				| md_pstar2	| 1989	| Sega		| Sega Megadrive| 					|
 | md_pstar2	|  	| Phantasy Star II (Euro, USA, Rev. A)			| 		| 1989	| Sega		| Sega Megadrive| 					|
+| md_ps2aae	|  	| Phantasy Star II - Amia's Adventure (Hack, English)	| md_ps2aa	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2aa	|  	| Phantasy Star II - Amia's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
+| md_ps2abe	|  	| Phantasy Star II - Anne's Adventure (Hack, English)	| md_ps2ab	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2ab	|  	| Phantasy Star II - Anne's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
+| md_ps2ace	|  	| Phantasy Star II - Huey's Adventure (Hack, English)	| md_ps2ac	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2ac	|  	| Phantasy Star II - Huey's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
 | md_pstar2j	|  	| Phantasy Star II - Kaerazaru Toki no Owari ni (Jpn)	| md_pstar2	| 1989	| Sega		| Sega Megadrive| 					|
+| md_ps2ade	|  	| Phantasy Star II - Kinds's Adventure (Hack, English)	| md_ps2ad	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2ad	|  	| Phantasy Star II - Kinds's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
+| md_ps2aee	|  	| Phantasy Star II - Nei's Adventure (Hack, English)	| md_ps2ae	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2ae	|  	| Phantasy Star II - Nei's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
+| md_ps2afe	|  	| Phantasy Star II - Rudger's Adventure (Hack, English)	| md_ps2af	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2af	|  	| Phantasy Star II - Rudger's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
+| md_ps2age	|  	| Phantasy Star II - Shilka's Adventure (Hack, English)	| md_ps2ag	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2ag	|  	| Phantasy Star II - Shilka's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
+| md_ps2ahe	|  	| Phantasy Star II - Yushis's Adventure (Hack, English)	| md_ps2ah	| 2010	| Sega		| Sega Megadrive| 					|
 | md_ps2ah	|  	| Phantasy Star II - Yushis's Adventure (Jpn, SegaNet)	| 		| 1991	| Sega		| Sega Megadrive| 					|
 | md_pstar3br	|  	| Phantasy Star III - Generations of Doom (Bra)		| md_pstar3	| 1998	| Tec Toy	| Sega Megadrive| 					|
 | md_pstar3	|  	| Phantasy Star III - Generations of Doom (Euro, USA, Ko| 		| 1990	| Sega		| Sega Megadrive| 					|
@@ -6431,8 +6439,8 @@ This list contains all games supported by FB Alpha.
 | md_pdrive	|  	| Power Drive (Euro)					| 		| 1994	| U.S. Gold	| Sega Megadrive| 					|
 | pce_power11	|  	| Power Eleven						| 		| 1991	| Hudson	| PC Engine	| 					|
 | pce_powergat	|  	| Power Gate						| 		| 1991	| Pack-In-Video	| PC Engine	| 					|
-| tg_pgolf	|  	| Power Golf						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | pce_pgolf	|  	| Power Golf						| 		| 1989	| Hudson	| PC Engine	| 					|
+| tg_pgolf	|  	| Power Golf						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
 | powerins	|  	| Power Instinct (USA)					| 		| 1993	| Atlus		| Miscellaneous	| 					|
 | powerinsa	|  	| Power Instinct (USA, bootleg set 1)			| powerins	| 1993	| Atlus		| Miscellaneous	| 					|
 | powerinsb	|  	| Power Instinct (USA, bootleg set 2)			| powerins	| 1993	| Atlus		| Miscellaneous	| 					|
@@ -6485,8 +6493,8 @@ This list contains all games supported by FB Alpha.
 | sailormnk	|  	| Pretty Soldier Sailor Moon (ver. 95/03/22B, Korea)	| sailormn	| 1995	| BanPresto / Ga| Cave		| 					|
 | sailormnt	|  	| Pretty Soldier Sailor Moon (ver. 95/03/22B, Taiwan)	| sailormn	| 1995	| BanPresto / Ga| Cave		| 					|
 | sailormnu	|  	| Pretty Soldier Sailor Moon (ver. 95/03/22B, USA)	| sailormn	| 1995	| BanPresto / Ga| Cave		| 					|
-| gg_primal	|  	| Primal Rage (Euro, USA)				| 		| 1994	| Time Warner In| Sega Game Gear| 					|
 | md_primal	|  	| Primal Rage (Euro, USA)				| 		| 1995	| Time Warner In| Sega Megadrive| 					|
+| gg_primal	|  	| Primal Rage (Euro, USA)				| 		| 1994	| Time Warner In| Sega Game Gear| 					|
 | prmtmfgt	|  	| Prime Time Fighter (Ver 2.1A 1993/05/21) (New Version)| trstar	| 1993	| Taito America | F3 System	| 					|
 | prmtmfgto	|  	| Prime Time Fighter (Ver 2.1A 1993/05/21) (Old Version)| trstar	| 1993	| Taito America | F3 System	| 					|
 | md_primetim	|  	| Prime Time NFL Starring Deion Sanders (USA)		| 		| 1995	| Sega		| Sega Megadrive| 					|
@@ -6718,8 +6726,8 @@ This list contains all games supported by FB Alpha.
 | sms_rtypep	|  	| R-Type (Prototype)					| sms_rtype	| 1988	| Sega		| Sega Master Sy| 					|
 | rtypeu	|  	| R-Type (US)						| rtype		| 1987	| Irem (Nintendo| M72		| 					|
 | rtypeb	|  	| R-Type (World bootleg)				| rtype		| 1987	| bootleg	| M72		| 					|
-| rtype		|  	| R-Type (World)					| 		| 1987	| Irem		| M72		| 					|
 | sms_rtype	|  	| R-Type (World)					| 		| 1988	| Sega		| Sega Master Sy| 					|
+| rtype		|  	| R-Type (World)					| 		| 1987	| Irem		| M72		| 					|
 | rtype2	|  	| R-Type II						| 		| 1989	| Irem		| M82		| 					|
 | rtype2j	|  	| R-Type II (Japan)					| rtype2	| 1989	| Irem		| M82		| 					|
 | rtype2jc	|  	| R-Type II (Japan, revision C)				| rtype2	| 1989	| Irem		| M82		| 					|
@@ -7178,8 +7186,8 @@ This list contains all games supported by FB Alpha.
 | tsamurai	|  	| Samurai Nihon-Ichi (set 1)				| 		| 1985	| Kaneko / Taito| Miscellaneous	| 					|
 | tsamurai2	|  	| Samurai Nihon-Ichi (set 2)				| tsamurai	| 1985	| Kaneko / Taito| Miscellaneous	| 					|
 | md_samsho	|  	| Samurai Shodown (Euro)				| 		| 1994	| Takara	| Sega Megadrive| 					|
-| gg_samsho	|  	| Samurai Shodown (USA)					| 		| 1994	| Takara	| Sega Game Gear| 					|
 | md_samshou	|  	| Samurai Shodown (USA)					| md_samsho	| 1994	| Takara	| Sega Megadrive| 					|
+| gg_samsho	|  	| Samurai Shodown (USA)					| 		| 1994	| Takara	| Sega Game Gear| 					|
 | samshoh	|  	| Samurai Shodown / Samurai Spirits (NGH-045)		| samsho	| 1993	| SNK		| Neo Geo MVS	| 					|
 | samsho	|  	| Samurai Shodown / Samurai Spirits (NGM-045)		| 		| 1993	| SNK		| Neo Geo MVS	| 					|
 | samshoa	|  	| Samurai Shodown / Samurai Spirits (NGM-045, alternate | samsho	| 1993	| SNK		| Neo Geo MVS	| 					|
@@ -7369,9 +7377,9 @@ This list contains all games supported by FB Alpha.
 | msx_senjokam	|  	| Senjou no Ookami (Jpn)				| 		| 1987	| ASCII		| MSX		| 					|
 | msx_senjyo	|  	| Senjyo (Jpn)						| 		| 1984	| Sony		| MSX		| 					|
 | msx_senjyoa	|  	| Senjyo (Jpn, Alt)					| msx_senjyo	| 1984	| Sony		| MSX		| 					|
+| sms_sensible	|  	| Sensible Soccer (Euro)				| 		| 1993	| Sony Imagesoft| Sega Master Sy| 					|
 | gg_sensible	|  	| Sensible Soccer (Euro)				| 		| 1994	| Sony Imagesoft| Sega Game Gear| 					|
 | md_sensible	|  	| Sensible Soccer (Euro)				| 		| 1993	| Renegade	| Sega Megadrive| 					|
-| sms_sensible	|  	| Sensible Soccer (Euro)				| 		| 1993	| Sony Imagesoft| Sega Master Sy| 					|
 | md_sensiblep	|  	| Sensible Soccer (Prototype)				| md_sensible	| 1993	| Renegade	| Sega Megadrive| 					|
 | md_sensibie	|  	| Sensible Soccer - International Edition (Euro)	| 		| 1993	| Sony Imagesoft| Sega Megadrive| 					|
 | sg1k_serizawa	|  	| Serizawa Hachidan no Tsumeshogi (Jpn)			| 		| 1983	| Sega		| Sega SG-1000	| 					|
@@ -7568,8 +7576,8 @@ This list contains all games supported by FB Alpha.
 | msx_skydiver	|  	| Sky Diver (Jpn)					| 		| 1984	| Hudson Soft	| MSX		| 					|
 | skyfox	|  	| Sky Fox						| 		| 1987	| Jaleco (Nichib| Miscellaneous	| 					|
 | msx_skyjag	|  	| Sky Jaguar (Jpn)					| 		| 1984	| Konami	| MSX		| 					|
-| sms_skyjag	|  	| Sky Jaguar (Kor)					| 		| 199?	| Samsung	| Sega Master Sy| 					|
 | msx_skyjagk	|  	| Sky Jaguar (Kor)					| msx_skyjag	| 198?	| Zemina	| MSX		| 					|
+| sms_skyjag	|  	| Sky Jaguar (Kor)					| 		| 199?	| Samsung	| Sega Master Sy| 					|
 | skykidd	|  	| Sky Kid (CUS60 version)				| skykid	| 1985	| Namco		| Miscellaneous	| 					|
 | skykid	|  	| Sky Kid (new version)					| 		| 1985	| Namco		| Miscellaneous	| 					|
 | skykido	|  	| Sky Kid (old version)					| skykid	| 1985	| Namco		| Miscellaneous	| 					|
@@ -7653,8 +7661,8 @@ This list contains all games supported by FB Alpha.
 | solrwarr	|  	| Solar-Warrior (US)					| xsleena	| 1986	| Technos Japan | Miscellaneous	| 					|
 | soldam	|  	| Soldam						| 		| 1992	| Jaleco	| Mega System 1	| 					|
 | soldamj	|  	| Soldam (Japan)					| soldam	| 1992	| Jaleco	| Mega System 1	| 					|
-| pce_soldblad	|   NW	| Soldier Blade						| 		| 1992	| Hudson	| PC Engine	| Hangs at first boss			|
 | tg_soldblad	|   NW	| Soldier Blade						| 		| 1992	| TTI		| TurboGrafx 16	| Hangs at first boss			|
+| pce_soldblad	|   NW	| Soldier Blade						| 		| 1992	| Hudson	| PC Engine	| Hangs at first boss			|
 | pce_soldblas	|  	| Soldier Blade Special - Caravan Stage			| 		| 19??	| Hudson	| PC Engine	| 					|
 | amazon	|  	| Soldier Girl Amazon					| 		| 1986	| Nichibutsu	| Miscellaneous	| 					|
 | md_soldfort	|  	| Soldiers of Fortune (USA)				| md_chaoseng	| 1993	| Spectrum Holob| Sega Megadrive| 					|
@@ -7814,8 +7822,8 @@ This list contains all games supported by FB Alpha.
 | sos		|  	| SOS							| 		| 1980	| Namco		| Miscellaneous	| 					|
 | sotsugyo	|  	| Sotsugyo Shousho					| 		| 1995	| Mitchell (Atlu| DECO IC16	| 					|
 | soukobdx	|  	| Souko Ban Deluxe (Japan, SB1)				| boxyboy	| 1990	| Namco		| System 1	| 					|
-| sg1k_sokoban	|  	| Soukoban (Jpn)					| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | gg_sokoban	|  	| Soukoban (Jpn)					| 		| 1990	| Riverhill Soft| Sega Game Gear| 					|
+| sg1k_sokoban	|  	| Soukoban (Jpn)					| 		| 1985	| Sega		| Sega SG-1000	| 					|
 | sg1k_sokobank	|  	| Soukoban (Kor)					| sg1k_sokoban	| 1985?	| Unknown	| Sega SG-1000	| 					|
 | msx_sokobank	|  	| Soukoban (Kor)					| msx_sokoban	| 1984?	| Qnix		| MSX		| 					|
 | sg1k_sokobant	|  	| Soukoban (Tw)						| sg1k_sokoban	| 1985?	| Unknown	| Sega SG-1000	| 					|
@@ -7846,8 +7854,8 @@ This list contains all games supported by FB Alpha.
 | spacegunj	|  	| Space Gun (Japan)					| spacegun	| 1990	| Taito Corporat| Taito-Z	| 					|
 | spacegunu	|  	| Space Gun (US)					| spacegun	| 1990	| Taito America | Taito-Z	| 					|
 | spacegun	|  	| Space Gun (World)					| 		| 1990	| Taito Corporat| Taito-Z	| 					|
-| pce_sharrier	|  	| Space Harrier						| 		| 1988	| NEC		| PC Engine	| 					|
 | tg_sharrier	|  	| Space Harrier						| 		| 1989	| NEC		| TurboGrafx 16	| 					|
+| pce_sharrier	|  	| Space Harrier						| 		| 1988	| NEC		| PC Engine	| 					|
 | sharrier1	|  	| Space Harrier (8751 315-5163)				| sharrier	| 1985	| Sega		| Hang-On	| 					|
 | sms_sharrier	|  	| Space Harrier (Euro)					| 		| 1986	| Sega		| Sega Master Sy| 					|
 | sms_sharrierju|  	| Space Harrier (Jpn, USA)				| sms_sharrier	| 1986	| Sega		| Sega Master Sy| 					|
@@ -7859,8 +7867,8 @@ This list contains all games supported by FB Alpha.
 | md_sharrier	|  	| Space Harrier II (World)				| 		| 1989	| Sega		| Sega Megadrive| 					|
 | spcinv95u	|  	| Space Invaders '95: The Attack Of Lunar Loonies (Ver 2| spcinv95	| 1995	| Taito America | F3 System	| 					|
 | spcinv95	|  	| Space Invaders '95: The Attack Of Lunar Loonies (Ver 2| 		| 1995	| Taito Corporat| F3 System	| 					|
-| msx_spaceinv	|  	| Space Invaders (Jpn)					| 		| 1985	| Nidecom	| MSX		| 					|
 | sg1k_spaceinv	|  	| Space Invaders (Jpn)					| 		| 1985	| Sega		| Sega SG-1000	| 					|
+| msx_spaceinv	|  	| Space Invaders (Jpn)					| 		| 1985	| Nidecom	| MSX		| 					|
 | sisv1		|   NW	| Space Invaders (SV Version rev 1)			| invaders	| 1978	| Taito		| Miscellaneous	| 					|
 | sisv2		|  	| Space Invaders (SV Version rev 2)			| invaders	| 1978	| Taito		| Miscellaneous	| 					|
 | sisv3		|  	| Space Invaders (SV Version rev 3)			| invaders	| 1978	| Taito		| Miscellaneous	| 					|
@@ -7917,8 +7925,8 @@ This list contains all games supported by FB Alpha.
 | speedspn	|  	| Speed Spin						| 		| 1994	| TCH		| Miscellaneous	| 					|
 | sms_speedbl	|  	| Speedball (Image Works) (Euro)			| 		| 1990	| Image Works	| Sega Master Sy| 					|
 | sms_speedblv	|  	| Speedball (Virgin) (Euro, USA)			| 		| 1992	| Virgin Interac| Sega Master Sy| 					|
-| md_speedbl2	|  	| Speedball 2 (Euro)					| 		| 1992	| Virgin Games	| Sega Megadrive| 					|
 | sms_speedbl2	|  	| Speedball 2 (Euro)					| 		| 1992	| Virgin Interac| Sega Master Sy| 					|
+| md_speedbl2	|  	| Speedball 2 (Euro)					| 		| 1992	| Virgin Games	| Sega Megadrive| 					|
 | md_speedbl2j	|  	| Speedball 2 (Jpn)					| md_speedbl2	| 1992	| CRI		| Sega Megadrive| 					|
 | md_speedbl2u	|  	| Speedball 2 - Brutal Deluxe (USA)			| md_speedbl2	| 1991	| Arena		| Sega Megadrive| 					|
 | msx_sbracer	|  	| Speedboat Racer (Euro)				| 		| 1987	| Methodic Solut| MSX		| 					|
@@ -7953,8 +7961,8 @@ This list contains all games supported by FB Alpha.
 | splatterj	|  	| Splatter House (Japan, SH1)				| splatter	| 1988	| Namco		| System 1	| 					|
 | splatter	|  	| Splatter House (World, new version (SH3))		| 		| 1988	| Namco		| System 1	| 					|
 | splatter2	|  	| Splatter House (World, old version (SH2))		| splatter	| 1988	| Namco		| System 1	| 					|
-| pce_splatth	|  	| Splatterhouse						| 		| 1990	| Namcot	| PC Engine	| 					|
 | tg_splatth	|  	| Splatterhouse						| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_splatth	|  	| Splatterhouse						| 		| 1990	| Namcot	| PC Engine	| 					|
 | md_splatth2	|  	| Splatterhouse 2 (Euro)				| 		| 1992	| Sega		| Sega Megadrive| 					|
 | md_splatth2u	|  	| Splatterhouse 2 (USA)					| md_splatth2	| 1992	| Namco		| Sega Megadrive| 					|
 | md_splatth3	|  	| Splatterhouse 3 (USA)					| 		| 1993	| Namco		| Sega Megadrive| 					|
@@ -8369,8 +8377,8 @@ This list contains all games supported by FB Alpha.
 | strkfgtr	|  	| Strike Fighter (World)				| 		| 1991	| Sega		| Y-Board	| 					|
 | stg		|  	| Strike Gunner S.T.G					| 		| 1991	| Athena / Tecmo| Seta		| 					|
 | cv_strikeit	|  	| Strike It!						| 		| 1983	| Telegames	| ColecoVision	| 					|
-| md_striker	|  	| Striker (Euro)					| 		| 1994	| Sega		| Sega Megadrive| 					|
 | gg_striker	|  	| Striker (Euro)					| 		| 1995	| Sega		| Sega Game Gear| 					|
+| md_striker	|  	| Striker (Euro)					| 		| 1994	| Sega		| Sega Megadrive| 					|
 | md_strikerp	|  	| Striker (Euro, Prototype)				| md_striker	| 1994	| Sega		| Sega Megadrive| 					|
 | s1945		|  	| Strikers 1945						| 		| 1995	| Psikyo	| Psikyo 68EC020| 					|
 | s1945a	|  	| Strikers 1945 (Alt)					| s1945		| 1995	| Psikyo	| Psikyo 68EC020| 					|
@@ -8465,8 +8473,8 @@ This list contains all games supported by FB Alpha.
 | superchsj	|  	| Super Chase - Criminal Termination (Japan)		| superchs	| 1992	| Taito Corporat| Taito Misc	| 					|
 | superchsu	|  	| Super Chase - Criminal Termination (US)		| superchs	| 1992	| Taito America | Taito Misc	| 					|
 | superchs	|  	| Super Chase - Criminal Termination (World)		| 		| 1992	| Taito Corporat| Taito Misc	| 					|
-| cv_scobra	|  	| Super Cobra						| 		| 1983	| Parker Brother| ColecoVision	| 					|
 | scobra	|  	| Super Cobra						| 		| 1981	| Konami	| Galaxian	| 					|
+| cv_scobra	|  	| Super Cobra						| 		| 1983	| Parker Brother| ColecoVision	| 					|
 | cv_scobraa	|  	| Super Cobra (Alt)					| cv_scobra	| 1983	| Parker Brother| ColecoVision	| 					|
 | scobrab	|  	| Super Cobra (bootleg)					| scobra	| 1981	| bootleg	| Galaxian	| 					|
 | msx_scobra	|  	| Super Cobra (Jpn)					| 		| 1983	| Konami	| MSX		| 					|
@@ -8594,8 +8602,8 @@ This list contains all games supported by FB Alpha.
 | smbombr1	|  	| Super Muscle Bomber - the international blowout (94080| ringdest	| 1994	| Capcom	| CPS2		| 					|
 | smbomb	|  	| Super Muscle Bomber - the international blowout (94083| ringdest	| 1994	| Capcom	| CPS2		| 					|
 | sms_superoff	|  	| Super Off Road (Euro)					| 		| 1992	| Virgin Interac| Sega Master Sy| 					|
-| gg_superoff	|  	| Super Off Road (Euro, USA)				| 		| 1992	| Virgin Interac| Sega Game Gear| 					|
 | md_superoff	|  	| Super Off Road (Euro, USA)				| 		| 1994	| Ballistic	| Sega Megadrive| 					|
+| gg_superoff	|  	| Super Off Road (Euro, USA)				| 		| 1992	| Virgin Interac| Sega Game Gear| 					|
 | md_jordanb1	|  	| Super One on One - Jordan Vs Bird (Euro, USA)		| md_jordanb	| 1992	| Electronic Art| Sega Megadrive| 					|
 | md_jordanb	|  	| Super One on One - Jordan Vs Bird (Euro, USA, v1.1)	| 		| 1992	| Electronic Art| Sega Megadrive| 					|
 | md_jordanbj	|  	| Super One on One - Jordan Vs Bird (Jpn)		| md_jordanb	| 1993	| Electronic Art| Sega Megadrive| 					|
@@ -8771,8 +8779,8 @@ This list contains all games supported by FB Alpha.
 | sms_t2ag	|  	| T2 - The Arcade Game (Euro)				| 		| 1993	| Arena		| Sega Master Sy| 					|
 | md_t2ag	|  	| T2 - The Arcade Game (Euro, USA)			| 		| 1992	| Acclaim Entert| Sega Megadrive| 					|
 | gg_t2ag	|  	| T2 - The Arcade Game (Euro, USA)			| 		| 1993	| Arena		| Sega Game Gear| 					|
-| md_t2agj	|  	| T2 - The Arcade Game (Jpn)				| md_t2ag	| 1994	| Acclaim Japan	| Sega Megadrive| 					|
 | gg_t2agj	|  	| T2 - The Arcade Game (Jpn)				| gg_t2ag	| 1993	| Acclaim	| Sega Game Gear| 					|
+| md_t2agj	|  	| T2 - The Arcade Game (Jpn)				| md_t2ag	| 1994	| Acclaim Japan	| Sega Megadrive| 					|
 | md_t2agp	|  	| T2 - The Arcade Game (USA, Prototype)			| md_t2ag	| 1992	| Acclaim Entert| Sega Megadrive| 					|
 | md_t3ag	|  	| T3 - The Arcade Game (Rus)				| md_t2ag	| 199?	| <unknown>	| Sega Megadrive| 					|
 | md_cars	|  	| Tachki (Rus)						| md_sskid	| 199?	| <unknown>	| Sega Megadrive| 					|
@@ -9069,8 +9077,8 @@ This list contains all games supported by FB Alpha.
 | gg_berensp15	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| gg_berens	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_berensp14	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| gg_berens	| 1994	| Sega		| Sega Game Gear| 					|
 | gg_berensp13	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| gg_berens	| 1994	| Sega		| Sega Game Gear| 					|
-| gg_berensp12	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| gg_berens	| 1994	| Sega		| Sega Game Gear| 					|
 | md_berensp05	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| md_berens	| 1994	| Sega		| Sega Megadrive| 					|
+| gg_berensp12	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| gg_berens	| 1994	| Sega		| Sega Game Gear| 					|
 | md_berensp04	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| md_berens	| 1994	| Sega		| Sega Megadrive| 					|
 | md_berensp03	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| md_berens	| 1994	| Sega		| Sega Megadrive| 					|
 | md_berensp02	|  	| The Berenstain Bears' Camping Adventure (Prototype, 19| md_berens	| 1994	| Sega		| Sega Megadrive| 					|
@@ -9101,12 +9109,12 @@ This list contains all games supported by FB Alpha.
 | sms_hicom3d	|  	| The Best Game Collection - Teddy Boy Blues + Great Soc| sms_hicom3a	| 1990	| Hi-Com	| Sega Master Sy| 					|
 | sms_hicom3c	|  	| The Best Game Collection - Teddy Boy Blues + Pit-Pot +| sms_hicom3a	| 1990	| Hi-Com	| Sega Master Sy| 					|
 | billiard	|  	| The Billiards						| hustler	| 1981	| bootleg	| Galaxian	| 					|
-| sg1k_blckonyx	|  	| The Black Onyx (Jpn)					| 		| 1987	| Sega		| Sega SG-1000	| 					|
 | msx_blckonyx	|  	| The Black Onyx (Jpn)					| 		| 1985	| ASCII		| MSX		| 					|
+| sg1k_blckonyx	|  	| The Black Onyx (Jpn)					| 		| 1987	| Sega		| Sega SG-1000	| 					|
 | msx_blckony2	|  	| The Black Onyx II - Search For The Fire Crystal (Jpn)	| 		| 1986	| ASCII		| MSX		| 					|
 | bounty	|  	| The Bounty						| 		| 1982	| Orca		| Miscellaneous	| 					|
-| msx_castle	|  	| The Castle (Jpn)					| 		| 1985	| ASCII		| MSX		| 					|
 | sg1k_castle	|  	| The Castle (Jpn)					| 		| 1986	| Sega		| Sega SG-1000	| 					|
+| msx_castle	|  	| The Castle (Jpn)					| 		| 1985	| ASCII		| MSX		| 					|
 | msx_castlek	|  	| The Castle (Kor)					| msx_castle	| 1987	| Static Soft	| MSX		| 					|
 | md_chaoseng	|  	| The Chaos Engine (Euro)				| 		| 1992	| Microprose	| Sega Megadrive| 					|
 | md_chaosen2	|  	| The Chaos Engine 2 (Euro, Prototype)			| 		| 199?	| <unknown>	| Sega Megadrive| 					|
@@ -9190,8 +9198,8 @@ This list contains all games supported by FB Alpha.
 | md_crashdump	|  	| The Incredible Crash Dummies (USA, Prototype)		| md_crashdum	| 1993	| Flying Edge	| Sega Megadrive| 					|
 | gg_crashdum	|  	| The Incredible Crash Dummies (World)			| 		| 1992	| Acclaim Entert| Sega Game Gear| 					|
 | sms_hulk	|  	| The Incredible Hulk (Euro, Bra)			| 		| 1994	| U.S. Gold	| Sega Master Sy| 					|
-| md_hulk	|  	| The Incredible Hulk (Euro, USA)			| 		| 1994	| U.S. Gold	| Sega Megadrive| 					|
 | gg_hulk	|  	| The Incredible Hulk (Euro, USA)			| 		| 1994	| U.S. Gold	| Sega Game Gear| 					|
+| md_hulk	|  	| The Incredible Hulk (Euro, USA)			| 		| 1994	| U.S. Gold	| Sega Megadrive| 					|
 | md_incredib	|  	| The Incredibles (Rus)					| md_tick	| 199?	| Glorysun	| Sega Megadrive| 					|
 | skingame	|  	| The Irem Skins Game (US set 1)			| majtitl2	| 1992	| Irem America	| M92		| 					|
 | skingame2	|  	| The Irem Skins Game (US set 2)			| majtitl2	| 1992	| Irem America	| M92		| 					|
@@ -9444,8 +9452,8 @@ This list contains all games supported by FB Alpha.
 | md_supshin2p2	|  	| The Super Shinobi II (Jpn, Prototype, Earlier)	| md_shinobi3	| 1993	| Sega		| Sega Megadrive| 					|
 | superspy	|  	| The Super Spy (NGM-011)(NGH-011)			| 		| 1990	| SNK		| Neo Geo MVS	| 					|
 | sms_termntrb	|  	| The Terminator (Bra)					| sms_termntr	| 1992	| Tec Toy	| Sega Master Sy| 					|
-| md_termintr	|  	| The Terminator (Euro)					| 		| 1991	| Virgin Games	| Sega Megadrive| 					|
 | sms_termntr	|  	| The Terminator (Euro)					| 		| 1992	| Virgin Interac| Sega Master Sy| 					|
+| md_termintr	|  	| The Terminator (Euro)					| 		| 1991	| Virgin Games	| Sega Megadrive| 					|
 | gg_termntr	|  	| The Terminator (Euro, USA)				| 		| 1992	| Virgin Interac| Sega Game Gear| 					|
 | md_termintru	|  	| The Terminator (USA)					| md_termintr	| 1991	| Virgin Games	| Sega Megadrive| 					|
 | sms_3dragon	|  	| The Three Dragon Story (Kor)				| 		| 19??	| Zemina	| Sega Master Sy| 					|
@@ -9546,8 +9554,8 @@ This list contains all games supported by FB Alpha.
 | md_timekill	|  	| Time Killers (Euro)					| 		| 1996	| Black Pearl	| Sega Megadrive| 					|
 | md_timekillu	|  	| Time Killers (USA)					| md_timekill	| 1996	| Black Pearl	| Sega Megadrive| 					|
 | timelimt	|  	| Time Limit						| 		| 1983	| Chuo Co. Ltd	| Miscellaneous	| 					|
-| cv_timeplt	|  	| Time Pilot						| 		| 1983	| Coleco	| ColecoVision	| 					|
 | timeplt	|  	| Time Pilot						| 		| 1982	| Konami	| GX393		| 					|
+| cv_timeplt	|  	| Time Pilot						| 		| 1983	| Coleco	| ColecoVision	| 					|
 | tp84		|  	| Time Pilot '84 (set 1)				| 		| 1984	| Konami	| GX388		| 					|
 | tp84a		|  	| Time Pilot '84 (set 2)				| tp84		| 1984	| Konami	| GX388		| 					|
 | tp84b		|  	| Time Pilot '84 (set 3)				| tp84		| 1984	| Konami	| GX388		| 					|
@@ -9778,16 +9786,16 @@ This list contains all games supported by FB Alpha.
 | turtshipko	|  	| Turtle Ship (Korea, older)				| turtship	| 1988	| Philko	| Miscellaneous	| 					|
 | turtship	|  	| Turtle Ship (North America)				| 		| 1988	| Philko (Sharp | Miscellaneous	| 					|
 | turtles	|  	| Turtles						| 		| 1981	| Konami (Stern | Galaxian	| 					|
-| tutankhm	|  	| Tutankham						| 		| 1982	| Konami	| GX350		| 					|
 | cv_tutankhm	|  	| Tutankham						| 		| 1983	| Parker Brother| ColecoVision	| 					|
+| tutankhm	|  	| Tutankham						| 		| 1982	| Konami	| GX350		| 					|
 | cv_tutankhma	|  	| Tutankham (Alt)					| cv_tutankhm	| 1983	| Parker Brother| ColecoVision	| 					|
 | tutankhms	|  	| Tutankham (Stern Electronics)				| tutankhm	| 1982	| Konami (Stern | GX350		| 					|
 | tg_tvbasket	|  	| TV Sports Basketball					| 		| 1991	| NEC		| TurboGrafx 16	| 					|
 | pce_tvbasket	|  	| TV Sports Basketball					| 		| 1993	| Victor Interac| PC Engine	| 					|
 | pce_tvfootbl	|  	| TV Sports Football					| 		| 1991	| Victor Interac| PC Engine	| 					|
 | tg_tvfootbl	|  	| TV Sports Football					| 		| 1990	| NEC		| TurboGrafx 16	| 					|
-| tg_tvhockey	|  	| TV Sports Hockey					| 		| 1991	| NEC		| TurboGrafx 16	| 					|
 | pce_tvhockey	|  	| TV Sports Hockey					| 		| 1993	| Victor Interac| PC Engine	| 					|
+| tg_tvhockey	|  	| TV Sports Hockey					| 		| 1991	| NEC		| TurboGrafx 16	| 					|
 | twinactn	|  	| Twin Action						| 		| 1995	| Afega		| NMK16		| 					|
 | twinadvk	|  	| Twin Adventure (Korea)				| twinadv	| 1995	| Barko Corp	| Kaneko Pandora| 					|
 | twinadv	|  	| Twin Adventure (World)				| 		| 1995	| Barko Corp	| Kaneko Pandora| 					|
@@ -9879,8 +9887,8 @@ This list contains all games supported by FB Alpha.
 | cv_upndown	|  	| Up'n Down						| 		| 1984	| Sega		| ColecoVision	| 					|
 | upndown	|  	| Up'n Down (315-5030)					| 		| 1983	| Sega		| System 1	| 					|
 | upndownu	|  	| Up'n Down (not encrypted)				| upndown	| 1983	| Sega		| System 1	| 					|
-| md_ustrike	|  	| Urban Strike (Euro, USA)				| 		| 1994	| Electronic Art| Sega Megadrive| 					|
 | gg_ustrike	|  	| Urban Strike (Euro, USA)				| 		| 1995	| Black Pearl	| Sega Game Gear| 					|
+| md_ustrike	|  	| Urban Strike (Euro, USA)				| 		| 1994	| Electronic Art| Sega Megadrive| 					|
 | msx_uridium	|  	| Uridium						| 		| 2014	| Trilobyte	| MSX		| 					|
 | mustangs	|  	| US AAF Mustang (25th May. 1990 / Seoul Trading)	| mustang	| 1990	| UPL (Seoul Tra| NMK16		| 					|
 | mustang	|  	| US AAF Mustang (25th May. 1990)			| 		| 1990	| UPL		| NMK16		| 					|
@@ -9962,8 +9970,8 @@ This list contains all games supported by FB Alpha.
 | md_vecman2p3	|  	| Vectorman 2 (Prototype, 19960826)			| md_vecman2	| 1996	| Sega		| Sega Megadrive| 					|
 | md_vecman2p2	|  	| Vectorman 2 (Prototype, 19960827)			| md_vecman2	| 1996	| Sega		| Sega Megadrive| 					|
 | md_vecman2	|  	| Vectorman 2 (USA)					| 		| 1996	| Sega		| Sega Megadrive| 					|
-| pce_veigues	|  	| Veigues - Tactical Gladiator				| 		| 1990	| Victor Enterta| PC Engine	| 					|
 | tg_veigues	|  	| Veigues - Tactical Gladiator				| 		| 1990	| NEC		| TurboGrafx 16	| 					|
+| pce_veigues	|  	| Veigues - Tactical Gladiator				| 		| 1990	| Victor Enterta| PC Engine	| 					|
 | vendetta2pd	|  	| Vendetta (Asia, 2 Players ver. D)			| vendetta	| 1991	| Konami	| GX081		| 					|
 | vendetta2pu	|  	| Vendetta (Asia, 2 Players ver. U)			| vendetta	| 1991	| Konami	| GX081		| 					|
 | vendettaz	|  	| Vendetta (Asia, 4 Players ver. Z)			| vendetta	| 1991	| Konami	| GX081		| 					|
@@ -10616,8 +10624,8 @@ This list contains all games supported by FB Alpha.
 | cv_zaxxon	|  	| Zaxxon						| 		| 1982	| Coleco	| ColecoVision	| 					|
 | msx_zaxxones	|  	| Zaxxon (Electric Software)				| 		| 1985	| Electric Softw| MSX		| 					|
 | zaxxonj	|  	| Zaxxon (Japan)					| zaxxon	| 1982	| Sega		| Zaxxon	| 					|
-| msx_zaxxon	|  	| Zaxxon (Jpn)						| 		| 1985	| Pony Canyon	| MSX		| 					|
 | sg1k_zaxxon	|  	| Zaxxon (Jpn)						| 		| 1985	| Sega		| Sega SG-1000	| 					|
+| msx_zaxxon	|  	| Zaxxon (Jpn)						| 		| 1985	| Pony Canyon	| MSX		| 					|
 | msx_zaxxona	|  	| Zaxxon (Jpn, Alt)					| msx_zaxxon	| 1985	| Pony Canyon	| MSX		| 					|
 | zaxxon	|  	| Zaxxon (set 1, rev D)					| 		| 1982	| Sega		| Zaxxon	| 					|
 | zaxxon2	|  	| Zaxxon (set 2, unknown rev)				| zaxxon	| 1982	| Sega		| Zaxxon	| 					|
@@ -10685,17 +10693,17 @@ This list contains all games supported by FB Alpha.
 | msx_zona0	|  	| Zona 0 (Spa)						| 		| 1991	| Topo Soft	| MSX		| 					|
 | gg_zool	|  	| Zool (Euro)						| 		| 1994	| Gremlin	| Sega Game Gear| 					|
 | md_zool	|  	| Zool (Euro)						| 		| 1993	| Electronic Art| Sega Megadrive| 					|
-| gg_zoolu	|  	| Zool (USA)						| gg_zool	| 1993	| GameTek	| Sega Game Gear| 					|
 | md_zoolu	|  	| Zool (USA)						| md_zool	| 1993	| GameTek	| Sega Megadrive| 					|
+| gg_zoolu	|  	| Zool (USA)						| gg_zool	| 1993	| GameTek	| Sega Game Gear| 					|
 | sms_zool	|  	| Zool - Ninja of the 'Nth' Dimension (Euro)		| 		| 1993	| Gremlin Intera| Sega Master Sy| 					|
 | gg_zoolj	|  	| Zool no Yume Bouken (Jpn)				| gg_zool	| 1994	| Infocom	| Sega Game Gear| 					|
-| msx_zoom909	|  	| Zoom 909 (Jpn)					| 		| 1986	| Pony Canyon	| MSX		| 					|
 | sg1k_zoom909	|  	| Zoom 909 (Jpn)					| 		| 1985	| Sega		| Sega SG-1000	| 					|
+| msx_zoom909	|  	| Zoom 909 (Jpn)					| 		| 1986	| Pony Canyon	| MSX		| 					|
 | msx_zoom909k	|  	| Zoom 909 (Kor)					| msx_zoom909	| 19??	| Prosoft	| MSX		| 					|
 | md_zoom	|  	| Zoom! (World)						| 		| 1990	| Sega		| Sega Megadrive| 					|
 | md_zoop	|  	| Zoop (Euro)						| 		| 1995	| Viacom New Med| Sega Megadrive| 					|
-| gg_zoop	|  	| Zoop (USA)						| 		| 1995	| Viacom New Med| Sega Game Gear| 					|
 | md_zoopu	|  	| Zoop (USA)						| md_zoop	| 1995	| Viacom New Med| Sega Megadrive| 					|
+| gg_zoop	|  	| Zoop (USA)						| 		| 1995	| Viacom New Med| Sega Game Gear| 					|
 | gg_zoopp	|  	| Zoop (USA, Prototype)					| gg_zoop	| 1995	| Viacom New Med| Sega Game Gear| 					|
 | md_zouzou	|  	| Zou! Zou! Zou! Rescue Daisakusen (Jpn)		| md_rolo	| 1993	| Electronic Art| Sega Megadrive| 					|
 | zupapa	|  	| Zupapa!						| 		| 2001	| SNK		| Neo Geo MVS	| 					|
