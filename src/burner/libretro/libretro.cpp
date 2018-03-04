@@ -4116,3 +4116,8 @@ INT32 GameInpDefault()
 
 	return 0;
 }
+
+void RetroAchievementCallback(char* name, unsigned char *memory, unsigned int length)
+{
+	// TODO RetroAchievement logic
+}

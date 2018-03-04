@@ -4132,6 +4132,11 @@ INT32 NeoInit()
 		return 1;
 	}
 
+#ifdef RETRO_ACHIEVEMENTS
+	RetroAchievementCallback("mainram", Neo68KRAM, 65536);
+	RetroAchievementCallback("memorycard", NeoMemoryCard, 131072);
+#endif
+
 	return NeoInitCommon();
 }
 
