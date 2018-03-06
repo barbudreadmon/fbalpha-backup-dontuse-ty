@@ -4003,6 +4003,10 @@ static INT32 NeoInitCommon()
 	nNeoActiveSlot = 0;
 	neogeoReset();							// Reset machine
 
+#ifdef RETRO_ACHIEVEMENTS
+	RetroAchievementsCallback(RETRO_MEMORY_SYSTEM_RAM, Neo68KRAM, 65536);
+#endif
+
 	return 0;
 }
 
@@ -4131,11 +4135,6 @@ INT32 NeoInit()
 	if (NeoLoad68KBIOS(NeoSystem & 0x1f)) {
 		return 1;
 	}
-
-#ifdef RETRO_ACHIEVEMENTS
-	RetroAchievementsCallback("mainram", Neo68KRAM, 65536);
-	RetroAchievementsCallback("memorycard", NeoMemoryCard, 131072);
-#endif
 
 	return NeoInitCommon();
 }
