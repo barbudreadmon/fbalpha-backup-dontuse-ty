@@ -4135,6 +4135,6 @@ void RetroAchievementsCallback(unsigned int id, unsigned char *memory, unsigned 
 		ra_main_ram_data = (void*)memory;
 		ra_main_ram_size = length;
 
-		log_cb(RETRO_LOG_INFO, "System RAM set to %p %zu\n", memory, length);
+		log_cb(RETRO_LOG_INFO, "System RAM set to %p %u\n", memory, length);
 	}
 }
