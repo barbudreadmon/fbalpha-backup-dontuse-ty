@@ -2110,6 +2110,7 @@ INT32 SekScan(INT32 nAction)
 
 		SCAN_VAR(nSekCPUType[i]);
 		SCAN_VAR(nSekIRQPending[i]); // fix for Gradius 2 s.states -dink feb.3.2015
+		SCAN_VAR(nSekCycles[i]);
 
 #if defined EMU_A68K && defined EMU_M68K
 		// Switch to another core if needed

@@ -77,6 +77,7 @@ extern UINT8 NeoSystem;
 bool is_neogeo_game = false;
 bool allow_neogeo_mode = true;
 UINT16 switch_ncode = 0;
+int kNetGame = 1;
 
 enum neo_geo_modes
 {

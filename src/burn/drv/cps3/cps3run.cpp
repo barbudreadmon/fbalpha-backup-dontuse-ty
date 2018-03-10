@@ -84,6 +84,8 @@ static UINT32 chardma_table_address = 0;
 static INT32 cps3_gfx_width, cps3_gfx_height;
 static INT32 cps3_gfx_max_x, cps3_gfx_max_y;
 
+extern int kNetGame;
+
 
 // -- AMD/Fujitsu 29F016 --------------------------------------------------
 
@@ -2092,13 +2094,14 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 		ba.szName	= "Palette";
 		BurnAcb(&ba);
 
-#ifndef __LIBRETRO__
-		ba.Data		= RamCRam;
-		ba.nLen		= 0x0800000;
-		ba.nAddress = 0;
-		ba.szName	= "Sprite ROM";
-		BurnAcb(&ba);
-#endif
+		// Too huge and not necessary if running net game
+		if (!kNetGame) {
+			ba.Data		= RamCRam;
+			ba.nLen		= 0x0800000;
+			ba.nAddress = 0;
+			ba.szName	= "Sprite ROM";
+			BurnAcb(&ba);
+		}
 
 /*		// so huge. need not backup it while NOCD
 		// otherwize, need backup gfx also
