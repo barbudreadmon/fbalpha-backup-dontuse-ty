@@ -184,6 +184,10 @@ static const struct retro_variable var_fba_fm_interpolation = { "fba-fm-interpol
 // Neo Geo core options
 static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Force Neo Geo mode (if available); MVS|AES|UNIBIOS|DIPSWITCH" };
 
+// Retro Achievements support
+static void* ra_main_ram_data = NULL;
+static size_t ra_main_ram_size = 0;
+
 void retro_set_environment(retro_environment_t cb)
 {
 	environ_cb = cb;
@@ -1811,8 +1815,15 @@ void retro_unload_game(void) {}
 
 unsigned retro_get_region() { return RETRO_REGION_NTSC; }
 
-void *retro_get_memory_data(unsigned) { return 0; }
-size_t retro_get_memory_size(unsigned) { return 0; }
+void *retro_get_memory_data(unsigned id)
+{
+	return id == RETRO_MEMORY_SYSTEM_RAM ? ra_main_ram_data : NULL;
+}
+
+size_t retro_get_memory_size(unsigned id)
+{
+	return id == RETRO_MEMORY_SYSTEM_RAM ? ra_main_ram_size : 0;
+}
 
 unsigned retro_api_version() { return RETRO_API_VERSION; }
 
@@ -4120,5 +4131,11 @@ INT32 GameInpDefault()
 
 void RetroAchievementsCallback(unsigned int id, unsigned char *memory, unsigned int length)
 {
-	// TODO RetroAchievement logic
+	if (id == RETRO_MEMORY_SYSTEM_RAM)
+	{
+		ra_main_ram_data = (void*)memory;
+		ra_main_ram_size = length;
+
+		log_cb(RETRO_LOG_INFO, "System RAM set to %p %zu\n", memory, length);
+	}
 }
