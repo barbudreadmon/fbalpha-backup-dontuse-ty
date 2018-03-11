@@ -22,6 +22,8 @@
    char slash = '/';
 #endif
 
+bool init_input_needed = true;
+
 static void log_dummy(enum retro_log_level level, const char *fmt, ...) { }
 static const char *print_label(unsigned i);
 
@@ -1428,7 +1430,14 @@ void retro_run()
 
       bool macro_updated = apply_macro_from_variables();
 
-      if (macro_updated) // if the reinit_input_performed is true, the 2 following methods was already called in the init_input one
+      bool init_input_performed = false;
+
+      if (init_input_needed)
+      {
+         init_input();
+      }
+
+      if (macro_updated && !init_input_performed) // if the init_input_performed is true, the 2 following methods was already called in the init_input one
       {
          // Re-create the list of macro input_descriptors with new values
          init_macro_input_descriptors();
@@ -1639,7 +1648,9 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    // CPS3 won't run without defining nBurnSoundLen
    init_audio_buffer(nBurnSoundRate, 6000);
 
-   init_input();
+   if (init_input_needed) {
+      init_input();
+   }
 
    // Initialize EEPROM path
    snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%cfba%c", g_save_dir, slash, slash);
@@ -1832,7 +1843,7 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
 	if (port < nMaxPlayers && fba_devices[port] != device)
 	{
 		fba_devices[port] = device;
-		init_input();
+		init_input_needed = true;
 	}
 }
 
@@ -1916,6 +1927,8 @@ static bool init_input(void)
 	uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
 	if(!strcmp(systemname, "CPS-3"))
 	environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);*/
+
+	init_input_needed = false;
 
 	return 0;
 }
@@ -2989,7 +3002,7 @@ static void GameInpInitMacros()
 			pgi->nType = BIT_DIGITAL;
 			pgi->Macro.nMode = 0;
 
-			sprintf(pgi->Macro.szName, "P%i 3× Punch", nPlayer + 1);
+			sprintf(pgi->Macro.szName, "P%i 3x Punch", nPlayer + 1);
 			for (INT32 j = 0; j < 3; j++) {
 				BurnDrvGetInputInfo(&bii, nPunchInputs[nPlayer][j]);
 				pgi->Macro.pVal[j] = bii.pVal;
@@ -3005,7 +3018,7 @@ static void GameInpInitMacros()
 			pgi->nType = BIT_DIGITAL;
 			pgi->Macro.nMode = 0;
 
-			sprintf(pgi->Macro.szName, "P%i 3× Kick", nPlayer + 1);
+			sprintf(pgi->Macro.szName, "P%i 3x Kick", nPlayer + 1);
 			for (INT32 j = 0; j < 3; j++) {
 				BurnDrvGetInputInfo(&bii, nKickInputs[nPlayer][j]);
 				pgi->Macro.pVal[j] = bii.pVal;
