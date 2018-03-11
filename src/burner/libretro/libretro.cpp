@@ -343,7 +343,7 @@ void retro_get_system_info(struct retro_system_info *info)
 /////
 static INT32 InputTick();
 static void InputMake();
-static bool init_input();
+static bool init_input(bool);
 static void check_variables();
 
 void wav_exit() { }
@@ -1434,7 +1434,7 @@ void retro_run()
 
       if (init_input_needed)
       {
-         init_input();
+         init_input(macro_updated);
          init_input_performed = true;
       }
 
@@ -1650,7 +1650,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    init_audio_buffer(nBurnSoundRate, 6000);
 
    if (init_input_needed) {
-      init_input();
+      init_input(false);
    }
 
    // Initialize EEPROM path
@@ -1891,7 +1891,7 @@ static const char *print_label(unsigned i)
    }
 }
 
-static bool init_input(void)
+static bool init_input(bool macro_updated)
 {
 	switch_ncode = 0;
 
@@ -1918,14 +1918,17 @@ static bool init_input(void)
 	// Read the user core option values
 	check_variables();
 
-	bool macro_updated = apply_macro_from_variables();
+	if (!macro_updated) {
+		macro_updated = apply_macro_from_variables();
+	}
 
 	if (macro_updated) {
 		// Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
 		init_macro_input_descriptors();
-		// The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
-		set_input_descriptors();
 	}
+
+	// The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
+	set_input_descriptors();
 
 	/* serialization quirks for netplay, cps3 seems problematic, neogeo, cps1 and 2 seem to be good to go 
 	uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
