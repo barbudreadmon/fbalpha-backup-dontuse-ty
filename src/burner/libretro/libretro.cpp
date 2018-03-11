@@ -1435,6 +1435,7 @@ void retro_run()
       if (init_input_needed)
       {
          init_input();
+         init_input_performed = true;
       }
 
       if (macro_updated && !init_input_performed) // if the init_input_performed is true, the 2 following methods was already called in the init_input one
@@ -1916,12 +1917,15 @@ static bool init_input(void)
 	set_environment();
 	// Read the user core option values
 	check_variables();
-	apply_macro_from_variables();
 
-	// Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
-	init_macro_input_descriptors();
-	// The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
-	set_input_descriptors();
+	bool macro_updated = apply_macro_from_variables();
+
+	if (macro_updated) {
+		// Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
+		init_macro_input_descriptors();
+		// The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
+		set_input_descriptors();
+	}
 
 	/* serialization quirks for netplay, cps3 seems problematic, neogeo, cps1 and 2 seem to be good to go 
 	uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
