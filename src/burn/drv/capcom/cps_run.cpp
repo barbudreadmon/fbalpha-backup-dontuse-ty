@@ -164,6 +164,11 @@ INT32 CpsRunInit()
 		CheatSearchInitCallbackFunction = CpsQSoundCheatSearchCallback;
 	}
 
+	
+	#ifdef RETRO_ACHIEVEMENTS
+	RetroAchievementsCallback(RETRO_MEMORY_SYSTEM_RAM, CpsRamFF, 65536);
+	#endif
+	
 	return 0;
 }
 
