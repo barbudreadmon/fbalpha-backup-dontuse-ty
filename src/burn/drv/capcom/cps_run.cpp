@@ -163,11 +163,6 @@ INT32 CpsRunInit()
 	if (Cps == 2 || Cps1Qs == 1) {
 		CheatSearchInitCallbackFunction = CpsQSoundCheatSearchCallback;
 	}
-
-	
-	#ifdef RETRO_ACHIEVEMENTS
-	RetroAchievementsCallback(RETRO_MEMORY_SYSTEM_RAM, CpsRamFF, 65536);
-	#endif
 	
 	return 0;
 }

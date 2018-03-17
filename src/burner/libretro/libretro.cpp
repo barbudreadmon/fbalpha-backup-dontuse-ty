@@ -186,10 +186,6 @@ static const struct retro_variable var_fba_fm_interpolation = { "fba-fm-interpol
 // Neo Geo core options
 static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Force Neo Geo mode (if available); MVS|AES|UNIBIOS|DIPSWITCH" };
 
-// Retro Achievements support
-static void* ra_main_ram_data = NULL;
-static size_t ra_main_ram_size = 0;
-
 void retro_set_environment(retro_environment_t cb)
 {
 	environ_cb = cb;
@@ -1465,6 +1461,7 @@ void retro_run()
 static uint8_t *write_state_ptr;
 static const uint8_t *read_state_ptr;
 static unsigned state_size;
+static void *state_ptr = NULL;
 
 static int burn_write_state_cb(BurnArea *pba)
 {
@@ -1485,6 +1482,12 @@ static int burn_dummy_state_cb(BurnArea *pba)
    log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
    state_size += pba->nLen;
    return 0;
+}
+
+static int burn_get_state_ptr_cb(BurnArea *pba)
+{
+	state_ptr = pba->Data;
+	return 0;
 }
 
 size_t retro_serialize_size()
@@ -1829,12 +1832,35 @@ unsigned retro_get_region() { return RETRO_REGION_NTSC; }
 
 void *retro_get_memory_data(unsigned id)
 {
-	return id == RETRO_MEMORY_SYSTEM_RAM ? ra_main_ram_data : NULL;
+	if (id == RETRO_MEMORY_SYSTEM_RAM) {
+		int nHardwareFlag = (BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK);
+		INT32 nMin = 0;
+		BurnAcb = burn_get_state_ptr_cb;
+		state_ptr = NULL;
+		if (nHardwareFlag == HARDWARE_SNK_NEOGEO) {
+			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+			return state_ptr;
+		}
+		if (nHardwareFlag == HARDWARE_CAPCOM_CPS1) {
+			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+			return (state_ptr + 0x030000);
+		}
+	}
+	return NULL;
 }
 
 size_t retro_get_memory_size(unsigned id)
 {
-	return id == RETRO_MEMORY_SYSTEM_RAM ? ra_main_ram_size : 0;
+	if(id == RETRO_MEMORY_SYSTEM_RAM) {
+		int nHardwareFlag = (BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK);
+		if(nHardwareFlag == HARDWARE_SNK_NEOGEO) {
+			return 0x00010000;
+		}
+		if(nHardwareFlag == HARDWARE_CAPCOM_CPS1) {
+			return 0x010000;
+		}
+	}
+	return 0;
 }
 
 unsigned retro_api_version() { return RETRO_API_VERSION; }
@@ -4147,15 +4173,4 @@ INT32 GameInpDefault()
 	*/
 
 	return 0;
-}
-
-void RetroAchievementsCallback(unsigned int id, unsigned char *memory, unsigned int length)
-{
-	if (id == RETRO_MEMORY_SYSTEM_RAM)
-	{
-		ra_main_ram_data = (void*)memory;
-		ra_main_ram_size = length;
-
-		log_cb(RETRO_LOG_INFO, "System RAM set to %p %zu\n", memory, length);
-	}
 }

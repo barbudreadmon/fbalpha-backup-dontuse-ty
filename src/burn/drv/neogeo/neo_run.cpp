@@ -4003,10 +4003,6 @@ static INT32 NeoInitCommon()
 	nNeoActiveSlot = 0;
 	neogeoReset();							// Reset machine
 
-#ifdef RETRO_ACHIEVEMENTS
-	RetroAchievementsCallback(RETRO_MEMORY_SYSTEM_RAM, Neo68KRAM, 65536);
-#endif
-
 	return 0;
 }
 
