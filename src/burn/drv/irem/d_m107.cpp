@@ -47,6 +47,7 @@ static UINT8 DrvJoy2[8];
 static UINT8 DrvJoy3[8];
 static UINT8 DrvJoy4[8];
 static UINT8 DrvInput[8];
+static UINT8 DrvFakeDips[1];
 static UINT8 DrvReset;
 
 static INT32 config_cpu_speed;
@@ -55,6 +56,7 @@ static INT32 vblank;
 static INT32 irq_vectorbase;
 static INT32 graphics_mask[2];
 static INT32 nPrevScreenPos = 0;
+static INT32 m107speedhack = 0;
 
 typedef struct _m107_layer m107_layer;
 struct _m107_layer
@@ -100,6 +102,7 @@ static struct BurnInputInfo FirebarrInputList[] = {
 	{"Dip A",		BIT_DIPSWITCH,	DrvInput + 5,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvInput + 6,	"dip"		},
 	{"Dip C",		BIT_DIPSWITCH,	DrvInput + 7,	"dip"		},
+	{"Dip D",		BIT_DIPSWITCH,	DrvFakeDips + 0,	"dip"		},
 };
 
 STDINPUTINFO(Firebarr)
@@ -148,6 +151,7 @@ static struct BurnInputInfo Dsoccr94InputList[] = {
 	{"Dip A",		BIT_DIPSWITCH,	DrvInput + 5,	"dip"		},
 	{"Dip B",		BIT_DIPSWITCH,	DrvInput + 6,	"dip"		},
 	{"Dip C",		BIT_DIPSWITCH,	DrvInput + 7,	"dip"		},
+	{"Dip D",		BIT_DIPSWITCH,	DrvFakeDips + 0,	"dip"		},
 };
 
 STDINPUTINFO(Dsoccr94)
@@ -228,6 +232,10 @@ static struct BurnDIPInfo FirebarrDIPList[]=
 	{0x16, 0x01, 0xc0, 0x80, "1 Coin  3 Credits"				},
 	{0x16, 0x01, 0xc0, 0x40, "1 Coin  5 Credits"				},
 	{0x16, 0x01, 0xc0, 0x00, "1 Coin  6 Credits"				},
+
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"},
+	{0x17, 0x01, 0x01, 0x00, "No"			},
+	{0x17, 0x01, 0x01, 0x01, "Yes"			},
 };
 
 STDDIPINFO(Firebarr)
@@ -307,6 +315,10 @@ static struct BurnDIPInfo Dsoccr94DIPList[]=
 	{0x26, 0x01, 0xc0, 0x80, "1 Coin  3 Credits"				},
 	{0x26, 0x01, 0xc0, 0x40, "1 Coin  5 Credits"				},
 	{0x26, 0x01, 0xc0, 0x00, "1 Coin  6 Credits"				},
+
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"},
+	{0x27, 0x01, 0x01, 0x00, "No"			},
+	{0x27, 0x01, 0x01, 0x01, "Yes"			},
 };
 
 STDDIPINFO(Dsoccr94)
@@ -605,6 +617,8 @@ static INT32 DrvDoReset()
 	sprite_enable = 0;
 	raster_irq_position = -1;
 	sound_cpu_reset = 0;
+	
+	m107speedhack = (DrvFakeDips[0] & 1);
 
 	return 0;
 }
@@ -989,7 +1003,7 @@ static INT32 DrvDraw()
 			DrvPalette[i] = CalcCol(i<<1);
 		bRecalcPalette = 0;
 	}
-//	DrawLayers(0, nScreenHeight);
+	if (m107speedhack) DrawLayers(0, nScreenHeight);
 
 	if (nBurnLayer & 8) draw_sprites();
 
@@ -1022,7 +1036,7 @@ static void scanline_interrupts(INT32 scanline)
 	if (scanline == raster_irq_position) {
 
 		if (scanline>=8 && scanline < 248 && nPrevScreenPos != (scanline-8)+1) {
-			if (nPrevScreenPos >= 0 && nPrevScreenPos <= 239)
+			if (nPrevScreenPos >= 0 && nPrevScreenPos <= 239 && !m107speedhack)
 				DrawLayers(nPrevScreenPos, (scanline-8)+1);
 			nPrevScreenPos = (scanline-8)+1;
 		}
@@ -1036,7 +1050,7 @@ static void scanline_interrupts(INT32 scanline)
 	{
 		vblank = 0;
 
-		if (nPrevScreenPos != 240) {
+		if (nPrevScreenPos != 240 && !m107speedhack) {
 			DrawLayers(nPrevScreenPos, 240);
 		}
 		nPrevScreenPos = 0;
