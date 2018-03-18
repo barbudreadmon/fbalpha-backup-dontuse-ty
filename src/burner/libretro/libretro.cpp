@@ -1843,7 +1843,16 @@ void *retro_get_memory_data(unsigned id)
 		}
 		if (nHardwareFlag == HARDWARE_CAPCOM_CPS1) {
 			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
-			return (state_ptr + 0x030000);
+			int offset = 0x030000; // size of "CpsRam90"
+			return (state_ptr + offset);
+		}
+		if (nHardwareFlag == HARDWARE_CAPCOM_CPS2) {
+			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+			int offset = 0x030000; // size of "CpsRam90"
+			if (strcmp(BurnDrvGetTextA(DRV_NAME), "gigaman2") != 0) {
+				offset += 0x020000; // size of "Gigaman2DummyQsndRam"
+			}
+			return (state_ptr + offset);
 		}
 	}
 	return NULL;
@@ -1857,6 +1866,9 @@ size_t retro_get_memory_size(unsigned id)
 			return 0x00010000;
 		}
 		if(nHardwareFlag == HARDWARE_CAPCOM_CPS1) {
+			return 0x010000;
+		}
+		if(nHardwareFlag == HARDWARE_CAPCOM_CPS2) {
 			return 0x010000;
 		}
 	}
