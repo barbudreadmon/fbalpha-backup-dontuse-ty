@@ -1845,6 +1845,10 @@ void *retro_get_memory_data(unsigned id)
 			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
 			return (state_ptr + 0x030000);
 		}
+		if (nHardwareFlag == HARDWARE_CAPCOM_CPS2) {
+			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+			return (state_ptr + 0x030000 + 0x004000);
+		}
 	}
 	return NULL;
 }
@@ -1857,6 +1861,9 @@ size_t retro_get_memory_size(unsigned id)
 			return 0x00010000;
 		}
 		if(nHardwareFlag == HARDWARE_CAPCOM_CPS1) {
+			return 0x010000;
+		}
+		if(nHardwareFlag == HARDWARE_CAPCOM_CPS2) {
 			return 0x010000;
 		}
 	}
