@@ -1854,6 +1854,10 @@ void *retro_get_memory_data(unsigned id)
 			}
 			return (state_ptr + offset);
 		}
+		if (nHardwareFlag == HARDWARE_CAPCOM_CPS2) {
+			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+			return (state_ptr + 0x030000 + 0x004000);
+		}
 	}
 	return NULL;
 }
