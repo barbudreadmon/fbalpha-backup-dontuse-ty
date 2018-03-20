@@ -1841,7 +1841,7 @@ void *retro_get_memory_data(unsigned id)
 			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
 			return state_ptr;
 		}
-		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1) {
+		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND) {
 			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
 			int offset = 0x030000; // size of "CpsRam90"
 			return (state_ptr + offset);
