@@ -1461,7 +1461,7 @@ void retro_run()
 static uint8_t *write_state_ptr;
 static const uint8_t *read_state_ptr;
 static unsigned state_size;
-static void *state_ptr = NULL;
+static unsigned char *state_ptr = NULL;
 
 static int burn_write_state_cb(BurnArea *pba)
 {
@@ -1486,7 +1486,7 @@ static int burn_dummy_state_cb(BurnArea *pba)
 
 static int burn_get_state_ptr_cb(BurnArea *pba)
 {
-	state_ptr = pba->Data;
+	state_ptr = (unsigned char*)pba->Data;
 	return 0;
 }
 
@@ -1833,20 +1833,20 @@ unsigned retro_get_region() { return RETRO_REGION_NTSC; }
 void *retro_get_memory_data(unsigned id)
 {
 	if (id == RETRO_MEMORY_SYSTEM_RAM) {
-		int nHardwareFlag = (BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK);
+		int nHardwareCode = BurnDrvGetHardwareCode();
 		INT32 nMin = 0;
 		BurnAcb = burn_get_state_ptr_cb;
 		state_ptr = NULL;
-		if (nHardwareFlag == HARDWARE_SNK_NEOGEO) {
+		if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
 			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
 			return state_ptr;
 		}
-		if (nHardwareFlag == HARDWARE_CAPCOM_CPS1) {
+		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1) {
 			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
 			int offset = 0x030000; // size of "CpsRam90"
 			return (state_ptr + offset);
 		}
-		if (nHardwareFlag == HARDWARE_CAPCOM_CPS2) {
+		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
 			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
 			int offset = 0x030000; // size of "CpsRam90"
 			if (strcmp(BurnDrvGetTextA(DRV_NAME), "gigaman2") != 0) {
@@ -1861,14 +1861,14 @@ void *retro_get_memory_data(unsigned id)
 size_t retro_get_memory_size(unsigned id)
 {
 	if(id == RETRO_MEMORY_SYSTEM_RAM) {
-		int nHardwareFlag = (BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK);
-		if(nHardwareFlag == HARDWARE_SNK_NEOGEO) {
+		int nHardwareCode = BurnDrvGetHardwareCode();
+		if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
 			return 0x00010000;
 		}
-		if(nHardwareFlag == HARDWARE_CAPCOM_CPS1) {
+		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1) {
 			return 0x010000;
 		}
-		if(nHardwareFlag == HARDWARE_CAPCOM_CPS2) {
+		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
 			return 0x010000;
 		}
 	}
