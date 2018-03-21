@@ -1828,18 +1828,17 @@ static unsigned char *mainram_ptr = NULL;
 
 static int burn_get_mainram_ptr_cb(BurnArea *pba)
 {
-	mainram_ptr = NULL;
 	int nHardwareCode = BurnDrvGetHardwareCode();
 	if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
 		if (strcmp(pba->szName, "68K RAM") == 0) {
-			memcpy(mainram_ptr, pba->Data, pba->nLen);
+			mainram_ptr = (unsigned char*)pba->Data;
 		}
 	}
 	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1
 	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND
 	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
 		if (strcmp(pba->szName, "CpsRamFF") == 0) {
-			memcpy(mainram_ptr, pba->Data, pba->nLen);
+			mainram_ptr = (unsigned char*)pba->Data;
 		}
 	}
 	return 0;
@@ -1849,6 +1848,7 @@ void *retro_get_memory_data(unsigned id)
 {
 	if (id == RETRO_MEMORY_SYSTEM_RAM) {
 		INT32 nMin = 0;
+		mainram_ptr = NULL;
 		BurnAcb = burn_get_mainram_ptr_cb;
 		BurnAreaScan(ACB_MEMORY_RAM, &nMin);
 		return mainram_ptr;
