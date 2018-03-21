@@ -1461,7 +1461,6 @@ void retro_run()
 static uint8_t *write_state_ptr;
 static const uint8_t *read_state_ptr;
 static unsigned state_size;
-static unsigned char *state_ptr = NULL;
 
 static int burn_write_state_cb(BurnArea *pba)
 {
@@ -1482,12 +1481,6 @@ static int burn_dummy_state_cb(BurnArea *pba)
    log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
    state_size += pba->nLen;
    return 0;
-}
-
-static int burn_get_state_ptr_cb(BurnArea *pba)
-{
-	state_ptr = (unsigned char*)pba->Data;
-	return 0;
 }
 
 size_t retro_serialize_size()
@@ -1830,30 +1823,35 @@ void retro_unload_game(void) {}
 
 unsigned retro_get_region() { return RETRO_REGION_NTSC; }
 
+// Retro Achievements support
+static unsigned char *mainram_ptr = NULL;
+
+static int burn_get_mainram_ptr_cb(BurnArea *pba)
+{
+	mainram_ptr = NULL;
+	int nHardwareCode = BurnDrvGetHardwareCode();
+	if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
+		if (strcmp(pba->szName, "68K RAM") == 0) {
+			memcpy(mainram_ptr, pba->Data, pba->nLen);
+		}
+	}
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
+		if (strcmp(pba->szName, "CpsRamFF") == 0) {
+			memcpy(mainram_ptr, pba->Data, pba->nLen);
+		}
+	}
+	return 0;
+}
+
 void *retro_get_memory_data(unsigned id)
 {
 	if (id == RETRO_MEMORY_SYSTEM_RAM) {
-		int nHardwareCode = BurnDrvGetHardwareCode();
 		INT32 nMin = 0;
-		BurnAcb = burn_get_state_ptr_cb;
-		state_ptr = NULL;
-		if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
-			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
-			return state_ptr;
-		}
-		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND) {
-			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
-			int offset = 0x030000; // size of "CpsRam90"
-			return (state_ptr + offset);
-		}
-		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
-			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
-			int offset = 0x030000; // size of "CpsRam90"
-			if (strcmp(BurnDrvGetTextA(DRV_NAME), "gigaman2") != 0) {
-				offset += 0x020000; // size of "Gigaman2DummyQsndRam"
-			}
-			return (state_ptr + offset);
-		}
+		BurnAcb = burn_get_mainram_ptr_cb;
+		BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+		return mainram_ptr;
 	}
 	return NULL;
 }
@@ -1865,10 +1863,9 @@ size_t retro_get_memory_size(unsigned id)
 		if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
 			return 0x00010000;
 		}
-		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1) {
-			return 0x010000;
-		}
-		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
+		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1
+		 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND
+		 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
 			return 0x010000;
 		}
 	}
