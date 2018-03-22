@@ -5,5 +5,4 @@
 
 extern unsigned int (__cdecl *BurnHighCol) (signed int r, signed int g, signed int b, signed int i);
 
-void RetroAchievementsCallback(unsigned int id, unsigned char *memory, unsigned int length);
 #endif

@@ -1668,12 +1668,12 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    InpDIPSWInit();
    BurnDrvInit();
    
-   // Get MainRam once, to check if we know where it is and to fill MainRamSize
+   // Get MainRam
    INT32 nMin = 0;
    BurnAcb = StateGetMainRamAcb;
    BurnAreaScan(ACB_MEMORY_RAM, &nMin);
    if (bMainRamFound) {
-      log_cb(RETRO_LOG_INFO, "[Cheevos] MainRam found : size is %d, data is %p\n", MainRamSize, MainRamData);
+      log_cb(RETRO_LOG_INFO, "[Cheevos] System RAM set to %p %zu\n", MainRamData, MainRamSize);
    }
 
    init_audio_buffer(nBurnSoundRate, nBurnFPS);

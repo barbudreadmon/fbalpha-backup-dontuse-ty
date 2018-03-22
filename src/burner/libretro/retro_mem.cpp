@@ -33,16 +33,7 @@ int StateGetMainRamAcb(BurnArea *pba)
 
 void *retro_get_memory_data(unsigned id)
 {
-	if (id == RETRO_MEMORY_SYSTEM_RAM) {
-		// No need to call this if MainRam wasn't found in fba_init
-		if (bMainRamFound) {
-			INT32 nMin = 0;
-			BurnAcb = StateGetMainRamAcb;
-			BurnAreaScan(ACB_MEMORY_RAM, &nMin);
-		}
-		return MainRamData;
-	}
-	return NULL;
+	return id == RETRO_MEMORY_SYSTEM_RAM ? MainRamData : NULL;
 }
 
 size_t retro_get_memory_size(unsigned id)
