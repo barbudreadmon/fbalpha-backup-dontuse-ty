@@ -1038,7 +1038,8 @@ static void scanline_interrupts(INT32 scanline)
 		if (scanline>=8 && scanline < 248 && nPrevScreenPos != (scanline-8)+1) {
 			if (nPrevScreenPos >= 0 && nPrevScreenPos <= 239 && !m107speedhack)
 				DrawLayers(nPrevScreenPos, (scanline-8)+1);
-			nPrevScreenPos = (scanline-8)+1;
+			if (!m107speedhack || (nPrevScreenPos >= 0 && nPrevScreenPos <= 239))
+				nPrevScreenPos = (scanline-8)+1;
 		}
 
 		VezSetIRQLineAndVector(0, (irq_vectorbase + 8)/4, CPU_IRQSTATUS_ACK);
