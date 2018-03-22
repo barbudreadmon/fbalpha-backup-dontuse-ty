@@ -5,7 +5,7 @@
 #include "burner.h"
 #include "retro_mem.h"
 
-unsigned char *MainRamData = NULL;
+void* MainRamData = NULL;
 size_t MainRamSize = 0;
 bool bMainRamFound = false;
 
@@ -14,7 +14,7 @@ int StateGetMainRamAcb(BurnArea *pba)
 	int nHardwareCode = BurnDrvGetHardwareCode();
 	if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
 		if (strcmp(pba->szName, "68K RAM") == 0) {
-			MainRamData = (unsigned char*)pba->Data;
+			MainRamData = pba->Data;
 			MainRamSize = pba->nLen;
 			bMainRamFound = true;
 		}
@@ -23,7 +23,7 @@ int StateGetMainRamAcb(BurnArea *pba)
 	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND
 	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
 		if (strcmp(pba->szName, "CpsRamFF") == 0) {
-			MainRamData = (unsigned char*)pba->Data;
+			MainRamData = pba->Data;
 			MainRamSize = pba->nLen;
 			bMainRamFound = true;
 		}
