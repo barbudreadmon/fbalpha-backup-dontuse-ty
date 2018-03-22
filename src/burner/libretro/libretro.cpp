@@ -5,6 +5,7 @@
 
 #include "libretro.h"
 #include "burner.h"
+#include "retro_mem.h"
 
 #include <file/file_path.h>
 
@@ -1666,6 +1667,15 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
 
    InpDIPSWInit();
    BurnDrvInit();
+   
+   // Get MainRam once, to check if we know where it is and to fill MainRamSize
+   INT32 nMin = 0;
+   BurnAcb = StateGetMainRamAcb;
+   BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+   if (bMainRamFound) {
+      log_cb(RETRO_LOG_INFO, "[Cheevos] MainRam found : size is %d, data is %p\n", MainRamSize, MainRamData);
+   }
+
    init_audio_buffer(nBurnSoundRate, nBurnFPS);
 
    char input[MAX_PATH];
@@ -1822,55 +1832,6 @@ bool retro_load_game_special(unsigned, const struct retro_game_info*, size_t) { 
 void retro_unload_game(void) {}
 
 unsigned retro_get_region() { return RETRO_REGION_NTSC; }
-
-// Retro Achievements support
-static unsigned char *mainram_ptr = NULL;
-
-static int burn_get_mainram_ptr_cb(BurnArea *pba)
-{
-	int nHardwareCode = BurnDrvGetHardwareCode();
-	if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
-		if (strcmp(pba->szName, "68K RAM") == 0) {
-			mainram_ptr = (unsigned char*)pba->Data;
-		}
-	}
-	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1
-	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND
-	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
-		if (strcmp(pba->szName, "CpsRamFF") == 0) {
-			mainram_ptr = (unsigned char*)pba->Data;
-		}
-	}
-	return 0;
-}
-
-void *retro_get_memory_data(unsigned id)
-{
-	if (id == RETRO_MEMORY_SYSTEM_RAM) {
-		INT32 nMin = 0;
-		mainram_ptr = NULL;
-		BurnAcb = burn_get_mainram_ptr_cb;
-		BurnAreaScan(ACB_MEMORY_RAM, &nMin);
-		return mainram_ptr;
-	}
-	return NULL;
-}
-
-size_t retro_get_memory_size(unsigned id)
-{
-	if(id == RETRO_MEMORY_SYSTEM_RAM) {
-		int nHardwareCode = BurnDrvGetHardwareCode();
-		if ((nHardwareCode & (HARDWARE_PUBLIC_MASK - HARDWARE_PREFIX_CARTRIDGE)) == HARDWARE_SNK_NEOGEO) {
-			return 0x00010000;
-		}
-		if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1
-		 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND
-		 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
-			return 0x010000;
-		}
-	}
-	return 0;
-}
 
 unsigned retro_api_version() { return RETRO_API_VERSION; }
 
