@@ -28,6 +28,13 @@ int StateGetMainRamAcb(BurnArea *pba)
 			bMainRamFound = true;
 		}
 	}
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS3) {
+		if (strcmp(pba->szName, "Main RAM") == 0) {
+			MainRamData = pba->Data;
+			MainRamSize = pba->nLen;
+			bMainRamFound = true;
+		}
+	}
 	return 0;
 }
 
