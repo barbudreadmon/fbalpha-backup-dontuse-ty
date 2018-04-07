@@ -1038,7 +1038,7 @@ static void scanline_interrupts(INT32 scanline)
 		if (scanline>=8 && scanline < 248 && nPrevScreenPos != (scanline-8)+1) {
 			if (nPrevScreenPos >= 0 && nPrevScreenPos <= 239 && !m107speedhack)
 				DrawLayers(nPrevScreenPos, (scanline-8)+1);
-			if (!m107speedhack || (nPrevScreenPos >= 0 && nPrevScreenPos <= 239))
+			if (!m107speedhack && (nPrevScreenPos >= 0 && nPrevScreenPos <= 239))
 				nPrevScreenPos = (scanline-8)+1;
 		}
 
@@ -1092,6 +1092,8 @@ static INT32 DrvFrame()
 	INT32 nInterleave = 256; // scanlines
 	INT32 nCyclesTotal[2] = { 0, 0 };
 	INT32 nCyclesDone[2] = { 0, 0 };
+	INT32 a = (m107speedhack ? 4 : 8);
+	INT32 b = (m107speedhack ? 3 : 7);
 
 	INT32 nSoundBufferPos = 0;
 	nCyclesTotal[0] = (INT32)((INT64)(config_cpu_speed / 60) * nBurnCPUSpeedAdjust / 0x0100);
@@ -1101,7 +1103,7 @@ static INT32 DrvFrame()
 		memset (pBurnSoundOut, 0, nBurnSoundLen * 2 * sizeof(INT16));
 	}
 
-	nInterleave = 256 * 8; // * 8 for tight sync
+	nInterleave = 256 * a; // * 8 for tight sync
 
 	vblank = 0;
 
@@ -1110,7 +1112,7 @@ static INT32 DrvFrame()
 		VezOpen(0);
 		INT32 segment = nCyclesTotal[0] / nInterleave;
 		nCyclesDone[0] += VezRun(segment);
-		if ((i&7)==7) scanline_interrupts(i/8); // update at hblank?
+		if ((i&b)==b) scanline_interrupts(i/a); // update at hblank?
 
 		segment = (VezTotalCycles() * 7159) / (config_cpu_speed / 1000);
 
@@ -1126,12 +1128,12 @@ static INT32 DrvFrame()
 			}
 		}
 
-		if (pBurnSoundOut && (i&7)==7) {
-			INT32 nSegmentLength = nBurnSoundLen / (nInterleave / 8);
+		if (pBurnSoundOut && (i&b)==b) {
+			INT32 nSegmentLength = nBurnSoundLen / (nInterleave / a);
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 			
 			BurnYM2151Render(pSoundBuf, nSegmentLength);
-			iremga20_update(0, pSoundBuf, nSegmentLength);
+			if(!m107speedhack) iremga20_update(0, pSoundBuf, nSegmentLength);
 			
 			nSoundBufferPos += nSegmentLength;
 		}
@@ -1146,8 +1148,9 @@ static INT32 DrvFrame()
 		if (nSegmentLength) {
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 			BurnYM2151Render(pSoundBuf, nSegmentLength);
-			iremga20_update(0, pSoundBuf, nSegmentLength);
+			if(!m107speedhack) iremga20_update(0, pSoundBuf, nSegmentLength);
 		}
+		if(m107speedhack) iremga20_update(0, pBurnSoundOut, nBurnSoundLen);
 	}
 	
 	VezClose();
