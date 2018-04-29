@@ -543,7 +543,7 @@ static UINT8 __fastcall m107SndReadByte(UINT32 address)
 	switch (address)
 	{
 		case 0xa8042:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xa8044:
 			return sound_latch[0];
@@ -617,7 +617,7 @@ static INT32 DrvDoReset()
 	sprite_enable = 0;
 	raster_irq_position = -1;
 	sound_cpu_reset = 0;
-	
+
 	m107speedhack = (DrvFakeDips[0] & 1);
 
 	return 0;
@@ -970,9 +970,6 @@ static void draw_layer_byline(INT32 start, INT32 finish, INT32 layer, INT32 forc
 
 static void DrawLayers(INT32 start, INT32 finish)
 {
-#if defined USE_SPEEDHACKS
-	if(!pBurnDraw) return;
-#endif
 	memset (RamPrioBitmap + (start * nScreenWidth), 0, nScreenWidth * (finish - start)); // clear priority
 
 	if (~pf_control[3][4] & 0x80) {
@@ -1003,6 +1000,7 @@ static INT32 DrvDraw()
 			DrvPalette[i] = CalcCol(i<<1);
 		bRecalcPalette = 0;
 	}
+//	DrawLayers(0, nScreenHeight);
 	if (m107speedhack) DrawLayers(0, nScreenHeight);
 
 	if (nBurnLayer & 8) draw_sprites();
@@ -1185,8 +1183,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 	{
 		VezScan(nAction);
 
-		iremga20_scan(0, nAction, pnMin);
-		BurnYM2151Scan(nAction);
+		iremga20_scan(nAction, pnMin);
+		BurnYM2151Scan(nAction, pnMin);
 
 		SCAN_VAR(raster_irq_position);
 		SCAN_VAR(sound_cpu_reset);
@@ -1280,7 +1278,7 @@ static INT32 airassInit()
 
 struct BurnDriver BurnDrvAirass = {
 	"airass", NULL, NULL, NULL, "1993",
-	"Air Assault (World)\0", NULL, "Irem", "M107",
+	"Air Assault (World)\0", NULL, "Irem", "Irem M107",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_IREM_MISC, GBF_VERSHOOT, 0,
 	NULL, airassRomInfo, airassRomName, NULL, NULL, FirebarrInputInfo, FirebarrDIPInfo,
@@ -1364,7 +1362,7 @@ static INT32 firebarrInit()
 
 struct BurnDriver BurnDrvFirebarr = {
 	"firebarr", "airass", NULL, NULL, "1993",
-	"Fire Barrel (Japan)\0", NULL, "Irem", "M107",
+	"Fire Barrel (Japan)\0", NULL, "Irem", "Irem M107",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_IREM_MISC, GBF_VERSHOOT, 0,
 	NULL, firebarrRomInfo, firebarrRomName, NULL, NULL, FirebarrInputInfo, FirebarrDIPInfo,
@@ -1435,7 +1433,7 @@ static INT32 dsoccr94Init()
 
 struct BurnDriver BurnDrvDsoccr94 = {
 	"dsoccr94", NULL, NULL, NULL, "1994",
-	"Dream Soccer '94 (World, M107 hardware)\0", NULL, "Irem (Data East Corporation license)", "M107",
+	"Dream Soccer '94 (World, M107 hardware)\0", NULL, "Irem (Data East Corporation license)", "Irem M107",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 4, HARDWARE_IREM_MISC, GBF_SPORTSFOOTBALL, 0,
 	NULL, dsoccr94RomInfo, dsoccr94RomName, NULL, NULL, Dsoccr94InputInfo, Dsoccr94DIPInfo,
@@ -1474,7 +1472,7 @@ STD_ROM_FN(dsoccr94k)
 
 struct BurnDriver BurnDrvDsoccr94k = {
 	"dsoccr94k", "dsoccr94", NULL, NULL, "1994",
-	"Dream Soccer '94 (Korea, M107 hardware)\0", NULL, "Irem (Data East Corporation license)", "M107",
+	"Dream Soccer '94 (Korea, M107 hardware)\0", NULL, "Irem (Data East Corporation license)", "Irem M107",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 4, HARDWARE_IREM_MISC, GBF_SPORTSFOOTBALL, 0,
 	NULL, dsoccr94kRomInfo, dsoccr94kRomName, NULL, NULL, Dsoccr94InputInfo, Dsoccr94DIPInfo,
@@ -1549,7 +1547,7 @@ static INT32 wpksocInit()
 
 struct BurnDriverD BurnDrvWpksoc = {
 	"wpksoc", NULL, NULL, NULL, "1995",
-	"World PK Soccer\0", NULL, "Jaleco", "M107",
+	"World PK Soccer\0", NULL, "Jaleco", "Irem M107",
 	NULL, NULL, NULL, NULL,
 	0, 4, HARDWARE_IREM_MISC, GBF_SPORTSFOOTBALL, 0,
 	NULL, wpksocRomInfo, wpksocRomName, NULL, NULL, Dsoccr94InputInfo, Dsoccr94DIPInfo,
@@ -1590,7 +1588,7 @@ STD_ROM_FN(kftgoal)
 
 struct BurnDriverD BurnDrvKftgoal = {
 	"kftgoal", "wpksoc", NULL, NULL, "1995",
-	"Kick for the Goal\0", NULL, "Jaleco", "M107",
+	"Kick for the Goal\0", NULL, "Jaleco", "Irem M107",
 	NULL, NULL, NULL, NULL,
 	BDF_CLONE, 4, HARDWARE_IREM_MISC, GBF_SPORTSFOOTBALL, 0,
 	NULL, kftgoalRomInfo, kftgoalRomName, NULL, NULL, Dsoccr94InputInfo, Dsoccr94DIPInfo,

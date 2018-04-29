@@ -39,7 +39,7 @@ void __fastcall PsndZWrite(UINT16 a, UINT8 d)
 //			bprintf(PRINT_NORMAL, "YM2151 write  -> %02X\n", d);
 			break;
 		case 0xF002:
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			break;
 		case 0xF004: {
 			INT32 nNewBank = d & 0x0f;
@@ -71,7 +71,7 @@ void __fastcall kodbZWrite(UINT16 a, UINT8 d)
 			BurnYM2151WriteRegister(d);
 			break;
 		case 0xE400:
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			break;
 
 #ifdef FBA_DEBUG
@@ -88,9 +88,9 @@ UINT8 __fastcall PsndZRead(UINT16 a)
 {
 	switch (a) {
 		case 0xF001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		case 0xF002:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		case 0xF008:
 //			bprintf(PRINT_NORMAL, " -- Sound latch read (%i).\n", PsndCode);
 			return PsndCode;
@@ -110,9 +110,9 @@ UINT8 __fastcall kodbZRead(UINT16 a)
 {
 	switch (a) {
 		case 0xE001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		case 0xE400:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		case 0xE800:
 			return PsndCode;
 
@@ -184,13 +184,13 @@ INT32 PsndZExit()
 }
 
 // Scan the current PSound z80 state
-INT32 PsndZScan(INT32 nAction)
+INT32 PsndZScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 	ZetScan(nAction);
 
-	MSM6295Scan(0, nAction);
-	BurnYM2151Scan(nAction);
+	MSM6295Scan(nAction, pnMin);
+	BurnYM2151Scan(nAction, pnMin);
 
 	SCAN_VAR(nPsndZBank);
 

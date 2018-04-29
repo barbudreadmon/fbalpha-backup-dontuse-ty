@@ -42792,42 +42792,6 @@ struct BurnDriver BurnDrvmd_euro2004 = {
 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };
 
-// Airstriker (v150)
-static struct BurnRomInfo md_airstrikerRomDesc[] = {
-	{ "Airstriker (U) [v150].bin", 0x01d31c, 0xb3c15380, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
-};
-
-STD_ROM_PICK(md_airstriker)
-STD_ROM_FN(md_airstriker)
-
-struct BurnDriver BurnDrvmd_airstriker = {
-	"md_airstriker", NULL, NULL, NULL, "2008",
-	"Airstriker (v150)\0", NULL, "Electrokinesis Studios", "Sega Megadrive",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
-	MegadriveGetZipName, md_airstrikerRomInfo, md_airstrikerRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
-	MegadriveInit, MegadriveExit, MegadriveFrame, NULL, MegadriveScan,
-	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
-};
-
-// Ixion
-static struct BurnRomInfo md_ixionRomDesc[] = {
-	{ "ixion.bin", 0x040000, 0xe857aa60, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
-};
-
-STD_ROM_PICK(md_ixion)
-STD_ROM_FN(md_ixion)
-
-struct BurnDriver BurnDrvmd_ixion = {
-	"md_ixion", NULL, NULL, NULL, "2015",
-	"Ixion\0", NULL, "Nendo", "Sega Megadrive",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY, 2, HARDWARE_SEGA_MEGADRIVE, GBF_MISC, 0,
-	MegadriveGetZipName, md_ixionRomInfo, md_ixionRomName, NULL, NULL, MegadriveInputInfo, MegadriveDIPInfo,
-	MegadriveInit, MegadriveExit, MegadriveFrame, NULL, MegadriveScan,
-	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
-};
-
 // Star Chaser
 static struct BurnRomInfo md_starchaserRomDesc[] = {
 	{ "starchaser-20140705.bin", 0x00b240, 0xfadd25a3, BRF_PRG | SEGA_MD_ROM_LOAD16_WORD_SWAP | SEGA_MD_ROM_OFFS_000000  },
@@ -42842,6 +42806,6 @@ struct BurnDriver BurnDrvmd_starchaser = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_16BIT_ONLY, 4, HARDWARE_SEGA_MEGADRIVE | HARDWARE_SEGA_MEGADRIVE_TEAMPLAYER, GBF_MISC, 0,
 	MegadriveGetZipName, md_starchaserRomInfo, md_starchaserRomName, NULL, NULL, Megadrive4pInputInfo, Megadrive4pDIPInfo,
-	MegadriveInit, MegadriveExit, MegadriveFrame, NULL, MegadriveScan,
-	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
+ 	MegadriveInit, MegadriveExit, MegadriveFrame, NULL, MegadriveScan,
+ 	&bMegadriveRecalcPalette, 0x100, 320, 224, 4, 3
 };

@@ -291,7 +291,7 @@ static struct BurnRomInfo EndurorRomDesc[] = {
 	{ "epr-7678.ic36",    0x08000, 0x9fb5e656, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7670.ic28",    0x08000, 0xdbbe2f6e, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7662.ic18",    0x08000, 0xcb0c13c5, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-7654.1c8",     0x08000, 0x2db6520d, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-7654.ic8",     0x08000, 0x2db6520d, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7677.ic35",    0x08000, 0x7764765b, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7669.ic27",    0x08000, 0xf9525faa, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7661.ic17",    0x08000, 0xfe93a79b, SYS16_ROM_SPRITES | BRF_GRA },
@@ -355,7 +355,7 @@ static struct BurnRomInfo Enduror1RomDesc[] = {
 	{ "epr-7678.ic36",    0x08000, 0x9fb5e656, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7670.ic28",    0x08000, 0xdbbe2f6e, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7662.ic18",    0x08000, 0xcb0c13c5, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-7654.1c8",     0x08000, 0x2db6520d, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-7654.ic8",     0x08000, 0x2db6520d, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7677.ic35",    0x08000, 0x7764765b, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7669.ic27",    0x08000, 0xf9525faa, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7661.ic17",    0x08000, 0xfe93a79b, SYS16_ROM_SPRITES | BRF_GRA },
@@ -402,6 +402,47 @@ static struct BurnRomInfo Enduror1RomDesc[] = {
 STD_ROM_PICK(Enduror1)
 STD_ROM_FN(Enduror1)
 
+static struct BurnRomInfo EnduroraRomDesc[] = {
+	{ "epr-7640a.ic97",   0x08000, 0x1d1dc5d4, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-7636a.ic84",   0x08000, 0x84131639, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-7641.ic98",    0x08000, 0x2503ae7c, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-7637.ic85",    0x08000, 0x82a27a8c, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-7642.ic99",    0x08000, 0x1c453bea, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "epr-7638.ic86",    0x08000, 0x70544779, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	
+	{ "epr-7634a.ic54",   0x08000, 0xaec83731, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
+	{ "epr-7635a.ic67",   0x08000, 0xb2fce96f, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
+
+	{ "epr-7644.ic31",    0x08000, 0xe7a4ff90, SYS16_ROM_TILES | BRF_GRA },
+	{ "epr-7645.ic46",    0x08000, 0x4caa0095, SYS16_ROM_TILES | BRF_GRA },
+	{ "epr-7646.ic60",    0x08000, 0x7e432683, SYS16_ROM_TILES | BRF_GRA },
+	
+	// sprites - ASSY ROM BD 837-6004-02 with jumpers J2, J3, J7 & J8 made
+	{ "mpr-10146.ic36",   0x20000, 0x85564401, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "mpr-10144.ic28",   0x20000, 0x03569803, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "mpr-10142.ic18",   0x20000, 0x4a72251b, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "mpr-10140.ic8",    0x20000, 0x68ff1691, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "mpr-10145.ic32",   0x20000, 0x3e64eec0, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "mpr-10143.ic24",   0x20000, 0xbdad5fd2, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "mpr-10141.ic14",   0x20000, 0x560360b9, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "mpr-10139.ic4",    0x20000, 0x863c7d9e, SYS16_ROM_SPRITES | BRF_GRA },
+		
+	{ "epr-7633.ic1",     0x08000, 0x6f146210, SYS16_ROM_ROAD | BRF_GRA },
+
+	{ "epr-7682.rom",     0x08000, 0xc4efbf48, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
+	
+	{ "epr-7681.rom",     0x08000, 0xbc0c4d12, SYS16_ROM_PCMDATA | BRF_SND },
+	{ "epr-7680.rom",     0x08000, 0x627b3c8c, SYS16_ROM_PCMDATA | BRF_SND },
+	
+	{ "epr-6844.ic123",   0x02000, 0xe3ec7bd6, SYS16_ROM_PROM | BRF_GRA },
+	
+	{ "317-0013a.key",    0x02000, 0x295e6737, SYS16_ROM_KEY | BRF_ESS | BRF_PRG },
+};
+
+
+STD_ROM_PICK(Endurora)
+STD_ROM_FN(Endurora)
+
 static struct BurnRomInfo EnduroblRomDesc[] = {
 	{ "7.13j",            0x10000, 0xf1d6b4b7, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
 	{ "4.13h",            0x10000, 0x43bff873, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
@@ -420,7 +461,7 @@ static struct BurnRomInfo EnduroblRomDesc[] = {
 	{ "epr-7678.ic36",    0x08000, 0x9fb5e656, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7670.ic28",    0x08000, 0xdbbe2f6e, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7662.ic18",    0x08000, 0xcb0c13c5, SYS16_ROM_SPRITES | BRF_GRA },
-	{ "epr-7654.1c8",     0x08000, 0x2db6520d, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "epr-7654.ic8",     0x08000, 0x2db6520d, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7677.ic35",    0x08000, 0x7764765b, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7669.ic27",    0x08000, 0xf9525faa, SYS16_ROM_SPRITES | BRF_GRA },
 	{ "epr-7661.ic17",    0x08000, 0xfe93a79b, SYS16_ROM_SPRITES | BRF_GRA },
@@ -550,10 +591,10 @@ STD_ROM_PICK(Hangon1)
 STD_ROM_FN(Hangon1)
 
 static struct BurnRomInfo Hangon2RomDesc[] = {
-	{ "epr-6851a__(needs_verification).ic22",     0x08000, 0x1e4d2217, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
-	{ "epr-6849a__(needs_verification).ic8",      0x08000, 0x3793e50e, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
-	{ "epr-6850a__(needs_verification).ic20",     0x08000, 0x5d715e3b, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
-	{ "epr-6848a__(needs_verification).ic6",      0x08000, 0xf1439a30, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
+	{ "epr-6851a__,needs_verification.ic22",     0x08000, 0x1e4d2217, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
+	{ "epr-6849a__,needs_verification.ic8",      0x08000, 0x3793e50e, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
+	{ "epr-6850a__,needs_verification.ic20",     0x08000, 0x5d715e3b, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
+	{ "epr-6848a__,needs_verification.ic6",      0x08000, 0xf1439a30, SYS16_ROM_PROG | BRF_ESS | BRF_PRG }, // as per the manual
 	
 	{ "epr-6838.ic63",    0x08000, 0x2747b794, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
 	{ "epr-6839.ic51",    0x08000, 0x73e9fa6e, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
@@ -730,6 +771,50 @@ static struct BurnRomInfo ShangonrbRomDesc[] = {
 
 STD_ROM_PICK(Shangonrb)
 STD_ROM_FN(Shangonrb)
+
+static struct BurnRomInfo Shangonrb2RomDesc[] = {
+	{ "sho-philco-s-30-r9-10.bin",      0x10000, 0xeccf7004, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "sho-philco-s-32-r12-13.bin",     0x10000, 0x90613f42, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "sho-philco-s-29-l9-10.bin",      0x08000, 0x12ee8716, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	{ "sho-philco-s-31-l12-13.bin",     0x08000, 0x155e0cfd, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
+	
+	{ "sho-philco-s-9-h4.bin",      	0x10000, 0x070c8059, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
+	{ "sho-philco-s-5-g4.bin",      	0x10000, 0x9916c54b, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
+	{ "sho-philco-s-8-h3.bin",      	0x10000, 0x000ad595, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
+	{ "sho-philco-s-4-g3.bin",      	0x10000, 0x8f8f4af0, SYS16_ROM_PROG2 | BRF_ESS | BRF_PRG },
+
+	{ "sho-philco-s-23-n-p8.bin",     	0x08000, 0x260286f9, SYS16_ROM_TILES | BRF_GRA },
+	{ "sho-philco-s-24-n-p9.bin",     	0x08000, 0xc609ee7b, SYS16_ROM_TILES | BRF_GRA },
+	{ "sho-philco-s-25-n-p10.bin",      0x08000, 0xb236a403, SYS16_ROM_TILES | BRF_GRA },
+
+	{ "sho-philco-s-21-m6.bin",     	0x10000, 0xd6ac012b, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-15-l6.bin",     	0x10000, 0xd9d83250, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-20-m5.bin",      	0x10000, 0xeef23b3d, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-14-l5.bin",      	0x10000, 0x0f26d131, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-19-m4.bin",     	0x10000, 0x8a57b8d6, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-13-l4.bin",     	0x10000, 0x3aff8910, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-18-m3.bin",     	0x10000, 0xaf473098, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-12-l3.bin",     	0x10000, 0x80bafeef, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-17-m2.bin",			0x10000, 0x03bc4878, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-11-l2.bin",     	0x10000, 0x274b734e, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-16-m1.bin",     	0x10000, 0x9f0677ed, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-10-l1.bin",     	0x10000, 0x508a4701, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-7-h2.bin",     		0x10000, 0xb176ea72, SYS16_ROM_SPRITES | BRF_GRA },
+	{ "sho-philco-s-6-h1.bin",      	0x10000, 0x42fcd51d, SYS16_ROM_SPRITES | BRF_GRA },
+	
+	{ "sho-philco-s-26-t1.bin",    		0x08000, 0x1bbe4fc8, SYS16_ROM_ROAD | BRF_GRA },
+
+	{ "sho-philco-s-3-g12.bin",    		0x08000, 0x83347dc0, SYS16_ROM_Z80PROG | BRF_ESS | BRF_PRG },
+	
+	{ "sho-philco-s-2-a16.bin",     	0x10000, 0xda08ca2b, SYS16_ROM_PCMDATA | BRF_SND },
+	{ "sho-philco-s-1-a14.bin",     	0x10000, 0x8b10e601, SYS16_ROM_PCMDATA | BRF_SND },
+	
+	{ "sho-philco-s-22-c-d2.bin",     	0x02000, 0xe3ec7bd6, SYS16_ROM_PROM | BRF_GRA },
+};
+
+
+STD_ROM_PICK(Shangonrb2)
+STD_ROM_FN(Shangonrb2)
 
 static struct BurnRomInfo SharrierRomDesc[] = {
 	{ "epr-7188a.ic97",   0x08000, 0x45e173c3, SYS16_ROM_PROG | BRF_ESS | BRF_PRG },
@@ -1447,6 +1532,16 @@ struct BurnDriver BurnDrvEnduror1 = {
 	NULL, 0x1800, 320, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvEndurora = {
+	"endurora", "enduror", NULL, NULL, "1986",
+	"Enduro Racer (YM2151) (mask ROM sprites, FD1089B 317-0013A)\0", NULL, "Sega", "Hang-On",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_SEGA_HANGON | HARDWARE_SEGA_FD1089B_ENC | HARDWARE_SEGA_SPRITE_LOAD32 | HARDWARE_SEGA_YM2203, GBF_RACING, 0,
+	NULL, EnduroraRomInfo, EnduroraRomName, NULL, NULL, EndurorInputInfo, EndurorDIPInfo,
+	EndurorInit, System16Exit, HangonYM2203Frame, NULL, System16Scan,
+	NULL, 0x1800, 320, 224, 4, 3
+};
+
 struct BurnDriver BurnDrvEndurobl = {
 	"endurobl", "enduror", NULL, NULL, "1986",
 	"Enduro Racer (bootleg set 1)\0", NULL, "bootleg", "Hang-On",
@@ -1513,6 +1608,16 @@ struct BurnDriverD BurnDrvShangonrb = {
 	NULL, NULL, NULL, NULL,
 	BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_SEGA_HANGON, GBF_RACING, 0,
 	NULL, ShangonrbRomInfo, ShangonrbRomName, NULL, NULL, ShangonrbInputInfo, ShangonrbDIPInfo,
+	ShangonrbInit, System16Exit, HangonFrame, NULL, System16Scan,
+	NULL, 0x1800, 320, 224, 4, 3
+};
+
+struct BurnDriverD BurnDrvShangonrb2 = {
+	"shangonrb2", "shangon", NULL, NULL, "1992",
+	"Super Hang-On (Hang-On conversion, Beta bootleg)\0", NULL, "bootleg (Beta)", "Hang-On",
+	NULL, NULL, NULL, NULL,
+	BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_SEGA_HANGON, GBF_RACING, 0,
+	NULL, Shangonrb2RomInfo, Shangonrb2RomName, NULL, NULL, ShangonrbInputInfo, ShangonrbDIPInfo,
 	ShangonrbInit, System16Exit, HangonFrame, NULL, System16Scan,
 	NULL, 0x1800, 320, 224, 4, 3
 };

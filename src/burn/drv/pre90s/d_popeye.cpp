@@ -3,14 +3,9 @@
 //   sprite clipping in popeye on the thru-way is normal (see pcb vid)
 
 #include "tiles_generic.h"
-#include "driver.h"
 #include "z80_intf.h"
 #include "bitswap.h"
-
-extern "C" {
-	#include "ay8910.h"
-}
-static INT16 *pAY8910Buffer[3];
+#include "ay8910.h"
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -24,6 +19,7 @@ static UINT8 *DrvColorRAM;
 static UINT8 *DrvSpriteRAM;
 static UINT8 *DrvBGRAM;
 static UINT8 *DrvColorPROM;
+static UINT8 *DrvProtPROM;
 static UINT8 *DrvCharGFX;
 static UINT8 *DrvSpriteGFX;
 
@@ -43,7 +39,9 @@ static UINT8 m_prot_shift;
 static UINT8 m_invertmask = 0xff;
 static INT32 bgbitmapwh; // 512 for popeye, 1024 for skyskipr
 
-static UINT8 skyskiprmode = 0;
+static INT32 skyskiprmode = 0; // skyskipper hardware
+static INT32 gfxlenx1 = 0; // 1 = 0x4000 sprites, 0 = 0x8000
+static INT32 bootleg = 0;
 
 static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
@@ -83,15 +81,15 @@ STDINPUTINFO(Skyskipr)
 static struct BurnDIPInfo SkyskiprDIPList[]=
 {
 	{0x12, 0xff, 0xff, 0x7f, NULL		},
-	{0x13, 0xff, 0xff, 0x7d, NULL		},
+	{0x13, 0xff, 0xff, 0x75, NULL		},
 
 	{0   , 0xfe, 0   ,    16, "Coinage"		},
 	{0x12, 0x01, 0x0f, 0x03, "A 3/1 B 1/2"		},
-	{0x12, 0x01, 0x0f, 0x0e, "2 Coins 1 Credits"		},
+	{0x12, 0x01, 0x0f, 0x0e, "2 Coins 1 Credit"		},
 	{0x12, 0x01, 0x0f, 0x01, "A 2/1 B 2/5"		},
 	{0x12, 0x01, 0x0f, 0x04, "A 2/1 B 1/3"		},
 	{0x12, 0x01, 0x0f, 0x07, "A 1/1 B 2/1"		},
-	{0x12, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"		},
+	{0x12, 0x01, 0x0f, 0x0f, "1 Coin  1 Credit"		},
 	{0x12, 0x01, 0x0f, 0x0c, "A 1/1 B 1/2"		},
 	{0x12, 0x01, 0x0f, 0x0d, "1 Coin  2 Credits"		},
 	{0x12, 0x01, 0x0f, 0x06, "A 1/2 B 1/4"		},
@@ -121,17 +119,15 @@ static struct BurnDIPInfo SkyskiprDIPList[]=
 	{0x13, 0x01, 0x03, 0x01, "3"		},
 	{0x13, 0x01, 0x03, 0x00, "4"		},
 
-	{0   , 0xfe, 0   ,    2, "Unknown"		},
-	{0x13, 0x01, 0x04, 0x04, "Off"		},
-	{0x13, 0x01, 0x04, 0x00, "On"		},
-
-	{0   , 0xfe, 0   ,    2, "Unknown"		},
-	{0x13, 0x01, 0x08, 0x08, "Off"		},
-	{0x13, 0x01, 0x08, 0x00, "On"		},
-
-	{0   , 0xfe, 0   ,    2, "Unknown"		},
-	{0x13, 0x01, 0x10, 0x10, "Off"		},
-	{0x13, 0x01, 0x10, 0x00, "On"		},
+	{0   , 0xfe, 0   ,    8, "Difficulty"			},
+	{0x13, 0x01, 0x1c, 0x1c, "Easiest"			},
+	{0x13, 0x01, 0x1c, 0x18, "Very Easy"			},
+	{0x13, 0x01, 0x1c, 0x14, "Easy"				},
+	{0x13, 0x01, 0x1c, 0x10, "Medium Easy"			},
+	{0x13, 0x01, 0x1c, 0x0c, "Medium Hard"			},
+	{0x13, 0x01, 0x1c, 0x08, "Hard"				},
+	{0x13, 0x01, 0x1c, 0x04, "Very Hard"			},
+	{0x13, 0x01, 0x1c, 0x00, "Hardest"			},
 
 	{0   , 0xfe, 0   ,    2, "Bonus Life"		},
 	{0x13, 0x01, 0x20, 0x20, "15000"		},
@@ -180,12 +176,12 @@ static struct BurnDIPInfo PopeyeDIPList[]=
 	{0x11, 0xff, 0xff, 0x3d, NULL		},
 
 	{0   , 0xfe, 0   ,    9, "Coinage"		},
-	{0x10, 0x01, 0x0f, 0x08, "6 Coins 1 Credits"		},
-	{0x10, 0x01, 0x0f, 0x05, "5 Coins 1 Credits"		},
-	{0x10, 0x01, 0x0f, 0x09, "4 Coins 1 Credits"		},
-	{0x10, 0x01, 0x0f, 0x0a, "3 Coins 1 Credits"		},
-	{0x10, 0x01, 0x0f, 0x0d, "2 Coins 1 Credits"		},
-	{0x10, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"		},
+	{0x10, 0x01, 0x0f, 0x08, "6 Coins 1 Credit"		},
+	{0x10, 0x01, 0x0f, 0x05, "5 Coins 1 Credit"		},
+	{0x10, 0x01, 0x0f, 0x09, "4 Coins 1 Credit"		},
+	{0x10, 0x01, 0x0f, 0x0a, "3 Coins 1 Credit"		},
+	{0x10, 0x01, 0x0f, 0x0d, "2 Coins 1 Credit"		},
+	{0x10, 0x01, 0x0f, 0x0f, "1 Coin  1 Credit"		},
 	{0x10, 0x01, 0x0f, 0x0e, "1 Coin  2 Credits"		},
 	{0x10, 0x01, 0x0f, 0x03, "1 Coin  3 Credits"		},
 	{0x10, 0x01, 0x0f, 0x00, "Free Play"		},
@@ -227,6 +223,67 @@ static struct BurnDIPInfo PopeyeDIPList[]=
 };
 
 STDDIPINFO(Popeye)
+
+static struct BurnDIPInfo PopeyefDIPList[]=
+{
+	{0x10, 0xff, 0xff, 0x5f, NULL		},
+	{0x11, 0xff, 0xff, 0x3d, NULL		},
+
+	{0   , 0xfe, 0   ,    16, "Coinage"		},
+	{0x10, 0x01, 0x0f, 0x03, "A 3/1 B 1/2"		},
+	{0x10, 0x01, 0x0f, 0x0e, "2 Coins 1 Credit"		},
+	{0x10, 0x01, 0x0f, 0x01, "A 2/1 B 2/5"		},
+	{0x10, 0x01, 0x0f, 0x04, "A 2/1 B 1/3"		},
+	{0x10, 0x01, 0x0f, 0x07, "A 1/1 B 2/1"		},
+	{0x10, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"	},
+	{0x10, 0x01, 0x0f, 0x0c, "A 1/1 B 1/2"		},
+	{0x10, 0x01, 0x0f, 0x0d, "1 Coin  2 Credits"	},
+	{0x10, 0x01, 0x0f, 0x06, "A 1/2 B 1/4"		},
+	{0x10, 0x01, 0x0f, 0x0b, "A 1/2 B 1/5"		},
+	{0x10, 0x01, 0x0f, 0x02, "A 2/5 B 1/1"		},
+	{0x10, 0x01, 0x0f, 0x0a, "A 1/3 B 1/1"		},
+	{0x10, 0x01, 0x0f, 0x09, "A 1/4 B 1/1"		},
+	{0x10, 0x01, 0x0f, 0x05, "A 1/5 B 1/1"		},
+	{0x10, 0x01, 0x0f, 0x08, "A 1/6 B 1/1"		},
+	{0x10, 0x01, 0x0f, 0x00, "Free Play"		},
+
+	{0   , 0xfe, 0   ,    2, "Unknown"		},
+	{0x10, 0x01, 0x10, 0x10, "Off"		},
+	{0x10, 0x01, 0x10, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    3, "Copyright"		},
+	{0x10, 0x01, 0x60, 0x40, "Nintendo"		},
+	{0x10, 0x01, 0x60, 0x20, "Nintendo Co.,Ltd"		},
+	{0x10, 0x01, 0x60, 0x60, "Nintendo of America"		},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x11, 0x01, 0x03, 0x03, "1"		},
+	{0x11, 0x01, 0x03, 0x02, "2"		},
+	{0x11, 0x01, 0x03, 0x01, "3"		},
+	{0x11, 0x01, 0x03, 0x00, "4"		},
+
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
+	{0x11, 0x01, 0x0c, 0x0c, "Easy"		},
+	{0x11, 0x01, 0x0c, 0x08, "Medium"		},
+	{0x11, 0x01, 0x0c, 0x04, "Hard"		},
+	{0x11, 0x01, 0x0c, 0x00, "Hardest"		},
+
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
+	{0x11, 0x01, 0x30, 0x30, "20000"		},
+	{0x11, 0x01, 0x30, 0x20, "30000"		},
+	{0x11, 0x01, 0x30, 0x10, "50000"		},
+	{0x11, 0x01, 0x30, 0x00, "None"		},
+
+	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
+	{0x11, 0x01, 0x40, 0x40, "Off"		},
+	{0x11, 0x01, 0x40, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Cabinet"		},
+	{0x11, 0x01, 0x80, 0x00, "Upright"		},
+	{0x11, 0x01, 0x80, 0x80, "Cocktail"		},
+};
+
+STDDIPINFO(Popeyef)
 
 static void popeye_do_palette()
 {
@@ -463,6 +520,7 @@ static INT32 MemIndex()
 	DrvCharGFX      = Next; Next += 0x20000;
 	DrvSpriteGFX    = Next; Next += 0x20000;
 	DrvColorPROM    = Next; Next += 0x00400;
+	DrvProtPROM     = Next; Next += 0x00100;
 
 	AllRam			= Next;
 
@@ -477,10 +535,6 @@ static INT32 MemIndex()
 	bgbitmap        = (UINT16*)Next; Next += 1024 * 1024 * sizeof(UINT16); // background bitmap (RAM section)
 
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -513,10 +567,7 @@ static void __fastcall port_write(UINT16 port, UINT8 data)
 
 static void popeye_ayportB_write(UINT32 /*addr*/, UINT32 data)
 {
-	/* bit 0 flips screen */
-	//flip_screen_set(data & 1);
-
-	/* bits 1-3 select DSW1 bit to read */
+	// flipscreen & 1
 	m_dswbit = (data & 0x0e) >> 1;
 }
 
@@ -525,16 +576,159 @@ static UINT8 popeye_ayportA_read(UINT32 /*addr*/)
 	return (DrvDip[0] & 0x7f) | ((DrvDip[1] << (7-m_dswbit)) & 0x80);
 }
 
-static INT32 CharPlaneOffsets[2] = { 0, 0 };
-static INT32 CharXOffsets[16] = { 7,7, 6,6, 5,5, 4,4, 3,3, 2,2, 1,1, 0,0 };
-static INT32 CharYOffsets[16] = { 0*8,0*8, 1*8,1*8, 2*8,2*8, 3*8,3*8, 4*8,4*8, 5*8,5*8, 6*8,6*8, 7*8,7*8 };
-
-static INT32 DrvInit()
+static void DecodeGfx(INT32 is_chars, UINT8 *data)
 {
-	INT32 SpritePlaneOffsets[2] = { 0, RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,2) };
-	INT32 SpriteXOffsets[16] = { RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+7,RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+6,RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+5,RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+4,RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+3,RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+2,RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+1,RGN_FRAC(((skyskiprmode) ? 0x4000 : 0x8000), 1,4)+0,7,6,5,4,3,2,1,0};
+	INT32 CharPlaneOffsets[2] = { 0, 0 };
+	INT32 CharXOffsets[16] = { 7,7, 6,6, 5,5, 4,4, 3,3, 2,2, 1,1, 0,0 };
+	INT32 CharYOffsets[16] = { 0*8,0*8, 1*8,1*8, 2*8,2*8, 3*8,3*8, 4*8,4*8, 5*8,5*8, 6*8,6*8, 7*8,7*8 };
+	INT32 SpritePlaneOffsets[2] = { 0, RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,2) };
+	INT32 SpriteXOffsets[16] = { RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+7,RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+6,RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+5,RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+4,RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+3,RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+2,RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+1,RGN_FRAC(((gfxlenx1) ? 0x4000 : 0x8000), 1,4)+0,7,6,5,4,3,2,1,0};
 	INT32 SpriteYOffsets[16] = { 15*8, 14*8, 13*8, 12*8, 11*8, 10*8, 9*8, 8*8, 7*8, 6*8, 5*8, 4*8, 3*8, 2*8, 1*8, 0*8 };
 
+	if (is_chars) {
+		GfxDecode(0x100, 1, 16, 16, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x40, data, DrvCharGFX);
+	} else { // sprites
+		GfxDecode((gfxlenx1) ? 0x100 : 0x200 /*((0x4000*8)/2)/(16*16))*/, 2, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x80, data, DrvSpriteGFX);
+	}
+
+}
+
+static INT32 SkyskipprLoad(UINT8 *DrvTempRom)
+{
+	bgbitmapwh = 1024;
+
+	if (BurnLoadRom(DrvTempRom + 0x0000, 0, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x1000, 1, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000, 2, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x3000, 3, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x4000, 4, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x5000, 5, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x6000, 6, 1)) return 1;
+
+	// decryption
+	for (INT32 i = 0; i < 0x8000; i++)
+		DrvZ80ROM[i] = BITSWAP08(DrvTempRom[BITSWAP16(i,15,14,13,12,11,10,8,7,0,1,2,4,5,9,3,6) ^ 0xfc],3,4,2,5,1,6,0,7);
+
+	memset(DrvTempRom, 0, 0x10000);
+	if (BurnLoadRom(DrvTempRom         , 7, 1)) return 1;
+	DecodeGfx(1, DrvTempRom);
+
+	memset(DrvTempRom, 0, 0x10000);
+	if (BurnLoadRom(DrvTempRom + 0x0000, 8, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x1000, 9, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000,10, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x3000,11, 1)) return 1;
+	DecodeGfx(0, DrvTempRom);
+
+	if (BurnLoadRom(DrvColorPROM + 0x0000, 12, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0020, 13, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0040, 14, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0140, 15, 1)) return 1;
+	if (BurnLoadRom(DrvProtPROM  + 0x0000, 16, 1)) return 1;
+	return 0;
+}
+
+static INT32 PopeyeLoad(UINT8 *DrvTempRom)
+{
+	bgbitmapwh = 512;
+
+	if (BurnLoadRom(DrvTempRom + 0x0000, 0, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000, 1, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x4000, 2, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x6000, 3, 1)) return 1;
+
+	/* decrypt the program ROMs */
+	for (INT32 i = 0; i < 0x8000; i++)
+		DrvZ80ROM[i] = BITSWAP08(DrvTempRom[BITSWAP16(i,15,14,13,12,11,10,8,7,6,3,9,5,4,2,1,0) ^ 0x3f],3,4,2,5,1,6,0,7);
+
+	memset(DrvTempRom, 0, 0x08000);
+	if (BurnLoadRom(DrvTempRom         , 4, 1)) return 1;
+	DecodeGfx(1, DrvTempRom + 0x800);
+
+	memset(DrvTempRom, 0, 0x01000);
+	if (BurnLoadRom(DrvTempRom + 0x0000, 5, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000, 6, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x4000, 7, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x6000, 8, 1)) return 1;
+	DecodeGfx(0, DrvTempRom);
+
+	if (BurnLoadRom(DrvColorPROM + 0x0000,  9, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0020, 10, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0040, 11, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0140, 12, 1)) return 1;
+	if (BurnLoadRom(DrvProtPROM  + 0x0000, 13, 1)) return 1;
+	return 0;
+}
+
+static INT32 PopeyejLoad(UINT8 *DrvTempRom)
+{
+	bgbitmapwh = 1024;
+
+	if (BurnLoadRom(DrvTempRom + 0x0000, 0, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x1000, 1, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000, 2, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x3000, 3, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x4000, 4, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x5000, 5, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x6000, 6, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x7000, 7, 1)) return 1;
+
+	// decryption
+	for (INT32 i = 0; i < 0x8000; i++)
+		DrvZ80ROM[i] = BITSWAP08(DrvTempRom[BITSWAP16(i,15,14,13,12,11,10,8,7,0,1,2,4,5,9,3,6) ^ 0xfc],3,4,2,5,1,6,0,7);
+
+	memset(DrvTempRom, 0, 0x08000);
+	if (BurnLoadRom(DrvTempRom         , 8, 1)) return 1;
+	DecodeGfx(1, DrvTempRom);
+
+	memset(DrvTempRom, 0, 0x01000);
+	if (BurnLoadRom(DrvTempRom + 0x0000, 9, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000, 10, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x4000, 11, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x6000, 12, 1)) return 1;
+	DecodeGfx(0, DrvTempRom);
+
+	if (BurnLoadRom(DrvColorPROM + 0x0000, 13, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0020, 14, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0040, 15, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0140, 16, 1)) return 1;
+	if (BurnLoadRom(DrvProtPROM  + 0x0000, 17, 1)) return 1;
+	return 0;
+}
+
+static INT32 PopeyeblLoad(UINT8 *DrvTempRom)
+{
+	bgbitmapwh = 512;
+
+	bootleg = 1;
+	m_invertmask = 0x00;
+
+	if (BurnLoadRom(DrvTempRom + 0x0000, 0, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000, 1, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x4000, 2, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x6000, 3, 1)) return 1;
+
+	memset(DrvTempRom, 0, 0x08000);
+	if (BurnLoadRom(DrvTempRom         , 4, 1)) return 1;
+	DecodeGfx(1, DrvTempRom + 0x800);
+
+	memset(DrvTempRom, 0, 0x01000);
+	if (BurnLoadRom(DrvTempRom + 0x0000, 5, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x2000, 6, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x4000, 7, 1)) return 1;
+	if (BurnLoadRom(DrvTempRom + 0x6000, 8, 1)) return 1;
+	DecodeGfx(0, DrvTempRom);
+
+	if (BurnLoadRom(DrvColorPROM + 0x0000,  9, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0020, 10, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0040, 11, 1)) return 1;
+	if (BurnLoadRom(DrvColorPROM + 0x0140, 12, 1)) return 1;
+	if (BurnLoadRom(DrvProtPROM  + 0x0000, 13, 1)) return 1;
+	return 0;
+}
+
+static INT32 DrvInit(INT32 (*LoadRoms)(UINT8 *DrvTempRom))
+{
 	AllMem = NULL;
 	MemIndex();
 	INT32 nLen = MemEnd - (UINT8 *)0;
@@ -542,71 +736,14 @@ static INT32 DrvInit()
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
+	m_invertmask = 0xff;
+
 	{   // Load ROMS parse GFX
-		UINT8 *DrvTempRom = (UINT8 *)BurnMalloc(0x40000);
-		memset(DrvTempRom, 0, 0x40000);
+		UINT8 *DrvTempRom = (UINT8 *)BurnMalloc(0x10000);
+		memset(DrvTempRom, 0, 0x10000);
 
-		if (skyskiprmode) { // SkySkipper
-			bgbitmapwh = 1024;
+		if (LoadRoms(DrvTempRom)) { BurnFree(DrvTempRom); return 1; }
 
-			if (BurnLoadRom(DrvTempRom + 0x0000, 0, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x1000, 1, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x2000, 2, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x3000, 3, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x4000, 4, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x5000, 5, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x6000, 6, 1)) return 1;
-
-			/* decrypt the program ROMs */
-			for (INT32 i = 0; i < 0x8000; i++)
-				DrvZ80ROM[i] = BITSWAP08(DrvTempRom[BITSWAP16(i,15,14,13,12,11,10,8,7,0,1,2,4,5,9,3,6) ^ 0xfc],3,4,2,5,1,6,0,7);
-
-			memset(DrvTempRom, 0, 0x40000);
-			if (BurnLoadRom(DrvTempRom         , 7, 1)) return 1;
-			GfxDecode(0x100, 1, 16, 16, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x40, DrvTempRom, DrvCharGFX);
-
-			memset(DrvTempRom, 0, 0x40000);
-			if (BurnLoadRom(DrvTempRom + 0x0000, 8, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x1000, 9, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x2000,10, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x3000,11, 1)) return 1;
-			GfxDecode(0x100 /*((0x4000*8)/2)/(16*16))*/, 2, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x80, DrvTempRom, DrvSpriteGFX);
-
-			if (BurnLoadRom(DrvColorPROM + 0x0000, 12, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0020, 13, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0040, 14, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0140, 15, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0240, 16, 1)) return 1;
-
-		} else { // Popeye
-			bgbitmapwh = 512;
-
-			if (BurnLoadRom(DrvTempRom + 0x0000, 0, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x2000, 1, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x4000, 2, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x6000, 3, 1)) return 1;
-
-			/* decrypt the program ROMs */
-			for (INT32 i = 0; i < 0x8000; i++)
-				DrvZ80ROM[i] = BITSWAP08(DrvTempRom[BITSWAP16(i,15,14,13,12,11,10,8,7,6,3,9,5,4,2,1,0) ^ 0x3f],3,4,2,5,1,6,0,7);
-
-			memset(DrvTempRom, 0, 0x40000);
-			if (BurnLoadRom(DrvTempRom         , 4, 1)) return 1;
-			GfxDecode(0x100, 1, 16, 16, CharPlaneOffsets, CharXOffsets, CharYOffsets, 0x40, DrvTempRom+0x800, DrvCharGFX);
-
-			memset(DrvTempRom, 0, 0x40000);
-			if (BurnLoadRom(DrvTempRom + 0x0000, 5, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x2000, 6, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x4000, 7, 1)) return 1;
-			if (BurnLoadRom(DrvTempRom + 0x6000, 8, 1)) return 1;
-			GfxDecode(0x200, 2, 16, 16, SpritePlaneOffsets, SpriteXOffsets, SpriteYOffsets, 0x80, DrvTempRom, DrvSpriteGFX);
-
-			if (BurnLoadRom(DrvColorPROM + 0x0000,  9, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0020, 10, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0040, 11, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0140, 12, 1)) return 1;
-			if (BurnLoadRom(DrvColorPROM + 0x0240, 13, 1)) return 1;
-		}
 		BurnFree(DrvTempRom);
 	}
 
@@ -616,13 +753,18 @@ static INT32 DrvInit()
 	ZetMapMemory(DrvZ80RAM,		0x8000, 0x8bff, MAP_RAM);
 	ZetMapMemory(DrvVidRAM,		0xa000, 0xa3ff, MAP_RAM);
 	ZetMapMemory(DrvColorRAM,	0xa400, 0xa7ff, MAP_RAM);
+	if (bootleg) {
+		//bprintf(0, _T("Bootleg stuff.\n"));
+		ZetMapMemory(DrvProtPROM,	0xe000, 0xe01f | 0xff, MAP_ROM);
+	}
 	ZetSetWriteHandler(main_write);
 	ZetSetReadHandler(main_read);
 	ZetSetInHandler(port_read);
 	ZetSetOutHandler(port_write);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, popeye_ayportA_read, NULL, NULL, popeye_ayportB_write);
+	AY8910Init(0, 2000000, 0);
+	AY8910SetPorts(0, popeye_ayportA_read, NULL, NULL, popeye_ayportB_write);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -643,12 +785,12 @@ static INT32 DrvExit()
 	BurnFree(AllMem);
 
 	skyskiprmode = 0;
+	gfxlenx1 = 0;
+	bootleg = 0;
 
 	return 0;
 }
 
-
-extern int counter;
 
 static void draw_chars()
 {
@@ -680,8 +822,9 @@ static void draw_background()
 	INT32 scrollx = 200 - background_pos[0] - 256*(background_pos[2]&1); /* ??? */
 	INT32 scrolly = 2 * (256 - background_pos[1]);
 
-	if (skyskiprmode)
+	if (skyskiprmode) {
 		scrollx = 2 * scrollx - 512;
+	}
 
 	// copy matching background section to pTransDraw
 	INT32 destx = 1-scrollx;
@@ -703,7 +846,7 @@ static void draw_background()
 static void draw_sprites()
 {
 	UINT8 *spriteram = DrvSpriteRAM;
-	INT32 sprmask = ((skyskiprmode) ? 0xff : 0x1ff);
+	INT32 sprmask = ((gfxlenx1) ? 0xff : 0x1ff);
 
 	for (INT32 offs = 0; offs < 0x27b; offs += 4)
 	{
@@ -762,9 +905,9 @@ static INT32 DrvDraw()
 
 	BurnTransferClear();
 
-	draw_background();
-	draw_sprites();
-	draw_chars();
+	if (nBurnLayer & 1) draw_background();
+	if (nBurnLayer & 2) draw_sprites();
+	if (nBurnLayer & 4) draw_chars();
 
 	BurnTransferCopy(DrvPalette);
 
@@ -778,7 +921,7 @@ static void DrvMakeInputs()
 
 	CompileInput(DrvJoy, (void*)DrvInput, 3, 8, DrvJoyInit);
 
-	if (!skyskiprmode) {
+	if (!gfxlenx1) {
 		// Convert to 4-way for Popeye
 		ProcessJoystick(&DrvInput[0], 0, 3,2,1,0, INPUT_4WAY);
 		ProcessJoystick(&DrvInput[1], 1, 3,2,1,0, INPUT_4WAY);
@@ -807,7 +950,7 @@ static INT32 DrvFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -876,11 +1019,12 @@ static struct BurnRomInfo skyskiprRomDesc[] = {
 STD_ROM_PICK(skyskipr)
 STD_ROM_FN(skyskipr)
 
-static INT32 DrvInitskyskipr()
+static INT32 DrvInitSkyskipr()
 {
 	skyskiprmode = 1;
+	gfxlenx1 = 1;
 
-	return DrvInit();
+	return DrvInit(SkyskipprLoad);
 }
 
 struct BurnDriver BurnDrvSkyskipr = {
@@ -889,9 +1033,14 @@ struct BurnDriver BurnDrvSkyskipr = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, skyskiprRomInfo, skyskiprRomName, NULL, NULL, SkyskiprInputInfo, SkyskiprDIPInfo,
-	DrvInitskyskipr, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
+	DrvInitSkyskipr, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
 	512, 448, 4, 3
 };
+
+static INT32 DrvInitPopeye()
+{
+	return DrvInit(PopeyeLoad);
+}
 
 // Popeye (revision D)
 
@@ -924,6 +1073,208 @@ struct BurnDriver BurnDrvPopeye = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, popeyeRomInfo, popeyeRomName, NULL, NULL, PopeyeInputInfo, PopeyeDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
+	DrvInitPopeye, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
+	512, 448, 4, 3
+};
+
+// Popeyeu (revision D not protected)
+
+static struct BurnRomInfo popeyeuRomDesc[] = {
+	{ "7a",			0x2000, 0x0bd04389, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "7b",			0x2000, 0xefdf02c3, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "7c",			0x2000, 0x8eee859e, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "7e",			0x2000, 0xb64aa314, 1 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "tpp2-v.5n",	0x1000, 0xcca61ddd, 2 | BRF_GRA }, //  4 gfx1
+
+	{ "tpp2-v.1e",	0x2000, 0x0f2cd853, 3 | BRF_GRA }, //  5 gfx2
+	{ "tpp2-v.1f",	0x2000, 0x888f3474, 3 | BRF_GRA }, //  6
+	{ "tpp2-v.1j",	0x2000, 0x7e864668, 3 | BRF_GRA }, //  7
+	{ "tpp2-v.1k",	0x2000, 0x49e1d170, 3 | BRF_GRA }, //  8
+
+	{ "tpp2-c.4a",	0x0020, 0x375e1602, 4 | BRF_GRA }, //  9 proms
+	{ "tpp2-c.3a",	0x0020, 0xe950bea1, 4 | BRF_GRA }, // 10
+	{ "tpp2-c.5b",	0x0100, 0xc5826883, 4 | BRF_GRA }, // 11
+	{ "tpp2-c.5a",	0x0100, 0xc576afba, 4 | BRF_GRA }, // 12
+	{ "tpp2-v.7j",	0x0100, 0xa4655e2e, 4 | BRF_GRA }, // 13
+};
+
+STD_ROM_PICK(popeyeu)
+STD_ROM_FN(popeyeu)
+
+struct BurnDriver BurnDrvPopeyeu = {
+	"popeyeu", "popeye", NULL, NULL, "1982",
+	"Popeye (revision D not protected)\0", NULL, "Nintendo", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, popeyeuRomInfo, popeyeuRomName, NULL, NULL, PopeyeInputInfo, PopeyeDIPInfo,
+	DrvInitPopeye, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
+	512, 448, 4, 3
+};
+
+
+// Popeye (revision F)
+
+static struct BurnRomInfo popeyefRomDesc[] = {
+	{ "tpp2-c_f.7a",	0x2000, 0x5fc5264d, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "tpp2-c_f.7b",	0x2000, 0x51de48e8, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "tpp2-c_f.7c",	0x2000, 0x62df9647, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "tpp2-c_f.7e",	0x2000, 0xf31e7916, 1 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "tpp2-v.5n",		0x1000, 0xcca61ddd, 2 | BRF_GRA }, //  4 gfx1
+
+	{ "tpp2-v.1e",		0x2000, 0x0f2cd853, 3 | BRF_GRA }, //  5 gfx2
+	{ "tpp2-v.1f",		0x2000, 0x888f3474, 3 | BRF_GRA }, //  6
+	{ "tpp2-v.1j",		0x2000, 0x7e864668, 3 | BRF_GRA }, //  7
+	{ "tpp2-v.1k",		0x2000, 0x49e1d170, 3 | BRF_GRA }, //  8
+
+	{ "tpp2-c.4a",		0x0020, 0x375e1602, 4 | BRF_GRA }, //  9 proms
+	{ "tpp2-c.3a",		0x0020, 0xe950bea1, 4 | BRF_GRA }, // 10
+	{ "tpp2-c.5b",		0x0100, 0xc5826883, 4 | BRF_GRA }, // 11
+	{ "tpp2-c.5a",		0x0100, 0xc576afba, 4 | BRF_GRA }, // 12
+	{ "tpp2-v.7j",		0x0100, 0xa4655e2e, 4 | BRF_GRA }, // 13
+};
+
+STD_ROM_PICK(popeyef)
+STD_ROM_FN(popeyef)
+
+struct BurnDriver BurnDrvPopeyef = {
+	"popeyef", "popeye", NULL, NULL, "1982",
+	"Popeye (revision F)\0", NULL, "Nintendo", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, popeyefRomInfo, popeyefRomName, NULL, NULL, PopeyeInputInfo, PopeyefDIPInfo,
+	DrvInitPopeye, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
+	512, 448, 4, 3
+};
+
+static INT32 DrvInitPopeyebl()
+{
+	return DrvInit(PopeyeblLoad);
+}
+
+// Popeye (bootleg)
+
+static struct BurnRomInfo popeyeblRomDesc[] = {
+	{ "app_exe.3j.2764",0x2000, 0x6e267c48, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "2.3l.2764",		0x2000, 0x995475ff, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "3.3m.2764",		0x2000, 0x99d6a04a, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "4.3p.2764",		0x2000, 0x548a6514, 1 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "5.10gh.2732",	0x1000, 0xce6c9f8e, 2 | BRF_GRA }, //  4 gfx1
+
+	{ "6.6n.2764",		0x2000, 0x0f2cd853, 3 | BRF_GRA }, //  5 gfx2
+	{ "7.6r.2764",		0x2000, 0x888f3474, 3 | BRF_GRA }, //  6
+	{ "8.6s.2764",		0x2000, 0x7e864668, 3 | BRF_GRA }, //  7
+	{ "9.6u.2764",		0x2000, 0x49e1d170, 3 | BRF_GRA }, //  8
+
+	{ "6.2u.18s030",	0x0020, 0xd138e8a4, 4 | BRF_GRA }, //  9 proms
+	{ "5.2t.18s030",	0x0020, 0x0f364007, 4 | BRF_GRA }, // 10
+	{ "3.2r.24s10",		0x0100, 0xca4d7b6a, 4 | BRF_GRA }, // 11
+	{ "4.2s.24s10",		0x0100, 0xcab9bc53, 4 | BRF_GRA }, // 12
+	
+	{ "7.11s.24s10",	0x0100, 0x1c5c8dea, 0 | BRF_OPT },
+	{ "2.1e.24s10",		0x0100, 0x29d7bd87, 0 | BRF_OPT },
+	{ "1.1d.24s10",		0x0100, 0xbb63b2a6, 0 | BRF_OPT },
+};
+
+STD_ROM_PICK(popeyebl)
+STD_ROM_FN(popeyebl)
+
+struct BurnDriver BurnDrvPopeyebl = {
+	"popeyebl", "popeye", NULL, NULL, "1982",
+	"Popeye (bootleg)\0", NULL, "bootleg", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, popeyeblRomInfo, popeyeblRomName, NULL, NULL, PopeyeInputInfo, PopeyeDIPInfo,
+	DrvInitPopeyebl, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
+	512, 448, 4, 3
+};
+
+static INT32 DrvInitPopeyej()
+{
+	skyskiprmode = 1;
+
+	return DrvInit(PopeyejLoad);
+}
+
+// Popeye (Japan, Sky Skipper hardware)
+
+static struct BurnRomInfo popeyejRomDesc[] = {
+	{ "tpp1-c.2a,2732",		0x1000, 0x4176761e, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "tpp1-c.2b,2732",		0x1000, 0x4e0b7f06, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "tpp1-c.2c,2732",		0x1000, 0xb1c18b7e, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "tpp1-c.2d,2732",		0x1000, 0x79d0e988, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "tpp1-c.2e,2732",		0x1000, 0x74854ca1, 1 | BRF_PRG | BRF_ESS }, //  4
+	{ "tpp1-c.2f,2732",		0x1000, 0xe2b08891, 1 | BRF_PRG | BRF_ESS }, //  5
+	{ "tpp1-c.2g,2732",		0x1000, 0xb74a1a97, 1 | BRF_PRG | BRF_ESS }, //  6
+	{ "tpp1-c.2h,2732",		0x1000, 0x30e84104, 1 | BRF_PRG | BRF_ESS }, //  6
+
+	{ "tpp1-v.3h,2716",		0x0800, 0xfa52a752, 2 | BRF_GRA }, 			 //  7 gfx1
+
+	{ "tpp1-e.1e,2763",		0x2000, 0x0f2cd853, 3 | BRF_GRA }, 			 //  8 gfx2
+	{ "tpp1-e.2e,2763",		0x2000, 0x888f3474, 3 | BRF_GRA }, 			 //  9
+	{ "tpp1-e.3e,2763",		0x2000, 0x7e864668, 3 | BRF_GRA }, 			 // 10
+	{ "tpp1-e.5e,2763",		0x2000, 0x49e1d170, 3 | BRF_GRA }, 			 // 11
+
+	{ "tpp1-t.4a,82s123",	0x0020, 0x375e1602, 4 | BRF_GRA }, 			 // 12 proms
+	{ "tpp1-t.1a,82s123",	0x0020, 0xe950bea1, 4 | BRF_GRA }, 			 // 13
+	{ "tpp1-t.3a,82s129",	0x0100, 0xc5826883, 4 | BRF_GRA }, 			 // 14
+	{ "tpp1-t.2a,82s129",	0x0100, 0xc576afba, 4 | BRF_GRA }, 			 // 15
+	{ "tpp1-t.3j,82s129",	0x0100, 0xa4655e2e, 4 | BRF_GRA }, 			 // 16
+};
+
+STD_ROM_PICK(popeyej)
+STD_ROM_FN(popeyej)
+
+struct BurnDriver BurnDrvPopeyej = {
+	"popeyej", "popeye", NULL, NULL, "1981",
+	"Popeye (Japan, Sky Skipper hardware)\0", NULL, "Nintendo", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	NULL, popeyejRomInfo, popeyejRomName, NULL, NULL, PopeyeInputInfo, PopeyeDIPInfo,
+	DrvInitPopeyej, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
+	512, 448, 4, 3
+};
+
+
+// Popeye (Japan, Sky Skipper hardware, Older)
+
+static struct BurnRomInfo popeyejoRomDesc[] = {
+	{ "tpp1-c.2a.bin",		0x1000, 0x4176761e, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "tpp1-c.2b.bin",		0x1000, 0x2cc76c54, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "tpp1-c.2c,2732",		0x1000, 0xb1c18b7e, 1 | BRF_PRG | BRF_ESS }, //  2
+//  { "tpp1-c.2c.bin",		0x1000, 0xd3061b82, 1 | BRF_PRG | BRF_ESS }, //  2
+//  Actual Dump had Fixed Bits but when compared the stuck bit accounted for all the errors compared to popeyej's 2C, so we use that one.
+	{ "tpp1-c.2d.bin",		0x1000, 0x79d0e988, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "tpp1-c.2e.bin",		0x1000, 0x74854ca1, 1 | BRF_PRG | BRF_ESS }, //  4
+	{ "tpp1-c.2f.bin",		0x1000, 0xe2b08891, 1 | BRF_PRG | BRF_ESS }, //  5
+	{ "tpp1-c.2g.bin",		0x1000, 0xb74a1a97, 1 | BRF_PRG | BRF_ESS }, //  6
+	{ "tpp1-c.2h.bin",		0x1000, 0xa1dcf54d, 1 | BRF_PRG | BRF_ESS }, //  6
+
+	{ "tpp1-v.3h.bin",		0x0800, 0xfa52a752, 2 | BRF_GRA }, 			 //  7 gfx1
+
+	{ "tpp1-e.1e.bin",		0x2000, 0x90889e1d, 3 | BRF_GRA }, 			 //  8 gfx2
+	{ "tpp1-e.2e.bin",		0x2000, 0xed06af50, 3 | BRF_GRA }, 			 //  9
+	{ "tpp1-e.3e.bin",		0x2000, 0x72b258f2, 3 | BRF_GRA }, 			 // 10
+	{ "tpp1-e.5e.bin",		0x2000, 0x7355ff16, 3 | BRF_GRA }, 			 // 11
+
+	{ "tpp1-t.4a.82s123",	0x0020, 0x375e1602, 4 | BRF_GRA }, 			 // 12 proms
+	{ "tpp1-t.1a.82s123",	0x0020, 0xe950bea1, 4 | BRF_GRA }, 			 // 13
+	{ "tpp1-t.3a.82s129",	0x0100, 0xc5826883, 4 | BRF_GRA }, 			 // 14
+	{ "tpp1-t.2a.82s129",	0x0100, 0xc576afba, 4 | BRF_GRA }, 			 // 15
+	{ "tpp1-t.3j.82s129",	0x0100, 0xa4655e2e, 4 | BRF_GRA }, 			 // 16
+};
+
+STD_ROM_PICK(popeyejo)
+STD_ROM_FN(popeyejo)
+
+struct BurnDriver BurnDrvPopeyejo = {
+	"popeyejo", "popeye", NULL, NULL, "1981",
+	"Popeye (Japan, Sky Skipper hardware, Older)\0", NULL, "Nintendo", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	NULL, popeyejoRomInfo, popeyejoRomName, NULL, NULL, PopeyeInputInfo, PopeyeDIPInfo,
+	DrvInitPopeyej, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x300,
 	512, 448, 4, 3
 };

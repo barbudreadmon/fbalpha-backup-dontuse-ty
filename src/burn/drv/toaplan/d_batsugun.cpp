@@ -287,8 +287,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 		SekScan(nAction);				// scan 68000 states
 		VezScan(nAction);
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
 
 		ToaScanGP9001(nAction, pnMin);
 	}
@@ -503,7 +503,7 @@ void __fastcall batsugun_v25_write(UINT32 address, UINT8 data)
 		return;
 
 		case 0x00004:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -513,10 +513,10 @@ UINT8 __fastcall batsugun_v25_read(UINT32 address)
 	switch (address)
 	{
 		case 0x00001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0x00004:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -613,7 +613,7 @@ static INT32 DrvInit(INT32 (*pRomLoad)())
 
 	BurnYM2151Init(3375000);
 	BurnYM2151SetAllRoutes(0.50, BURN_SND_ROUTE_BOTH);
-	MSM6295Init(0, 4000000 / 165, 1);
+	MSM6295Init(0, 4000000 / MSM6295_PIN7_LOW, 1);
 	MSM6295SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
 
 	nSpriteYOffset = 0x0001;

@@ -6,11 +6,8 @@
 #include "z80_intf.h"
 #include "burn_ym2151.h"
 #include "burn_ym3526.h"
-#include "driver.h"
 #include "dac.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -32,8 +29,6 @@ static UINT8 *DrvPalRAM2;
 static UINT32 *Palette;
 static UINT32 *DrvPalette;
 
-static INT16 *pFMBuffer;
-static INT16 *pAY8910Buffer[3];
 static INT16 *pSoundBuffer;
 
 static UINT8 DrvRecalc;
@@ -1147,7 +1142,7 @@ UINT8 __fastcall bssoccer_sound0_read(UINT16 address)
 	switch (address)
 	{
 		case 0xf801:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xfc00:
 			return soundlatch;
@@ -1300,7 +1295,6 @@ static INT32 MemIndex()
 
 	DrvPalette	= (UINT32*)Next; Next += 0x01000 * sizeof(UINT32);
 
-	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 4 /*3*/ * sizeof(INT16);
 	pSoundBuffer = (INT16*)Next; Next += nBurnSoundLen * 2 * sizeof(INT16);
 
 	AllRam		= Next;
@@ -1459,10 +1453,6 @@ static INT32 BestbestInit()
 	memset(AllMem, 0, nLen);
 	MemIndex();
 
-	for (INT32 i = 0; i < 3; i++) {
-		pAY8910Buffer[i] = pFMBuffer + nBurnSoundLen * i;
-	}
-
 	if (DrvLoadRoms()) return 1;
 
 	SekInit(0, 0x68000);
@@ -1506,7 +1496,8 @@ static INT32 BestbestInit()
 	BurnTimerAttachZetYM3526(6000000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
 	
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, bestbest_ay8910_write_a, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910SetPorts(0, NULL, NULL, bestbest_ay8910_write_a, NULL);
 	AY8910SetRoute(0, BURN_SND_AY8910_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	AY8910SetRoute(0, BURN_SND_AY8910_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
 	AY8910SetRoute(0, BURN_SND_AY8910_ROUTE_3, 0.00, BURN_SND_ROUTE_BOTH); // suppressed?
@@ -1978,7 +1969,7 @@ static INT32 BestbestFrame()
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pSoundBuffer + (nSoundBufferPos << 1);
 
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			
 			nSoundBufferPos += nSegmentLength;
 		}
@@ -1990,7 +1981,7 @@ static INT32 BestbestFrame()
 		INT16* pSoundBuf = pSoundBuffer + (nSoundBufferPos << 1);
 
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 	}
 	
@@ -2223,7 +2214,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		DACScan(nAction, pnMin);
 
 		if (game_select) {
-			BurnYM2151Scan(nAction);
+			BurnYM2151Scan(nAction, pnMin);
 		} else {
 			AY8910Scan(nAction, pnMin);
 		}

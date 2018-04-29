@@ -30,7 +30,7 @@ static struct BurnInputInfo SupermanInputList[]=
 
 	{"Reset"       , BIT_DIGITAL,	&TaitoReset        , "reset"       },
 	{"Service"     , BIT_DIGITAL,	TaitoInputPort2 + 2, "service"     },
-	{"Tilt"        , BIT_DIGITAL,	TaitoInputPort2 + 3, "tilt"        },
+	{"Tilt"        , BIT_DIGITAL,	TaitoInputPort2 + 7, "tilt"        },
 	{"Dip 1"       , BIT_DIPSWITCH,	TaitoDip + 0       , "dip"         },
 	{"Dip 2"       , BIT_DIPSWITCH,	TaitoDip + 1       , "dip"         },
 };
@@ -76,7 +76,10 @@ static void TaitoXMakeInputs()
 		TaitoInput[0] -= (TaitoInputPort0[i] & 1) << i;
 		TaitoInput[1] -= (TaitoInputPort1[i] & 1) << i;
 		TaitoInput[2] -= (TaitoInputPort2[i] & 1) << i;
+	}
 
+	if (cchip_active) {
+		cchip_loadports(TaitoInput[0], TaitoInput[1], 0, TaitoInput[2]);
 	}
 }
 
@@ -576,6 +579,17 @@ static struct BurnDIPInfo DaisenpuDIPList[]=
 
 STDDIPINFO(Daisenpu)
 
+// Taito C-Chip BIOS
+static struct BurnRomInfo emptyRomDesc[] = {
+	{ "",                    0,          0, 0 },
+};
+
+static struct BurnRomInfo cchipRomDesc[] = {
+#if !defined ROM_VERIFY
+	{ "cchip_upd78c11.bin",		0x01000, 0x43021521, BRF_BIOS | TAITO_CCHIP_BIOS},
+#endif
+};
+
 static struct BurnRomInfo BallbrosRomDesc[] = {
 	{ "10a",           0x20000, 0x4af0e858, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
 	{ "5a",            0x20000, 0x0b983a69, BRF_ESS | BRF_PRG | TAITO_68KROM1_BYTESWAP },
@@ -667,10 +681,10 @@ static struct BurnRomInfo SupermanRomDesc[] = {
 
 	{ "b61-01.e18",    0x80000, 0x3cf99786, BRF_SND | TAITO_YM2610B },
 	
-	{ "b61_11.m11",    0x10000, 0x00000000, BRF_ESS | BRF_PRG | BRF_NODUMP },
+	{ "b61_11.m11",    0x02000, 0x3bc5d44b, BRF_ESS | BRF_PRG | TAITO_CCHIP_EEPROM },
 };
 
-STD_ROM_PICK(Superman)
+STDROMPICKEXT(Superman, Superman, cchip)
 STD_ROM_FN(Superman)
 
 static struct BurnRomInfo SupermanuRomDesc[] = {
@@ -688,10 +702,10 @@ static struct BurnRomInfo SupermanuRomDesc[] = {
 
 	{ "b61-01.e18",    0x80000, 0x3cf99786, BRF_SND | TAITO_YM2610B },
 	
-	{ "b61_11.m11",    0x10000, 0x00000000, BRF_ESS | BRF_PRG | BRF_NODUMP },
+	{ "b61_11.m11",    0x02000, 0x3bc5d44b, BRF_ESS | BRF_PRG | TAITO_CCHIP_EEPROM },
 };
 
-STD_ROM_PICK(Supermanu)
+STDROMPICKEXT(Supermanu, Supermanu, cchip)
 STD_ROM_FN(Supermanu)
 
 static struct BurnRomInfo SupermanjRomDesc[] = {
@@ -709,10 +723,10 @@ static struct BurnRomInfo SupermanjRomDesc[] = {
 
 	{ "b61-01.e18",    0x80000, 0x3cf99786, BRF_SND | TAITO_YM2610B },
 	
-	{ "b61_11.m11",    0x10000, 0x00000000, BRF_ESS | BRF_PRG | BRF_NODUMP },
+	{ "b61_11.m11",    0x02000, 0x3bc5d44b, BRF_ESS | BRF_PRG | TAITO_CCHIP_EEPROM },
 };
 
-STD_ROM_PICK(Supermanj)
+STDROMPICKEXT(Supermanj, Supermanj, cchip)
 STD_ROM_FN(Supermanj)
 
 static struct BurnRomInfo TwinhawkRomDesc[] = {
@@ -771,6 +785,9 @@ static INT32 MemIndex()
 	TaitoZ80Rom1                    = Next; Next += TaitoZ80Rom1Size;
 	TaitoYM2610ARom                 = Next; Next += TaitoYM2610ARomSize;
 	TaitoYM2610BRom                 = Next; Next += TaitoYM2610BRomSize;
+
+	cchip_rom                       = Next; Next += TaitoCCHIPBIOSSize;
+	cchip_eeprom                    = Next; Next += TaitoCCHIPEEPROMSize;
 	
 	TaitoRamStart                   = Next;
 
@@ -792,10 +809,8 @@ static INT32 MemIndex()
 
 UINT8 __fastcall TaitoX68KReadByte(UINT32 a)
 {
-	if (TaitoIC_SupermanCChipInUse) {
-		if (a >= 0x900000 && a <= 0x9007ff) {
-			return SupermanCChipRamRead((a - 0x900000) >> 1, TaitoInput[0], TaitoInput[1], TaitoInput[2]);
-		}
+	if (cchip_active) {
+		CCHIP_READ(0x900000)
 	}
 
 	switch (a) {
@@ -818,24 +833,8 @@ UINT8 __fastcall TaitoX68KReadByte(UINT32 a)
 		case 0x800003: {
 			return TC0140SYTCommRead();
 		}
-		
-		case 0x900001: {
-			return TaitoInput[0];
-		}
-		
-		case 0x900003: {
-			return TaitoInput[1];
-		}
-		
-		case 0x900005: {
-			return TaitoInput[2];
-		}
-		
-		case 0x900803: {
-			if (TaitoIC_SupermanCChipInUse) return SupermanCChipCtrlRead();
-		}
-		
-		default: {
+
+	    default: {
 			bprintf(PRINT_NORMAL, _T("68K #1 Read byte => %06X\n"), a);
 		}
 	}
@@ -845,13 +844,10 @@ UINT8 __fastcall TaitoX68KReadByte(UINT32 a)
 
 void __fastcall TaitoX68KWriteByte(UINT32 a, UINT8 d)
 {
-	if (TaitoIC_SupermanCChipInUse) {
-		if (a >= 0x900000 && a <= 0x9007ff) {
-			SupermanCChipRamWrite((a - 0x900000) >> 1, d);
-			return;
-		}
+	if (cchip_active) {
+		CCHIP_WRITE(0x900000)
 	}
-	
+
 	switch (a) {
 		case 0x300000:
 		case 0x300001: {
@@ -886,26 +882,7 @@ void __fastcall TaitoX68KWriteByte(UINT32 a, UINT8 d)
 			TC0140SYTCommWrite(d);
 			return;
 		}
-		
-		case 0x900009: {
-			// coin write
-			return;
-		}
-		
-		case 0x900803: {
-			if (TaitoIC_SupermanCChipInUse) {
-				SupermanCChipCtrlWrite();
-				return;
-			}
-		}
-		
-		case 0x900c01: {
-			if (TaitoIC_SupermanCChipInUse) {
-				SupermanCChipBankWrite(d);
-				return;
-			}
-		}
-		
+
 		case 0xc00000:
 		case 0xc00001: {
 			//???
@@ -1045,7 +1022,7 @@ UINT8 __fastcall TwinhawkZ80Read(UINT16 a)
 {
 	switch (a) {
 		case 0xe001: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		case 0xe201: {
@@ -1098,30 +1075,12 @@ void __fastcall TwinhawkZ80Write(UINT16 a, UINT8 d)
 
 static void TaitoXFMIRQHandler(INT32, INT32 nStatus)
 {
-	if (nStatus & 1) {
-		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
-	} else {
-		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
-	}
-}
-
-static INT32 TaitoXSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 4000000;
-}
-
-static double TaitoXGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000;
+	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static void TaitoXYM2151IRQHandler(INT32 Irq)
 {
-	if (Irq) {
-		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
-	} else {
-		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
-	}
+	ZetSetIRQLine(0, (Irq) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 SpritePlaneOffsets[4]    = { 0x800008, 0x800000, 8, 0 };
@@ -1196,9 +1155,9 @@ static INT32 TaitoXInit(INT32 nSoundType)
 		BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.45, BURN_SND_ROUTE_RIGHT);
 	} else {
 		if (nSoundType == 2) {
-			BurnYM2610Init(8000000, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, NULL, TaitoXSynchroniseStream, TaitoXGetTime, 0);
+			BurnYM2610Init(8000000, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, NULL, 0);
 		} else {
-			BurnYM2610Init(8000000, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, &TaitoXFMIRQHandler, TaitoXSynchroniseStream, TaitoXGetTime, 0);
+			BurnYM2610Init(8000000, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, &TaitoXFMIRQHandler, 0);
 		}
 		BurnTimerAttachZet(4000000);
 		BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
@@ -1252,8 +1211,6 @@ static INT32 SupermanInit()
 {
 	INT32 nRet;
 	
-	SupermanCChipInit();
-	
 	TaitoSpriteAModulo = 0x200;
 	TaitoSpriteANumPlanes = 4;
 	TaitoSpriteAWidth = 16;
@@ -1264,7 +1221,9 @@ static INT32 SupermanInit()
 	TaitoNumSpriteA = 0x4000;
 	
 	nRet = TaitoXInit(0);
-	
+
+	cchip_init();
+
 	TaitoIrqLine = 6;
 	
 	return nRet;
@@ -1516,6 +1475,11 @@ static INT32 TaitoXFrame()
 		ZetOpen(0);
 		BurnTimerUpdate(i * (nTaitoCyclesTotal[1] / nInterleave));
 		ZetClose();
+
+		if (cchip_active) { // superman
+			cchip_run(8000000 / 60 / nInterleave);
+			if (i == (nInterleave - 1)) cchip_interrupt();
+		}
 	}
 	
 	ZetOpen(0);
@@ -1615,7 +1579,7 @@ static INT32 TaitoXScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 
 		if (TaitoNumYM2610) BurnYM2610Scan(nAction, pnMin);
-		if (TaitoNumYM2151) BurnYM2151Scan(nAction);
+		if (TaitoNumYM2151) BurnYM2151Scan(nAction, pnMin);
 		
 		SCAN_VAR(TaitoInput);
 		SCAN_VAR(TaitoZ80Bank);
@@ -1636,7 +1600,7 @@ static INT32 TaitoXScan(INT32 nAction, INT32 *pnMin)
 
 struct BurnDriver BurnDrvBallbros = {
 	"ballbros", NULL, NULL, NULL, "1992",
-	"Balloon Brothers\0", NULL, "East Technology", "Taito-X",
+	"Balloon Brothers\0", NULL, "East Technology", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_TAITO_TAITOX, GBF_PUZZLE, 0,
 	NULL, BallbrosRomInfo, BallbrosRomName, NULL, NULL, TwinhawkInputInfo, BallbrosDIPInfo,
@@ -1646,7 +1610,7 @@ struct BurnDriver BurnDrvBallbros = {
 
 struct BurnDriver BurnDrvGigandes = {
 	"gigandes", NULL, NULL, NULL, "1989",
-	"Gigandes\0", NULL, "East Technology", "Taito-X",
+	"Gigandes\0", NULL, "East Technology", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_TAITO_TAITOX, GBF_HORSHOOT, 0,
 	NULL, GigandesRomInfo, GigandesRomName, NULL, NULL, TwinhawkInputInfo, GigandesDIPInfo,
@@ -1656,7 +1620,7 @@ struct BurnDriver BurnDrvGigandes = {
 
 struct BurnDriver BurnDrvGigandesa = {
 	"gigandesa", "gigandes", NULL, NULL, "1989",
-	"Gigandes (earlier)\0", NULL, "East Technology", "Taito-X",
+	"Gigandes (earlier)\0", NULL, "East Technology", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_TAITOX, GBF_HORSHOOT, 0,
 	NULL, GigandesaRomInfo, GigandesaRomName, NULL, NULL, TwinhawkInputInfo, GigandesDIPInfo,
@@ -1666,7 +1630,7 @@ struct BurnDriver BurnDrvGigandesa = {
 
 struct BurnDriver BurnDrvKyustrkr = {
 	"kyustrkr", NULL, NULL, NULL, "1989",
-	"Last Striker / Kyuukyoku no Striker\0", NULL, "East Technology", "Taito-X",
+	"Last Striker / Kyuukyoku no Striker\0", NULL, "East Technology", "Taito X",
 	L"Last Striker\0Final \u7A76\u6975 \u306E Striker\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_TAITOX, GBF_SPORTSFOOTBALL, 0,
 	NULL, KyustrkrRomInfo, KyustrkrRomName, NULL, NULL, TwinhawkInputInfo, KyustrkrDIPInfo,
@@ -1675,8 +1639,8 @@ struct BurnDriver BurnDrvKyustrkr = {
 };
 
 struct BurnDriver BurnDrvSuperman = {
-	"superman", NULL, NULL, NULL, "1988",
-	"Superman (World)\0", NULL, "Taito Corporation", "Taito-X",
+	"superman", NULL, "cchip", NULL, "1988",
+	"Superman (World)\0", NULL, "Taito Corporation", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_TAITO_TAITOX, GBF_SCRFIGHT, 0,
 	NULL, SupermanRomInfo, SupermanRomName, NULL, NULL, SupermanInputInfo, SupermanDIPInfo,
@@ -1685,8 +1649,8 @@ struct BurnDriver BurnDrvSuperman = {
 };
 
 struct BurnDriver BurnDrvSupermanu = {
-	"supermanu", "superman", NULL, NULL, "1988",
-	"Superman (US)\0", NULL, "Taito Corporation", "Taito-X",
+	"supermanu", "superman", "cchip", NULL, "1988",
+	"Superman (US)\0", NULL, "Taito Corporation", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_TAITOX, GBF_SCRFIGHT, 0,
 	NULL, SupermanuRomInfo, SupermanuRomName, NULL, NULL, SupermanInputInfo, SupermanuDIPInfo,
@@ -1695,8 +1659,8 @@ struct BurnDriver BurnDrvSupermanu = {
 };
 
 struct BurnDriver BurnDrvSupermanj = {
-	"supermanj", "superman", NULL, NULL, "1988",
-	"Superman (Japan)\0", NULL, "Taito Corporation", "Taito-X",
+	"supermanj", "superman", "cchip", NULL, "1988",
+	"Superman (Japan)\0", NULL, "Taito Corporation", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_TAITOX, GBF_SCRFIGHT, 0,
 	NULL, SupermanjRomInfo, SupermanjRomName, NULL, NULL, SupermanInputInfo, SupermanjDIPInfo,
@@ -1706,7 +1670,7 @@ struct BurnDriver BurnDrvSupermanj = {
 
 struct BurnDriver BurnDrvTwinhawk = {
 	"twinhawk", NULL, NULL, NULL, "1989",
-	"Twin Hawk (World)\0", NULL, "Taito Corporation Japan", "Taito-X",
+	"Twin Hawk (World)\0", NULL, "Taito Corporation Japan", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_TAITOX, GBF_VERSHOOT, 0,
 	NULL, TwinhawkRomInfo, TwinhawkRomName, NULL, NULL, TwinhawkInputInfo, TwinhawkDIPInfo,
@@ -1716,7 +1680,7 @@ struct BurnDriver BurnDrvTwinhawk = {
 
 struct BurnDriver BurnDrvTwinhawku = {
 	"twinhawku", "twinhawk", NULL, NULL, "1989",
-	"Twin Hawk (US)\0", NULL, "Taito America Corporation", "Taito-X",
+	"Twin Hawk (US)\0", NULL, "Taito America Corporation", "Taito X",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_TAITOX, GBF_VERSHOOT, 0,
 	NULL, TwinhawkuRomInfo, TwinhawkuRomName, NULL, NULL, TwinhawkInputInfo, TwinhawkuDIPInfo,
@@ -1726,7 +1690,7 @@ struct BurnDriver BurnDrvTwinhawku = {
 
 struct BurnDriver BurnDrvDaisenpu = {
 	"daisenpu", "twinhawk", NULL, NULL, "1989",
-	"Daisenpu (Japan)\0", NULL, "Taito Corporation", "Taito-X",
+	"Daisenpu (Japan)\0", NULL, "Taito Corporation", "Taito X",
 	L"\u5927\u65CB\u98A8 (Japan)\0Daisenpu\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_TAITOX, GBF_VERSHOOT, 0,
 	NULL, DaisenpuRomInfo, DaisenpuRomName, NULL, NULL, TwinhawkInputInfo, DaisenpuDIPInfo,

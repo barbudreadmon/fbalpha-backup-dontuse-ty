@@ -221,7 +221,7 @@ UINT8 __fastcall hotdogstZIn(UINT16 nAddress)
 		}
 		
 		case 0x60: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		default: {
@@ -256,7 +256,7 @@ void __fastcall hotdogstZOut(UINT16 nAddress, UINT8 nValue)
 		}
 		
 		case 0x60: {
-			MSM6295Command(0, nValue);
+			MSM6295Write(0, nValue);
 			return;
 		}
 		
@@ -559,7 +559,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 
 		BurnYM2203Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(nVideoIRQ);
 		SCAN_VAR(nSoundIRQ);
@@ -597,16 +597,6 @@ static void DrvFMIRQHandler(INT32, INT32 nStatus)
 	} else {
 		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 4000000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000;
 }
 
 static INT32 drvZInit()
@@ -690,7 +680,7 @@ static INT32 DrvInit()
 	nCaveExtraXOffset = -32;
 	nCaveExtraYOffset = 32;
 	
-	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, 0);
 	BurnTimerAttachZet(4000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.80, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.20, BURN_SND_ROUTE_BOTH);

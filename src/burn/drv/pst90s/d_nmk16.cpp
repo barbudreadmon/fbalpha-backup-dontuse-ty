@@ -2507,11 +2507,11 @@ UINT8 __fastcall macross2_main_read_byte(UINT32 address)
 
 		case 0x10000a:
 		case 0x10000b:
-			return DrvDips[1];
+			return (Tdragon2mode & 2) ? *soundlatch2 : DrvDips[1];
 
 		case 0x10000e:
 		case 0x10000f:
-			return *soundlatch2;
+			return (Tdragon2mode & 2) ? DrvDips[1] : *soundlatch2;
 	}
 
 	return 0;
@@ -2531,10 +2531,10 @@ UINT16 __fastcall macross2_main_read_word(UINT32 address)
 			return (DrvDips[0] << 8) | DrvDips[0];
 
 		case 0x10000a:
-			return (DrvDips[1] << 8) | DrvDips[1];
+			return (Tdragon2mode & 2) ? *soundlatch2 : (DrvDips[1] << 8) | DrvDips[1];
 
 		case 0x10000e:
-			return *soundlatch2;
+			return (Tdragon2mode & 2) ? (DrvDips[1] << 8) | DrvDips[1] : *soundlatch2;
 	}
 
 	return 0;
@@ -2729,11 +2729,11 @@ void __fastcall bjtwin_main_write_word(UINT32 address, UINT16 data)
 		return;
 
 		case 0x084000:
-			MSM6295Command(0, data & 0xff);
+			MSM6295Write(0, data & 0xff);
 		return;
 
 		case 0x084010:
-			MSM6295Command(1, data & 0xff);
+			MSM6295Write(1, data & 0xff);
 		return;
 
 		case 0x084020:
@@ -2781,11 +2781,11 @@ UINT8 __fastcall bjtwin_main_read_byte(UINT32 address)
 
 		case 0x084000:
 		case 0x084001:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x084010:
 		case 0x084011:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;
@@ -2808,10 +2808,10 @@ UINT16 __fastcall bjtwin_main_read_word(UINT32 address)
 			return 0xff00 | DrvDips[1];
 
 		case 0x084000:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x084010:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;
@@ -3562,11 +3562,11 @@ void __fastcall tharrier_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xf400:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0xf500:
-			MSM6295Command(1, data);
+			MSM6295Write(1, data);
 		return;
 
 		case 0xf600:
@@ -3587,10 +3587,10 @@ UINT8 __fastcall tharrier_sound_read(UINT16 address)
 			return *soundlatch;
 
 		case 0xf400:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xf500:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;
@@ -3641,7 +3641,7 @@ void __fastcall ssmissin_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x9800:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -3651,7 +3651,7 @@ UINT8 __fastcall ssmissin_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0x9800:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xa000:
 			ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
@@ -3674,7 +3674,7 @@ void __fastcall afega_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xf80a:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -3689,10 +3689,10 @@ UINT8 __fastcall afega_sound_read(UINT16 address)
 
 		case 0xf808:
 		case 0xf809:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xf80a:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -3710,11 +3710,11 @@ void __fastcall firehawk_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xfff8:
-			MSM6295Command(1, data);
+			MSM6295Write(1, data);
 		return;
 
 		case 0xfffa:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 
@@ -3733,10 +3733,10 @@ UINT8 __fastcall firehawk_sound_read(UINT16 address)
 			return *soundlatch;
 
 		case 0xfff8:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 
 		case 0xfffa:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	if (address >= 0xfe00) {
@@ -3788,11 +3788,11 @@ void __fastcall macross2_sound_out(UINT16 port, UINT8 data)
 		return;
 
 		case 0x80:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x88:
-			MSM6295Command(1, data);
+			MSM6295Write(1, data);
 		return;
 
 		case 0x90:
@@ -3817,10 +3817,10 @@ UINT8 __fastcall macross2_sound_in(UINT16 port)
 			return BurnYM2203Read(0, 0);
 
 		case 0x80:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x88:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;
@@ -3848,26 +3848,6 @@ static void DrvYM2151IrqHandler(INT32 nStatus)
 	} else {
 		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
-}
-
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate) // tharrier & manybloc
-{
-	return (INT64)(ZetTotalCycles() * nSoundRate / 6000000);
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 6000000;
-}
-
-inline static INT32 Macross2SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)(ZetTotalCycles() * nSoundRate / 4000000);
-}
-
-inline static double Macross2GetTime()
-{
-	return (double)ZetTotalCycles() / 4000000;
 }
 
 static void MSM6295SetInitialBanks(INT32 chips)
@@ -4177,7 +4157,7 @@ static INT32 DrvInit(INT32 (*pLoadCallback)()) // tharrier, manybloc
 
 	BurnSetRefreshRate(56.00);
 
-	BurnYM2203Init(1, 1500000, &DrvYM2203IrqHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 1500000, &DrvYM2203IrqHandler, 0);
 	BurnTimerAttachZet(6000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 2.00, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.50, BURN_SND_ROUTE_BOTH);
@@ -4251,22 +4231,29 @@ static INT32 Macross2Init()
 	MemIndex();
 
 	{
-		if (BurnLoadRom(Drv68KROM  + 0x000000,  0, 1)) return 1;
+		INT32 rom = 0;
 
-		if (BurnLoadRom(DrvZ80ROM  + 0x000000,  1, 1)) return 1;
+		if (Tdragon2mode & 2) { // Tdragon3h mode
+			if (BurnLoadRom(Drv68KROM  + 0x000001,  rom++, 2)) return 1;
+			if (BurnLoadRom(Drv68KROM  + 0x000000,  rom++, 2)) return 1;
+		} else { // everything else
+			if (BurnLoadRom(Drv68KROM  + 0x000000,  rom++, 1)) return 1;
+		}
+
+		if (BurnLoadRom(DrvZ80ROM  + 0x000000,  rom++, 1)) return 1;
 		memcpy (DrvZ80ROM + 0x10000, DrvZ80ROM, 0x20000);
 
-		if (BurnLoadRom(DrvGfxROM0 + 0x000000,  2, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM0 + 0x000000,  rom++, 1)) return 1;
 
-		if (BurnLoadRom(DrvGfxROM1 + 0x000000,  3, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1 + 0x000000,  rom++, 1)) return 1;
 
-		if (BurnLoadRom(DrvGfxROM2 + 0x000000,  4, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM2 + 0x200000,  5, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM2 + 0x000000,  rom++, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM2 + 0x200000,  rom++, 1)) return 1;
 		BurnByteswap(DrvGfxROM2, 0x400000);
 
-		if (BurnLoadRom(DrvSndROM0 + 0x000000,  6, 1)) return 1;
+		if (BurnLoadRom(DrvSndROM0 + 0x000000,  rom++, 1)) return 1;
 
-		if (BurnLoadRom(DrvSndROM1 + 0x000000,  7, 1)) return 1;
+		if (BurnLoadRom(DrvSndROM1 + 0x000000,  rom++, 1)) return 1;
 
 		DrvGfxDecode(0x20000, 0x200000, 0x400000);
 	}
@@ -4306,7 +4293,7 @@ static INT32 Macross2Init()
 
 	BurnSetRefreshRate(56.00);
 
-	BurnYM2203Init(1, 1500000, &DrvYM2203IrqHandler, Macross2SynchroniseStream, Macross2GetTime, 0);
+	BurnYM2203Init(1, 1500000, &DrvYM2203IrqHandler, 0);
 	BurnTimerAttachZet(4000000);
 
 	if (Tdragon2mode) {
@@ -5438,7 +5425,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
                     // Afega with no YM
                 } else {
                     if (!MSM6295x2_only && !MSM6295x1_only)
-                        BurnYM2151Scan(nAction); // twin action,etc dont use this
+                        BurnYM2151Scan(nAction, pnMin); // twin action,etc dont use this
                                              // and will crash if called.
                 }
             } else {
@@ -5447,9 +5434,9 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
                     BurnYM2203Scan(nAction, pnMin);
             }
 
-            MSM6295Scan(0, nAction);
+            MSM6295Scan(nAction, pnMin);
             if (!MSM6295x1_only)
-                MSM6295Scan(1, nAction);
+                //MSM6295Scan(1, nAction);
 
             SCAN_VAR(macross2_sound_enable);
             if (NMK004_enabled) {
@@ -6605,6 +6592,47 @@ struct BurnDriver BurnDrvBigbang = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, 0,
 	NULL, bigbangRomInfo, bigbangRomName, NULL, NULL, Tdragon2InputInfo, Tdragon2DIPInfo,
 	Tdragon2Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
+	224, 384, 3, 4
+};
+
+static INT32 Tdragon3Init()
+{
+	Tdragon2mode = 1 | 2; // 2 = tdragon3 mode
+	return Macross2Init();
+}
+
+// Thunder Dragon 3 (bootleg of Thunder Dragon 2)
+
+static struct BurnRomInfo tdragon3hRomDesc[] = {
+	{ "h.27c2001",	0x040000, 0x0091f4a3, 1 | BRF_PRG | BRF_ESS }, //  0 68k code
+	{ "l.27c020",	0x040000, 0x4699c313, 1 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "1.27c1000",	0x020000, 0xb870be61, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 code
+
+	{ "12.27c1000",	0x020000, 0xf809d616, 3 | BRF_GRA }, //  3 Characters
+
+	{ "ww930914.2",	0x200000, 0xf968c65d, 4 | BRF_GRA }, //  4 Tiles
+
+	{ "ww930917.7",	0x200000, 0xb98873cb, 5 | BRF_GRA }, //  5 Sprites
+	{ "ww930918.8",	0x200000, 0xbaee84b2, 5 | BRF_GRA }, //  6
+
+	{ "ww930916.4",	0x200000, 0x07c35fe6, 6 | BRF_SND }, //  7 OKI1 Samples
+	{ "ww930915.3",	0x200000, 0x82025bab, 7 | BRF_SND }, //  8 OKI2 Samples
+
+	{ "9.bpr",	0x000100, 0x435653a2, 0 | BRF_OPT }, //  9 Unused proms
+	{ "10.bpr",	0x000100, 0xe6ead349, 0 | BRF_OPT }, // 10
+};
+
+STD_ROM_PICK(tdragon3h)
+STD_ROM_FN(tdragon3h)
+
+struct BurnDriver BurnDrvTdragon3h = {
+	"tdragon3h", "tdragon2", NULL, NULL, "1996",
+	"Thunder Dragon 3 (bootleg of Thunder Dragon 2)\0", NULL, "bootleg (Conny Co Ltd.)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_POST90S, GBF_VERSHOOT, 0,
+	NULL, tdragon3hRomInfo, tdragon3hRomName, NULL, NULL, Tdragon2InputInfo, Tdragon2DIPInfo,
+	Tdragon3Init, DrvExit, Macross2Frame, Macross2Draw, DrvScan, NULL, 0x400,
 	224, 384, 3, 4
 };
 
@@ -9871,11 +9899,11 @@ static void raphero_sound_write(UINT32 address, UINT8 data)
 		return;
 
 		case 0xc800:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0xc808:
-			MSM6295Command(1, data);
+			MSM6295Write(1, data);
 		return;
 
 		case 0xc810:
@@ -9908,10 +9936,10 @@ static UINT8 raphero_sound_read(UINT32 address)
 			return BurnYM2203Read(0, address & 1);
 
 		case 0xc800:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xc808:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 
 		case 0xd800:
 			return *soundlatch;
@@ -9923,16 +9951,6 @@ static UINT8 raphero_sound_read(UINT32 address)
 static void RapheroYM2203IrqHandler(INT32, INT32 nStatus)
 {
 	tlcs90SetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-}
-
-inline static double RapheroGetTime()
-{
-	return (double)tlcs90TotalCycles() / 8000000;
-}
-
-inline static INT32 RapheroSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)(tlcs90TotalCycles() * nSoundRate / 8000000);
 }
 
 static INT32 RapheroDoReset()
@@ -10021,7 +10039,7 @@ static INT32 RapheroInit()
 	tlcs90SetReadHandler(raphero_sound_read);
 	tlcs90Close();
 
-	BurnYM2203Init(1, 1500000, &RapheroYM2203IrqHandler, RapheroSynchroniseStream, RapheroGetTime, 0);
+	BurnYM2203Init(1, 1500000, &RapheroYM2203IrqHandler, 0);
 	BurnTimerAttachTlcs90(8000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   1.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.50, BURN_SND_ROUTE_BOTH);

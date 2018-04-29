@@ -143,12 +143,10 @@
 
 #define VERBOSE 0
 #define CLEAR_LINE	0
-
 #ifdef INLINE
- #undef INLINE
+#undef INLINE
 #endif
 #define INLINE		inline
-
 //#define LOG(x)	do { if (VERBOSE) logerror x; } while (0)
 #define LOG(x)
 #define fatalerror(x)
@@ -326,7 +324,7 @@ struct _mcs51_state_t
 	/* Internal Ram */
 	UINT8	internal_ram[0xff+1];	/* 128 RAM (8031/51) + 128 RAM in second bank (8032/52) */
 	UINT8	sfr_ram[0xff];			/* 128 SFR - these are in 0x80 - 0xFF */
- 
+
 	/* DS5002FP */
 	struct {
 		UINT8	previous_ta;		/* Previous Timed Access value */
@@ -784,6 +782,16 @@ static INLINE INT32 external_ram_iaddr(INT32 offset, INT32 mem_mask)
 static INLINE UINT8 iram_read(INT32 offset)
 {
 	return (((offset) < 0x80) ? mcs51_state.internal_ram[offset] : mcs51_state.sfr_read(offset));
+}
+
+void mcs51_iram_fill(UINT8 *src, UINT32 size)
+{
+	if (size > 0x80) {
+		bprintf(0, _T("mcs51_iram_fill(x, %X); size overflow - max 0x80.\n"), size);
+		return;
+	}
+
+	memcpy(&mcs51_state.internal_ram, src, size);
 }
 
 static INLINE void iram_write(INT32 offset, UINT8 data)
@@ -2305,7 +2313,7 @@ static UINT8 ds5002fp_sfr_read(INT32 offset)
 		case ADDR_MCON: 	DS5_LOGR(MCON, data);		break;
 		case ADDR_TA:		DS5_LOGR(TA, data);			break;
 		case ADDR_RNR:		DS5_LOGR(RNR, data);		break;
-		case ADDR_RPCTL:	DS5_LOGR(RPCTL, data);		break;
+		case ADDR_RPCTL:	DS5_LOGR(RPCTL, data);		return 0x80; break; // 7/17/17 fix touchgo
 		case ADDR_RPS:		DS5_LOGR(RPS, data);		break;
 		case ADDR_PCON:
 			SET_PFW(0);		/* reset PFW flag */

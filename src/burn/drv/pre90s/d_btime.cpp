@@ -1,18 +1,10 @@
 // BurgerTime emu-layer for FB Alpha by dink & iq_132, based on the MAME driver by Zsolt Vasvari.
 
-// Todo:
-// Zoar - Sound and Input issues, after coining-up it starts automatically.
-//        Also missing sounds in some places...
-
 #include "tiles_generic.h"
 #include "m6502_intf.h"
 #include "bitswap.h"
-#include "driver.h"
 #include "flt_rc.h"
-
-extern "C" {
-    #include "ay8910.h"
-}
+#include "ay8910.h"
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -44,7 +36,6 @@ static UINT8 *DrvGfxROM3;
 static INT32 gfx0len;
 static INT32 gfx1len;
 
-static INT16 *pAY8910Buffer[6];
 static INT16 *hpfiltbuffer;
 
 static UINT8 DrvJoy1[8];
@@ -72,10 +63,10 @@ static UINT8 btime_palette; // disco, zoar
 static UINT8 zippysoundinit;
 
 // mmonkey protection stuff
-INT32 protection_command;
-INT32 protection_status;
-INT32 protection_value;
-INT32 protection_ret;
+static INT32 protection_command;
+static INT32 protection_status;
+static INT32 protection_value;
+static INT32 protection_ret;
 
 static UINT8 btimemode = 0;
 static UINT8 btime3mode = 0;
@@ -495,8 +486,8 @@ STDINPUTINFO(Zoar)
 
 static struct BurnDIPInfo ZoarDIPList[]=
 {
-	{0x13, 0xff, 0xff, 0x2f, NULL		},
-	{0x14, 0xff, 0xff, 0x1f, NULL		},
+	{0x13, 0xff, 0xff, 0x2f|0x10, NULL		},
+	{0x14, 0xff, 0xff, 0x0f, NULL		},
 
 	{0   , 0xfe, 0   ,    4, "Coin A"		},
 	{0x13, 0x01, 0x03, 0x00, "2 Coins 1 Credits"		},
@@ -716,8 +707,9 @@ static void btimepalettewrite(UINT16 offset, UINT8 data)
 	DrvPalette[offset] = BurnHighCol(r, g, b, 0);
 }
 
-static UINT8 btime_main_read(UINT16 address)
+static UINT8 btime_main_read(UINT16 addr)
 {
+	INT32 address = addr;
 	RB(0x0000, 0x07ff, DrvMainRAM);
 	RB(0x0c00, 0x0c1f, DrvPalRAM);
 	RB(0x1000, 0x13ff, DrvVidRAM);
@@ -757,8 +749,9 @@ static UINT8 btime_main_read(UINT16 address)
 	return 0;
 }
 
-static UINT8 bnj_main_read(UINT16 address)
+static UINT8 bnj_main_read(UINT16 addr)
 {
+	INT32 address = addr;
 	RB(0x0000, 0x07ff, DrvMainRAM);
 	RB(0x5c00, 0x5c1f, DrvPalRAM);
 	RB(0x4000, 0x43ff, DrvVidRAM);
@@ -798,8 +791,9 @@ static UINT8 bnj_main_read(UINT16 address)
 	return 0;
 }
 
-static UINT8 zoar_main_read(UINT16 address)
+static UINT8 zoar_main_read(UINT16 addr)
 {
+	INT32 address = addr;
 	RB(0x0000, 0x07ff, DrvMainRAM);
 	RB(0x8000, 0x83ff, DrvVidRAM);
 	RB(0x8400, 0x87ff, DrvColRAM);
@@ -831,12 +825,16 @@ static UINT8 zoar_main_read(UINT16 address)
 
 		case 0x9803:
 			return DrvInputs[1];
+
+		case 0x9804:
+			return DrvInputs[2];
 	}
 	return 0;
 }
 
-static UINT8 disco_main_read(UINT16 address)
+static UINT8 disco_main_read(UINT16 addr)
 {
+	INT32 address = addr;
 	RB(0x0000, 0x07ff, DrvMainRAM);
 	RB(0x2000, 0x7fff, DrvCharRAM);
 	RB(0x8000, 0x83ff, DrvVidRAM);
@@ -875,8 +873,9 @@ static UINT8 mmonkeyop_main_read(UINT16 address)
 	return DrvMainROMdec[address];
 }
 
-static UINT8 mmonkey_main_read(UINT16 address)
+static UINT8 mmonkey_main_read(UINT16 addr)
 {
+	INT32 address = addr;
 	RB(0x0000, 0x3bff, DrvMainRAM);
 	RB(0x3c00, 0x3fff, DrvVidRAM);
 
@@ -961,8 +960,9 @@ static void mmonkey_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-static void btime_main_write(UINT16 address, UINT8 data)
+static void btime_main_write(UINT16 addr, UINT8 data)
 {
+	INT32 address = addr;
 	WB(0x0000, 0x07ff, DrvMainRAM);
 	WB(0x1000, 0x13ff, DrvVidRAM);
 	WB(0x1400, 0x17ff, DrvColRAM);
@@ -1009,8 +1009,9 @@ static void btime_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-static void zoar_main_write(UINT16 address, UINT8 data)
+static void zoar_main_write(UINT16 addr, UINT8 data)
 {
+	INT32 address = addr;
 	WB(0x0000, 0x07ff, DrvMainRAM);
 	WB(0x8000, 0x83ff, DrvVidRAM);
 	WB(0x8400, 0x87ff, DrvColRAM);
@@ -1044,8 +1045,11 @@ static void zoar_main_write(UINT16 address, UINT8 data)
 
 		case 0x9806:
 			soundlatch = data;
+			UINT32 main_tot = M6502TotalCycles();
 			M6502Close();
 			M6502Open(1);
+			INT32 cyc = (main_tot / 3) - M6502TotalCycles();
+			if (cyc > 0) M6502Run(cyc);
 			M6502SetIRQLine(0, CPU_IRQSTATUS_ACK);
 			M6502Close();
 			M6502Open(0);
@@ -1053,8 +1057,9 @@ static void zoar_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-static void disco_main_write(UINT16 address, UINT8 data)
+static void disco_main_write(UINT16 addr, UINT8 data)
 {
+	INT32 address = addr;
 	WB(0x0000, 0x07ff, DrvMainRAM);
 	WB(0x2000, 0x7fff, DrvCharRAM);
 	WB(0x8000, 0x83ff, DrvVidRAM);
@@ -1078,9 +1083,9 @@ static void disco_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-static void bnj_main_write(UINT16 address, UINT8 data)
+static void bnj_main_write(UINT16 addr, UINT8 data)
 {
-
+	INT32 address = addr;
 	WB(0x0000, 0x07ff, DrvMainRAM);
 	WB(0x4000, 0x43ff, DrvVidRAM);
 	WB(0x4400, 0x47ff, DrvColRAM);
@@ -1125,8 +1130,9 @@ static void bnj_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-static UINT8 btime_sound_read(UINT16 address)
+static UINT8 btime_sound_read(UINT16 addr)
 {
+	INT32 address = addr;
 	if (address <= 0x1fff) {
 		return DrvSoundRAM[address & 0x3ff];
 	}
@@ -1207,23 +1213,23 @@ static void btime_sound_write(UINT16 address, UINT8 data)
 	{
 		case 0x01:
 			//bprintf(0, _T("0x01: %X. "), data);
-			if (ignext) {
+			if (btimemode && ignext) {
 				data = 0; // set volume to 0
 				ignext = 0;
 			}
-			AY8910Write(0, ~((address>>13)-1) & 1, data);
+			AY8910Write(0, 1, data);
 			checkhiss_and_add01(data);
 			return;
 		case 0x02:
 			//bprintf(0, _T("0x02: %X. "), data);
-			AY8910Write(0, ~((address>>13)-1) & 1, data);
+			AY8910Write(0, 0, data);
 			checkhiss_add02(data);
 			return;
 		case 0x03:
-			AY8910Write(1, ~((address>>13)-1) & 1, data);
+			AY8910Write(1, 1, data);
 			return;
 		case 0x04:
-			AY8910Write(1, ~((address>>13)-1) & 1, data);
+			AY8910Write(1, 0, data);
 			return;
 
 		case 0x06: {
@@ -1236,8 +1242,9 @@ static void btime_sound_write(UINT16 address, UINT8 data)
 	}
 }
 
-static UINT8 disco_sound_read(UINT16 address)
+static UINT8 disco_sound_read(UINT16 addr)
 {
+	INT32 address = addr;
 	RB(0x0000, 0x03ff, DrvSoundRAM);
 
 	RB(0xf000, 0xffff, DrvSoundROM);
@@ -1251,8 +1258,9 @@ static UINT8 disco_sound_read(UINT16 address)
 	return 0;
 }
 
-static void disco_sound_write(UINT16 address, UINT8 data)
+static void disco_sound_write(UINT16 addr, UINT8 data)
 {
+	INT32 address = addr;
 	WB(0x0000, 0x03ff, DrvSoundRAM);
 
 	switch (address & 0xf000)
@@ -1279,6 +1287,7 @@ static void ay8910_0_portA_write(UINT32, UINT32 data)
 	if (audio_nmi_type == AUDIO_ENABLE_AY8910)
 	{
 		audio_nmi_enable = ~data & 1;
+		//bprintf(0, _T("data %X. audio_nmi_enable %X.  audio_nmi_state %X.\n"), data, audio_nmi_enable, audio_nmi_state);
 		M6502SetIRQLine(0x20, (audio_nmi_enable && audio_nmi_state) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 	}
 
@@ -1301,13 +1310,6 @@ static INT32 MemIndex()
 	DrvColPROM  = Next; Next += 0x000200;
 
 	DrvPalette	= (UINT32*)Next; Next += 0x0200 * sizeof(INT32);
-
-	pAY8910Buffer[0] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5] = (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	AllRam		= Next;
 
@@ -1531,8 +1533,9 @@ static INT32 MmonkeyInit() // and lnc
 	M6502Close();
 
 	M6502Open(1);
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, &ay8910_0_portA_write, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910SetPorts(0, NULL, NULL, &ay8910_0_portA_write, NULL);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 	M6502Close();
@@ -1608,8 +1611,9 @@ static INT32 DiscoInit()
 	M6502Close();
 
 	M6502Open(1);
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, &ay8910_0_portA_write, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910SetPorts(0, NULL, NULL, &ay8910_0_portA_write, NULL);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 	M6502Close();
@@ -1706,8 +1710,9 @@ static INT32 BnjInit()
 	M6502Close();
 
 	M6502Open(1);
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, &ay8910_0_portA_write, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910SetPorts(0, NULL, NULL, &ay8910_0_portA_write, NULL);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 	M6502Close();
@@ -1800,8 +1805,9 @@ static INT32 BtimeInit()
 	M6502SetReadOpHandler(btime_sound_read);
 	M6502Close();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, &ay8910_0_portA_write, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910SetPorts(0, NULL, NULL, &ay8910_0_portA_write, NULL);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 
@@ -1901,12 +1907,14 @@ static INT32 ZoarInit()
 	M6502SetReadOpHandler(btime_sound_read);
 	M6502Close();
 
-	AY8910Init(0, 3000000, nBurnSoundRate, NULL, NULL, &ay8910_0_portA_write, NULL);
-	AY8910Init(1, 3000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 3000000, 0);
+	AY8910Init(1, 3000000, 1);
+	AY8910SetPorts(0, NULL, NULL, &ay8910_0_portA_write, NULL);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 
-	audio_nmi_type = AUDIO_ENABLE_AY8910;
+	//audio_nmi_type = AUDIO_ENABLE_AY8910; // this doesn't work always.
+	audio_nmi_type =  AUDIO_ENABLE_DIRECT;
 	zoarmode = 1;
 
 	GenericTilesInit();
@@ -2027,7 +2035,7 @@ static void draw_chars(UINT8 transparency, UINT8 color, int priority)
 		}
 
 		y -= 1;
-		x -= (bnjskew) ? 0 : 1;
+		x -= (bnjskew|zoarmode) ? 0 : 1;
 
 		if (transparency) {
 			Render8x8Tile_Mask_Clip(pTransDraw, code, x * 8, y * 8, color, 3, 0, 0, DrvGfxROM0);
@@ -2065,7 +2073,7 @@ static void draw_sprites(UINT8 color, UINT8 sprite_y_adjust, UINT8 sprite_y_adju
 		INT32 code = sprite_ram[offs + interleave];
 
 		y -= 8;
-		x -= (bnjskew) ? 0 : 8;
+		x -= (bnjskew|zoarmode) ? 0 : 8;
 
 		y = y - sprite_y_adjust;
 
@@ -2256,7 +2264,7 @@ static INT32 LncDraw()
 	BurnTransferClear();
 
 	if (nBurnLayer & 2) draw_chars(0, 0, -1);
-	if (nBurnLayer & 4) draw_sprites(0, 1, 2, DrvVidRAM, 0x20); // for eggs
+	if (nBurnLayer & 4) draw_sprites(0, 1, 2, DrvVidRAM, 0x20);
 
 	BurnTransferCopy(DrvPalette);
 
@@ -2333,7 +2341,7 @@ static INT32 BtimeFrame()
 
 	INT32 nInterleave = 272;
 
-	INT32 nCyclesTotal[2] = { ((discomode) ? 750000 : 1500000) / 60, ((zippysoundinit) ? 6500000 : 500000) / 60 };
+	INT32 nCyclesTotal[2] = { (INT32)((double)((discomode|bnjskew) ? 750000 : 1500000) / 57.444853), (INT32)((double)((zippysoundinit) ? 6500000 : 500000) / 57.444853) };
 	INT32 nCyclesDone[2]  = { 0, 0 };
 	INT32 nSoundBufferPos = 0;
 
@@ -2356,33 +2364,29 @@ static INT32 BtimeFrame()
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
 		M6502Open(0);
-		INT32 nSegment = (nCyclesTotal[0] - nCyclesDone[0]) / (nInterleave - i);
+		INT32 nSegment = ((i + 1) * nCyclesTotal[0] / nInterleave) - nCyclesDone[0];
 		nCyclesDone[0] += M6502Run(nSegment);
 		M6502Close();
 
 		if (i == 248) vblank = 0x80;
-		if (i == 8) {
-			vblank = 0x00;
-
-			if (pBurnDraw) {
-				BurnDrvRedraw();
-			}
-
-		}
+		if (i == 8)   vblank = 0x00;
 
 		M6502Open(1);
-		nSegment = (nCyclesTotal[1] - nCyclesDone[1]) / (nInterleave - i);
+		nSegment = ((i + 1) * nCyclesTotal[1] / nInterleave) - nCyclesDone[1];
 		nCyclesDone[1] += M6502Run(nSegment);
 
-		audio_nmi_state = (i + 1) & 8;
-		M6502SetIRQLine(0x20, (audio_nmi_enable && audio_nmi_state) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
+		if ((i+1)%8 == 7)
+		{
+			audio_nmi_state = (i+1) & 8;
+			M6502SetIRQLine(0x20, (audio_nmi_enable && audio_nmi_state) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
+		}
 
 		M6502Close();
 
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910RenderInternal(nSegmentLength);
 
 			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
 			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
@@ -2404,7 +2408,7 @@ static INT32 BtimeFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910RenderInternal(nSegmentLength);
 
 			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
 			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
@@ -2419,6 +2423,10 @@ static INT32 BtimeFrame()
 			filter_rc_update(4, pAY8910Buffer[4], pSoundBuf, nSegmentLength);
 			filter_rc_update(5, pAY8910Buffer[5], pSoundBuf, nSegmentLength);
 		}
+	}
+
+	if (pBurnDraw) {
+		BurnDrvRedraw();
 	}
 
 	return 0;
@@ -2859,7 +2867,7 @@ STD_ROM_FN(zoar)
 
 struct BurnDriver BurnDrvZoar = {
 	"zoar", NULL, NULL, NULL, "1982",
-	"Zoar\0", "Sound issues..", "Data East USA", "Miscellaneous",
+	"Zoar\0", NULL, "Data East USA", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, zoarRomInfo, zoarRomName, NULL, NULL, ZoarInputInfo, ZoarDIPInfo,

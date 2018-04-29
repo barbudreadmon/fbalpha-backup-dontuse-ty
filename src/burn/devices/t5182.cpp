@@ -87,7 +87,7 @@ static UINT8 __fastcall t5182_port_read(UINT16 p)
 	{
 		case 0x00:
 		case 0x01:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0x20:
 			return t5182_semaphore_main | (irqstate & 2);
@@ -192,7 +192,7 @@ void t5182Exit()
 	DebugDev_T5182Initted = 0;
 }
 
-INT32 t5182Scan(INT32 nAction)
+INT32 t5182Scan(INT32 nAction, INT32 *pnMin)
 {
 #if defined FBA_DEBUG
 	if (!DebugDev_T5182Initted) bprintf(PRINT_ERROR, _T("t5182Scan called without init\n"));
@@ -211,11 +211,13 @@ INT32 t5182Scan(INT32 nAction)
 			ZetScan(nAction);
 		}
 
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 
 		SCAN_VAR(t5182_semaphore_snd);
 		SCAN_VAR(t5182_semaphore_main);
 		SCAN_VAR(irqstate);
+		SCAN_VAR(coin_frame);
+		SCAN_VAR(t5182_coin_input);
 	}
 
 	return 0;

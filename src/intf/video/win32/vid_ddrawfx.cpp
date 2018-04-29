@@ -446,6 +446,9 @@ static int Frame(bool bRedraw)								// bRedraw = 0
 		} else {
 			BurnDrvFrame();							// Run one frame and draw the screen
 		}
+
+		if ((BurnDrvGetFlags() & BDF_16BIT_ONLY) && pVidTransCallback)
+			pVidTransCallback();
 	}
 
 	MemToSurf();									// Copy the memory buffer to the directdraw buffer for later blitting
@@ -496,8 +499,6 @@ static int Paint(int bValidate)
 	// Display OSD text message
 	VidSDisplayOSD(pddsBlitFX[nUseSys], &rect, 0);
 
-	if (bVidVSync && !nVidFullscreen) { BlitFXDD->WaitForVerticalBlank(DDWAITVB_BLOCKEND, NULL); }
-
 	if (BlitFXBack != NULL) {
 		// Triple bufferring
 		if (BlitFXBack->Blt(&Dest, pddsBlitFX[nUseSys], NULL, DDBLT_WAIT, NULL) < 0) {
@@ -506,6 +507,8 @@ static int Paint(int bValidate)
 		BlitFXPrim->Flip(NULL, DDFLIP_WAIT);
 	} else {
 		// Normal
+		if (bVidVSync && !nVidFullscreen) { BlitFXDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, NULL); }
+
 		if (BlitFXPrim->Blt(&Dest, pddsBlitFX[nUseSys], NULL, DDBLT_WAIT, NULL) < 0) {
 			return 1;
 		}

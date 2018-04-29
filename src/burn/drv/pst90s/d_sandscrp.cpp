@@ -383,7 +383,7 @@ static void __fastcall sandscrp_sound_write_port(UINT16 port, UINT8 data)
 		return;
 
 		case 0x04:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x06:
@@ -427,16 +427,6 @@ static UINT8 DrvYM2203PortB(UINT32)
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 4000000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000;
 }
 
 static INT32 DrvDoReset(INT32 full_reset)
@@ -614,7 +604,7 @@ static INT32 DrvInit(INT32 type)
 	ZetSetInHandler(sandscrp_sound_read_port);
 	ZetClose();
 
-	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, 0);
 	BurnYM2203SetPorts(0, &DrvYM2203PortA, &DrvYM2203PortB, NULL, NULL);
 	BurnTimerAttachZet(4000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.50, BURN_SND_ROUTE_BOTH);
@@ -668,12 +658,17 @@ static INT32 DrvDraw()
 
 	BurnTransferClear();
 
-	for (INT32 i = 0; i < 8; i++) {
+	for (INT32 i = 0; i < 4; i++) {
 		kaneko_view2_draw_layer(0, 0, i);
 		kaneko_view2_draw_layer(0, 1, i);
 	}
 
 	pandora_update(pTransDraw);
+
+	for (INT32 i = 4; i < 8; i++) {
+		kaneko_view2_draw_layer(0, 0, i);
+		kaneko_view2_draw_layer(0, 1, i);
+	}
 
 	BurnTransferCopy(DrvPalette);
 
@@ -704,7 +699,7 @@ static INT32 DrvFrame()
 	}
 
 	INT32 nInterleave = 256;
-	INT32 nCyclesTotal[2] =  { 20000000 / 60, 4000000 / 60 };
+	INT32 nCyclesTotal[2] =  { 12000000 / 60, 4000000 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
 
 	SekOpen(0);
@@ -712,11 +707,9 @@ static INT32 DrvFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++) {
 
-		INT32 nSegment = nCyclesTotal[0] / nInterleave;
+		nCyclesDone[0] += SekRun(((i + 1) * nCyclesTotal[0] / nInterleave) - nCyclesDone[0]);
 
-		nCyclesDone[0] += SekRun(nSegment);
-
-		if (i == 224) {
+		if (i == 240) {
 			vblank_irq = 1;
 			update_irq_state();
 		}
@@ -726,7 +719,7 @@ static INT32 DrvFrame()
 			update_irq_state();
 		}
 
-		BurnTimerUpdate(SekTotalCycles()/3);
+		BurnTimerUpdate((i + 1) * nCyclesTotal[1] / nInterleave);
 	}
 
 	BurnTimerEndFrame(nCyclesTotal[1]);
@@ -773,7 +766,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 
 		BurnYM2203Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(vblank_irq);
 		SCAN_VAR(sprite_irq);

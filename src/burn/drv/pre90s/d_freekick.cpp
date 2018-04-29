@@ -1,4 +1,4 @@
-// Gigas / Freekick / Counter Run / Perfect Billiard for FBA, ported by vbt
+// Gigas / Freekick / Counter Run / Perfect Billiard for FBA, ported by vbt, based on driver by Tomasz Slanina and David Haywood
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
@@ -168,6 +168,7 @@ static struct BurnInputInfo GigasInputList[] = {
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDip + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDip + 1,	"dip"},
+	{"Dip C",		BIT_DIPSWITCH,	DrvDip + 2,	"dip"},
 };
 
 STDINPUTINFO(Gigas)
@@ -315,6 +316,71 @@ static struct BurnDIPInfo Gigasm2DIPList[]=
 };
 
 STDDIPINFO(Gigasm2)
+
+static struct BurnDIPInfo OmegaDIPList[]=
+{
+	{0x0d, 0xff, 0xff, 0x06, NULL		},
+	{0x0e, 0xff, 0xff, 0xff, NULL		},
+	{0x0f, 0xff, 0xff, 0xc3, NULL		},
+
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
+	{0x0d, 0x01, 0x06, 0x06, "20000 & 60000, Every 60000 Points"		},
+	{0x0d, 0x01, 0x06, 0x02, "30000 & 80000, Every 80000 Points"		},
+	{0x0d, 0x01, 0x06, 0x04, "20000 & 60000 Points"		},
+	{0x0d, 0x01, 0x06, 0x00, "Only 20000 Points"		},
+
+	{0   , 0xfe, 0   ,    16, "Coin A"		},
+	{0x0e, 0x01, 0x0f, 0x00, "5 Coins 1 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x0e, "3 Coins 1 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x05, "2 Coins 1 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x06, "3 Coins 2 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x0a, "3 Coins 4 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x09, "2 Coins 3 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x02, "3 Coins/5 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x07, "1 Coin  2 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x01, "2 Coins 5 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x0b, "1 Coin  3 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x03, "1 Coin  4 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x0d, "1 Coin  5 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x0c, "1 Coin/10 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x04, "1 Coin/25 Credits"		},
+	{0x0e, 0x01, 0x0f, 0x08, "1 Coin/50 Credits"		},
+
+	{0   , 0xfe, 0   ,    16, "Coin B"		},
+	{0x0e, 0x01, 0xf0, 0x00, "5 Coins 1 Credits"		},
+	{0x0e, 0x01, 0xf0, 0xe0, "3 Coins 1 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x50, "2 Coins 1 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x60, "3 Coins 2 Credits"		},
+	{0x0e, 0x01, 0xf0, 0xf0, "1 Coin  1 Credits"		},
+	{0x0e, 0x01, 0xf0, 0xa0, "3 Coins 4 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x90, "2 Coins 3 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x20, "3 Coins/5 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x70, "1 Coin  2 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x10, "2 Coins 5 Credits"		},
+	{0x0e, 0x01, 0xf0, 0xb0, "1 Coin  3 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x30, "1 Coin  4 Credits"		},
+	{0x0e, 0x01, 0xf0, 0xd0, "1 Coin  5 Credits"		},
+	{0x0e, 0x01, 0xf0, 0xc0, "1 Coin/10 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x40, "1 Coin/25 Credits"		},
+	{0x0e, 0x01, 0xf0, 0x80, "1 Coin/50 Credits"		},
+
+	{0   , 0xfe, 0   ,    2, "Hopper Status?"		},
+	{0x0f, 0x01, 0x01, 0x01, "Off"		},
+	{0x0f, 0x01, 0x01, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    2, "Invulnerability"		},
+	{0x0f, 0x01, 0x02, 0x02, "Off"		},
+	{0x0f, 0x01, 0x02, 0x00, "On"		},
+
+	{0   , 0xfe, 0   ,    4, "Prize Version"		},
+	{0x0f, 0x01, 0xc0, 0xc0, "Off"		},
+	{0x0f, 0x01, 0xc0, 0x80, "On Setting 1"		},
+	{0x0f, 0x01, 0xc0, 0x40, "On Setting 2"		},
+	{0x0f, 0x01, 0xc0, 0x00, "On Setting 3"		},
+};
+
+STDDIPINFO(Omega)
 
 static struct BurnInputInfo FreekckInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 coin"},
@@ -936,7 +1002,7 @@ UINT8 __fastcall gigas_in(UINT16 address)
 		break;
 		
 		case 0x01:
-			return 0;
+			return DrvDip[2];
 		break;
 	}
 
@@ -1079,6 +1145,17 @@ static INT32 LoadRoms()
 		}
 	}
 
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "omega"))
+	{
+		if (BurnLoadRom(DrvMainROM,  rom_number++, 1)) return 1;
+		if (BurnLoadRom(DrvMainROM + 0x04000,  rom_number++, 1)) return 1;
+
+		if (BurnLoadRom(MC8123Key,  rom_number++, 1)) return 1;
+
+		mc8123_decrypt_rom(0, 1, DrvMainROM, DrvMainROMdec, MC8123Key);
+		use_encrypted = 1;
+	}
+
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "gigasb")) 
 	{
 		if (BurnLoadRom(DrvMainROM + 0x10000,  rom_number++, 1)) return 1;
@@ -1217,6 +1294,11 @@ static INT32 DrvInit()
 	} else { // gigas*
 		ZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
 		ZetMapArea(0x0000, 0xbfff, 2, DrvMainROM + 0x10000, DrvMainROM);
+
+		if (use_encrypted) {
+			ZetMapArea(0x0000, 0xbfff, 0, DrvMainROM);
+			ZetMapArea(0x0000, 0xbfff, 2, DrvMainROMdec, DrvMainROM); // fetch ops(encrypted), opargs(unencrypted)
+		}
 	}
 
 
@@ -1380,13 +1462,13 @@ static INT32 pbillrdInit()
 // Perfect Billiard
 
 static struct BurnRomInfo pbillrdRomDesc[] = {
-	{ "pb.18",	0x4000, 0x9e6275ac, 1 }, //  0 maincpu
-	{ "pb.7",	0x8000, 0xdd438431, 1 }, //  1
-	{ "pb.9",	0x4000, 0x089ce80a, 1 }, //  2
+	{ "pb.18",		0x4000, 0x9e6275ac, 1 }, //  0 maincpu
+	{ "pb.7",		0x8000, 0xdd438431, 1 }, //  1
+	{ "pb.9",		0x4000, 0x089ce80a, 1 }, //  2
 
-	{ "pb.4",	0x4000, 0x2f4d4dd3, 2 }, //  3 gfx1
-	{ "pb.5",	0x4000, 0x9dfccbd3, 2 }, //  4
-	{ "pb.6",	0x4000, 0xb5c3f6f6, 2 }, //  5
+	{ "pb.4",		0x4000, 0x2f4d4dd3, 2 }, //  3 gfx1
+	{ "pb.5",		0x4000, 0x9dfccbd3, 2 }, //  4
+	{ "pb.6",		0x4000, 0xb5c3f6f6, 2 }, //  5
 
 	{ "10619.3r",	0x2000, 0x3296b9d9, 3 }, //  6 gfx2
 	{ "10621.3m",	0x2000, 0x3dca8e4b, 3 }, //  7
@@ -1416,19 +1498,19 @@ struct BurnDriver BurnDrvPbillrd = {
 // Perfect Billiard (MC-8123, 317-5008)
 
 static struct BurnRomInfo pbillrdsaRomDesc[] = {
-	{ "20",			0x4000, 0xda020258, 1 }, //  0 maincpu
-	{ "17",			0x8000, 0x9bb3d467, 1 }, //  1
-	{ "19",			0x4000, 0x2335e6dd, 1 }, //  2
+	{ "20",				0x4000, 0xda020258, 1 }, //  0 maincpu
+	{ "17",				0x8000, 0x9bb3d467, 1 }, //  1
+	{ "19",				0x4000, 0x2335e6dd, 1 }, //  2
 
-	{ "317-0030.key",	0x2000, 0x9223f06d, 2 }, //  3 user1
+	{ "317-5008.key",	0x2000, 0x9223f06d, 2 }, //  3 user1
 
-	{ "pb.4",		0x4000, 0x2f4d4dd3, 3 }, //  4 gfx1
-	{ "pb.5",		0x4000, 0x9dfccbd3, 3 }, //  5
-	{ "pb.6",		0x4000, 0xb5c3f6f6, 3 }, //  6
+	{ "pb.4",			0x4000, 0x2f4d4dd3, 3 }, //  4 gfx1
+	{ "pb.5",			0x4000, 0x9dfccbd3, 3 }, //  5
+	{ "pb.6",			0x4000, 0xb5c3f6f6, 3 }, //  6
 
-	{ "1",			0x4000, 0xc8ed651e, 4 }, //  7 gfx2
-	{ "3",			0x4000, 0x5282fc86, 4 }, //  8
-	{ "2",			0x4000, 0xe9f73f5b, 4 }, //  9
+	{ "1",				0x4000, 0xc8ed651e, 4 }, //  7 gfx2
+	{ "3",				0x4000, 0x5282fc86, 4 }, //  8
+	{ "2",				0x4000, 0xe9f73f5b, 4 }, //  9
 
 	{ "82s129.3a",		0x0100, 0x44802169, 5 }, // 10 proms
 	{ "82s129.4d",		0x0100, 0x69ca07cc, 5 }, // 11
@@ -1457,15 +1539,15 @@ struct BurnDriver BurnDrvPbillrds = {
 static struct BurnRomInfo freekickRomDesc[] = {
 	{ "ns6201-a_1987.10_free_kick.cpu",	0xd000, 0x6d172850, 1 }, //  0 maincpu
 
-	{ "11.1e",		0x8000, 0xa6030ba9, 2 }, //  1 user1
+	{ "11.1e",			0x8000, 0xa6030ba9, 2 }, //  1 user1
 
-	{ "12.1h",		0x4000, 0xfb82e486, 3 }, //  2 gfx1
-	{ "13.1j",		0x4000, 0x3ad78ee2, 3 }, //  3
-	{ "14.1l",		0x4000, 0x0185695f, 3 }, //  4
+	{ "12.1h",			0x4000, 0xfb82e486, 3 }, //  2 gfx1
+	{ "13.1j",			0x4000, 0x3ad78ee2, 3 }, //  3
+	{ "14.1l",			0x4000, 0x0185695f, 3 }, //  4
 
-	{ "15.1m",		0x4000, 0x0fa7c13c, 4 }, //  5 gfx2
-	{ "16.1p",		0x4000, 0x2b996e89, 4 }, //  6
-	{ "17.1r",		0x4000, 0xe7894def, 4 }, //  7
+	{ "15.1m",			0x4000, 0x0fa7c13c, 4 }, //  5 gfx2
+	{ "16.1p",			0x4000, 0x2b996e89, 4 }, //  6
+	{ "17.1r",			0x4000, 0xe7894def, 4 }, //  7
 
 	{ "24s10n.8j",		0x0100, 0x53a6bc21, 5 }, //  8 proms
 	{ "24s10n.7j",		0x0100, 0x38dd97d8, 5 }, //  9
@@ -1493,15 +1575,15 @@ struct BurnDriver BurnDrvFreekick = {
 static struct BurnRomInfo freekickaRomDesc[] = {
 	{ "ns6201-a_1987.9_free_kick.cpu",	0xd000, 0xacc0a278, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
 
-	{ "11.1e",		0x8000, 0xa6030ba9, 2 | BRF_GRA },           //  1 user1
+	{ "11.1e",			0x8000, 0xa6030ba9, 2 | BRF_GRA },           //  1 user1
 
-	{ "12.1h",		0x4000, 0xfb82e486, 3 | BRF_GRA },           //  2 gfx1
-	{ "13.1j",		0x4000, 0x3ad78ee2, 3 | BRF_GRA },           //  3
-	{ "14.1l",		0x4000, 0x0185695f, 3 | BRF_GRA },           //  4
+	{ "12.1h",			0x4000, 0xfb82e486, 3 | BRF_GRA },           //  2 gfx1
+	{ "13.1j",			0x4000, 0x3ad78ee2, 3 | BRF_GRA },           //  3
+	{ "14.1l",			0x4000, 0x0185695f, 3 | BRF_GRA },           //  4
 
-	{ "15.1m",		0x4000, 0x0fa7c13c, 4 | BRF_GRA },           //  5 gfx2
-	{ "16.1p",		0x4000, 0x2b996e89, 4 | BRF_GRA },           //  6
-	{ "17.1r",		0x4000, 0xe7894def, 4 | BRF_GRA },           //  7
+	{ "15.1m",			0x4000, 0x0fa7c13c, 4 | BRF_GRA },           //  5 gfx2
+	{ "16.1p",			0x4000, 0x2b996e89, 4 | BRF_GRA },           //  6
+	{ "17.1r",			0x4000, 0xe7894def, 4 | BRF_GRA },           //  7
 
 	{ "24s10n.8j",		0x0100, 0x53a6bc21, 5 | BRF_GRA },           //  8 proms
 	{ "24s10n.7j",		0x0100, 0x38dd97d8, 5 | BRF_GRA },           //  9
@@ -1527,28 +1609,28 @@ struct BurnDriver BurnDrvFreekicka = {
 // Free Kick (bootleg set 1)
 
 static struct BurnRomInfo freekickb1RomDesc[] = {
-	{ "freekbl8.q7",	0x10000, 0x4208cfe5, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "freekbl8.q7",		0x10000, 0x4208cfe5, 1 | BRF_PRG | BRF_ESS }, 	 //  0 maincpu
 
-	{ "11.1e",		0x08000, 0xa6030ba9, 2 | BRF_GRA },           //  1 user1
+	{ "11.1e",				0x08000, 0xa6030ba9, 2 | BRF_GRA },           	 //  1 user1
 
-	{ "12.1h",		0x04000, 0xfb82e486, 3 | BRF_GRA },           //  2 gfx1
-	{ "13.1j",		0x04000, 0x3ad78ee2, 3 | BRF_GRA },           //  3
-	{ "14.1l",		0x04000, 0x0185695f, 3 | BRF_GRA },           //  4
+	{ "12.1h",				0x04000, 0xfb82e486, 3 | BRF_GRA },           	 //  2 gfx1
+	{ "13.1j",				0x04000, 0x3ad78ee2, 3 | BRF_GRA },           	 //  3
+	{ "14.1l",				0x04000, 0x0185695f, 3 | BRF_GRA },           	 //  4
 
-	{ "15.1m",		0x04000, 0x0fa7c13c, 4 | BRF_GRA },           //  5 gfx2
-	{ "16.1p",		0x04000, 0x2b996e89, 4 | BRF_GRA },           //  6
-	{ "17.1r",		0x04000, 0xe7894def, 4 | BRF_GRA },           //  7
+	{ "15.1m",				0x04000, 0x0fa7c13c, 4 | BRF_GRA },           	 //  5 gfx2
+	{ "16.1p",				0x04000, 0x2b996e89, 4 | BRF_GRA },           	 //  6
+	{ "17.1r",				0x04000, 0xe7894def, 4 | BRF_GRA },           	 //  7
 
-	{ "24s10n.8j",		0x00100, 0x53a6bc21, 5 | BRF_GRA },           //  8 proms
-	{ "24s10n.7j",		0x00100, 0x38dd97d8, 5 | BRF_GRA },           //  9
-	{ "24s10n.8k",		0x00100, 0x18e66087, 5 | BRF_GRA },           // 10
-	{ "24s10n.7k",		0x00100, 0xbc21797a, 5 | BRF_GRA },           // 11
-	{ "24s10n.8h",		0x00100, 0x8aac5fd0, 5 | BRF_GRA },           // 12
-	{ "24s10n.7h",		0x00100, 0xa507f941, 5 | BRF_GRA },           // 13
+	{ "24s10n.8j",			0x00100, 0x53a6bc21, 5 | BRF_GRA },           	 //  8 proms
+	{ "24s10n.7j",			0x00100, 0x38dd97d8, 5 | BRF_GRA },           	 //  9
+	{ "24s10n.8k",			0x00100, 0x18e66087, 5 | BRF_GRA },           	 // 10
+	{ "24s10n.7k",			0x00100, 0xbc21797a, 5 | BRF_GRA },           	 // 11
+	{ "24s10n.8h",			0x00100, 0x8aac5fd0, 5 | BRF_GRA },           	 // 12
+	{ "24s10n.7h",			0x00100, 0xa507f941, 5 | BRF_GRA },           	 // 13
 
-	{ "pal16l8.q10.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 14 pals
-	{ "pal16l8.r1.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 15
-	{ "pal16l8.s1.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA },           // 16
+	{ "pal16l8.q10.bin",	0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA }, // 14 pals
+	{ "pal16l8.r1.bin",		0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA }, // 15
+	{ "pal16l8.s1.bin",		0x00001, 0x00000000, 6 | BRF_NODUMP | BRF_GRA }, // 16
 };
 
 STD_ROM_PICK(freekickb1)
@@ -1567,18 +1649,18 @@ struct BurnDriver BurnDrvFreekickb1 = {
 // Free Kick (bootleg set 3)
 
 static struct BurnRomInfo freekickb3RomDesc[] = {
-	{ "1",		0x8000, 0x214e1868, 1 }, //  0 maincpu
-	{ "2",		0x8000, 0x734cdfc7, 1 }, //  1
+	{ "1",			0x8000, 0x214e1868, 1 }, //  0 maincpu
+	{ "2",			0x8000, 0x734cdfc7, 1 }, //  1
 
-	{ "11.1e",	0x8000, 0xa6030ba9, 2 }, //  2 user1
+	{ "11.1e",		0x8000, 0xa6030ba9, 2 }, //  2 user1
 
-	{ "12.1h",	0x4000, 0xfb82e486, 3 }, //  3 gfx1
-	{ "13.1j",	0x4000, 0x3ad78ee2, 3 }, //  4
-	{ "14.1l",	0x4000, 0x0185695f, 3 }, //  5
+	{ "12.1h",		0x4000, 0xfb82e486, 3 }, //  3 gfx1
+	{ "13.1j",		0x4000, 0x3ad78ee2, 3 }, //  4
+	{ "14.1l",		0x4000, 0x0185695f, 3 }, //  5
 
-	{ "15.1m",	0x4000, 0x0fa7c13c, 4 }, //  6 gfx2
-	{ "16.1p",	0x4000, 0x2b996e89, 4 }, //  7
-	{ "17.1r",	0x4000, 0xe7894def, 4 }, //  8
+	{ "15.1m",		0x4000, 0x0fa7c13c, 4 }, //  6 gfx2
+	{ "16.1p",		0x4000, 0x2b996e89, 4 }, //  7
+	{ "17.1r",		0x4000, 0xe7894def, 4 }, //  8
 
 	{ "24s10n.8j",	0x0100, 0x53a6bc21, 5 }, //  9 proms
 	{ "24s10n.7j",	0x0100, 0x38dd97d8, 5 }, // 10
@@ -1711,8 +1793,9 @@ struct BurnDriver BurnDrvGigasb = {
 };
 
 // Gigas Mark II (bootleg)
+// bootleg of Gigas MarkII without the MC-8123
 
-static struct BurnRomInfo gigasm2RomDesc[] = {
+static struct BurnRomInfo gigasm2bRomDesc[] = {
 	{ "8.rom",	0x08000, 0xc00a4a6c, 1 }, //  0 maincpu
 	{ "7.rom",	0x08000, 0x92bd9045, 1 }, //  1
 	{ "9.rom",	0x08000, 0xa3ef809c, 1 }, //  1
@@ -1733,15 +1816,15 @@ static struct BurnRomInfo gigasm2RomDesc[] = {
 	{ "3.pr",	0x00100, 0x28b5ee4c, 4 }, // 13
 };
 
-STD_ROM_PICK(gigasm2)
-STD_ROM_FN(gigasm2)
+STD_ROM_PICK(gigasm2b)
+STD_ROM_FN(gigasm2b)
 
-struct BurnDriver BurnDrvGigasm2 = {
-	"gigasm2b", NULL, NULL, NULL, "1986",
+struct BurnDriver BurnDrvGigasm2b = {
+	"gigasm2b", "gigasm2", NULL, NULL, "1986",
 	"Gigas Mark II\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_PRE90S, GBF_BREAKOUT, 0,
-	NULL, gigasm2RomInfo, gigasm2RomName, NULL, NULL, GigasInputInfo, Gigasm2DIPInfo,
+	NULL, gigasm2bRomInfo, gigasm2bRomName, NULL, NULL, GigasInputInfo, Gigasm2DIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
 };
@@ -1749,25 +1832,25 @@ struct BurnDriver BurnDrvGigasm2 = {
 // Gigas (MC-8123, 317-5002)
 
 static struct BurnRomInfo gigasRomDesc[] = {
-	{ "8.8n",	0x04000, 0x34ea8262, BRF_ESS | BRF_PRG }, //  0 maincpu
-	{ "7.8r",	0x08000, 0x43653909, BRF_ESS | BRF_PRG }, //  1
+	{ "8.8n",			0x04000, 0x34ea8262, BRF_ESS | BRF_PRG }, //  0 maincpu
+	{ "7.8r",			0x08000, 0x43653909, BRF_ESS | BRF_PRG }, //  1
 
-	{ "4.3k",	0x04000, 0x8ed78981, BRF_GRA }, //  2 gfx1
-	{ "5.3h",	0x04000, 0x0645ec2d, BRF_GRA }, //  3
-	{ "6.3g",	0x04000, 0x99e9cb27, BRF_GRA }, //  4
+	{ "4.3k",			0x04000, 0x8ed78981, BRF_GRA }, 		  //  2 gfx1
+	{ "5.3h",			0x04000, 0x0645ec2d, BRF_GRA }, 		  //  3
+	{ "6.3g",			0x04000, 0x99e9cb27, BRF_GRA }, 		  //  4
 
-	{ "1.3p",	0x04000, 0xd78fae6e, BRF_GRA }, //  5 gfx2
-	{ "3.3l",	0x04000, 0x37df4a4c, BRF_GRA }, //  6
-	{ "2.3n",	0x04000, 0x3a46e354, BRF_GRA }, //  7
+	{ "1.3p",			0x04000, 0xd78fae6e, BRF_GRA }, 		  //  5 gfx2
+	{ "3.3l",			0x04000, 0x37df4a4c, BRF_GRA }, 		  //  6
+	{ "2.3n",			0x04000, 0x3a46e354, BRF_GRA }, 		  //  7
 
-	{ "3a.bin",	0x00100, 0xa784e71f, BRF_OPT }, //  8 proms
-	{ "4d.bin",	0x00100, 0x376df30c, BRF_OPT }, //  9
-	{ "4a.bin",	0x00100, 0x4edff5bd, BRF_OPT }, // 10
-	{ "3d.bin",	0x00100, 0xfe201a4e, BRF_OPT }, // 11
-	{ "3b.bin",	0x00100, 0x5796cc4a, BRF_OPT }, // 12
-	{ "3c.bin",	0x00100, 0x28b5ee4c, BRF_OPT }, // 13
+	{ "tbp24s10n.3a",	0x00100, 0xa784e71f, BRF_OPT }, 	 	  //  8 proms
+	{ "tbp24s10n.4d",	0x00100, 0x376df30c, BRF_OPT }, 		  //  9
+	{ "tbp24s10n.4a",	0x00100, 0x4edff5bd, BRF_OPT }, 		  // 10
+	{ "tbp24s10n.3d",	0x00100, 0xfe201a4e, BRF_OPT }, 		  // 11
+	{ "tbp24s10n.3b",	0x00100, 0x5796cc4a, BRF_OPT }, 	  	  // 12
+	{ "tbp24s10n.3c",	0x00100, 0x28b5ee4c, BRF_OPT }, 		  // 13
 
-	{ "317-5002.key",	0x02000, 0x86a7e5f6, BRF_ESS | BRF_PRG }, //  14
+	{ "317-5002.key",	0x02000, 0x86a7e5f6, BRF_ESS | BRF_PRG }, // 14
 };
 STD_ROM_PICK(gigas)
 STD_ROM_FN(gigas)
@@ -1776,8 +1859,84 @@ struct BurnDriver BurnDrvGigas = {
 	"gigas", NULL, NULL, NULL, "1986",
 	"Gigas (MC-8123, 317-5002)\0", "Please use gigasb instead!", "SEGA", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	0 | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_PRE90S, GBF_BREAKOUT, 0,
+	BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_PRE90S, GBF_BREAKOUT, 0,
 	NULL, gigasRomInfo, gigasRomName, NULL, NULL, GigasInputInfo, GigasDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
 };
+
+// Gigas Mark II (MC-8123, 317-5002)
+// Gigas Mark II is a romswap/upgrade to gigas, and uses the same MC-8123 (317-5002).
+
+static struct BurnRomInfo gigasm2RomDesc[] = {
+	{ "18.8n",			0x04000, 0x32e83d80, BRF_ESS | BRF_PRG }, //  0 maincpu
+	{ "17.8r",			0x08000, 0x460dadd2, BRF_ESS | BRF_PRG }, //  1
+
+	{ "14.3k",			0x04000, 0x20b3405f, BRF_GRA }, 		  //  2 gfx1
+	{ "15.3h",			0x04000, 0xd04ecfa8, BRF_GRA }, 		  //  3
+	{ "16.3g",			0x04000, 0x33776801, BRF_GRA }, 		  //  4
+
+	{ "11.3p",			0x04000, 0xf64cbd1e, BRF_GRA }, 		  //  5 gfx2
+	{ "13.3l",			0x04000, 0xc228df19, BRF_GRA }, 		  //  6
+	{ "12.3n",			0x04000, 0xa6ad9ce2, BRF_GRA }, 		  //  7
+
+	{ "tbp24s10n.3a",	0x00100, 0xa784e71f, BRF_OPT }, 	 	  //  8 proms
+	{ "tbp24s10n.4d",	0x00100, 0x376df30c, BRF_OPT }, 		  //  9
+	{ "tbp24s10n.4a",	0x00100, 0x4edff5bd, BRF_OPT }, 		  // 10
+	{ "tbp24s10n.3d",	0x00100, 0xfe201a4e, BRF_OPT }, 		  // 11
+	{ "tbp24s10n.3b",	0x00100, 0x5796cc4a, BRF_OPT }, 	  	  // 12
+	{ "tbp24s10n.3c",	0x00100, 0x28b5ee4c, BRF_OPT }, 		  // 13
+
+	{ "317-5002.key",	0x02000, 0x86a7e5f6, BRF_ESS | BRF_PRG }, // 14
+};
+STD_ROM_PICK(gigasm2)
+STD_ROM_FN(gigasm2)
+
+struct BurnDriver BurnDrvGigasm2 = {
+	"gigasm2", NULL, NULL, NULL, "1986",
+	"Gigas Mark II (MC-8123, 317-5002)\0", "Please use gigasm2b instead!", "SEGA", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_PRE90S, GBF_BREAKOUT, 0,
+	NULL, gigasm2RomInfo, gigasm2RomName, NULL, NULL, GigasInputInfo, Gigasm2DIPInfo,
+	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
+	224, 256, 3, 4
+};
+
+// Omega
+
+static struct BurnRomInfo omegaRomDesc[] = {
+	{ "17.m10",		0x4000, 0xc7de0993, BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "8.n10",		0x8000, 0x9bb61910, BRF_PRG | BRF_ESS }, //  1
+
+	{ "omega.key",  0x2000, 0x0a63943f, BRF_PRG | BRF_ESS }, //  2 maincpu:key
+
+	{ "4.f10",		0x4000, 0xbf780a8e, BRF_GRA },           //  3 gfx1
+	{ "5.h10",		0x4000, 0xb491647f, BRF_GRA },           //  4
+	{ "6.j10",		0x4000, 0x65beba5b, BRF_GRA },           //  5
+
+	{ "3.d10",		0x4000, 0xc678b202, BRF_GRA },           //  6 gfx2
+	{ "1.a10",		0x4000, 0xe0aeada9, BRF_GRA },           //  7
+	{ "2.c10",		0x4000, 0xdbc0a47f, BRF_GRA },           //  8
+
+	{ "tbp24s10n.3f",	0x0100, 0x75ec7472, BRF_GRA },           //  9 proms
+	{ "tbp24s10n.4f",	0x0100, 0x5113a114, BRF_GRA },           // 10
+	{ "tbp24s10n.3g",	0x0100, 0xb6b5d4a0, BRF_GRA },           // 11
+	{ "tbp24s10n.4g",	0x0100, 0x931bc299, BRF_GRA },           // 12
+	{ "tbp24s10n.3e",	0x0100, 0x899e089d, BRF_GRA },           // 13
+	{ "tbp24s10n.4e",	0x0100, 0x28321dd8, BRF_GRA },           // 14
+};
+
+STD_ROM_PICK(omega)
+STD_ROM_FN(omega)
+
+struct BurnDriver BurnDrvOmega = {
+	"omega", NULL, NULL, NULL, "1986",
+	"Omega\0", NULL, "Nihon System", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	NULL, omegaRomInfo, omegaRomName, NULL, NULL, GigasInputInfo, OmegaDIPInfo,
+	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
+	224, 256, 3, 4
+};
+
+

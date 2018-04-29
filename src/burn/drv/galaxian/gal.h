@@ -6,11 +6,7 @@
 #include "s2650_intf.h"
 #include "sn76496.h"
 #include "flt_rc.h"
-
-#include "driver.h"
-extern "C" {
- #include "ay8910.h"
-}
+#include "ay8910.h"
 
 // ROM types
 #define GAL_ROM_Z80_PROG1				1
@@ -272,9 +268,8 @@ INT32 GalFrame();
 INT32 GalScan(INT32 nAction, INT32 *pnMin);
 
 // gal_sound.cpp
-extern INT16* pFMBuffer;
-extern INT16* pAY8910Buffer[9];
 extern UINT8 GalSoundType;
+extern UINT8 GalSoundSubType;
 extern UINT8 HunchbksSoundIrqFire;
 extern UINT8 GalLastPort2;
 extern UINT8 GalShootEnable;

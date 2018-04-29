@@ -71,15 +71,15 @@ static INT32 lordgun_gun_hw_y[2];
 static struct BurnInputInfo LordgunInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
-	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"p1 x-axis"),
-	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"p1 y-axis"),
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy5 + 4,	"p1 fire 1"	},
+	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"mouse x-axis"),
+	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"mouse y-axis"),
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy5 + 4,	"mouse button"	},
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy4 + 1,	"p2 coin"	},
 	{"P2 Start",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 start"	},
-	A("P2 Right / left",	BIT_ANALOG_REL, DrvAxis + 2,	"p2 x-axis"),
-	A("P2 Up / Down",	BIT_ANALOG_REL, DrvAxis + 3,	"p2 y-axis"),
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy5 + 5,	"p2 fire 1"	},
+	A("P2 Right / left",	BIT_ANALOG_REL, DrvAxis + 2,	"mouse x-axis"),
+	A("P2 Up / Down",	BIT_ANALOG_REL, DrvAxis + 3,	"mouse y-axis"),
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy5 + 5,	"mouse button"	},
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy3 + 4,	"service"	},
@@ -555,7 +555,7 @@ void __fastcall lordgun_sound_write_port(UINT16 port, UINT8 data)
 		return;
 
 		case 0x2000:	// lordgun
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x6000:	// lordgun
@@ -575,11 +575,11 @@ void __fastcall lordgun_sound_write_port(UINT16 port, UINT8 data)
 		return;
 
 		case 0x7400:	// aliencha
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x7800:	// aliencha
-			MSM6295Command(1, data);
+			MSM6295Write(1, data);
 		return;
 	}
 }
@@ -589,7 +589,7 @@ UINT8 __fastcall lordgun_sound_read_port(UINT16 port)
 	switch (port)
 	{
 		case 0x2000:	// lordgun
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x3000:
 			return soundlatch[0];
@@ -601,10 +601,10 @@ UINT8 __fastcall lordgun_sound_read_port(UINT16 port)
 			return BurnYMF278BReadStatus();
 
 		case 0x7400:	// aliencha
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x7800:	// aliencha
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;

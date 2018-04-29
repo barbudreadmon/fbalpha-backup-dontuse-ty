@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "m6809_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -20,8 +17,6 @@ static UINT8 *DrvVidRAM;
 
 static UINT32 *DrvPalette;
 static UINT8  DrvRecalc;
-
-static INT16 *pAY8910Buffer[3];
 
 static UINT8 bankdata;
 static INT32 vblank;
@@ -164,10 +159,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -242,7 +233,7 @@ static INT32 DrvInit(INT32 game_select)
 		break;
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvNVRAM,	0x0000, 0x1fff, MAP_RAM);
 	M6809MapMemory(DrvCharRAM,	0x2800, 0x2fff, MAP_ROM);
@@ -252,7 +243,7 @@ static INT32 DrvInit(INT32 game_select)
 	M6809SetReadHandler(usgames_read);
 	M6809Close();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -345,7 +336,7 @@ static INT32 DrvFrame()
 	M6809Close();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {

@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -19,20 +16,18 @@ static UINT8 *DrvNVRAM;
 static UINT8 *DrvVidRAM;
 
 static UINT32 *DrvPalette;
-
-static INT16 *pAY8910Buffer[3];
-
 static UINT8 DrvRecalc;
 
-static UINT8  DrvJoy1[8];
-static UINT8  DrvJoy2[8];
-static UINT8  DrvDips[2];
-static UINT8  DrvInputs[2];
-static UINT8  DrvReset;
+static UINT8 soundlatch;
+static UINT8 soundcontrol;
 
-static UINT8 *soundlatch;
-static UINT8 *soundcontrol;
-static UINT32 sound_bit;
+static UINT8 DrvJoy1[8];
+static UINT8 DrvJoy2[8];
+static UINT8 DrvDips[2];
+static UINT8 DrvInputs[2];
+static UINT8 DrvReset;
+
+static UINT8 sound_bit;
 
 static struct BurnInputInfo Enraya4InputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 coin"	},
@@ -111,74 +106,73 @@ STDDIPINFO(Enraya4)
 
 static struct BurnDIPInfo UnkpacgDIPList[]=
 {
-	{0x09, 0xff, 0xff, 0xff, NULL		},
-	{0x0a, 0xff, 0xff, 0x00, NULL		},
+	{0x09, 0xff, 0xff, 0xff, NULL			},
+	{0x0a, 0xff, 0xff, 0x00, NULL			},
 
-	{0   , 0xfe, 0   ,    2, "DIP8"		},
-	{0x09, 0x01, 0x80, 0x00, "Off"		},
-	{0x09, 0x01, 0x80, 0x80, "On"		},
+	{0   , 0xfe, 0   ,    2, "DIP8"			},
+	{0x09, 0x01, 0x80, 0x00, "Off"			},
+	{0x09, 0x01, 0x80, 0x80, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-0"		},
-	{0x0a, 0x01, 0x01, 0x00, "Off"		},
-	{0x0a, 0x01, 0x01, 0x01, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-0"			},
+	{0x0a, 0x01, 0x01, 0x00, "Off"			},
+	{0x0a, 0x01, 0x01, 0x01, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-1"		},
-	{0x0a, 0x01, 0x02, 0x00, "Off"		},
-	{0x0a, 0x01, 0x02, 0x02, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-1"			},
+	{0x0a, 0x01, 0x02, 0x00, "Off"			},
+	{0x0a, 0x01, 0x02, 0x02, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-2"		},
-	{0x0a, 0x01, 0x04, 0x00, "Off"		},
-	{0x0a, 0x01, 0x04, 0x04, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-2"			},
+	{0x0a, 0x01, 0x04, 0x00, "Off"			},
+	{0x0a, 0x01, 0x04, 0x04, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-3"		},
-	{0x0a, 0x01, 0x08, 0x00, "Off"		},
-	{0x0a, 0x01, 0x08, 0x08, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-3"			},
+	{0x0a, 0x01, 0x08, 0x00, "Off"			},
+	{0x0a, 0x01, 0x08, 0x08, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-4"		},
-	{0x0a, 0x01, 0x10, 0x00, "Off"		},
-	{0x0a, 0x01, 0x10, 0x10, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-4"			},
+	{0x0a, 0x01, 0x10, 0x00, "Off"			},
+	{0x0a, 0x01, 0x10, 0x10, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-5"		},
-	{0x0a, 0x01, 0x20, 0x00, "Off"		},
-	{0x0a, 0x01, 0x20, 0x20, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-5"			},
+	{0x0a, 0x01, 0x20, 0x00, "Off"			},
+	{0x0a, 0x01, 0x20, 0x20, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-6"		},
-	{0x0a, 0x01, 0x40, 0x00, "Off"		},
-	{0x0a, 0x01, 0x40, 0x40, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-6"			},
+	{0x0a, 0x01, 0x40, 0x00, "Off"			},
+	{0x0a, 0x01, 0x40, 0x40, "On"			},
 
-	{0   , 0xfe, 0   ,    2, "0-7"		},
-	{0x0a, 0x01, 0x80, 0x00, "Off"		},
-	{0x0a, 0x01, 0x80, 0x80, "On"		},
+	{0   , 0xfe, 0   ,    2, "0-7"			},
+	{0x0a, 0x01, 0x80, 0x00, "Off"			},
+	{0x0a, 0x01, 0x80, 0x80, "On"			},
 };
 
 STDDIPINFO(Unkpacg)
 
-void __fastcall enraya4_write(UINT16 address, UINT8 data)
+static void __fastcall enraya4_write(UINT16 address, UINT8 data)
 {
 	if ((address & 0xf000) == 0xd000 || (address & 0xf000) == 0x7000) {
 		DrvVidRAM[((address & 0x3ff) << 1) + 0] = data;
 		DrvVidRAM[((address & 0x3ff) << 1) + 1] = (address >> 10) & 3;
-
 		return;
 	}
 }
 
 static void sound_control(UINT8 data)
 {
-	if ((*soundcontrol & sound_bit) == sound_bit && (data & sound_bit) == 0) {
-		AY8910Write(0, ~*soundcontrol & 1, *soundlatch);
+	if ((soundcontrol & sound_bit) == sound_bit && (data & sound_bit) == 0) {
+		AY8910Write(0, ~soundcontrol & 1, soundlatch);
 	}
 
-	*soundcontrol = data;
+	soundcontrol = data;
 }
 
-void __fastcall enraya4_out_port(UINT16 port, UINT8 data)
+static void __fastcall enraya4_out_port(UINT16 port, UINT8 data)
 {
 	switch (port & 0xff)
 	{
 		case 0x20:
 		case 0x23:
-			*soundlatch = data;
+			soundlatch = data;
 		break;
 
 		case 0x30:
@@ -188,10 +182,8 @@ void __fastcall enraya4_out_port(UINT16 port, UINT8 data)
 	}
 }
 
-UINT8 __fastcall enraya4_in_port(UINT16 port)
+static UINT8 __fastcall enraya4_in_port(UINT16 port)
 {
-	static UINT8 nRet = 0; 
-
 	switch (port & 0xff)
 	{
 		case 0x00:
@@ -204,7 +196,12 @@ UINT8 __fastcall enraya4_in_port(UINT16 port)
 			return DrvInputs[1];
 	}
 
-	return nRet;
+	return 0;
+}
+
+static tilemap_callback( bg )
+{
+	TILE_SET_INFO(0, DrvVidRAM[offs * 2] + (DrvVidRAM[offs * 2 + 1] * 256), 0, 0);
 }
 
 static INT32 DrvDoReset()
@@ -218,6 +215,9 @@ static INT32 DrvDoReset()
 	AY8910Reset(0);
 
 	HiscoreReset();
+
+	soundlatch   = 0;
+	soundcontrol = 0;
 
 	return 0;
 }
@@ -239,32 +239,18 @@ static INT32 MemIndex()
 	DrvZ80RAM		= Next; Next += 0x001000;
 	DrvVidRAM		= Next; Next += 0x000800;
 
-	soundlatch		= Next; Next += 0x000001;
-	soundcontrol		= Next; Next += 0x000001;
-
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
 	return 0;
 }
 
-static void DrvPaletteInit()
-{
-	for (INT32 i = 0; i < 8; i++) {
-		DrvPalette[i] = BurnHighCol((i & 1) * 0xff, ((i & 2)/2) * 0xff, ((i & 4)/4) * 0xff, 0);
-	}
-}
-
 static INT32 DrvGfxDecode()
 {
 	INT32 Plane[3] = { 0x10000, 0x20000, 0x00000 };
-	INT32 XOffs[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-	INT32 YOffs[8] = { 0, 8, 16, 24, 32, 40, 48, 56 };
+	INT32 XOffs[8] = { STEP8(0,1) };
+	INT32 YOffs[8] = { STEP8(0,8) };
 
 	UINT8 *tmp = (UINT8*)BurnMalloc(0x6000);
 	if (tmp == NULL) {
@@ -283,7 +269,7 @@ static INT32 DrvGfxDecode()
 static void DrvPrgDecode()
 {
 	for (INT32 i = 0x8000; i < 0xa000; i++) {
-		DrvZ80ROM[i] = (DrvZ80ROM[i] & 0xfc) | ((DrvZ80ROM[i] & 0x02) >> 1) | ((DrvZ80ROM[i] & 0x01) << 1);
+		DrvZ80ROM[i] = (DrvZ80ROM[i] & 0xfc) | ((DrvZ80ROM[i] & 1) << 1) | ((DrvZ80ROM[i] >> 1) & 1);
 	}
 }
 
@@ -297,15 +283,14 @@ static INT32 DrvInit(INT32 game, INT32 sbit)
 	MemIndex();
 
 	{
-		BurnLoadRom(DrvZ80ROM + 0x00000, 0, 1);
-		BurnLoadRom(DrvZ80ROM + 0x08000, 1, 1);
+		if (BurnLoadRom(DrvZ80ROM + 0x00000, 0, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM + 0x08000, 1, 1)) return 1;
 
-		BurnLoadRom(DrvGfxROM + 0x00000, 2, 1);
-		BurnLoadRom(DrvGfxROM + 0x02000, 3, 1);
-		BurnLoadRom(DrvGfxROM + 0x04000, 4, 1);
+		if (BurnLoadRom(DrvGfxROM + 0x00000, 2, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM + 0x02000, 3, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM + 0x04000, 4, 1)) return 1;
 
-		if (game) DrvPrgDecode();
-		DrvPaletteInit();
+		if (game) DrvPrgDecode(); // unkpacg
 		DrvGfxDecode();
 	}
 
@@ -314,23 +299,16 @@ static INT32 DrvInit(INT32 game, INT32 sbit)
 
 	if (game == 0)	// 4enraya
 	{
-		ZetMapArea(0x0000, 0xbfff, 0, DrvZ80ROM);
-		ZetMapArea(0x0000, 0xbfff, 2, DrvZ80ROM);
-		ZetMapArea(0xc000, 0xcfff, 0, DrvZ80RAM);
-		ZetMapArea(0xc000, 0xcfff, 1, DrvZ80RAM);
-		ZetMapArea(0xc000, 0xcfff, 2, DrvZ80RAM);
-	//	ZetMapArea(0xd000, 0xdfff, 1, DrvVidRAM);
+		ZetMapMemory(DrvZ80ROM,			0x0000, 0xbfff, MAP_ROM);
+		ZetMapMemory(DrvZ80RAM,			0xc000, 0xcfff, MAP_RAM);
+	//	ZetMapMemory(DrvVidRAM,			0xd000, 0xdfff, MAP_WRITE);
 	}
 	else		// unkpacg
 	{
-		ZetMapArea(0x0000, 0x1fff, 0, DrvZ80ROM);
-		ZetMapArea(0x0000, 0x1fff, 2, DrvZ80ROM);
-		ZetMapArea(0x6000, 0x6fff, 0, DrvNVRAM);
-		ZetMapArea(0x6000, 0x6fff, 1, DrvNVRAM);
-		ZetMapArea(0x6000, 0x6fff, 2, DrvNVRAM);
-	//	ZetMapArea(0xd000, 0xdfff, 1, DrvVidRAM);
-		ZetMapArea(0x8000, 0x9fff, 0, DrvZ80ROM + 0x8000);
-		ZetMapArea(0x8000, 0x9fff, 2, DrvZ80ROM + 0x8000);
+		ZetMapMemory(DrvZ80ROM,			0x0000, 0x1fff, MAP_ROM);
+		ZetMapMemory(DrvNVRAM,			0x6000, 0x6fff, MAP_RAM);
+	//	ZetMapMemory(DrvVidRAM,			0x7000, 0x7fff, MAP_WRITE);
+		ZetMapMemory(DrvZ80ROM + 0x8000,	0x8000, 0x9fff, MAP_ROM);
 	}
 
 	ZetSetOutHandler(enraya4_out_port);
@@ -338,12 +316,15 @@ static INT32 DrvInit(INT32 game, INT32 sbit)
 	ZetSetWriteHandler(enraya4_write);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 
 	sound_bit = sbit;
 
 	GenericTilesInit();
+	GenericTilemapInit(0, TILEMAP_SCAN_ROWS, bg_map_callback, 8, 8, 32, 32);
+	GenericTilemapSetGfx(0, DrvGfxROM, 3, 8, 8, 0x10000, 0, 0);
+	GenericTilemapSetOffsets(0, 0, -16);
 
 	DrvDoReset();
 
@@ -361,6 +342,13 @@ static INT32 DrvExit()
 	return 0;
 }
 
+static void DrvPaletteInit()
+{
+	for (INT32 i = 0; i < 8; i++) {
+		DrvPalette[i] = BurnHighCol((i&1)?0xff:0, (i&2)?0xff:0, (i&4)?0xff:0, 0);
+	}
+}
+
 static INT32 DrvDraw()
 {
 	if (DrvRecalc) {
@@ -368,14 +356,7 @@ static INT32 DrvDraw()
 		DrvRecalc = 0;
 	}
 
-	for (INT32 offs = 0x40; offs < 0x3c0; offs++) {
-		INT32 sx = (offs & 0x1f) << 3;
-		INT32 sy = (offs >> 5) << 3;
-
-		INT32 code = DrvVidRAM[(offs << 1) + 0] | (DrvVidRAM[(offs << 1) + 1] << 8);
-
-		Render8x8Tile(pTransDraw, code, sx, sy - 16, 0, 0, 0, DrvGfxROM);
-	}
+	GenericTilemapDraw(0, pTransDraw, 0);
 
 	BurnTransferCopy(DrvPalette);
 
@@ -399,7 +380,7 @@ static INT32 DrvFrame()
 
 	INT32 nInterleave = 4;
 	INT32 nCyclesTotal = 4000000 / 60;
-	INT32 nCyclesDone  = 0;
+	INT32 nCyclesDone = 0;
 
 	ZetOpen(0);
 
@@ -415,7 +396,7 @@ static INT32 DrvFrame()
 	ZetClose();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -443,6 +424,9 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 		ZetScan(nAction);
 		AY8910Scan(nAction, pnMin);
+
+		SCAN_VAR(soundlatch);
+		SCAN_VAR(soundcontrol);
 	}
 
 	if (nAction & ACB_NVRAM) {

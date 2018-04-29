@@ -595,11 +595,11 @@ static UINT8 __fastcall FstarfrcZ80Read(UINT16 a)
 {
 	switch (a) {
 		case 0xfc00: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 
 		case 0xfc05: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 
 		case 0xfc08: {
@@ -614,7 +614,7 @@ static void __fastcall FstarfrcZ80Write(UINT16 a, UINT8 d)
 {
 	switch (a) {
 		case 0xfc00: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 
@@ -1293,8 +1293,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		SekScan(nAction);					// Scan 68000
 		ZetScan(nAction);					// Scan Z80
 
-		MSM6295Scan(0, nAction);			// Scan OKIM6295
-		BurnYM2151Scan(nAction);
+		MSM6295Scan(nAction, pnMin);			// Scan OKIM6295
+		BurnYM2151Scan(nAction, pnMin);
 
 		// Scan critical driver variables
 		SCAN_VAR(FstarfrcSoundLatch);

@@ -182,7 +182,7 @@ static void __fastcall dblewing_sound_write(UINT16 address, UINT8 data)
 
 		case 0xb000:
 		case 0xf000:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -193,19 +193,18 @@ static UINT8 __fastcall dblewing_sound_read(UINT16 address)
 	{
 		case 0xa000:
 		case 0xa001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xb000:
 		case 0xf000:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xc000:
+			sound_irq = 0;
 			return soundlatch;
 
 		case 0xd000:
-			sound_irq &= ~0x02;
-			ZetSetIRQLine(0, (sound_irq) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-			return sound_irq;
+			return sound_irq ? 0 : 1;
 	}
 
 	return 0;
@@ -214,9 +213,7 @@ static UINT8 __fastcall dblewing_sound_read(UINT16 address)
 static void sound_callback(UINT16 data)
 {
 	soundlatch = data & 0xff;
-	sound_irq |=  0x02;
-
-	ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
+	sound_irq = 1;
 }
 
 static UINT16 input_read()
@@ -241,12 +238,7 @@ static UINT8 __fastcall dblewing_sound_read_port(UINT16 port)
 
 static void DrvYM2151IrqHandler(INT32 state)
 {
-	if (state) 
-		sound_irq |=  0x01;
-	else
-		sound_irq &= ~0x01;
-
-	ZetSetIRQLine(0, (sound_irq) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
+	ZetSetIRQLine(0, (state) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 dblewing_bank_callback( const INT32 bank )
@@ -397,10 +389,10 @@ static INT32 DrvInit()
 
 	BurnYM2151Init(3580000);
 	BurnYM2151SetIrqHandler(&DrvYM2151IrqHandler);
-	BurnYM2151SetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
+	BurnYM2151SetAllRoutes(0.75, BURN_SND_ROUTE_BOTH);
 
 	MSM6295Init(0, 1000000 / 132, 1);
-	MSM6295SetRoute(0, 1.00, BURN_SND_ROUTE_BOTH);
+	MSM6295SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
 
@@ -455,8 +447,6 @@ static void draw_sprites()
 		if (y >= 256) y -= 512;
 		y = 240 - y;
 		x = 304 - x;
-
-		if (x > 320) continue;
 
 		sprite &= ~multi;
 
@@ -550,9 +540,7 @@ static INT32 DrvDraw()
 
 	//bprintf (0, _T("%4.4x\n"), deco16_pf_control[0][0]);
 
-	for (INT32 i = 0; i < nScreenWidth * nScreenHeight; i++) {
-		pTransDraw[i] = 0;
-	}
+	BurnTransferClear();
 
 	if (nBurnLayer & 1) deco16_draw_layer(1, pTransDraw, 0);
 
@@ -574,7 +562,7 @@ static INT32 DrvFrame()
 	ZetNewFrame();
 
 	{
-		memset (DrvInputs, 0xff, 2 * sizeof(UINT16)); 
+		memset (DrvInputs, 0xff, 2 * sizeof(UINT16));
 
 		for (INT32 i = 0; i < 16; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
@@ -594,8 +582,8 @@ static INT32 DrvFrame()
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
-		if (i == 29) deco16_vblank = 0;
-		if (i == 248) {
+		if (i == 16) deco16_vblank = 0;
+		if (i == 255) { // palette issues w/sprites on fadeout @ 248
 			deco16_vblank = 0x08;
 			SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 		}
@@ -653,8 +641,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 		deco16Scan();
 
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(flipscreen);
 		SCAN_VAR(soundlatch);

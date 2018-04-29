@@ -1064,6 +1064,7 @@ static tilemap_callback( mappy_bg )
 	UINT8 attr = DrvVidRAM[offs + 0x800];
 
 	TILE_SET_INFO(0, code, attr, TILE_GROUP((attr >> 6) & 1));
+	*category = attr & 0x3f;
 }
 
 static tilemap_callback( superpac_bg )
@@ -1202,8 +1203,7 @@ static INT32 MappyInit()
 		DrvGfxDecode(0);
 	}
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x1000, 0x27ff, MAP_RAM);
@@ -1212,11 +1212,15 @@ static INT32 MappyInit()
 	M6809SetReadHandler(mappy_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809ROM1,		0xe000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(mappy_sub_write);
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
+
+	M6809Init(3);
+	// not used
 
 	NamcoSoundInit(24000, 8, 0);
 	NacmoSoundSetAllRoutes(0.50 * 10.0 / 16.0, BURN_SND_ROUTE_BOTH);
@@ -1231,6 +1235,10 @@ static INT32 MappyInit()
 	GenericTilemapInit(0, mappy_bg_map_scan, mappy_bg_map_callback, 8, 8, 36, 60);
 	GenericTilemapSetGfx(0, DrvGfxROM0, 2, 8, 8, 0x1000*4, 0, 0x3f);
 	GenericTilemapSetScrollCols(0, 36);
+	GenericTilemapCategoryConfig(0, 0x40);
+	for (INT32 i = 0; i < 0x40 * 4; i++) {
+		GenericTilemapSetCategoryEntry(0, i / 4, i % 4, ((DrvColPROM[i + 0x020] & 0xf) == 0xf) ? 1 : 0);
+	}
 
 	DrvDoReset();
 
@@ -1266,8 +1274,7 @@ static INT32 Digdug2Init()
 		DrvGfxDecode(0);
 	}
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x1000, 0x27ff, MAP_RAM);
@@ -1276,11 +1283,14 @@ static INT32 Digdug2Init()
 	M6809SetReadHandler(mappy_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809ROM1,		0xe000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(mappy_sub_write);
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
+
+	M6809Init(3); // not used
 
 	NamcoSoundInit(24000, 8, 0);
 	NacmoSoundSetAllRoutes(0.50 * 10.0 / 16.0, BURN_SND_ROUTE_BOTH);
@@ -1295,6 +1305,10 @@ static INT32 Digdug2Init()
 	GenericTilemapInit(0, mappy_bg_map_scan, mappy_bg_map_callback, 8, 8, 36, 60);
 	GenericTilemapSetGfx(0, DrvGfxROM0, 2, 8, 8, 0x1000*4, 0, 0x3f);
 	GenericTilemapSetScrollCols(0, 36);
+	GenericTilemapCategoryConfig(0, 0x40);
+	for (INT32 i = 0; i < 0x40 * 4; i++) {
+		GenericTilemapSetCategoryEntry(0, i / 4, i % 4, ((DrvColPROM[i + 0x020] & 0xf) == 0xf) ? 1 : 0);
+	}
 
 	fourwaymode = 1;
 
@@ -1332,8 +1346,7 @@ static INT32 MotosInit()
 		DrvGfxDecode(0);
 	}
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x1000, 0x27ff, MAP_RAM);
@@ -1342,11 +1355,14 @@ static INT32 MotosInit()
 	M6809SetReadHandler(mappy_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809ROM1,		0xe000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(mappy_sub_write);
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
+
+	M6809Init(2); // not used
 
 	NamcoSoundInit(24000, 8, 0);
 	NacmoSoundSetAllRoutes(0.50 * 10.0 / 16.0, BURN_SND_ROUTE_BOTH);
@@ -1361,6 +1377,10 @@ static INT32 MotosInit()
 	GenericTilemapInit(0, mappy_bg_map_scan, mappy_bg_map_callback, 8, 8, 36, 60);
 	GenericTilemapSetGfx(0, DrvGfxROM0, 2, 8, 8, 0x1000*4, 0, 0x3f);
 	GenericTilemapSetScrollCols(0, 36);
+	GenericTilemapCategoryConfig(0, 0x40);
+	for (INT32 i = 0; i < 0x40 * 4; i++) {
+		GenericTilemapSetCategoryEntry(0, i / 4, i % 4, ((DrvColPROM[i + 0x020] & 0xf) == 0xf) ? 1 : 0);
+	}
 
 	DrvDoReset();
 
@@ -1395,8 +1415,7 @@ static INT32 SuperpacInit()
 		DrvGfxDecode(0);
 	}
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x0800, 0x1fff, MAP_RAM);
@@ -1405,11 +1424,14 @@ static INT32 SuperpacInit()
 	M6809SetReadHandler(superpac_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809ROM1,		0xe000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(superpac_sub_write);
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
+
+	M6809Init(3); // not used
 
 	NamcoSoundInit(24000, 8, 0);
 	NacmoSoundSetAllRoutes(0.50 * 10.0 / 16.0, BURN_SND_ROUTE_BOTH);
@@ -1460,8 +1482,7 @@ static INT32 PacnpalInit()
 		DrvGfxDecode(0);
 	}
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x0800, 0x1fff, MAP_RAM);
@@ -1470,11 +1491,14 @@ static INT32 PacnpalInit()
 	M6809SetReadHandler(superpac_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809ROM1,		0xe000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(superpac_sub_write);
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
+
+	M6809Init(0); // not used
 
 	NamcoSoundInit(24000, 8, 0);
 	NacmoSoundSetAllRoutes(0.50 * 10.0 / 16.0, BURN_SND_ROUTE_BOTH);
@@ -1526,8 +1550,7 @@ static INT32 GrobdaInit()
 		DrvGfxDecode(0);
 	}
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x0800, 0x1fff, MAP_RAM);
@@ -1536,11 +1559,14 @@ static INT32 GrobdaInit()
 	M6809SetReadHandler(superpac_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809ROM1,		0xe000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(grobda_sub_write);
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
+
+	M6809Init(2); // not used
 
 	NamcoSoundInit(24000, 8, 0);
 	NacmoSoundSetAllRoutes(0.50 * 10.0 / 16.0, BURN_SND_ROUTE_BOTH);
@@ -1596,8 +1622,7 @@ static INT32 PhozonInit()
 		DrvGfxDecode(1);
 	}
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x0800, 0x1fff, MAP_RAM);
@@ -1606,12 +1631,14 @@ static INT32 PhozonInit()
 	M6809SetReadHandler(phozon_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809ROM1,		0xe000, 0xffff, MAP_ROM);
 	M6809SetWriteHandler(mappy_sub_write);
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
 
+	M6809Init(2);
 	M6809Open(2);
 	M6809MapMemory(DrvVidRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x0800, 0x1fff, MAP_RAM);

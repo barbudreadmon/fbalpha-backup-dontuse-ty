@@ -344,7 +344,7 @@ UINT8 __fastcall crimfght_sound_read(UINT16 address)
 	{
 		case 0xa000:
 		case 0xa001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xc000:
 			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
@@ -418,6 +418,7 @@ static INT32 DrvDoReset()
 	ZetReset();
 	ZetClose();
 
+	K007232Reset(0);
 	BurnYM2151Reset();
 
 	KonamiICReset();
@@ -666,7 +667,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		konamiCpuScan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 		K007232Scan(nAction, pnMin);
 
 		KonamiICScan(nAction);

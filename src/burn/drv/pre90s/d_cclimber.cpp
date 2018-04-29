@@ -6,11 +6,8 @@
 // 2: fix Crazy Kong pt. II offsets and bigsprite flipping issues
 
 #include "tiles_generic.h"
-#include "driver.h"
 #include "z80_intf.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -32,9 +29,9 @@ static UINT8 *DrvBGSprRAM;
 static UINT8 *DrvSprRAM;
 static UINT8 *DrvVidRAM;
 static UINT8 *DrvColRAM;
+
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-static INT16 *pAY8910Buffer[6];
 
 static INT32 DrvGfxROM0Len;
 static INT32 DrvGfxROM1Len;
@@ -71,10 +68,10 @@ static struct BurnInputInfo CclimberInputList[] = {
 	{"P1 Down (left)"    , BIT_DIGITAL  , DrvJoy1 + 1, "p1 down"  },
 	{"P1 Left (left)"    , BIT_DIGITAL  , DrvJoy1 + 2, "p1 left"  },
 	{"P1 Right (left)"   , BIT_DIGITAL  , DrvJoy1 + 3, "p1 right" },
-	{"P1 Up (right)"     , BIT_DIGITAL  , DrvJoy1 + 4, "p1 up 2"    },
-	{"P1 Down (right)"   , BIT_DIGITAL  , DrvJoy1 + 5, "p1 down 2"  },
-	{"P1 Left (right)"   , BIT_DIGITAL  , DrvJoy1 + 6, "p1 left 2"  },
-	{"P1 Right (right)"  , BIT_DIGITAL  , DrvJoy1 + 7, "p1 right 2" },
+	{"P1 Up (right)"     , BIT_DIGITAL  , DrvJoy1 + 4, "p3 up"    },
+	{"P1 Down (right)"   , BIT_DIGITAL  , DrvJoy1 + 5, "p3 down"  },
+	{"P1 Left (right)"   , BIT_DIGITAL  , DrvJoy1 + 6, "p3 left"  },
+	{"P1 Right (right)"  , BIT_DIGITAL  , DrvJoy1 + 7, "p3 right" },
 
 	{"P2 Coin"           , BIT_DIGITAL  , DrvJoy3 + 1, "p2 coin"  },
 	{"P2 Start"          , BIT_DIGITAL  , DrvJoy3 + 3, "p2 start" },
@@ -83,10 +80,10 @@ static struct BurnInputInfo CclimberInputList[] = {
 	{"P2 Down (left)"    , BIT_DIGITAL  , DrvJoy2 + 1, "p2 down"  },
 	{"P2 Left (left)"    , BIT_DIGITAL  , DrvJoy2 + 2, "p2 left"  },
 	{"P2 Right (left)"   , BIT_DIGITAL  , DrvJoy2 + 3, "p2 right" },
-	{"P2 Up (right)"     , BIT_DIGITAL  , DrvJoy2 + 4, "p2 up 2"    },
-	{"P2 Down (right)"   , BIT_DIGITAL  , DrvJoy2 + 5, "p2 down 2"  },
-	{"P2 Left (right)"   , BIT_DIGITAL  , DrvJoy2 + 6, "p2 left 2"  },
-	{"P2 Right (right)"  , BIT_DIGITAL  , DrvJoy2 + 7, "p2 right 2" },
+	{"P2 Up (right)"     , BIT_DIGITAL  , DrvJoy2 + 4, "p4 up"    },
+	{"P2 Down (right)"   , BIT_DIGITAL  , DrvJoy2 + 5, "p4 down"  },
+	{"P2 Left (right)"   , BIT_DIGITAL  , DrvJoy2 + 6, "p4 left"  },
+	{"P2 Right (right)"  , BIT_DIGITAL  , DrvJoy2 + 7, "p4 right" },
 
 	{"Reset"             , BIT_DIGITAL  , &DrvReset    , "reset"    },
 	{"Dip"               , BIT_DIPSWITCH, DrvDips + 0  , "dip"      },
@@ -127,6 +124,44 @@ static struct BurnDIPInfo CclimberDIPList[]=
 };
 
 STDDIPINFO(Cclimber)
+
+static struct BurnDIPInfo CclimberjDIPList[]=
+{
+	{0x15, 0xff, 0xff, 0x00, NULL		},
+	{0x16, 0xff, 0xff, 0xf0, NULL		},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x15, 0x01, 0x03, 0x00, "3"		},
+	{0x15, 0x01, 0x03, 0x01, "4"		},
+	{0x15, 0x01, 0x03, 0x02, "5"		},
+	{0x15, 0x01, 0x03, 0x03, "6"		},
+
+	{0   , 0xfe, 0   ,    2, "Bonus_Life"		},
+	{0x15, 0x01, 0x04, 0x00, "30000"		},
+	{0x15, 0x01, 0x04, 0x04, "50000"		},
+
+	{0   , 0xfe, 0   ,    2, "Rack Test (Cheat)"		},
+	{0x15, 0x01, 0x08, 0x00, "Off"		},
+	{0x15, 0x01, 0x08, 0x08, "On"		},
+	
+	{0   , 0xfe, 0   ,    4, "Coin A"		},
+	{0x15, 0x01, 0x30, 0x30, "4 Coins 1 Credits"		},
+	{0x15, 0x01, 0x30, 0x20, "3 Coins 1 Credits"		},
+	{0x15, 0x01, 0x30, 0x10, "2 Coins 1 Credits"		},
+	{0x15, 0x01, 0x30, 0x00, "1 Coin  1 Credits"		},
+
+	{0   , 0xfe, 0   ,    4, "Coin B"		},
+	{0x15, 0x01, 0xc0, 0x00, "1 Coin  1 Credits"		},
+	{0x15, 0x01, 0xc0, 0x40, "1 Coin  2 Credits"		},
+	{0x15, 0x01, 0xc0, 0x80, "1 Coin  3 Credits"		},
+	{0x15, 0x01, 0xc0, 0xc0, "Free Play"		},
+
+	{0   , 0xfe, 0   ,    2, "Cabinet"		},
+	{0x16, 0x01, 0x10, 0x10, "Upright"		},
+	{0x16, 0x01, 0x10, 0x00, "Cocktail"		},
+};
+
+STDDIPINFO(Cclimberj)
 
 static struct BurnInputInfo RpatrolInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"},
@@ -679,19 +714,12 @@ static INT32 MemIndex()
 
 	DrvPalette		= (UINT32*)Next; Next += 0x0200 * sizeof(UINT32);
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	AllRam			= Next;
 
 	DrvZ80RAM0		= Next; Next += 0x0000c00;
 	DrvZ80RAM1		= Next; Next += 0x0000800;
 	DrvZ80RAM2		= Next; Next += 0x0000800;
-	DrvZ80RAM1_0    = Next; Next += 0x0001000;
+	DrvZ80RAM1_0  		= Next; Next += 0x0001000;
 	DrvBGSprRAM		= Next; Next += 0x0000100;
 	DrvSprRAM		= Next; Next += 0x0000400;
 	DrvColRAM		= Next; Next += 0x0000400;
@@ -707,10 +735,8 @@ static INT32 DrvGfxDecode(UINT8 *gfx_base, UINT8 *gfx_dest, INT32 len, INT32 siz
 {
 	INT32 Plane[2] = { 0, (len / 2) * 8 };
 	INT32 PlaneSwimmer[3] = { 0, RGN_FRAC(len, 1, 3), RGN_FRAC(len, 2, 3) };
-	INT32 XOffs[16] = {  0, 1, 2, 3, 4, 5, 6, 7,
-			8*8+0, 8*8+1, 8*8+2, 8*8+3, 8*8+4, 8*8+5, 8*8+6, 8*8+7 };
-	INT32 YOffs[16] = {  0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8,
-			16*8, 17*8, 18*8, 19*8, 20*8, 21*8, 22*8, 23*8 };
+	INT32 XOffs[16] = { STEP8(0,1), STEP8(64,1) };
+	INT32 YOffs[16] = { STEP8(0,8), STEP8(128,8) };
 
 	UINT8 *tmp = (UINT8*)BurnMalloc(len);
 	if (tmp == NULL) {
@@ -920,7 +946,6 @@ static void SwimmerPaletteInit()
 	swimmer_set_background_pen();
 }
 
-
 static void cclimber_decode(const INT8 convtable[8][16])
 {
 	UINT8 *rom = DrvZ80ROM;
@@ -1093,9 +1118,10 @@ static INT32 DrvInit()
 		ZetClose();
 	}
 
-	AY8910Init(0, (game_select == 6) ? 2000000 : 1536000, nBurnSoundRate, NULL, NULL, &cclimber_sample_select_w, NULL);
+	AY8910Init(0, (game_select == 6) ? 2000000 : 1536000, 0);
+	AY8910SetPorts(0, NULL, NULL, &cclimber_sample_select_w, NULL);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
-	AY8910Init(1, (game_select == 6) ? 2000000 : 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, (game_select == 6) ? 2000000 : 1536000, 1);
 	AY8910SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -1431,7 +1457,7 @@ static INT32 DrvFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -1474,7 +1500,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 }
 
 
-// Crazy Climber (US)
+// Crazy Climber (US set 1)
 
 static struct BurnRomInfo cclimberRomDesc[] = {
 	{ "cc11",		0x1000, 0x217ec4ff, 1 | BRF_PRG | BRF_ESS }, //  0 - Z80 Code
@@ -1520,6 +1546,23 @@ static void cclimber_decrypt()
 	cclimber_decode(convtable);
 }
 
+void cclimberj_decrypt()
+{
+	static const INT8 convtable[8][16] =
+	{
+		{ 0x41,0x54,0x51,0x14,0x05,0x10,0x01,0x55,0x44,0x11,0x00,0x50,0x15,0x40,0x04,0x45 },
+		{ 0x50,0x11,0x40,0x55,0x51,0x14,0x45,0x04,0x54,0x15,0x10,0x05,0x44,0x01,0x00,0x41 },
+		{ 0x44,0x11,0x00,0x50,0x41,0x54,0x04,0x14,0x15,0x40,0x51,0x55,0x05,0x10,0x01,0x45 },
+		{ 0x10,0x50,0x54,0x55,0x01,0x44,0x40,0x04,0x14,0x11,0x00,0x41,0x45,0x15,0x51,0x05 },
+		{ 0x14,0x41,0x01,0x44,0x04,0x50,0x51,0x45,0x11,0x40,0x54,0x15,0x10,0x00,0x55,0x05 },
+		{ 0x01,0x05,0x41,0x45,0x54,0x50,0x55,0x10,0x11,0x15,0x51,0x14,0x44,0x40,0x04,0x00 },
+		{ 0x05,0x55,0x00,0x50,0x11,0x40,0x54,0x14,0x45,0x51,0x10,0x04,0x44,0x01,0x41,0x15 },
+		{ 0x55,0x50,0x15,0x10,0x01,0x04,0x41,0x44,0x45,0x40,0x05,0x00,0x11,0x14,0x51,0x54 },
+	};
+
+	cclimber_decode(convtable);
+}
+
 static INT32 cclimberInit()
 {
 	INT32 nRet;
@@ -1537,11 +1580,102 @@ static INT32 cclimberInit()
 
 struct BurnDriver BurnDrvCclimber = {
 	"cclimber", NULL, NULL, NULL, "1980",
-	"Crazy Climber (US)\0", NULL, "Nichibutsu", "Miscellaneous",
+	"Crazy Climber (US set 1)\0", NULL, "Nichibutsu", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, cclimberRomInfo, cclimberRomName, NULL, NULL, CclimberInputInfo, CclimberDIPInfo,
 	cclimberInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
+	256, 224, 4, 3
+};
+
+// Crazy Climber (US set 2)
+
+static struct BurnRomInfo cclimberaRomDesc[] = {
+	{ "cc11",		0x1000, 0x217ec4ff, 1 | BRF_PRG | BRF_ESS }, //  0 - Z80 Code
+	{ "10",			0x1000, 0x983d0bab, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "cc9",		0x1000, 0x6db0879c, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "cc8",		0x1000, 0xf48c5fe3, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "7",			0x1000, 0xc2e06606, 1 | BRF_PRG | BRF_ESS }, //  4
+
+	{ "cc6",		0x0800, 0x481b64cc, 2 | BRF_GRA },	     	 //  5 - Sprites & Tiles
+	{ "cc5",		0x0800, 0x2c33b760, 2 | BRF_GRA },	     	 //  6
+	{ "cc4",		0x0800, 0x332347cb, 2 | BRF_GRA },	     	 //  7
+	{ "cc3",		0x0800, 0x4e4b3658, 2 | BRF_GRA },	     	 //  8
+
+	{ "cc2",		0x0800, 0x14f3ecc9, 3 | BRF_GRA },	     	 //  9 - Big Sprites
+	{ "cc1",		0x0800, 0x21c0f9fb, 3 | BRF_GRA },	     	 // 10
+
+	{ "cclimber.pr1", 	0x0020, 0x751c3325, 6 | BRF_GRA },	     // 11 - Color Proms
+	{ "cclimber.pr2", 	0x0020, 0xab1940fa, 6 | BRF_GRA },	     // 12
+	{ "cclimber.pr3", 	0x0020, 0x71317756, 6 | BRF_GRA },	     // 13 
+
+	{ "cc13",		0x1000, 0xe0042f75, 7 | BRF_SND },	     	 // 14 - Samples
+	{ "cc12",		0x1000, 0x5da13aaa, 7 | BRF_SND },	     	 // 15
+};
+
+STD_ROM_PICK(cclimbera)
+STD_ROM_FN(cclimbera)
+
+struct BurnDriver BurnDrvCclimbera = {
+	"cclimbera", "cclimber", NULL, NULL, "1980",
+	"Crazy Climber (US set 2)\0", NULL, "Nichibutsu", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, cclimberaRomInfo, cclimberaRomName, NULL, NULL, CclimberInputInfo, CclimberDIPInfo,
+	cclimberInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
+	256, 224, 4, 3
+};
+
+static INT32 cclimberjInit()
+{
+	INT32 nRet;
+
+	game_select = 1;
+
+	nRet = DrvInit();
+
+	if (nRet == 0) {
+		cclimberj_decrypt();
+	}
+
+	return nRet;
+}
+
+// Crazy Climber (Japan)
+
+static struct BurnRomInfo cclimberjRomDesc[] = {
+	{ "cc11j.bin",	0x1000, 0x89783959, 1 | BRF_PRG | BRF_ESS }, //  0 - Z80 Code
+	{ "cc10j.bin",	0x1000, 0x14eda506, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "cc09j.bin",	0x1000, 0x26489069, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "cc08j.bin",	0x1000, 0xb33c96f8, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "cc07j.bin",	0x1000, 0xfbc9626c, 1 | BRF_PRG | BRF_ESS }, //  4
+
+	{ "cc06",		0x0800, 0x481b64cc, 2 | BRF_GRA },	     	 //  5 - Sprites & Tiles
+	{ "cc05",		0x0800, 0x2c33b760, 2 | BRF_GRA },	     	 //  6
+	{ "cc04",		0x0800, 0x332347cb, 2 | BRF_GRA },	     	 //  7
+	{ "cc03",		0x0800, 0x4e4b3658, 2 | BRF_GRA },	     	 //  8
+
+	{ "cc02",		0x0800, 0x14f3ecc9, 3 | BRF_GRA },	     	 //  9 - Big Sprites
+	{ "cc01",		0x0800, 0x21c0f9fb, 3 | BRF_GRA },	     	 // 10
+
+	{ "cclimber.pr1", 	0x0020, 0x751c3325, 6 | BRF_GRA },	     // 11 - Color Proms
+	{ "cclimber.pr2", 	0x0020, 0xab1940fa, 6 | BRF_GRA },	     // 12
+	{ "cclimber.pr3", 	0x0020, 0x71317756, 6 | BRF_GRA },	     // 13 
+
+	{ "cc13j.bin",	0x1000, 0x5f0bcdfb, 7 | BRF_SND },	     	 // 14 - Samples
+	{ "cc12j.bin",	0x1000, 0x9003ffbd, 7 | BRF_SND },	     	 // 15
+};
+
+STD_ROM_PICK(cclimberj)
+STD_ROM_FN(cclimberj)
+
+struct BurnDriver BurnDrvCclimberj = {
+	"cclimberj", "cclimber", NULL, NULL, "1980",
+	"Crazy Climber (Japan)\0", NULL, "Nichibutsu", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, cclimberjRomInfo, cclimberjRomName, NULL, NULL, CclimberInputInfo, CclimberjDIPInfo,
+	cclimberjInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
 	256, 224, 4, 3
 };
 
@@ -1636,25 +1770,6 @@ struct BurnDriver BurnDrvCkong = {
 	ckongInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x60,
 	224, 256, 3, 4
 };
-
-
-
-void cclimbrj_decode()
-{
-	static const INT8 convtable[8][16] =
-	{
-		{ 0x41,0x54,0x51,0x14,0x05,0x10,0x01,0x55,0x44,0x11,0x00,0x50,0x15,0x40,0x04,0x45 },
-		{ 0x50,0x11,0x40,0x55,0x51,0x14,0x45,0x04,0x54,0x15,0x10,0x05,0x44,0x01,0x00,0x41 },
-		{ 0x44,0x11,0x00,0x50,0x41,0x54,0x04,0x14,0x15,0x40,0x51,0x55,0x05,0x10,0x01,0x45 },
-		{ 0x10,0x50,0x54,0x55,0x01,0x44,0x40,0x04,0x14,0x11,0x00,0x41,0x45,0x15,0x51,0x05 },
-		{ 0x14,0x41,0x01,0x44,0x04,0x50,0x51,0x45,0x11,0x40,0x54,0x15,0x10,0x00,0x55,0x05 },
-		{ 0x01,0x05,0x41,0x45,0x54,0x50,0x55,0x10,0x11,0x15,0x51,0x14,0x44,0x40,0x04,0x00 },
-		{ 0x05,0x55,0x00,0x50,0x11,0x40,0x54,0x14,0x45,0x51,0x10,0x04,0x44,0x01,0x41,0x15 },
-		{ 0x55,0x50,0x15,0x10,0x01,0x04,0x41,0x44,0x45,0x40,0x05,0x00,0x11,0x14,0x51,0x54 },
-	};
-
-	cclimber_decode(convtable);
-}
 
 static void sega_decode(const UINT8 convtable[32][4])
 {

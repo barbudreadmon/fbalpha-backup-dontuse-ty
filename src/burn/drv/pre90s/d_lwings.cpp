@@ -870,7 +870,7 @@ static void __fastcall fball_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xe000:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -883,7 +883,7 @@ static UINT8 __fastcall fball_sound_read(UINT16 address)
 			return soundlatch;
 
 		case 0xe000:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -1008,11 +1008,6 @@ static INT32 DrvGfxDecode()
 	return 0;
 }
 
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)(ZetTotalCycles() * nSoundRate / 3000000);
-}
-
 inline static INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 {
 	return (INT64)((double)ZetTotalCycles() * nSoundRate / (nCyclesTotal[0] * 130));
@@ -1021,11 +1016,6 @@ inline static INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 inline static INT32 DrvMSM5205SynchroniseStreamAvengers(INT32 nSoundRate)
 {
 	return (INT64)((double)ZetTotalCycles() * nSoundRate / (nCyclesTotal[0] * 60));
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 3000000;
 }
 
 static void lwings_main_cpu_init()
@@ -1070,7 +1060,7 @@ static void lwings_sound_init()
 	ZetSetWriteHandler(lwings_sound_write);
 	ZetClose();
 
-	BurnYM2203Init(2, 1500000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(2, 1500000, NULL, 0);
 	BurnTimerAttachZet(3000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.10, BURN_SND_ROUTE_BOTH);
@@ -1860,7 +1850,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(DrvSampleBank);
 
 		if (fball) {
-			MSM6295Scan(0, nAction);
+			MSM6295Scan(nAction, pnMin);
 			oki_bank(0); // wrong
 		} else {
 			BurnYM2203Scan(nAction, pnMin);
@@ -2020,8 +2010,8 @@ struct BurnDriver BurnDrvLwings = {
 // Legendary Wings (US set 2)
 
 static struct BurnRomInfo lwings2RomDesc[] = {
-	{ "u13-l",		0x8000, 0x3069c01c, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "u14-k",		0x8000, 0x5d91c828, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "u13-l",			0x8000, 0x3069c01c, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "u14-k",			0x8000, 0x5d91c828, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "9c_lw03.bin",	0x8000, 0xec5cc201, 1 | BRF_PRG | BRF_ESS }, //  2
 
 	{ "11e_lw04.bin",	0x8000, 0xa20337a2, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
@@ -2061,7 +2051,7 @@ struct BurnDriver BurnDrvLwings2 = {
 
 // Ares no Tsubasa (Japan)
 
-static struct BurnRomInfo lwingsjpRomDesc[] = {
+static struct BurnRomInfo lwingsjRomDesc[] = {
 	{ "a_06c.rom",		0x8000, 0x2068a738, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "a_07c.rom",		0x8000, 0xd6a2edc4, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "9c_lw03.bin",	0x8000, 0xec5cc201, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -2087,15 +2077,57 @@ static struct BurnRomInfo lwingsjpRomDesc[] = {
 	{ "63s141.15g",		0x0100, 0xd96bcc98, 0 | BRF_OPT },           // 17 Proms (not used)
 };
 
-STD_ROM_PICK(lwingsjp)
-STD_ROM_FN(lwingsjp)
+STD_ROM_PICK(lwingsj)
+STD_ROM_FN(lwingsj)
 
-struct BurnDriver BurnDrvLwingsjp = {
+struct BurnDriver BurnDrvLwingsj = {
 	"lwingsj", "lwings", NULL, NULL, "1986",
 	"Ares no Tsubasa (Japan)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
-	NULL, lwingsjpRomInfo, lwingsjpRomName, NULL, NULL, DrvInputInfo, LwingsDIPInfo,
+	NULL, lwingsjRomInfo, lwingsjRomName, NULL, NULL, DrvInputInfo, LwingsDIPInfo,
+	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
+	240, 256, 3, 4
+};
+
+
+// Ares no Tsubasa (Japan, rev. A)
+
+static struct BurnRomInfo lwingsjaRomDesc[] = {
+	{ "at_01a.6c",		0x8000, 0x568f1ea5, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "at_02.7c",		0x8000, 0xd6a2edc4, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "at_03.9c",		0x8000, 0xec5cc201, 1 | BRF_PRG | BRF_ESS }, //  2
+
+	{ "at_03.11e",		0x8000, 0xa20337a2, 2 | BRF_PRG | BRF_ESS }, //  3 Z80 #1 Code
+
+	{ "at_05.9h",		0x4000, 0x091d923c, 4 | BRF_GRA },           //  4 Characters
+
+	{ "at_14.3e",		0x8000, 0x176e3027, 5 | BRF_GRA },           //  5 Background Layer 1 Tiles
+	{ "at_08.1e",		0x8000, 0xf5d25623, 5 | BRF_GRA },           //  6
+	{ "at_13.3d",		0x8000, 0x001caa35, 5 | BRF_GRA },           //  7
+	{ "at_07.1d",		0x8000, 0x0ba008c3, 5 | BRF_GRA },           //  8
+	{ "at_12.3b",		0x8000, 0x4f8182e9, 5 | BRF_GRA },           //  9
+	{ "at_06.1b",		0x8000, 0xf1617374, 5 | BRF_GRA },           // 10
+	{ "at_15.3f",		0x8000, 0x9b374dcc, 5 | BRF_GRA },           // 11
+	{ "at_09.1f",		0x8000, 0x23654e0a, 5 | BRF_GRA },           // 12
+
+	{ "at_17.3j",		0x8000, 0x8f3c763a, 6 | BRF_GRA },           // 13 Sprites
+	{ "at_11.1j",		0x8000, 0x7cc90a1d, 6 | BRF_GRA },           // 14
+	{ "at_16.3h",		0x8000, 0x7d58f532, 6 | BRF_GRA },           // 15
+	{ "at_10.1h",		0x8000, 0x3e396eda, 6 | BRF_GRA },           // 16
+
+	{ "szb01.15g",		0x0100, 0xd96bcc98, 0 | BRF_OPT },           // 17 Proms (not used)
+};
+
+STD_ROM_PICK(lwingsja)
+STD_ROM_FN(lwingsja)
+
+struct BurnDriver BurnDrvLwingsja = {
+	"lwingsja", "lwings", NULL, NULL, "1986",
+	"Ares no Tsubasa (Japan, rev. A)\0", NULL, "Capcom", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_VERSHOOT, 0,
+	NULL, lwingsjaRomInfo, lwingsjaRomName, NULL, NULL, DrvInputInfo, LwingsDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
 };
@@ -2585,23 +2617,23 @@ struct BurnDriver BurnDrvBuraiken = {
 // Fire Ball (FM Work)
 
 static struct BurnRomInfo fballRomDesc[] = {
-	{ "D4.bin",		0x20000, 0x6122b3dc, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "d4.bin",		0x20000, 0x6122b3dc, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 
-	{ "A05.bin",		0x10000, 0x474dd19e, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
+	{ "a05.bin",		0x10000, 0x474dd19e, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
 
-	{ "J03.bin",		0x10000, 0xbe11627f, 3 | BRF_GRA },           //  2 Characters
+	{ "j03.bin",		0x10000, 0xbe11627f, 3 | BRF_GRA },           //  2 Characters
 
-	{ "B15.bin",		0x20000, 0x2169ad3e, 4 | BRF_GRA },           //  3 Background Layer 1 Tiles
-	{ "C15.bin",		0x20000, 0x0f77b03e, 4 | BRF_GRA },           //  4
-	{ "E15.bin",		0x20000, 0x89a761d2, 4 | BRF_GRA },           //  5
-	{ "F15.bin",		0x20000, 0x34b3f9a2, 4 | BRF_GRA },           //  6
+	{ "b15.bin",		0x20000, 0x2169ad3e, 4 | BRF_GRA },           //  3 Background Layer 1 Tiles
+	{ "c15.bin",		0x20000, 0x0f77b03e, 4 | BRF_GRA },           //  4
+	{ "e15.bin",		0x20000, 0x89a761d2, 4 | BRF_GRA },           //  5
+	{ "f15.bin",		0x20000, 0x34b3f9a2, 4 | BRF_GRA },           //  6
 
-	{ "J15.bin",		0x20000, 0xed7be8e7, 5 | BRF_GRA },           //  7 Sprites
-	{ "H15.bin",		0x20000, 0x6ffb5433, 5 | BRF_GRA },           //  8
+	{ "j15.bin",		0x20000, 0xed7be8e7, 5 | BRF_GRA },           //  7 Sprites
+	{ "h15.bin",		0x20000, 0x6ffb5433, 5 | BRF_GRA },           //  8
 
-	{ "A03.bin",		0x40000, 0x22b0d089, 6 | BRF_SND },           //  9 msm6295 Samples
-	{ "A02.bin",		0x40000, 0x951d6579, 6 | BRF_SND },           // 10
-	{ "A01.bin",		0x40000, 0x020b5261, 6 | BRF_SND },           // 11
+	{ "a03.bin",		0x40000, 0x22b0d089, 6 | BRF_SND },           //  9 msm6295 Samples
+	{ "a02.bin",		0x40000, 0x951d6579, 6 | BRF_SND },           // 10
+	{ "a01.bin",		0x40000, 0x020b5261, 6 | BRF_SND },           // 11
 };
 
 STD_ROM_PICK(fball)

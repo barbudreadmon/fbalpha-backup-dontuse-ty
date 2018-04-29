@@ -222,8 +222,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		SekScan(nAction);				// Scan 68000
 		ZetScan(nAction);				// Scan Z80
 
-		MSM6295Scan(0, nAction);
-		BurnYM2151Scan(nAction);
+		MSM6295Scan(nAction, pnMin);
+		BurnYM2151Scan(nAction, pnMin);
 
 		ToaScanGP9001(nAction, pnMin);
 
@@ -258,10 +258,10 @@ static INT32 LoadRoms()
 UINT8 __fastcall shippumdZ80Read(UINT16 nAddress)
 {
 	if (nAddress == 0xE001) {
-		return BurnYM2151ReadStatus();
+		return BurnYM2151Read();
 	}
 	if (nAddress == 0xE004) {
-		return MSM6295ReadStatus(0);
+		return MSM6295Read(0);
 	}
 	return 0;
 }
@@ -276,7 +276,7 @@ void __fastcall shippumdZ80Write(UINT16 nAddress, UINT8 nValue)
 			BurnYM2151WriteRegister(nValue);
 			break;
 		case 0xE004:
-			MSM6295Command(0, nValue);
+			MSM6295Write(0, nValue);
 			break;
 	}
 }

@@ -6,10 +6,7 @@
 #include "tiles_generic.h"
 #include "m6809_intf.h"
 #include "m6502_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 #include "dac.h"
 
 static UINT8 *AllMem;
@@ -36,8 +33,6 @@ static UINT8 *DrvM6502RAM;
 static UINT32 *DrvPalette;
 static UINT8  DrvRecalc;
 
-static INT16 *pAY8910Buffer[6];
-
 static UINT8 *scroll;
 
 static UINT8 soundlatch;
@@ -54,24 +49,26 @@ static UINT8 DrvReset;
 static INT32 vblank;
 static INT32 screen_flipx;
 
+static INT32 bwingsa = 0;
+
 static struct BurnInputInfo BwingInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
-	{"P1 Start",		BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"	},
+	{"P1 Start",	BIT_DIGITAL,	DrvJoy3 + 2,	"p1 start"	},
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 up"		},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 down"	},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 left"	},
-	{"P1 Right",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 right"	},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
+	{"P1 Right",	BIT_DIGITAL,	DrvJoy1 + 0,	"p1 right"	},
+	{"P1 Button 1",	BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
+	{"P1 Button 2",	BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 coin"	},
-	{"P2 Start",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 start"	},
+	{"P2 Start",	BIT_DIGITAL,	DrvJoy3 + 3,	"p2 start"	},
 	{"P2 Up",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 up"		},
 	{"P2 Down",		BIT_DIGITAL,	DrvJoy2 + 3,	"p2 down"	},
 	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 left"	},
-	{"P2 Right",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 right"	},
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"	},
-	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p2 fire 2"	},
+	{"P2 Right",	BIT_DIGITAL,	DrvJoy2 + 0,	"p2 right"	},
+	{"P2 Button 1",	BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"	},
+	{"P2 Button 2",	BIT_DIGITAL,	DrvJoy2 + 5,	"p2 fire 2"	},
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy3 + 6,	"service"	},
@@ -422,13 +419,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -480,27 +470,34 @@ static INT32 DrvInit()
 	MemIndex();
 
 	{
-		if (BurnLoadRom(DrvM6809ROM0 + 0x0000,  0, 1)) return 1;
-		if (BurnLoadRom(DrvM6809ROM0 + 0x4000,  1, 1)) return 1;
-		if (BurnLoadRom(DrvM6809ROM0 + 0x8000,  2, 1)) return 1;
+		if (bwingsa) {
+			if (BurnLoadRom(DrvM6809ROM0 + 0x0000,  0, 1)) return 1;
+			if (BurnLoadRom(DrvM6809ROM0 + 0x2000,  1, 1)) return 1; // weird (overlaps)
+			if (BurnLoadRom(DrvM6809ROM0 + 0x4000,  2, 1)) return 1;
+			if (BurnLoadRom(DrvM6809ROM0 + 0x8000,  3, 1)) return 1;
+		} else {
+			if (BurnLoadRom(DrvM6809ROM0 + 0x0000,  0, 1)) return 1;
+			if (BurnLoadRom(DrvM6809ROM0 + 0x4000,  1, 1)) return 1;
+			if (BurnLoadRom(DrvM6809ROM0 + 0x8000,  2, 1)) return 1;
+		}
 
-		if (BurnLoadRom(DrvM6809ROM1 + 0x0000,  3, 1)) return 1;
-		if (BurnLoadRom(DrvM6809ROM1 + 0x2000,  4, 1)) return 1;
-		if (BurnLoadRom(DrvM6809ROM1 + 0x4000,  5, 1)) return 1;
+		if (BurnLoadRom(DrvM6809ROM1 + 0x0000,  3 + bwingsa, 1)) return 1;
+		if (BurnLoadRom(DrvM6809ROM1 + 0x2000,  4 + bwingsa, 1)) return 1;
+		if (BurnLoadRom(DrvM6809ROM1 + 0x4000,  5 + bwingsa, 1)) return 1;
 
-		if (BurnLoadRom(DrvM6502ROM  + 0x0000,  6, 1)) return 1;
+		if (BurnLoadRom(DrvM6502ROM  + 0x0000,  6 + bwingsa, 1)) return 1;
 
-		if (BurnLoadRom(DrvGfxROM0   + 0x0000,  7, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM0   + 0x0000,  7 + bwingsa, 1)) return 1;
 
-		if (BurnLoadRom(DrvGfxROM1   + 0x0000,  8, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1   + 0x4000,  9, 1)) return 1;
-		if (BurnLoadRom(DrvGfxROM1   + 0x8000, 10, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1   + 0x0000,  8 + bwingsa, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1   + 0x4000,  9 + bwingsa, 1)) return 1;
+		if (BurnLoadRom(DrvGfxROM1   + 0x8000, 10 + bwingsa, 1)) return 1;
 
 		DrvSoundRomDecode();
 		DrvGfxDecode();
 	}
 
-	M6809Init(2);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvShareRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvM6809RAM0,		0x0800, 0x0fff, MAP_RAM);
@@ -512,6 +509,7 @@ static INT32 DrvInit()
 	M6809SetReadHandler(bwing_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvShareRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvM6809RAM1,		0x0800, 0x0fff, MAP_RAM);
@@ -528,8 +526,8 @@ static INT32 DrvInit()
 	M6502SetReadPortHandler(bwing_sound_read_port);
 	M6502Close();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 
@@ -567,6 +565,8 @@ static INT32 DrvExit()
 	DACExit();
 
 	BurnFree(AllMem);
+
+	bwingsa = 0;
 
 	return 0;
 }
@@ -762,7 +762,7 @@ static INT32 DrvFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -772,7 +772,7 @@ static INT32 DrvFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 		DACUpdate(pBurnSoundOut, nBurnSoundLen);
 	}
@@ -890,6 +890,12 @@ struct BurnDriver BurnDrvBwingso = {
 	240, 256, 3, 4
 };
 
+static INT32 bwingsaInit()
+{
+	bwingsa = 1;
+
+	return DrvInit();
+}
 
 // B-Wings (Alt Ver.?)
 
@@ -921,7 +927,7 @@ struct BurnDriver BurnDrvBwingsa = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_PREFIX_DATAEAST, GBF_VERSHOOT, 0,
 	NULL, bwingsaRomInfo, bwingsaRomName, NULL, NULL, BwingInputInfo, BwingDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x40,
+	bwingsaInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x40,
 	240, 256, 3, 4
 };
 

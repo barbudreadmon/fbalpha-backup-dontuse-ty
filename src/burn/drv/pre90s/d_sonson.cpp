@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "m6809_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -23,11 +20,9 @@ static UINT8 *DrvVidRAM;
 static UINT8 *DrvColRAM;
 static UINT8 *DrvSprRAM;
 static UINT8 *DrvScrollX;
+
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[6];
-static INT16 *pFMBuffer;
 
 static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
@@ -144,7 +139,7 @@ static void sonson_sound_irqtrigger(UINT8 data)
 	DrvSoundTrigger = data;
 }
 
-void sonson_main_write(UINT16 address, UINT8 data)
+static void sonson_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -171,7 +166,7 @@ void sonson_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 sonson_main_read(UINT16 address)
+static UINT8 sonson_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -188,7 +183,7 @@ UINT8 sonson_main_read(UINT16 address)
 	return 0;
 }
 
-void sonson_sound_write(UINT16 address, UINT8 data)
+static void sonson_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -210,7 +205,7 @@ void sonson_sound_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 sonson_sound_read(UINT16 address)
+static UINT8 sonson_sound_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -317,8 +312,6 @@ static INT32 MemIndex()
 
 	RamEnd		= Next;
 
-	pFMBuffer	= (INT16*)Next; Next += nBurnSoundLen * 6 * sizeof (INT16);
-
 	MemEnd		= Next;
 
 	return 0;
@@ -358,10 +351,6 @@ static INT32 DrvInit()
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
-
-	for (INT32 i = 0; i < 6; i++) {
-		pAY8910Buffer[i] = pFMBuffer + nBurnSoundLen * i;
-	}
 
 	if (sonsonj)
 	{
@@ -403,7 +392,7 @@ static INT32 DrvInit()
 	DrvPaletteInit();
 	DrvGfxDecode();
 
-	M6809Init(2);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM0,		0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvVidRAM,		0x1000, 0x13ff, MAP_RAM);
@@ -414,6 +403,7 @@ static INT32 DrvInit()
 	M6809SetWriteHandler(sonson_main_write);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809RAM1,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM1 + 0x0e000,	0xe000, 0xffff, MAP_ROM);
@@ -421,8 +411,8 @@ static INT32 DrvInit()
 	M6809SetWriteHandler(sonson_sound_write);
 	M6809Close();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.30, BURN_SND_ROUTE_BOTH);
 
@@ -600,7 +590,7 @@ static INT32 DrvFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -609,7 +599,7 @@ static INT32 DrvFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 	}
 

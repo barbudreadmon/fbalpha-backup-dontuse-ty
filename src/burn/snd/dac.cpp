@@ -6,6 +6,8 @@
 struct dac_info
 {
 	INT16	Output;
+	INT16	Output2;
+	INT32   Stereo;
 	double 	nVolume;
 	INT32 	nCurrentPosition;
 	INT32	Initialized;
@@ -49,7 +51,7 @@ static void UpdateStream(INT32 chip, INT32 length)
 	INT16 *rbuf = rBuffer + ptr->nCurrentPosition;
 
 	INT16 lOut = ((ptr->OutputDir & BURN_SND_ROUTE_LEFT ) == BURN_SND_ROUTE_LEFT ) ? ptr->Output : 0;
-	INT16 rOut = ((ptr->OutputDir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) ? ptr->Output : 0;
+	INT16 rOut = ((ptr->OutputDir & BURN_SND_ROUTE_RIGHT) == BURN_SND_ROUTE_RIGHT) ? ((ptr->Stereo) ? ptr->Output2 : ptr->Output) : 0;
 
 	ptr->nCurrentPosition += length;
 
@@ -142,9 +144,32 @@ void DACWrite16(INT32 Chip, INT16 Data)
 
 	ptr = &dac_table[Chip];
 
+	Data = (INT32)(Data * ptr->nVolume);
+
 	if (Data != ptr->Output) {
 		UpdateStream(Chip, ptr->pSyncCallback());
 		ptr->Output = Data;
+	}
+}
+
+void DACWrite16Stereo(INT32 Chip, INT16 Data, INT16 Data2)
+{
+#if defined FBA_DEBUG
+	if (!DebugSnd_DACInitted) bprintf(PRINT_ERROR, _T("DACWrite16Stereo called without init\n"));
+	if (Chip > NumChips) bprintf(PRINT_ERROR, _T("DACWrite16Stereo called with invalid chip number %x\n"), Chip);
+#endif
+
+	struct dac_info *ptr;
+
+	ptr = &dac_table[Chip];
+
+	Data = (INT32)(Data * ptr->nVolume);
+	Data2 = (INT32)(Data2 * ptr->nVolume);
+
+	if (Data != ptr->Output || Data2 != ptr->Output2) {
+		UpdateStream(Chip, ptr->pSyncCallback());
+		ptr->Output = Data;
+		ptr->Output2 = Data2;
 	}
 }
 
@@ -171,6 +196,19 @@ static void DACBuildVolTables()
 	}
 }
 
+void DACStereoMode(INT32 Chip)
+{
+#if defined FBA_DEBUG
+	if (!DebugSnd_DACInitted) bprintf(PRINT_ERROR, _T("DACStereoMode called without init\n"));
+	if (Chip > NumChips) bprintf(PRINT_ERROR, _T("DACStereoMode called with invalid chip number %x\n"), Chip);
+#endif
+
+	struct dac_info *ptr;
+	ptr = &dac_table[Chip];
+
+	ptr->Stereo = 1;
+}
+
 void DACInit(INT32 Num, UINT32 /*Clock*/, INT32 bAdd, INT32 (*pSyncCB)())
 {
 #if defined FBA_DEBUG
@@ -191,6 +229,7 @@ void DACInit(INT32 Num, UINT32 /*Clock*/, INT32 bAdd, INT32 (*pSyncCB)())
 	ptr->Initialized = 1;
 	ptr->nVolume = 1.00;
 	ptr->OutputDir = BURN_SND_ROUTE_BOTH;
+	ptr->Stereo = 0;
 	ptr->pSyncCallback = pSyncCB;
 
 	DACBuildVolTables(); // necessary to build for every chip?
@@ -225,6 +264,7 @@ void DACReset()
 
 		ptr->nCurrentPosition = 0;
 		ptr->Output = 0;
+		ptr->Output2 = 0;
 	}
 }
 
@@ -255,7 +295,7 @@ void DACExit()
 	rBuffer = NULL;
 }
 
-INT32 DACScan(INT32 nAction,INT32 *pnMin)
+void DACScan(INT32 nAction,INT32 *pnMin)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_DACInitted) bprintf(PRINT_ERROR, _T("DACScan called without init\n"));
@@ -272,8 +312,7 @@ INT32 DACScan(INT32 nAction,INT32 *pnMin)
 			ptr = &dac_table[i];
 
 			SCAN_VAR(ptr->Output);
+			SCAN_VAR(ptr->Output2);
 		}
 	}
-
-	return 0;
 }

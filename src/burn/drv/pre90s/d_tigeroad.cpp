@@ -542,16 +542,6 @@ static void TigeroadIRQHandler(INT32, INT32 nStatus)
 	}
 }
 
-static INT32 TigeroadSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 3579545;
-}
-
-static double TigeroadGetTime()
-{
-	return (double)ZetTotalCycles() / 3579545;
-}
-
 inline static INT32 DrvMSM5205SynchroniseStream(INT32 nSoundRate)
 {
 	return (INT64)((double)SekTotalCycles() * nSoundRate / 10000000);
@@ -728,7 +718,7 @@ static INT32 DrvInit(INT32 (*pInitCallback)())
 		ZetClose();
 	}
 
-	BurnYM2203Init(2, 3579545, &TigeroadIRQHandler, TigeroadSynchroniseStream, TigeroadGetTime, 0);
+	BurnYM2203Init(2, 3579545, &TigeroadIRQHandler, 0);
 	BurnTimerAttachZet(3579545);
 	BurnYM2203SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
@@ -1451,7 +1441,7 @@ static struct BurnRomInfo f1dreamRomDesc[] = {
 
 	{ "09e_tr.bin",	0x00100, 0xec80ae36, 7 | BRF_GRA | BRF_OPT }, // 15 Priority Proms (unused)
 	
-	{ "c8751h-88",  0x01000, 0x00000000, 0 | BRF_OPT | BRF_NODUMP },
+	{ "8751.mcu",   0x01000, 0xc8e6075c, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(f1dream)

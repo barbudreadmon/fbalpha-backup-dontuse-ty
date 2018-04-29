@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -24,8 +21,6 @@ static UINT8 *DrvSprRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[6];
 
 static UINT8  DrvJoy1[8];
 static UINT8  DrvJoy2[8];
@@ -51,10 +46,10 @@ static struct BurnInputInfo MainsnkInputList[] = {
 	{"P1 Left Down",	BIT_DIGITAL,	DrvJoy2 + 1,	"p1 down"	},
 	{"P1 Left Left",	BIT_DIGITAL,	DrvJoy2 + 2,	"p1 left"	},
 	{"P1 Left Right",	BIT_DIGITAL,	DrvJoy2 + 3,	"p1 right"	},
-	{"P1 Right Up",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 up 2"	},
-	{"P1 Right Down",	BIT_DIGITAL,	DrvJoy2 + 5,	"p1 down 2"	},
-	{"P1 Right Left",	BIT_DIGITAL,	DrvJoy2 + 6,	"p1 left 2"	},
-	{"P1 Right Right",	BIT_DIGITAL,	DrvJoy2 + 7,	"p1 right 2"},
+	{"P1 Right Up",		BIT_DIGITAL,	DrvJoy2 + 4,	"p3 up"		},
+	{"P1 Right Down",	BIT_DIGITAL,	DrvJoy2 + 5,	"p3 down"	},
+	{"P1 Right Left",	BIT_DIGITAL,	DrvJoy2 + 6,	"p3 left"	},
+	{"P1 Right Right",	BIT_DIGITAL,	DrvJoy2 + 7,	"p3 right"	},
 	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy4 + 0,	"p1 fire 1"},
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy4 + 1,	"p1 fire 2"},
 	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy4 + 2,	"p1 fire 3"},
@@ -66,10 +61,10 @@ static struct BurnInputInfo MainsnkInputList[] = {
 	{"P2 Left Down",	BIT_DIGITAL,	DrvJoy3 + 1,	"p2 down"	},
 	{"P2 Left Left",	BIT_DIGITAL,	DrvJoy3 + 2,	"p2 left"	},
 	{"P2 Left Right",	BIT_DIGITAL,	DrvJoy3 + 3,	"p2 right"	},
-	{"P2 Right Up",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 up 2"	},
-	{"P2 Right Down",	BIT_DIGITAL,	DrvJoy3 + 5,	"p2 down 2"	},
-	{"P2 Right Left",	BIT_DIGITAL,	DrvJoy3 + 6,	"p2 left 2"	},
-	{"P2 Right Right",	BIT_DIGITAL,	DrvJoy3 + 7,	"p2 right 2"},
+	{"P2 Right Up",		BIT_DIGITAL,	DrvJoy3 + 4,	"p4 up"		},
+	{"P2 Right Down",	BIT_DIGITAL,	DrvJoy3 + 5,	"p4 down"	},
+	{"P2 Right Left",	BIT_DIGITAL,	DrvJoy3 + 6,	"p4 left"	},
+	{"P2 Right Right",	BIT_DIGITAL,	DrvJoy3 + 7,	"p4 right"	},
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy4 + 4,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy4 + 5,	"p2 fire 2"},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy4 + 6,	"p2 fire 3"},
@@ -243,8 +238,6 @@ static struct BurnDIPInfo CanvasDIPList[]=
 
 STDDIPINFO(Canvas)
 
-
-
 static void __fastcall main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
@@ -369,13 +362,6 @@ static INT32 MemIndex()
 	DrvSprRAM		= Next; Next += 0x000800;
 
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -508,8 +494,8 @@ static INT32 DrvInit(INT32 select)
 	ZetSetReadHandler(sound_read);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
+	AY8910Init(1, 2000000, 1);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 
@@ -678,7 +664,6 @@ static INT32 DrvFrame()
 	INT32 nCyclesTotal[2] = { 3360000 / 60, 4000000 / 60 };
 	INT32 nCyclesDone[2] = { 0, 0 };
 
-
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
 		ZetOpen(0);
@@ -693,7 +678,7 @@ static INT32 DrvFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {

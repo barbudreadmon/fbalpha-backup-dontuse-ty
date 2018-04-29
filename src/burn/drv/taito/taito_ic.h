@@ -1,8 +1,4 @@
-extern INT32 TaitoIC_SupermanCChipInUse;
-extern INT32 TaitoIC_MegabCChipInUse;
-extern INT32 TaitoIC_RainbowCChipInUse;
 extern INT32 TaitoIC_OpwolfCChipInUse;
-extern INT32 TaitoIC_VolfiedCChipInUse;
 
 extern INT32 TaitoIC_PC080SNInUse;
 extern INT32 TaitoIC_PC090OJInUse;
@@ -25,34 +21,8 @@ void TaitoICReset();
 void TaitoICExit();
 void TaitoICScan(INT32 nAction);
 
-// C-Chip
-UINT16 SupermanCChipCtrlRead();
-UINT16 SupermanCChipRamRead(UINT32 Offset, UINT8 Input1, UINT8 Input2, UINT8 Input3);
-void SupermanCChipCtrlWrite();
-void SupermanCChipBankWrite(UINT16 Data);
-void SupermanCChipRamWrite(UINT32 Offset, UINT16 Data);
-void SupermanCChipReset();
-void SupermanCChipInit();
-void SupermanCChipExit();
-void SupermanCChipScan(INT32 nAction);
-
-UINT16 MegabCChipRead(UINT32 Offset);
-void MegabCChipWrite(UINT32 Offset, UINT16 Data);
-void MegabCChipReset();
-void MegabCChipInit();
-void MegabCChipExit();
-void MegabCChipScan(INT32 nAction);
-
-void RainbowCChipUpdate(UINT8 Input1, UINT8 Input2, UINT8 Input3, UINT8 Input4);
-UINT16 RainbowCChipCtrlRead();
-UINT16 RainbowCChipRamRead(UINT32 Offset);
-void RainbowCChipCtrlWrite(UINT16);
-void RainbowCChipBankWrite(UINT16 Data);
-void RainbowCChipRamWrite(UINT32 Offset, UINT16 Data);
-void RainbowCChipReset();
-void RainbowCChipInit(INT32 Version);
-void RainbowCChipExit();
-void RainbowCChipScan(INT32 nAction);
+// Emulated C-Chip
+#include "cc.h"
 
 void OpwolfCChipUpdate(UINT8 Input1, UINT8 Input2);
 UINT16 OpwolfCChipStatusRead();
@@ -64,21 +34,6 @@ void OpwolfCChipReset();
 void OpwolfCChipInit(INT32 Region);
 void OpwolfCChipExit();
 void OpwolfCChipScan(INT32 nAction);
-
-void BonzeWriteCChipRam(INT32 offset, INT32 data);
-void BonzeWriteCChipBank(INT32 data);
-UINT16 BonzeReadCChipRam(INT32 offset);
-void BonzeCChipReset();
-void BonzeCChipScan(INT32 nAction);
-
-void VolfiedCChipBankWrite(UINT16 data);
-void VolfiedCChipRamWrite(INT32 offset, UINT8 data);
-UINT8 VolfiedCChipCtrlRead();
-UINT8 VolfiedCChipRamRead(INT32 offset);
-void VolfiedCChipInit();
-void VolfiedCChipReset();
-void VolfiedCChipExit();
-void VolfiedCChipScan(INT32 nAction);
 
 // PC080SN
 #define PC080SN_MAX_CHIPS 2
@@ -127,7 +82,7 @@ void TC0100SCNCtrlWordWrite(INT32 Chip, UINT32 Offset, UINT16 Data);
 INT32 TC0100SCNBottomLayer(INT32 Chip);
 void TC0100SCNRenderBgLayer(INT32 Chip, INT32 Opaque, UINT8 *pSrc, INT32 Priority = 1);
 void TC0100SCNRenderFgLayer(INT32 Chip, INT32 Opaque, UINT8 *pSrc, INT32 Priority = 2);
-void TC0100SCNRenderCharLayer(INT32 Chip);
+void TC0100SCNRenderCharLayer(INT32 Chip, INT32 Priority = 4);
 void TC0100SCNReset();
 void TC0100SCNInit(INT32 Chip, INT32 nNumTiles, INT32 xOffset, INT32 yOffset, INT32 xFlip, UINT8 *PriorityMap);
 void TC0100SCNSetColourDepth(INT32 Chip, INT32 ColourDepth);
@@ -145,8 +100,13 @@ extern INT32 TC0110PCRTotalColours;
 UINT16 TC0110PCRWordRead(INT32 Chip);
 void TC0110PCRWordWrite(INT32 Chip, INT32 Offset, UINT16 Data);
 void TC0110PCRStep1WordWrite(INT32 Chip, INT32 Offset, UINT16 Data);
+void TC0110PCRStep1WordWriteAJ(INT32 Chip, INT32 Offset, UINT16 Data);
 void TC0110PCRStep1RBSwapWordWrite(INT32 Chip, INT32 Offset, UINT16 Data);
 void TC0110PCRStep14rbgWordWrite(INT32 Chip, INT32 Offset, UINT16 Data);
+void TC0110PCRRecalcPalette(); // this is _not_ generic! (choose one based on game requirements)
+void TC0110PCRRecalcPaletteStep1();
+void TC0110PCRRecalcPaletteStep1RBSwap();
+void TC0110PCRRecalcPaletteStep14rbg();
 void TC0110PCRReset();
 void TC0110PCRInit(INT32 Num, INT32 nNumColours);
 void TC0110PCRExit();
@@ -224,13 +184,14 @@ void TC0220IOCScan(INT32 nAction);
 extern UINT8 *TC0280GRDRam;
 extern INT32 TC0280GRDBaseColour;
 
-void TC0280GRDRenderLayer();
+void TC0280GRDRenderLayer(INT32 Priority);
 void TC0280GRDCtrlWordWrite(UINT32 Offset, UINT16 Data);
 void TC0280GRDReset();
 void TC0280GRDInit(INT32 xOffs, INT32 yOffs, UINT8 *pSrc);
 void TC0430GRWInit(INT32 xOffs, INT32 yOffs, UINT8 *pSrc);
 void TC0280GRDExit();
 void TC0280GRDScan(INT32 nAction);
+void TC0280GRDSetPriMap(UINT8 *PriMap);
 
 #define TC0430GRWRam		TC0280GRDRam
 #define TC0430GRWRenderLayer	TC0280GRDRenderLayer
@@ -238,6 +199,7 @@ void TC0280GRDScan(INT32 nAction);
 #define TC0430GRWReset		TC0280GRDReset
 #define TC0430GRWExit		TC0280GRDExit
 #define TC0430GRWScan		TC0280GRDScan
+#define TC0430GRDSetPriMap  TC0280GRDSetPriMap
 
 // TC0360PRI
 extern UINT8 TC0360PRIRegs[16];

@@ -1,17 +1,12 @@
 // FB Alpha Mario Bros driver module
 // Based on MAME driver by Mirko Buffoni
 
-// todo:
-//	emulate sound cpu - quite a few sounds are missing!
-//
-
 #include "tiles_generic.h"
 #include "z80_intf.h"
+#include "i8039.h"
 #include "samples.h"
-#include "driver.h"
-extern "C" {
+#include "dac.h"
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -27,7 +22,8 @@ static UINT8 *DrvVidRAM;
 static UINT8 *DrvSprRAM;
 static UINT8 *DrvSndRAM;
 
-static INT16 *pAY8910Buffer[3];
+static UINT8 *i8039_p;
+static UINT8 *i8039_t;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
@@ -41,11 +37,13 @@ static UINT8 *gfxbank;
 static UINT8 *palbank;
 static UINT8 *scroll;
 
-static UINT8  DrvJoy1[8];
-static UINT8  DrvJoy2[8];
-static UINT8  DrvDips[2];
-static UINT8  DrvInputs[2];
-static UINT8  DrvReset;
+static UINT8 DrvJoy1[8];
+static UINT8 DrvJoy2[8];
+static UINT8 DrvDips[2];
+static UINT8 DrvInputs[2];
+static UINT8 DrvReset;
+
+static INT32 masao = 0;
 
 static INT32 monitor = 0; // monitor type (unused atm)
 
@@ -125,6 +123,42 @@ static struct BurnDIPInfo MarioDIPList[]=
 
 STDDIPINFO(Mario)
 
+static struct BurnDIPInfo MariofDIPList[]=
+{
+	{0x0b, 0xff, 0xff, 0x00, NULL			},
+	{0x0c, 0xff, 0xff, 0x00, NULL			},
+
+	{0   , 0xfe, 0   ,    2, "Service Mode"		},
+	{0x0b, 0x01, 0x80, 0x00, "Off"			},
+	{0x0b, 0x01, 0x80, 0x01, "On"			},
+
+	{0   , 0xfe, 0   ,    4, "Lives"		},
+	{0x0c, 0x01, 0x03, 0x00, "3"			},
+	{0x0c, 0x01, 0x03, 0x01, "4"			},
+	{0x0c, 0x01, 0x03, 0x02, "5"			},
+	{0x0c, 0x01, 0x03, 0x03, "6"			},
+
+	{0   , 0xfe, 0   ,    4, "Coinage"		},
+	{0x0c, 0x01, 0x0c, 0x04, "2 Coins 1 Credits"	},
+	{0x0c, 0x01, 0x0c, 0x00, "1 Coin  1 Credits"	},
+	{0x0c, 0x01, 0x0c, 0x08, "1 Coin  2 Credits"	},
+	{0x0c, 0x01, 0x0c, 0x0c, "1 Coin  3 Credits"	},
+
+	{0   , 0xfe, 0   ,    4, "Bonus Life"		},
+	{0x0c, 0x01, 0x30, 0x00, "20k 40k 20k+"			},
+	{0x0c, 0x01, 0x30, 0x10, "30k 50k 20k+"			},
+	{0x0c, 0x01, 0x30, 0x20, "40k 60k 20k+"			},
+	{0x0c, 0x01, 0x30, 0x30, "None"			},
+
+	{0   , 0xfe, 0   ,    4, "Difficulty"		},
+	{0x0c, 0x01, 0xc0, 0x00, "Easy"			},
+	{0x0c, 0x01, 0xc0, 0x80, "Medium"		},
+	{0x0c, 0x01, 0xc0, 0x40, "Hard"			},
+	{0x0c, 0x01, 0xc0, 0xc0, "Hardest"		},
+};
+
+STDDIPINFO(Mariof)
+
 static struct BurnDIPInfo MariojDIPList[]=
 {
 	{0x0b, 0xff, 0xff, 0x00, NULL			},
@@ -163,7 +197,7 @@ static struct BurnDIPInfo MariojDIPList[]=
 
 STDDIPINFO(Marioj)
 
-static UINT8 __fastcall mario_main_read(unsigned short address)
+static UINT8 __fastcall mario_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -182,20 +216,21 @@ static UINT8 __fastcall mario_main_read(unsigned short address)
 
 static void play_sample(INT32 sample, INT32 checkstatus, UINT8 data)
 {
-	if (sample_data[sample] != data) {
+	if (sample_data[sample] != data && !masao) {
+		sample_data[sample] = data;
 		if (!data) return;
 
-		sample_data[sample] = data;
-
 		if (checkstatus) {
-			if (BurnSampleGetStatus(sample) <= 0) BurnSamplePlay(sample);
+			if (BurnSampleGetStatus(sample) == 0) BurnSamplePlay(sample);
 		} else {
 			BurnSamplePlay(sample);
 		}
 	}
 }
 
-static void __fastcall mario_main_write(unsigned short address, UINT8 data)
+#define ACTIVEHIGH_PORT_BIT(P,A,D)   ((P & (~(1 << A))) | (D << A))
+
+static void __fastcall mario_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -208,13 +243,20 @@ static void __fastcall mario_main_write(unsigned short address, UINT8 data)
 		return;
 
 		case 0x7f00:
+			if (!masao) { // mario
+				I8039SetIrqState((data) ? 1 : 0);
+			} else { // masao
+				ZetClose(); // masao
+				ZetOpen(1);
+				ZetSetVector(0xff);
+				ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
+				ZetClose();
+				ZetOpen(0);
+			}
+		return;
+
 		case 0x7f01:
-			ZetClose(); // masao
-			ZetOpen(1);
-			ZetSetVector(0xff);
-			ZetSetIRQLine(0, CPU_IRQSTATUS_ACK);
-			ZetClose();
-			ZetOpen(0);
+			i8039_t[0] = data; // mario
 		return;
 
 		case 0x7f02:
@@ -222,8 +264,15 @@ static void __fastcall mario_main_write(unsigned short address, UINT8 data)
 		return;
 
 		case 0x7f03:
+			i8039_p[1] = ACTIVEHIGH_PORT_BIT(i8039_p[1], 0, data);
+		return;
+
 		case 0x7f04:
+			i8039_p[1] = ACTIVEHIGH_PORT_BIT(i8039_p[1], 1, data);
+		return;
+
 		case 0x7f05:
+			i8039_p[1] = ACTIVEHIGH_PORT_BIT(i8039_p[1], 2, data);
 		return;
 
 		case 0x7f06:
@@ -239,7 +288,7 @@ static void __fastcall mario_main_write(unsigned short address, UINT8 data)
 		return;
 
 		case 0x7e00:
-			*soundlatch = data; // masao
+			*soundlatch = data;
 		return;
 
 		case 0x7e80:
@@ -255,7 +304,7 @@ static void __fastcall mario_main_write(unsigned short address, UINT8 data)
 		return;
 
 		case 0x7e84:
-			*interrupt_enable = data;
+			*interrupt_enable = data & 1;
 		return;
 
 		case 0x7e85:
@@ -264,7 +313,7 @@ static void __fastcall mario_main_write(unsigned short address, UINT8 data)
 	}
 }
 
-static void __fastcall mario_main_write_port(unsigned short port, UINT8 /*data*/)
+static void __fastcall mario_main_write_port(UINT16 port, UINT8 /*data*/)
 {
 	switch (port & 0xff)
 	{
@@ -274,7 +323,7 @@ static void __fastcall mario_main_write_port(unsigned short port, UINT8 /*data*/
 	}
 }
 
-static UINT8 __fastcall mario_main_read_port(unsigned short port)
+static UINT8 __fastcall mario_main_read_port(UINT16 port)
 {
 	switch (port & 0xff)
 	{
@@ -316,7 +365,7 @@ static UINT8 masao_ay8910_read_port_A(UINT32)
 	return *soundlatch;
 }
 
-static int DrvDoReset()
+static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
@@ -328,13 +377,73 @@ static int DrvDoReset()
 	ZetReset();
 	ZetClose();
 
+	I8039Reset();
+	DACReset();
+
+	i8039_p[1] = 0xf0; // mario sound, start active low top bits
+
 	BurnSampleReset();
 	AY8910Reset(0);
 
 	return 0;
 }
 
-static int MemIndex()
+static UINT8 __fastcall mario_i8039_read(UINT32 address)
+{
+	return DrvSndROM[address & 0x0fff];
+}
+
+static void __fastcall mario_i8039_write_port(UINT32 port, UINT8 data)
+{
+	if ((port & 0x1ff) <= 0xff) {
+		DACSignedWrite(0, data);
+	}
+
+	switch (port & 0x1ff)
+	{
+		case I8039_p1:
+			i8039_p[1] = data;
+		return;
+
+		case I8039_p2:
+			i8039_p[2] = data;
+		return;
+	}
+}
+
+static UINT8 __fastcall mario_i8039_read_port(UINT32 port)
+{
+	if ((port & 0x1ff) <= 0xff) {
+		if (i8039_p[2] & 0x80)
+			return *soundlatch;
+		else
+			return (DrvSndROM[((i8039_p[2] & 0xf) * 256 + (port & 0xff)) & 0xfff]);
+	}
+
+	switch (port & 0x1ff)
+	{
+		case I8039_p1:
+			return i8039_p[1];
+
+		case I8039_p2:
+			return i8039_p[2] & 0xef;
+
+		case I8039_t0:
+			return i8039_t[0];
+
+		case I8039_t1:
+			return i8039_t[1];
+	}
+
+	return 0;
+}
+
+static INT32 DrvSyncDAC()
+{
+	return (INT32)(float)(nBurnSoundLen * (I8039TotalCycles() / (730000.0000 / (nBurnFPS / 100.0000))));
+}
+
+static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
@@ -347,7 +456,7 @@ static int MemIndex()
 
 	DrvColPROM		= Next; Next += 0x000200;
 
-	DrvPalette		= (unsigned int*)Next; Next += 0x0200 * sizeof(int);
+	DrvPalette		= (UINT32*)Next; Next += 0x0200 * sizeof(UINT32);
 
 	AllRam			= Next;
 
@@ -358,6 +467,9 @@ static int MemIndex()
 	DrvSndRAM		= Next; Next += 0x000400;
 
 	soundlatch		= Next; Next += 0x000001;
+	i8039_p         = Next; Next += 0x000004;
+	i8039_t         = Next; Next += 0x000004;
+
 	interrupt_enable	= Next; Next += 0x000001;
 	gfxbank			= Next; Next += 0x000001;
 	palbank			= Next; Next += 0x000001;
@@ -368,21 +480,17 @@ static int MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
 }
 
-static int DrvGfxDecode()
+static INT32 DrvGfxDecode()
 {
-	int Plane0[2] = { 1*512*8*8, 0*512*8*8 };
-	int Plane1[3] = { 2*256*256, 1*256*256, 0*256*256 };
-	int XOffs[16] = { STEP8(0,1), STEP8((256*16*8), 1) };
-	int YOffs[16] = { STEP16(0,8) };
+	INT32 Plane0[2] = { 1*512*8*8, 0*512*8*8 };
+	INT32 Plane1[3] = { 2*256*256, 1*256*256, 0*256*256 };
+	INT32 XOffs[16] = { STEP8(0,1), STEP8((256*16*8), 1) };
+	INT32 YOffs[16] = { STEP16(0,8) };
 
 	UINT8 *tmp = (UINT8*)BurnMalloc(0x6000);
 	if (tmp == NULL) {
@@ -410,9 +518,9 @@ static void DrvPaletteInit()
 	for (INT32 i = 0; i < 0x100; i++) {
 		UINT8 c = DrvColPROM[i];
 
-		int r = tab0[(c >> 5) & 0x07] + ((c & 0x1c) ? 0x07 : 0) + ((c & 0x03) ? 0x07 : 0);
-		int g = tab0[(c >> 2) & 0x07] + ((c & 0xe0) ? 0x07 : 0) + ((c & 0x03) ? 0x07 : 0);
-		int b = tab1[(c >> 0) & 0x03];
+		INT32 r = tab0[(c >> 5) & 0x07] + ((c & 0x1c) ? 0x07 : 0) + ((c & 0x03) ? 0x07 : 0);
+		INT32 g = tab0[(c >> 2) & 0x07] + ((c & 0xe0) ? 0x07 : 0) + ((c & 0x03) ? 0x07 : 0);
+		INT32 b = tab1[(c >> 0) & 0x03];
 
 		if (r > 0x100) r = 0xff;
 		if (g > 0x100) g = 0xff;
@@ -452,7 +560,7 @@ static INT32 DrvInit()
 		if (BurnLoadRom(DrvZ80ROM  + 0xf000,  3, 1)) return 1;
 
 		if (BurnLoadRom(DrvSndROM  + 0x0000,  4, 1)) return 1;
-
+		if (!masao) DrvSndROM[1] = 0x01; // mario onry i8039 patch
 		if (BurnLoadRom(DrvGfxROM0 + 0x0000,  5, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM0 + 0x1000,  6, 1)) return 1;
 
@@ -482,8 +590,18 @@ static INT32 DrvInit()
 	ZetSetInHandler(mario_main_read_port);
 	ZetClose();
 
+	I8039Init(NULL);
+	I8039SetProgramReadHandler(mario_i8039_read);
+	I8039SetCPUOpReadHandler(mario_i8039_read);
+	I8039SetCPUOpReadArgHandler(mario_i8039_read);
+	I8039SetIOReadHandler(mario_i8039_read_port);
+	I8039SetIOWriteHandler(mario_i8039_write_port);
+
+	DACInit(0, 0, 1, DrvSyncDAC);
+	DACSetRoute(0, 0.65, BURN_SND_ROUTE_BOTH);
+
 	BurnSampleInit(0);
-	BurnSampleSetAllRoutesAllSamples(0.80, BURN_SND_ROUTE_BOTH);
+	BurnSampleSetAllRoutesAllSamples(0.25, BURN_SND_ROUTE_BOTH);
 
 	{ // masao
 
@@ -495,7 +613,8 @@ static INT32 DrvInit()
 		ZetSetReadHandler(masao_sound_read);
 		ZetClose();
 
-		AY8910Init(0, 2386333, nBurnSoundRate, &masao_ay8910_read_port_A, NULL, NULL, NULL);
+		AY8910Init(0, 2386333, 0);
+		AY8910SetPorts(0, &masao_ay8910_read_port_A, NULL, NULL, NULL);
 		AY8910SetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH);
 	}
 
@@ -511,11 +630,17 @@ static INT32 DrvExit()
 {
 	BurnSampleExit();
 	AY8910Exit(0);	// masao
+	DACExit();
 
 	GenericTilesExit();
+
 	ZetExit();
 
+	I8039Exit();
+
 	BurnFree (AllMem);
+
+	masao = 0;
 
 	return 0;
 }
@@ -601,8 +726,10 @@ static INT32 DrvDraw()
 		DrvRecalc = 0;
 	}
 
-	draw_layer();
-	draw_sprites();
+	BurnTransferClear();
+
+	if (nBurnLayer & 1) draw_layer();
+	if (nBurnLayer & 2) draw_sprites();
 
 	BurnTransferCopy(DrvPalette);
 
@@ -623,17 +750,39 @@ static INT32 DrvFrame()
 		}
 	}
 
-	INT32 nCyclesTotal = 4000000 / 60;
+	INT32 nInterleave = 256;
+	INT32 nCyclesTotal[2] = { 4000000 / 60, 730000 / 60 };
+	INT32 nCyclesDone[2] = { 0, 0 };
+	INT32 nSoundBufferPos = 0;
+
+	ZetNewFrame();
+	I8039NewFrame();
 
 	ZetOpen(0);
-	ZetRun(nCyclesTotal);
-	if (*interrupt_enable) ZetNmi();
-	ZetClose();
+	for (INT32 i = 0; i < nInterleave; i++)
+	{
+		nCyclesDone[0] += ZetRun(((i + 1) * nCyclesTotal[0] / nInterleave) - nCyclesDone[0]);
+		if (i == 240 && *interrupt_enable) ZetNmi();
+
+		nCyclesDone[1] += I8039Run(((i + 1) * nCyclesTotal[1] / nInterleave) - nCyclesDone[1]);
+
+		if (pBurnSoundOut && i&1) {
+			INT32 nSegmentLength = nBurnSoundLen / (nInterleave / 2);
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			BurnSampleRender(pSoundBuf, nSegmentLength);
+			nSoundBufferPos += nSegmentLength;
+		}
+	}
 
 	if (pBurnSoundOut) {
-		memset (pBurnSoundOut, 0, nBurnSoundLen * 2 * 2);
-		BurnSampleRender(pBurnSoundOut, nBurnSoundLen);
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+		if (nSegmentLength) {
+			BurnSampleRender(pSoundBuf, nSegmentLength);
+		}
+		DACUpdate(pBurnSoundOut, nBurnSoundLen);
 	}
+	ZetClose();
 
 	if (pBurnDraw) {
 		DrvDraw();
@@ -673,7 +822,7 @@ static INT32 MasaoFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -700,39 +849,44 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	}
 	
 	if (nAction & ACB_DRIVER_DATA) {
-                ZetScan(nAction);
+		ZetScan(nAction);
+		if (masao) {
+			AY8910Scan(nAction, pnMin);
+		} else { // mario
+			I8039Scan(nAction, pnMin);
 
-		BurnSampleScan(nAction, pnMin);
+			DACScan(nAction, pnMin);
+			BurnSampleScan(nAction, pnMin);
+		}
 	}
 
 	return 0;
 }
 
 
-
-// Mario Bros. (US, Revision F)
+// Mario Bros. (US, Revision G)
 
 static struct BurnRomInfo marioRomDesc[] = {
-	{ "tma1-c-7f_f.7f",	0x2000, 0xc0c6e014, 1 }, //  0 maincpu
-	{ "tma1-c-7e_f.7e",	0x2000, 0x94fb60d6, 1 }, //  1
-	{ "tma1-c-7d_f.7d",	0x2000, 0xdcceb6c1, 1 }, //  2
-	{ "tma1-c-7c_f.7c",	0x1000, 0x4a63d96b, 1 }, //  3
+	{ "tma1-c-7f_g.7f",	0x2000, 0xc0c6e014, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "tma1-c-7e_g.7e",	0x2000, 0x116b3856, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "tma1-c-7d_g.7d",	0x2000, 0xdcceb6c1, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "tma1-c-7c_g.7c",	0x1000, 0x4a63d96b, 1 | BRF_PRG | BRF_ESS }, //  3
 
-	{ "tma1-c-6k_e.6k",	0x1000, 0x06b9ff85, 2 }, //  4 audiocpu
+	{ "tma1-c-6k_e.6k",	0x1000, 0x06b9ff85, 2 | BRF_PRG | BRF_ESS }, //  4 audiocpu
 
-	{ "tma1-v-3f.3f",	0x1000, 0x28b0c42c, 3 }, //  5 gfx1
-	{ "tma1-v-3j.3j",	0x1000, 0x0c8cc04d, 3 }, //  6
+	{ "tma1-v-3f.3f",	0x1000, 0x28b0c42c, 3 | BRF_GRA },           //  5 gfx1
+	{ "tma1-v-3j.3j",	0x1000, 0x0c8cc04d, 3 | BRF_GRA },           //  6
 
-	{ "tma1-v-7m.7m",	0x1000, 0x22b7372e, 4 }, //  7 gfx2
-	{ "tma1-v-7n.7n",	0x1000, 0x4f3a1f47, 4 }, //  8
-	{ "tma1-v-7p.7p",	0x1000, 0x56be6ccd, 4 }, //  9
-	{ "tma1-v-7s.7s",	0x1000, 0x56f1d613, 4 }, // 10
-	{ "tma1-v-7t.7t",	0x1000, 0x641f0008, 4 }, // 11
-	{ "tma1-v-7u.7u",	0x1000, 0x7baf5309, 4 }, // 12
+	{ "tma1-v-7m.7m",	0x1000, 0x22b7372e, 4 | BRF_GRA },           //  7 gfx2
+	{ "tma1-v-7n.7n",	0x1000, 0x4f3a1f47, 4 | BRF_GRA },           //  8
+	{ "tma1-v-7p.7p",	0x1000, 0x56be6ccd, 4 | BRF_GRA },           //  9
+	{ "tma1-v-7s.7s",	0x1000, 0x56f1d613, 4 | BRF_GRA },           // 10
+	{ "tma1-v-7t.7t",	0x1000, 0x641f0008, 4 | BRF_GRA },           // 11
+	{ "tma1-v-7u.7u",	0x1000, 0x7baf5309, 4 | BRF_GRA },           // 12
 
-	{ "tma1-c-4p_1.4p",	0x0200, 0x8187d286, 5 }, // 13 proms
+	{ "tma1-c-4p.4p",	0x0200, 0xafc9bd41, 5 | BRF_GRA },           // 13 proms
 
-	{ "tma1-c-5p.5p",	0x0020, 0x58d86098, 6 }, // 14 unk_proms
+	{ "tma1-c-5p.5p",	0x0020, 0x58d86098, 6 | BRF_GRA },           // 14 decoder_prom
 };
 
 STD_ROM_PICK(mario)
@@ -740,10 +894,49 @@ STD_ROM_FN(mario)
 
 struct BurnDriver BurnDrvMario = {
 	"mario", NULL, NULL, "mario", "1983",
-	"Mario Bros. (US, Revision F)\0", "Imperfect sound", "Nintendo of America", "Miscellaneous",
+	"Mario Bros. (US, Revision G)\0", NULL, "Nintendo of America", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
-	NULL, marioRomInfo, marioRomName, MarioSampleInfo, MarioSampleName, MariooInputInfo, MarioDIPInfo,
+	NULL, marioRomInfo, marioRomName, MarioSampleInfo, MarioSampleName, MarioInputInfo, MarioDIPInfo,
+	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
+	256, 224, 4, 3
+};
+
+
+// Mario Bros. (US, Revision F)
+
+static struct BurnRomInfo mariofRomDesc[] = {
+	{ "tma1-c-7f_f.7f",	0x2000, 0xc0c6e014, 1 | BRF_PRG | BRF_ESS }, //  0 maincpu
+	{ "tma1-c-7e_f.7e",	0x2000, 0x94fb60d6, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "tma1-c-7d_f.7d",	0x2000, 0xdcceb6c1, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "tma1-c-7c_f.7c",	0x1000, 0x4a63d96b, 1 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "tma1-c-6k_e.6k",	0x1000, 0x06b9ff85, 2 | BRF_PRG | BRF_ESS }, //  4 audiocpu
+
+	{ "tma1-v-3f.3f",	0x1000, 0x28b0c42c, 3 | BRF_GRA },           //  5 gfx1
+	{ "tma1-v-3j.3j",	0x1000, 0x0c8cc04d, 3 | BRF_GRA },           //  6
+
+	{ "tma1-v-7m.7m",	0x1000, 0x22b7372e, 4 | BRF_GRA },           //  7 gfx2
+	{ "tma1-v-7n.7n",	0x1000, 0x4f3a1f47, 4 | BRF_GRA },           //  8
+	{ "tma1-v-7p.7p",	0x1000, 0x56be6ccd, 4 | BRF_GRA },           //  9
+	{ "tma1-v-7s.7s",	0x1000, 0x56f1d613, 4 | BRF_GRA },           // 10
+	{ "tma1-v-7t.7t",	0x1000, 0x641f0008, 4 | BRF_GRA },           // 11
+	{ "tma1-v-7u.7u",	0x1000, 0x7baf5309, 4 | BRF_GRA },           // 12
+
+	{ "tma1-c-4p_1.4p",	0x0200, 0x8187d286, 5 | BRF_GRA },           // 13 proms
+
+	{ "tma1-c-5p.5p",	0x0020, 0x58d86098, 6 | BRF_GRA },           // 14 decoder_prom
+};
+
+STD_ROM_PICK(mariof)
+STD_ROM_FN(mariof)
+
+struct BurnDriver BurnDrvMariof = {
+	"mariof", "mario", NULL, "mario", "1983",
+	"Mario Bros. (US, Revision F)\0", NULL, "Nintendo of America", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, mariofRomInfo, mariofRomName, MarioSampleInfo, MarioSampleName, MarioInputInfo, MariofDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	256, 224, 4, 3
 };
@@ -779,7 +972,7 @@ STD_ROM_FN(marioe)
 
 struct BurnDriver BurnDrvMarioe = {
 	"marioe", "mario", NULL, "mario", "1983",
-	"Mario Bros. (US, Revision E)\0", "Imperfect sound", "Nintendo of America", "Miscellaneous",
+	"Mario Bros. (US, Revision E)\0", NULL, "Nintendo of America", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, marioeRomInfo, marioeRomName, MarioSampleInfo, MarioSampleName, MarioInputInfo, MarioDIPInfo,
@@ -818,7 +1011,7 @@ STD_ROM_FN(marioo)
 
 struct BurnDriver BurnDrvMarioo = {
 	"marioo", "mario", NULL, "mario", "1983",
-	"Mario Bros. (US, Unknown Rev)\0", "Imperfect sound", "Nintendo of America", "Miscellaneous",
+	"Mario Bros. (US, Unknown Rev)\0", NULL, "Nintendo of America", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, mariooRomInfo, mariooRomName, MarioSampleInfo, MarioSampleName, MariooInputInfo, MarioDIPInfo,
@@ -857,7 +1050,7 @@ STD_ROM_FN(marioj)
 
 struct BurnDriver BurnDrvMarioj = {
 	"marioj", "mario", NULL, "mario", "1983",
-	"Mario Bros. (Japan)\0", "Imperfect sound", "Nintendo", "Miscellaneous",
+	"Mario Bros. (Japan)\0", NULL, "Nintendo", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, mariojRomInfo, mariojRomName, MarioSampleInfo, MarioSampleName, MarioInputInfo, MariojDIPInfo,
@@ -865,6 +1058,12 @@ struct BurnDriver BurnDrvMarioj = {
 	256, 224, 4, 3
 };
 
+
+static INT32 DrvInitmasao()
+{
+	masao = 1;
+	return DrvInit();
+}
 
 // Masao
 
@@ -898,6 +1097,6 @@ struct BurnDriver BurnDrvMasao = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
 	NULL, masaoRomInfo, masaoRomName, MarioSampleInfo, MarioSampleName, MariooInputInfo, MarioDIPInfo,
-	DrvInit, DrvExit, MasaoFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
+	DrvInitmasao, DrvExit, MasaoFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	256, 224, 4, 3
 };

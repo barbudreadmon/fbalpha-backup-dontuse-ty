@@ -1256,7 +1256,7 @@ static UINT8 namcos2_sound_read(UINT16 address)
 	{
 		case 0x4000:
 		case 0x4001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 	}
 
 	return 0;
@@ -1401,7 +1401,7 @@ static void finallap_68k_map(INT32 cpu)
 
 static void namcos2_sound_init()
 {
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 //	M6809MapMemory(DrvDPRAM,	0x7000, 0x77ff, MAP_RAM);
 //	M6809MapMemory(DrvDPRAM,	0x7800, 0x7fff, MAP_RAM);
@@ -3700,8 +3700,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		m6805Scan(nAction);
 		M6809Scan(nAction);
 
-		BurnYM2151Scan(nAction);
-		c140_scan();
+		BurnYM2151Scan(nAction, pnMin);
+		c140_scan(nAction, pnMin);
 
 		if (uses_gun) {
 			BurnGunScan();
@@ -3937,49 +3937,51 @@ struct BurnDriver BurnDrvAssaultp = {
 };
 
 
-// Ordyne (Japan, English Version)
+// Ordyne (World)
 
 static struct BurnRomInfo ordyneRomDesc[] = {
-	{ "or1_mp0e.bin",	0x20000, 0x5e2f9052, 0x01 | BRF_PRG | BRF_ESS }, //  0 Main 68K Code
-	{ "or1_mp1e.bin",	0x20000, 0x367a8fcf, 0x01 | BRF_PRG | BRF_ESS }, //  1
+	{ "or2_mp0.mpr0",	0x20000, 0x31a1742b, 0x01 | BRF_PRG | BRF_ESS }, //  0 Main 68K Code
+	{ "or2_mp1.mpr1",	0x20000, 0xc80c6b73, 0x01 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "or1_sp0.bin",	0x10000, 0x01ef6638, 0x02 | BRF_PRG | BRF_ESS }, //  2 Sub 68K Code
-	{ "or1_sp1.bin",	0x10000, 0xb632adc3, 0x02 | BRF_PRG | BRF_ESS }, //  3
+	{ "or1_sp0.spr0",	0x10000, 0x01ef6638, 0x02 | BRF_PRG | BRF_ESS }, //  2 Sub 68K Code
+	{ "or1_sp1.spr1",	0x10000, 0xb632adc3, 0x02 | BRF_PRG | BRF_ESS }, //  3
 
-	{ "or1_sd0.bin",	0x20000, 0xc41e5d22, 0x03 | BRF_PRG | BRF_ESS }, //  4 M6809 Code
+	{ "or1_sd.snd0",	0x20000, 0xc41e5d22, 0x03 | BRF_PRG | BRF_ESS }, //  4 M6809 Code
 
 	{ "sys2mcpu.bin",	0x02000, 0xa342a97e, 0x04 | BRF_PRG | BRF_ESS }, //  5 HD68705 Code
-	{ "sys2c65c.bin",	0x08000, 0xa5b2a4ff, 0x04 | BRF_PRG | BRF_ESS }, //  6
+	{ "sys2_c65b.3f",	0x08000, 0xe9f2922a, 0x04 | BRF_PRG | BRF_ESS }, //  6
 
-	{ "or1_ob0.bin",	0x20000, 0x67b2b9e4, 0x05 | BRF_GRA },           //  7 Sprites
-	{ "or1_ob1.bin",	0x20000, 0x8a54fa5e, 0x05 | BRF_GRA },           //  8
-	{ "or1_ob2.bin",	0x20000, 0xa2c1cca0, 0x05 | BRF_GRA },           //  9
-	{ "or1_ob3.bin",	0x20000, 0xe0ad292c, 0x05 | BRF_GRA },           // 10
-	{ "or1_ob4.bin",	0x20000, 0x7aefba59, 0x05 | BRF_GRA },           // 11
-	{ "or1_ob5.bin",	0x20000, 0xe4025be9, 0x05 | BRF_GRA },           // 12
-	{ "or1_ob6.bin",	0x20000, 0xe284c30c, 0x05 | BRF_GRA },           // 13
-	{ "or1_ob7.bin",	0x20000, 0x262b7112, 0x05 | BRF_GRA },           // 14
+	{ "or_obj-0.obj0",	0x20000, 0x67b2b9e4, 0x05 | BRF_GRA },           //  7 Sprites
+	{ "or_obj-1.obj1",	0x20000, 0x8a54fa5e, 0x05 | BRF_GRA },           //  8
+	{ "or_obj-2.obj2",	0x20000, 0xa2c1cca0, 0x05 | BRF_GRA },           //  9
+	{ "or_obj-3.obj3",	0x20000, 0xe0ad292c, 0x05 | BRF_GRA },           // 10
+	{ "or_obj-4.obj4",	0x20000, 0x7aefba59, 0x05 | BRF_GRA },           // 11
+	{ "or_obj-5.obj5",	0x20000, 0xe4025be9, 0x05 | BRF_GRA },           // 12
+	{ "or_obj-6.obj6",	0x20000, 0xe284c30c, 0x05 | BRF_GRA },           // 13
+	{ "or_obj-7.obj7",	0x20000, 0x262b7112, 0x05 | BRF_GRA },           // 14
 
-	{ "or1_ch0.bin",	0x20000, 0xe7c47934, 0x06 | BRF_GRA },           // 15 Layer Tiles
-	{ "or1_ch1.bin",	0x20000, 0x874b332d, 0x06 | BRF_GRA },           // 16
-	{ "or1_ch3.bin",	0x20000, 0x5471a834, 0x06 | BRF_GRA },           // 17
-	{ "or1_ch5.bin",	0x20000, 0xa7d3a296, 0x06 | BRF_GRA },           // 18
-	{ "or1_ch6.bin",	0x20000, 0x3adc09c8, 0x06 | BRF_GRA },           // 19
-	{ "or1_ch7e.bin",	0x20000, 0x8c0d2ab7, 0x06 | BRF_GRA },           // 20
+	{ "or_chr-0.chr0",	0x20000, 0xe7c47934, 0x06 | BRF_GRA },           // 15 Layer Tiles
+	{ "or_chr-1.chr1",	0x20000, 0x874b332d, 0x06 | BRF_GRA },           // 16
+	{ "or_chr-3.chr3",	0x20000, 0x5471a834, 0x06 | BRF_GRA },           // 17
+	{ "or_chr-5.chr5",	0x20000, 0xa7d3a296, 0x06 | BRF_GRA },           // 18
+	{ "or_chr-6.chr6",	0x20000, 0x3adc09c8, 0x06 | BRF_GRA },           // 19
+	{ "or2_chr7.chr7",	0x20000, 0x8c0d2ab7, 0x06 | BRF_GRA },           // 20
 
-	{ "or1_rz0.bin",	0x20000, 0xc88a9e6b, 0x07 | BRF_GRA },           // 21 Roz Layer Tiles
-	{ "or1_rz1.bin",	0x20000, 0xc20cc749, 0x07 | BRF_GRA },           // 22
-	{ "or1_rz2.bin",	0x20000, 0x148c9866, 0x07 | BRF_GRA },           // 23
-	{ "or1_rz3.bin",	0x20000, 0x4e727b7e, 0x07 | BRF_GRA },           // 24
-	{ "or1_rz4.bin",	0x20000, 0x17b04396, 0x07 | BRF_GRA },           // 25
+	{ "or_roz-0.roz0",	0x20000, 0xc88a9e6b, 0x07 | BRF_GRA },           // 21 Roz Layer Tiles
+	{ "or_roz-1.roz1",	0x20000, 0xc20cc749, 0x07 | BRF_GRA },           // 22
+	{ "or_roz-2.roz2",	0x20000, 0x148c9866, 0x07 | BRF_GRA },           // 23
+	{ "or_roz-3.roz3",	0x20000, 0x4e727b7e, 0x07 | BRF_GRA },           // 24
+	{ "or_roz-4.roz4",	0x20000, 0x17b04396, 0x07 | BRF_GRA },           // 25
 
-	{ "or1_sha.bin",	0x20000, 0x7aec9dee, 0x08 | BRF_GRA },           // 26 Layer Tiles Mask Data
+	{ "or_shape.shape",	0x20000, 0x7aec9dee, 0x08 | BRF_GRA },           // 26 Layer Tiles Mask Data
 
-	{ "or1_dt0.bin",	0x20000, 0xde214f7a, 0x09 | BRF_PRG | BRF_ESS }, // 27 Shared 68K Data
-	{ "or1_dt1.bin",	0x20000, 0x25e3e6c8, 0x09 | BRF_PRG | BRF_ESS }, // 28
+	{ "or1_d0.data0",	0x20000, 0xde214f7a, 0x09 | BRF_PRG | BRF_ESS }, // 27 Shared 68K Data
+	{ "or1_d1.data1",	0x20000, 0x25e3e6c8, 0x09 | BRF_PRG | BRF_ESS }, // 28
 
-	{ "or1_vo1.bin",	0x80000, 0x369e0bca, 0x0a | BRF_SND },           // 29 C140 Samples
-	{ "or1_vo2.bin",	0x80000, 0x9f4cd7b5, 0x0a | BRF_SND },           // 30
+	{ "or_voi1.voice1",	0x80000, 0x369e0bca, 0x0a | BRF_SND },           // 29 C140 Samples
+	{ "or_voi2.voice2",	0x80000, 0x9f4cd7b5, 0x0a | BRF_SND },           // 30
+	
+	{ "lh5762.6n",		0x02000, 0x90db1bf6, 0x00 | BRF_OPT },
 };
 
 STD_ROM_PICK(ordyne)
@@ -4024,7 +4026,7 @@ static INT32 OrdynejInit()
 
 struct BurnDriver BurnDrvOrdyne = {
 	"ordyne", NULL, NULL, NULL, "1988",
-	"Ordyne (Japan, English Version)\0", NULL, "Namco", "System 2",
+	"Ordyne (World)\0", NULL, "Namco", "System 2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, ordyneRomInfo, ordyneRomName, NULL, NULL, DefaultInputInfo, DefaultDIPInfo,
@@ -4036,46 +4038,48 @@ struct BurnDriver BurnDrvOrdyne = {
 // Ordyne (Japan)
 
 static struct BurnRomInfo ordynejRomDesc[] = {
-	{ "or1_mp0.bin",	0x20000, 0xf5929ed3, 0x01 | BRF_PRG | BRF_ESS }, //  0 Main 68K Code
-	{ "or1_mp1.bin",	0x20000, 0xc1c8c1e2, 0x01 | BRF_PRG | BRF_ESS }, //  1
+	{ "or1_mp0.mpr0",	0x20000, 0xf5929ed3, 0x01 | BRF_PRG | BRF_ESS }, //  0 Main 68K Code
+	{ "or1_mp1.mpr1",	0x20000, 0xc1c8c1e2, 0x01 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "or1_sp0.bin",	0x10000, 0x01ef6638, 0x02 | BRF_PRG | BRF_ESS }, //  2 Sub 68K Code
-	{ "or1_sp1.bin",	0x10000, 0xb632adc3, 0x02 | BRF_PRG | BRF_ESS }, //  3
+	{ "or1_sp0.spr0",	0x10000, 0x01ef6638, 0x02 | BRF_PRG | BRF_ESS }, //  2 Sub 68K Code
+	{ "or1_sp1.spr1",	0x10000, 0xb632adc3, 0x02 | BRF_PRG | BRF_ESS }, //  3
 
-	{ "or1_sd0.bin",	0x20000, 0xc41e5d22, 0x03 | BRF_PRG | BRF_ESS }, //  4 M6809 Code
+	{ "or1_sd.snd0",	0x20000, 0xc41e5d22, 0x03 | BRF_PRG | BRF_ESS }, //  4 M6809 Code
 
 	{ "sys2mcpu.bin",	0x02000, 0xa342a97e, 0x04 | BRF_PRG | BRF_ESS }, //  5 HD68705 Code
-	{ "sys2c65c.bin",	0x08000, 0xa5b2a4ff, 0x04 | BRF_PRG | BRF_ESS }, //  6
+	{ "sys2_c65b.3f",	0x08000, 0xe9f2922a, 0x04 | BRF_PRG | BRF_ESS }, //  6
 
-	{ "or1_ob0.bin",	0x20000, 0x67b2b9e4, 0x05 | BRF_GRA },           //  7 Sprites
-	{ "or1_ob1.bin",	0x20000, 0x8a54fa5e, 0x05 | BRF_GRA },           //  8
-	{ "or1_ob2.bin",	0x20000, 0xa2c1cca0, 0x05 | BRF_GRA },           //  9
-	{ "or1_ob3.bin",	0x20000, 0xe0ad292c, 0x05 | BRF_GRA },           // 10
-	{ "or1_ob4.bin",	0x20000, 0x7aefba59, 0x05 | BRF_GRA },           // 11
-	{ "or1_ob5.bin",	0x20000, 0xe4025be9, 0x05 | BRF_GRA },           // 12
-	{ "or1_ob6.bin",	0x20000, 0xe284c30c, 0x05 | BRF_GRA },           // 13
-	{ "or1_ob7.bin",	0x20000, 0x262b7112, 0x05 | BRF_GRA },           // 14
+	{ "or_obj-0.obj0",	0x20000, 0x67b2b9e4, 0x05 | BRF_GRA },           //  7 Sprites
+	{ "or_obj-1.obj1",	0x20000, 0x8a54fa5e, 0x05 | BRF_GRA },           //  8
+	{ "or_obj-2.obj2",	0x20000, 0xa2c1cca0, 0x05 | BRF_GRA },           //  9
+	{ "or_obj-3.obj3",	0x20000, 0xe0ad292c, 0x05 | BRF_GRA },           // 10
+	{ "or_obj-4.obj4",	0x20000, 0x7aefba59, 0x05 | BRF_GRA },           // 11
+	{ "or_obj-5.obj5",	0x20000, 0xe4025be9, 0x05 | BRF_GRA },           // 12
+	{ "or_obj-6.obj6",	0x20000, 0xe284c30c, 0x05 | BRF_GRA },           // 13
+	{ "or_obj-7.obj7",	0x20000, 0x262b7112, 0x05 | BRF_GRA },           // 14
 
-	{ "or1_ch0.bin",	0x20000, 0xe7c47934, 0x06 | BRF_GRA },           // 15 Layer Tiles
-	{ "or1_ch1.bin",	0x20000, 0x874b332d, 0x06 | BRF_GRA },           // 16
-	{ "or1_ch3.bin",	0x20000, 0x5471a834, 0x06 | BRF_GRA },           // 17
-	{ "or1_ch5.bin",	0x20000, 0xa7d3a296, 0x06 | BRF_GRA },           // 18
-	{ "or1_ch6.bin",	0x20000, 0x3adc09c8, 0x06 | BRF_GRA },           // 19
-	{ "or1_ch7.bin",	0x20000, 0xf050a152, 0x06 | BRF_GRA },           // 20
+	{ "or_chr-0.chr0",	0x20000, 0xe7c47934, 0x06 | BRF_GRA },           // 15 Layer Tiles
+	{ "or_chr-1.chr1",	0x20000, 0x874b332d, 0x06 | BRF_GRA },           // 16
+	{ "or_chr-3.chr3",	0x20000, 0x5471a834, 0x06 | BRF_GRA },           // 17
+	{ "or_chr-5.chr5",	0x20000, 0xa7d3a296, 0x06 | BRF_GRA },           // 18
+	{ "or_chr-6.chr6",	0x20000, 0x3adc09c8, 0x06 | BRF_GRA },           // 19
+	{ "or_chr-7.chr7",	0x20000, 0xf050a152, 0x06 | BRF_GRA },           // 20
 
-	{ "or1_rz0.bin",	0x20000, 0xc88a9e6b, 0x07 | BRF_GRA },           // 21 Roz Layer Tiles
-	{ "or1_rz1.bin",	0x20000, 0xc20cc749, 0x07 | BRF_GRA },           // 22
-	{ "or1_rz2.bin",	0x20000, 0x148c9866, 0x07 | BRF_GRA },           // 23
-	{ "or1_rz3.bin",	0x20000, 0x4e727b7e, 0x07 | BRF_GRA },           // 24
-	{ "or1_rz4.bin",	0x20000, 0x17b04396, 0x07 | BRF_GRA },           // 25
+	{ "or_roz-0.roz0",	0x20000, 0xc88a9e6b, 0x07 | BRF_GRA },           // 21 Roz Layer Tiles
+	{ "or_roz-1.roz1",	0x20000, 0xc20cc749, 0x07 | BRF_GRA },           // 22
+	{ "or_roz-2.roz2",	0x20000, 0x148c9866, 0x07 | BRF_GRA },           // 23
+	{ "or_roz-3.roz3",	0x20000, 0x4e727b7e, 0x07 | BRF_GRA },           // 24
+	{ "or_roz-4.roz4",	0x20000, 0x17b04396, 0x07 | BRF_GRA },           // 25
 
-	{ "or1_sha.bin",	0x20000, 0x7aec9dee, 0x08 | BRF_GRA },           // 26 Layer Tiles Mask Data
+	{ "or_shape.shape",	0x20000, 0x7aec9dee, 0x08 | BRF_GRA },           // 26 Layer Tiles Mask Data
 
-	{ "or1_dt0.bin",	0x20000, 0xde214f7a, 0x09 | BRF_PRG | BRF_ESS }, // 27 Shared 68K Data
-	{ "or1_dt1.bin",	0x20000, 0x25e3e6c8, 0x09 | BRF_PRG | BRF_ESS }, // 28
+	{ "or1_d0.data0",	0x20000, 0xde214f7a, 0x09 | BRF_PRG | BRF_ESS }, // 27 Shared 68K Data
+	{ "or1_d1.data1",	0x20000, 0x25e3e6c8, 0x09 | BRF_PRG | BRF_ESS }, // 28
 
-	{ "or1_vo1.bin",	0x80000, 0x369e0bca, 0x0a | BRF_SND },           // 29 C140 Samples
-	{ "or1_vo2.bin",	0x80000, 0x9f4cd7b5, 0x0a | BRF_SND },           // 30
+	{ "or_voi1.voice1",	0x80000, 0x369e0bca, 0x0a | BRF_SND },           // 29 C140 Samples
+	{ "or_voi2.voice2",	0x80000, 0x9f4cd7b5, 0x0a | BRF_SND },           // 30
+	
+	{ "lh5762.6n",		0x02000, 0x90db1bf6, 0x00 | BRF_OPT },
 };
 
 STD_ROM_PICK(ordynej)
@@ -4088,6 +4092,67 @@ struct BurnDriver BurnDrvOrdynej = {
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
 	NULL, ordynejRomInfo, ordynejRomName, NULL, NULL, DefaultInputInfo, DefaultDIPInfo,
 	OrdynejInit, Namcos2Exit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x4000,
+	288, 224, 4, 3
+};
+
+
+// Ordyne (Japan, English Version)
+
+static struct BurnRomInfo ordynejeRomDesc[] = {
+	{ "or1_mp0e.mpr0",	0x20000, 0x5e2f9052, 0x01 | BRF_PRG | BRF_ESS }, //  0 Main 68K Code
+	{ "or1_mp1e.mpr1",	0x20000, 0x367a8fcf, 0x01 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "or1_sp0.spr0",	0x10000, 0x01ef6638, 0x02 | BRF_PRG | BRF_ESS }, //  2 Sub 68K Code
+	{ "or1_sp1.spr1",	0x10000, 0xb632adc3, 0x02 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "or1_sd.snd0",	0x20000, 0xc41e5d22, 0x03 | BRF_PRG | BRF_ESS }, //  4 M6809 Code
+
+	{ "sys2mcpu.bin",	0x02000, 0xa342a97e, 0x04 | BRF_PRG | BRF_ESS }, //  5 HD68705 Code
+	{ "sys2_c65b.3f",	0x08000, 0xe9f2922a, 0x04 | BRF_PRG | BRF_ESS }, //  6
+
+	{ "or_obj-0.obj0",	0x20000, 0x67b2b9e4, 0x05 | BRF_GRA },           //  7 Sprites
+	{ "or_obj-1.obj1",	0x20000, 0x8a54fa5e, 0x05 | BRF_GRA },           //  8
+	{ "or_obj-2.obj2",	0x20000, 0xa2c1cca0, 0x05 | BRF_GRA },           //  9
+	{ "or_obj-3.obj3",	0x20000, 0xe0ad292c, 0x05 | BRF_GRA },           // 10
+	{ "or_obj-4.obj4",	0x20000, 0x7aefba59, 0x05 | BRF_GRA },           // 11
+	{ "or_obj-5.obj5",	0x20000, 0xe4025be9, 0x05 | BRF_GRA },           // 12
+	{ "or_obj-6.obj6",	0x20000, 0xe284c30c, 0x05 | BRF_GRA },           // 13
+	{ "or_obj-7.obj7",	0x20000, 0x262b7112, 0x05 | BRF_GRA },           // 14
+
+	{ "or_chr-0.chr0",	0x20000, 0xe7c47934, 0x06 | BRF_GRA },           // 15 Layer Tiles
+	{ "or_chr-1.chr1",	0x20000, 0x874b332d, 0x06 | BRF_GRA },           // 16
+	{ "or_chr-3.chr3",	0x20000, 0x5471a834, 0x06 | BRF_GRA },           // 17
+	{ "or_chr-5.chr5",	0x20000, 0xa7d3a296, 0x06 | BRF_GRA },           // 18
+	{ "or_chr-6.chr6",	0x20000, 0x3adc09c8, 0x06 | BRF_GRA },           // 19
+	{ "or1_ch7e.chr7",	0x20000, 0x8c0d2ab7, 0x06 | BRF_GRA },           // 20
+
+	{ "or_roz-0.roz0",	0x20000, 0xc88a9e6b, 0x07 | BRF_GRA },           // 21 Roz Layer Tiles
+	{ "or_roz-1.roz1",	0x20000, 0xc20cc749, 0x07 | BRF_GRA },           // 22
+	{ "or_roz-2.roz2",	0x20000, 0x148c9866, 0x07 | BRF_GRA },           // 23
+	{ "or_roz-3.roz3",	0x20000, 0x4e727b7e, 0x07 | BRF_GRA },           // 24
+	{ "or_roz-4.roz4",	0x20000, 0x17b04396, 0x07 | BRF_GRA },           // 25
+
+	{ "or_shape.shape",	0x20000, 0x7aec9dee, 0x08 | BRF_GRA },           // 26 Layer Tiles Mask Data
+
+	{ "or1_d0.data0",	0x20000, 0xde214f7a, 0x09 | BRF_PRG | BRF_ESS }, // 27 Shared 68K Data
+	{ "or1_d1.data1",	0x20000, 0x25e3e6c8, 0x09 | BRF_PRG | BRF_ESS }, // 28
+
+	{ "or_voi1.voice1",	0x80000, 0x369e0bca, 0x0a | BRF_SND },           // 29 C140 Samples
+	{ "or_voi2.voice2",	0x80000, 0x9f4cd7b5, 0x0a | BRF_SND },           // 30
+	
+	{ "lh5762.6n",		0x02000, 0x90db1bf6, 0x00 | BRF_OPT },
+};
+
+STD_ROM_PICK(ordyneje)
+STD_ROM_FN(ordyneje)
+
+struct BurnDriver BurnDrvOrdyneje = {
+	"ordyneje", "ordyne", NULL, NULL, "1988",
+	"Ordyne (Japan, English Version)\0", NULL, "Namco", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_HORSHOOT, 0,
+	NULL, ordynejeRomInfo, ordynejeRomName, NULL, NULL, DefaultInputInfo, DefaultDIPInfo,
+	OrdyneInit, Namcos2Exit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x4000,
 	288, 224, 4, 3
 };
 
@@ -5623,13 +5688,14 @@ static struct BurnRomInfo sgunner2jRomDesc[] = {
 	{ "sns_snd0.bin",	0x20000, 0xf079cd32, 0x03 | BRF_PRG | BRF_ESS }, //  4 M6809 Code
 
 #ifdef ROM_VERIFY
+	// note - this define is only enabled for rom verification and is omitted completely from normal builds
 //	correct M37450 Code, unemulated/doesn't work. JacKc & Barry - please do not change these next 3 lines (5, 6, 7) or the game will break.
-	{ "sys2_c68.3f",	0x08000, 0xca64550a, 0x00 | BRF_PRG | BRF_ESS }, //  5 c68
-#else
+	{ "sys2_c68.3f",	0x08000, 0xca64550a, 0x00 | BRF_PRG | BRF_ESS }, //	5 c68 Code (unused for now)
+#endif
+
 //	not actually on this hw, but works
 	{ "sys2mcpu.bin",	0x02000, 0xa342a97e, 0x04 | BRF_PRG | BRF_ESS }, //  6 HD68705 Code
 	{ "sys2c65c.bin",	0x08000, 0xa5b2a4ff, 0x04 | BRF_PRG | BRF_ESS }, //  7
-#endif
 
 	{ "sns_obj0.bin",	0x80000, 0xc762445c, 0x05 | BRF_GRA },           //  8 Sprites
 	{ "sns_obj4.bin",	0x80000, 0x0b1be894, 0x05 | BRF_GRA },           //  9
@@ -7115,7 +7181,7 @@ struct BurnDriverD BurnDrvFinalap3bl = {
 };
 
 
-// Four Trax
+// Four Trax (World)
 
 static struct BurnRomInfo fourtraxRomDesc[] = {
 	{ "fx2_mp0.11d",	0x20000, 0xf147cd6b, 0x01 | BRF_PRG | BRF_ESS }, //  0 Main 68K Code
@@ -7172,7 +7238,7 @@ STD_ROM_FN(fourtrax)
 
 struct BurnDriverD BurnDrvFourtrax = {
 	"fourtrax", NULL, NULL, NULL, "1989",
-	"Four Trax\0", "Imperfect graphics, sound and inputs", "Namco", "System 2",
+	"Four Trax (World)\0", "Imperfect graphics, sound and inputs", "Namco", "System 2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_NOT_WORKING, 2, HARDWARE_MISC_PRE90S, GBF_RACING, 0,
 	NULL, fourtraxRomInfo, fourtraxRomName, NULL, NULL, DefaultInputInfo, DefaultDIPInfo, //FourtraxInputInfo, Fourtrax3DIPInfo,
@@ -7180,3 +7246,68 @@ struct BurnDriverD BurnDrvFourtrax = {
 	288, 224, 4, 3
 };
 
+
+// Four Trax (Asia)
+
+static struct BurnRomInfo fourtraxaRomDesc[] = {
+	{ "fx4_mp0.11d",	0x20000, 0xf87b3dce, 0x01 | BRF_PRG | BRF_ESS }, //  0 Main 68K Code
+	{ "fx4_mp1.13d",	0x20000, 0xd82f7c20, 0x01 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "fx1_sp0.11k",	0x20000, 0x41687edd, 0x02 | BRF_PRG | BRF_ESS }, //  2 Sub 68K Code
+	{ "fx1_sp1.13k",	0x20000, 0xdbbae326, 0x02 | BRF_PRG | BRF_ESS }, //  3
+
+	{ "fx1_sd0.7j",		0x20000, 0xacccc934, 0x03 | BRF_PRG | BRF_ESS }, //  4 M6809 Code
+
+	{ "sys2mcpu.bin",	0x02000, 0xa342a97e, 0x04 | BRF_PRG | BRF_ESS }, //  5 HD68705 Code
+	{ "sys2c65c.bin",	0x08000, 0xa5b2a4ff, 0x04 | BRF_PRG | BRF_ESS }, //  6
+
+	{ "fx_obj-0.4c",	0x40000, 0x1aa60ffa, 0x15 | BRF_GRA },           //  7 Sprites
+	{ "fx_obj-1.3c",	0x40000, 0x7509bc09, 0x15 | BRF_GRA },           //  8
+	{ "fx_obj-4.4a",	0x40000, 0x30add52a, 0x15 | BRF_GRA },           //  9
+	{ "fx_obj-5.3a",	0x40000, 0xe3cd2776, 0x15 | BRF_GRA },           // 10
+	{ "fx_obj-8.8c",	0x40000, 0xb165acab, 0x15 | BRF_GRA },           // 11
+	{ "fx_obj-9.7c",	0x40000, 0x90f0735b, 0x15 | BRF_GRA },           // 12
+	{ "fx_obj-12.8a",	0x40000, 0xf5e23b78, 0x15 | BRF_GRA },           // 13
+	{ "fx_obj-13.7a",	0x40000, 0x04a25007, 0x15 | BRF_GRA },           // 14
+	{ "fx_obj2.2c",		0x40000, 0x243affc7, 0x15 | BRF_GRA },           // 15
+	{ "fx_obj-3.1c",	0x40000, 0xb7e5d17d, 0x15 | BRF_GRA },           // 16
+	{ "fx_obj6.2a",		0x40000, 0xa2d5ce4a, 0x15 | BRF_GRA },           // 17
+	{ "fx_obj7.1a",		0x40000, 0x4d91c929, 0x15 | BRF_GRA },           // 18
+	{ "fx_obj10.6c",	0x40000, 0x7a01e86f, 0x15 | BRF_GRA },           // 19
+	{ "fx_obj-11.5c",	0x40000, 0x514b3fe5, 0x15 | BRF_GRA },           // 20
+	{ "fx_obj-14.6a",	0x40000, 0xc1658c77, 0x15 | BRF_GRA },           // 21
+	{ "fx_obj15.5a",	0x40000, 0x2bc909b3, 0x15 | BRF_GRA },           // 22
+
+	{ "fx_chr-0.11n",	0x20000, 0x6658c1c3, 0x06 | BRF_GRA },           // 23 Layer Tiles
+	{ "fx_chr-1.11p",	0x20000, 0x3a888943, 0x06 | BRF_GRA },           // 24
+	{ "fx4_ch2.11r",	0x20000, 0xa5d1ab10, 0x06 | BRF_GRA },           // 25
+	{ "fx_chr-3.11s",	0x20000, 0x47fa7e61, 0x06 | BRF_GRA },           // 26
+	{ "fx_chr-4.9n",	0x20000, 0xc720c5f5, 0x06 | BRF_GRA },           // 27
+	{ "fx_chr-5.9p",	0x20000, 0x9eacdbc8, 0x06 | BRF_GRA },           // 28
+	{ "fx_chr-6.9r",	0x20000, 0xc3dba42e, 0x06 | BRF_GRA },           // 29
+	{ "fx_chr-7.9s",	0x20000, 0xc009f3ae, 0x06 | BRF_GRA },           // 30
+
+	{ "fx_sha.7n",		0x20000, 0xf7aa4af7, 0x08 | BRF_GRA },           // 31 Layer Tiles Mask Data
+
+	{ "fx_dat0.13s",	0x40000, 0x63abf69b, 0x09 | BRF_PRG | BRF_ESS }, // 32 Shared 68K Data
+	{ "fx_dat1.13r",	0x40000, 0x725bed14, 0x09 | BRF_PRG | BRF_ESS }, // 33
+	{ "fx_dat2.13p",	0x40000, 0x71e4a5a0, 0x09 | BRF_PRG | BRF_ESS }, // 34
+	{ "fx_dat3.13n",	0x40000, 0x605725f7, 0x09 | BRF_PRG | BRF_ESS }, // 35
+
+	{ "fx1_1.5b",		0x00100, 0x85ffd753, 0x0c | BRF_GRA },           // 36 C45 Color Look-up
+
+	{ "fx_voi-1.3m",	0x80000, 0x6173364f, 0x0a | BRF_SND },           // 37 C140 Samples
+};
+
+STD_ROM_PICK(fourtraxa)
+STD_ROM_FN(fourtraxa)
+
+struct BurnDriverD BurnDrvFourtraxa = {
+	"fourtraxa", "fourtrax", NULL, NULL, "1989",
+	"Four Trax (Asia)\0", "Imperfect graphics, sound and inputs", "Namco", "System 2",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_NOT_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_RACING, 0,
+	NULL, fourtraxaRomInfo, fourtraxaRomName, NULL, NULL, DefaultInputInfo, DefaultDIPInfo, //FourtraxInputInfo, Fourtrax3DIPInfo,
+	FourtraxInit, Namcos2Exit, DrvFrame, FinallapDraw, DrvScan, &DrvRecalc, 0x4000,
+	288, 224, 4, 3
+};

@@ -242,10 +242,10 @@ static struct BurnInputInfo LghostInputList[] = {
 	{"Coin 2"            , BIT_DIGITAL   , System16InputPort0 + 1, "p2 coin"    },
 	{"Coin 3"            , BIT_DIGITAL   , System16InputPort0 + 7, "p3 coin"    },
 
-	A("P1 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"  ),
-	A("P1 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"  ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort1 + 0, "p1 fire 1"  },
-	{"P1 Fire 2"         , BIT_DIGITAL   , System16InputPort1 + 1, "p1 fire 2"  },
+	A("P1 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort0,   "mouse x-axis"   ),
+	A("P1 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort1,   "mouse y-axis"   ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort1 + 0, "mouse button 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL   , System16InputPort1 + 1, "mouse button 2" },
 	
 	A("P2 X-Axis"        , BIT_ANALOG_REL, &System16AnalogPort2,   "p2 x-axis"  ),
 	A("P2 Y-Axis"        , BIT_ANALOG_REL, &System16AnalogPort3,   "p2 y-axis"  ),

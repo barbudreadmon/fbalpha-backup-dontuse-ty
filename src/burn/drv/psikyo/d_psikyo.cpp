@@ -606,16 +606,6 @@ static void PsikyoFMIRQHandler(INT32, INT32 nStatus)
 	}
 }
 
-static INT32 PsikyoSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 4000000;
-}
-
-static double PsikyoGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000.0;
-}
-
 // ----------------------------------------------------------------------------
 // Z80 I/O handlers
 
@@ -1856,7 +1846,7 @@ static INT32 DrvInit()
 	switch (PsikyoHardwareVersion) {
 		case PSIKYO_HW_SAMURAIA:
 		case PSIKYO_HW_GUNBIRD: {
-			BurnYM2610Init(8000000, PsikyoSampleROM02, &PsikyoSampleROM02Size, PsikyoSampleROM01, &PsikyoSampleROM01Size, &PsikyoFMIRQHandler, PsikyoSynchroniseStream, PsikyoGetTime, 0);
+			BurnYM2610Init(8000000, PsikyoSampleROM02, &PsikyoSampleROM02Size, PsikyoSampleROM01, &PsikyoSampleROM01Size, &PsikyoFMIRQHandler, 0);
 			BurnTimerAttachZet(4000000);
 			BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 			BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
@@ -1865,7 +1855,7 @@ static INT32 DrvInit()
 		}
 		case PSIKYO_HW_S1945:
 		case PSIKYO_HW_TENGAI: {
-			BurnYMF278BInit(0, PsikyoSampleROM02, PsikyoSampleROM02Size, &PsikyoFMIRQHandler, PsikyoSynchroniseStream);
+			BurnYMF278BInit(0, PsikyoSampleROM02, PsikyoSampleROM02Size, &PsikyoFMIRQHandler);
 			BurnYMF278BSetRoute(BURN_SND_YMF278B_YMF278B_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 			BurnYMF278BSetRoute(BURN_SND_YMF278B_YMF278B_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
 			BurnTimerAttachZet(4000000);
@@ -2246,8 +2236,8 @@ struct BurnDriver BurnDrvBtlKRoad = {
 // Battle K-Road (Korean PCB))
 // f205v id 1266
 static struct BurnRomInfo btlkroadkRomDesc[] = {
-	{ "4(dot).u46",   0x040000, 0xe724d429, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
-	{ "5(dot).u39",   0x040000, 0xc0d65765, BRF_ESS | BRF_PRG }, //  1
+	{ "4,dot.u46",   0x040000, 0xe724d429, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
+	{ "5,dot.u39",   0x040000, 0xc0d65765, BRF_ESS | BRF_PRG }, //  1
 
 	{ "u14.bin",      0x200000, 0x282d89c3, BRF_GRA },			 //  2 Sprite data
 	{ "u24.bin",      0x200000, 0xbbe9d3d1, BRF_GRA },			 //  3
@@ -2258,7 +2248,7 @@ static struct BurnRomInfo btlkroadkRomDesc[] = {
 
 	{ "u33.bin",      0x200000, 0x4c8577f1, BRF_GRA },			 //  7 Tile data
 
-	{ "3(k).u71",     0x020000, 0xe0f0c597, BRF_ESS | BRF_PRG }, //  8 CPU #1 code
+	{ "3,k.u71",     0x020000, 0xe0f0c597, BRF_ESS | BRF_PRG }, //  8 CPU #1 code
 
 	{ "u64.bin",      0x080000, 0x0f33049f, BRF_SND },			 //  9 YM2610 ADPCM (delta-t) data
 	{ "u56.bin",      0x100000, 0x51d73682, BRF_SND },			 // 10 YM2610 ADPCM data

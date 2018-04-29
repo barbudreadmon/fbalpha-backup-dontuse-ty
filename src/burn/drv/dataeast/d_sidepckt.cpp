@@ -458,7 +458,7 @@ static void SidecpcktjI8751Write(UINT8 Data)
 	}
 }
 
-UINT8 SidepcktM6809ReadByte(UINT16 Address)
+static UINT8 SidepcktM6809ReadByte(UINT16 Address)
 {
 	switch (Address) {
 		case 0x3000: {
@@ -494,7 +494,7 @@ UINT8 SidepcktM6809ReadByte(UINT16 Address)
 	return 0;
 }
 
-void SidepcktM6809WriteByte(UINT16 Address, UINT8 Data)
+static void SidepcktM6809WriteByte(UINT16 Address, UINT8 Data)
 {
 	switch (Address) {
 		case 0x3004: {
@@ -519,7 +519,7 @@ void SidepcktM6809WriteByte(UINT16 Address, UINT8 Data)
 	}
 }
 
-UINT8 SidepcktSoundReadByte(UINT16 Address)
+static UINT8 SidepcktSoundReadByte(UINT16 Address)
 {
 	switch (Address) {
 		case 0x3000: {
@@ -534,7 +534,7 @@ UINT8 SidepcktSoundReadByte(UINT16 Address)
 	return 0;
 }
 
-void SidepcktSoundWriteByte(UINT16 Address, UINT8 Data)
+static void SidepcktSoundWriteByte(UINT16 Address, UINT8 Data)
 {
 	switch (Address) {
 		case 0x1000: {
@@ -563,16 +563,6 @@ void SidepcktSoundWriteByte(UINT16 Address, UINT8 Data)
 	}
 }
 
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)(M6809TotalCycles() * nSoundRate / 2000000);
-}
-
-inline static double DrvGetTime()
-{
-	return (double)M6809TotalCycles() / 2000000;
-}
-
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
@@ -580,11 +570,6 @@ static void DrvFMIRQHandler(INT32, INT32 nStatus)
 	} else {
 		M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
 	}
-}
-
-static INT32 DrvYM3526SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6502TotalCycles() * nSoundRate / 1500000;
 }
 
 static INT32 CharPlaneOffsets[3]   = { 0, 0x40000, 0x80000 };
@@ -664,7 +649,7 @@ static INT32 DrvInit()
 		
 	BurnFree(DrvTempRom);
 	
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809Ram + 0x0000, 0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvVideoRam         , 0x1000, 0x13ff, MAP_RAM);
@@ -686,11 +671,11 @@ static INT32 DrvInit()
 	M6502SetWriteHandler(SidepcktSoundWriteByte);
 	M6502Close();	
 	
-	BurnYM2203Init(1, 1500000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 1500000, NULL, 0);
 	BurnTimerAttachM6809(2000000);
 	BurnYM2203SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM3526Init(3000000, &DrvFMIRQHandler, &DrvYM3526SynchroniseStream, 1);
+	BurnYM3526Init(3000000, &DrvFMIRQHandler, 1);
 	BurnTimerAttachM6502YM3526(1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
 	
@@ -921,14 +906,14 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ba.szName = "All Ram";
 		BurnAcb(&ba);
 	}
-	
+
 	if (nAction & ACB_DRIVER_DATA) {
 		M6809Scan(nAction);
 		M6502Scan(nAction);
-		
+
 		BurnYM2203Scan(nAction, pnMin);
 		BurnYM3526Scan(nAction, pnMin);
-	
+
 		SCAN_VAR(I8751Return);
 		SCAN_VAR(CurrentPtr);
 		SCAN_VAR(CurrentTable);

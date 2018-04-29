@@ -20,7 +20,7 @@ struct QChan_s {
 		UINT8 bKey;				// 1 if channel is playing
 		INT8 nBank;						// Bank we are currently playing a sample from
 
-		INT32 nPlayStart;		// Start of being played
+		INT32 nPlayStart;					// Start of being played
 		INT32 nStart;						// Start of sample 16.12
 		INT32 nEnd;						// End of sample   16.12
 		INT32 nLoop;						// Loop offset from end

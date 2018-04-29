@@ -960,11 +960,11 @@ UINT8 __fastcall Ddragon3Z80Read(UINT16 a)
 {
 	switch (a) {
 		case 0xc801: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		case 0xd800: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		case 0xe000: {
@@ -993,7 +993,7 @@ void __fastcall Ddragon3Z80Write(UINT16 a, UINT8 d)
 		}
 		
 		case 0xd800: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 		
@@ -1151,11 +1151,11 @@ UINT8 __fastcall CtribeZ80Read(UINT16 a)
 {
 	switch (a) {
 		case 0x8801: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		case 0x9800: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		case 0xa000: {
@@ -1184,7 +1184,7 @@ void __fastcall CtribeZ80Write(UINT16 a, UINT8 d)
 		}
 		
 		case 0x9800: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 		
@@ -2030,8 +2030,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
 		ZetScan(nAction);			// Scan Z80
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
 
 		// Scan critical driver variables
 		SCAN_VAR(nCyclesDone);

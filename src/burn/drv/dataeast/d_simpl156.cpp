@@ -171,41 +171,41 @@ static UINT8 CommonRead8(INT32 address)
 
 static UINT32 map_offsets[3]; // memory, msm0, msm1
 
-void simpl156_write_byte(UINT32 address, UINT8 data)
+static void simpl156_write_byte(UINT32 address, UINT8 data)
 {
 	if ((address & 0xf80000) == map_offsets[0]) {
 		CommonWrite8(address & 0x7ffff, data);
 	}
 
 	if ((address & ~3) == map_offsets[1]) {
-		MSM6295Command(0, data);
+		MSM6295Write(0, data);
 		return;
 	}
 
 	if ((address & ~3) == map_offsets[2]) {
-		MSM6295Command(1, data);
+		MSM6295Write(1, data);
 		return;
 	}
 }
 
-void simpl156_write_long(UINT32 address, UINT32 data)
+static void simpl156_write_long(UINT32 address, UINT32 data)
 {
 	if ((address & 0xf80000) == map_offsets[0]) {
 		CommonWrite32(address & 0x7ffff, data);
 	}
 
 	if (address == map_offsets[1]) {
-		MSM6295Command(0, data);
+		MSM6295Write(0, data);
 		return;
 	}
 
 	if (address == map_offsets[2]) {
-		MSM6295Command(1, data);
+		MSM6295Write(1, data);
 		return;
 	}
 }
 
-UINT8 simpl156_read_byte(UINT32 address)
+static UINT8 simpl156_read_byte(UINT32 address)
 {
 	if ((address & 0xf80000) == map_offsets[0]) {
 		return CommonRead8(address & 0x7ffff);
@@ -216,17 +216,17 @@ UINT8 simpl156_read_byte(UINT32 address)
 	}
 
 	if ((address & ~3) == map_offsets[1]) {
-		return MSM6295ReadStatus(0);
+		return MSM6295Read(0);
 	}
 
 	if ((address & ~3) == map_offsets[2]) {
-		return MSM6295ReadStatus(1);
+		return MSM6295Read(1);
 	}
 
 	return 0;
 }
 
-UINT32 simpl156_read_long(UINT32 address)
+static UINT32 simpl156_read_long(UINT32 address)
 {
 	if ((address & 0xf80000) == map_offsets[0]) {
 		return CommonRead32(address & 0x7ffff);
@@ -237,11 +237,11 @@ UINT32 simpl156_read_long(UINT32 address)
 	}
 
 	if (address == map_offsets[1]) {
-		return MSM6295ReadStatus(0);
+		return MSM6295Read(0);
 	}
 
 	if (address == map_offsets[2]) {
-		return MSM6295ReadStatus(1);
+		return MSM6295Read(1);
 	}
 
 	return 0;
@@ -588,8 +588,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ArmScan(nAction);
 
-		MSM6295Scan(0, nAction);
-		MSM6295Scan(1, nAction);
+		MSM6295Scan(nAction, pnMin);
+		//MSM6295Scan(1, nAction);
 
 		deco16Scan();
 

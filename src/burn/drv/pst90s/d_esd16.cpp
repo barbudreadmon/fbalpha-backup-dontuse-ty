@@ -583,7 +583,7 @@ void __fastcall esd16_sound_out(UINT16 port, UINT8 data)
 		return;
 
 		case 0x02:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x05:
@@ -597,7 +597,7 @@ UINT8 __fastcall esd16_sound_in(UINT16 port)
 	switch (port & 0xff)
 	{
 		case 0x02:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x03:
 			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
@@ -1203,7 +1203,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		EEPROMScan(nAction, pnMin);
 
 		BurnYM3812Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(flipscreen);
 		SCAN_VAR(soundlatch);
@@ -1558,6 +1558,8 @@ static struct BurnRomInfo mchampdxRomDesc[] = {
 	{ "rom.fu34",			0x200000, 0x2895cf09, 4 | BRF_GRA },			//  7
 
 	{ "ver0106_esd4.su10", 	0x040000, 0xac8ae009, 5 | BRF_SND },			//  8 - OKI Samples
+	
+	{ "eeprom",				0x000080, 0x646b2f53, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(mchampdx)
@@ -1636,6 +1638,8 @@ static struct BurnRomInfo mchampdaRomDesc[] = {
 	{ "rom.fu34",	0x200000, 0x2895cf09, 4 | BRF_GRA },		//  7
 
 	{ "esd4.su10",	0x040000, 0x2fbe94ab, 5 | BRF_SND },		//  8 - OKI Samples
+	
+	{ "eeprom",				0x000080, 0x646b2f53, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(mchampda)
@@ -1753,6 +1757,8 @@ static struct BurnRomInfo deluxe5RomDesc[] = {
 	{ "fu34",			0x200000, 0x248b8c05, 4 | BRF_GRA },		//  9
 
 	{ "esd4.su10",		0x020000, 0x23f2b7d9, 5 | BRF_SND },		// 10 - OKI Samples
+	
+	{ "eeprom",		0x000080, 0x4539a8a0, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(deluxe5)
@@ -1787,6 +1793,8 @@ static struct BurnRomInfo deluxe5aRomDesc[] = {
 	{ "fu34",			0x200000, 0x248b8c05, 4 | BRF_GRA },		//  9
 
 	{ "esd4.su10",		0x020000, 0x23f2b7d9, 5 | BRF_SND },		// 10 - OKI Samples
+	
+	{ "eeprom",		0x000080, 0x4539a8a0, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(deluxe5a)
@@ -1821,6 +1829,8 @@ static struct BurnRomInfo deluxe5bRomDesc[] = {
 	{ "fu34",			0x200000, 0x248b8c05, 4 | BRF_GRA },		//  9
 
 	{ "esd4.su10",		0x020000, 0x23f2b7d9, 5 | BRF_SND },		// 10 - OKI Samples
+	
+	{ "eeprom",		0x000080, 0x4539a8a0, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(deluxe5b)
@@ -1855,6 +1865,8 @@ static struct BurnRomInfo deluxe4uRomDesc[] = {
 	{ "fu34",			0x200000, 0x93175d6d, 4 | BRF_GRA },		//  9
 
 	{ "esd4.su10",		0x020000, 0x23f2b7d9, 5 | BRF_SND },		// 10 - OKI Samples
+	
+	{ "eeprom",		0x000080, 0x4539a8a0, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(deluxe4u)

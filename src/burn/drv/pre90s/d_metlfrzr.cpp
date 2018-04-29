@@ -80,7 +80,7 @@ static struct BurnDIPInfo MetlfrzrDIPList[]=
 	{0x11, 0x01, 0x04, 0x04, "No"			},
 	{0x11, 0x01, 0x04, 0x00, "Yes"			},
 
-	{0   , 0xfe, 0   ,    2, "2-2"			},
+	{0   , 0xfe, 0   ,    2, "2-3"			},
 	{0x11, 0x01, 0x08, 0x08, "No"			},
 	{0x11, 0x01, 0x08, 0x00, "Yes"			},
 
@@ -556,7 +556,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
 
-		t5182Scan(nAction);
+		t5182Scan(nAction, pnMin);
 
 
 		SCAN_VAR(z80_bank);

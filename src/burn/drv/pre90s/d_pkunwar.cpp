@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
-	#include "ay8910.h"
-}
+#include "ay8910.h"
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -27,8 +24,6 @@ static UINT8 *DrvSubRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[6];
 
 static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
@@ -811,13 +806,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -917,9 +905,10 @@ static INT32 PkunwarInit()
 	ZetMapMemory(DrvMainROM + 0xe000,	0xe000, 0xffff, MAP_ROM);
 	ZetClose();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, &pkunwar_port_0, &pkunwar_port_1, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, &pkunwar_port_2, &pkunwar_port_3, NULL, NULL);
-
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910SetPorts(0, &pkunwar_port_0, &pkunwar_port_1, NULL, NULL);
+	AY8910SetPorts(1, &pkunwar_port_2, &pkunwar_port_3, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 
@@ -971,9 +960,10 @@ static INT32 NovaInit()
 	ZetMapMemory(DrvMainRAM,		0xe000, 0xe7ff, MAP_RAM);
 	ZetClose();
 
-    AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, &nova2001_scroll_x_w, &nova2001_scroll_y_w);
-    AY8910Init(1, 2000000, nBurnSoundRate, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
-
+	AY8910Init(0, 2000000, 0);
+	AY8910Init(1, 2000000, 1);
+	AY8910SetPorts(0, NULL, NULL, &nova2001_scroll_x_w, &nova2001_scroll_y_w);
+	AY8910SetPorts(1, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 
@@ -1056,9 +1046,10 @@ static INT32 NinjakunInit()
 	ZetMapMemory(DrvMainRAM + 0x0000,	0xe400, 0xe7ff, MAP_RAM);
 	ZetClose();
 
-	AY8910Init(0, 3000000, nBurnSoundRate, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
-	AY8910Init(1, 3000000, nBurnSoundRate, NULL, NULL, &nova2001_scroll_x_w, &nova2001_scroll_y_w);
-
+	AY8910Init(0, 3000000, 0);
+	AY8910Init(1, 3000000, 1);
+	AY8910SetPorts(1, NULL, NULL, &nova2001_scroll_x_w, &nova2001_scroll_y_w);
+	AY8910SetPorts(0, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 
@@ -1118,9 +1109,10 @@ static INT32 Raiders5Init()
 	ZetMapMemory(DrvMainRAM + 0x0000,	0xa000, 0xa7ff, MAP_RAM);
 	ZetClose();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, &raiders5_port_0, &pkunwar_port_1, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
-
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910SetPorts(0, &raiders5_port_0, &pkunwar_port_1, NULL, NULL);
+	AY8910SetPorts(1, &nova2001_port_3, &nova2001_port_4, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 
@@ -1503,7 +1495,7 @@ static INT32 NovaFrame()
 	ZetClose();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -1534,7 +1526,7 @@ static INT32 PkunwarFrame()
 	ZetClose();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -1582,7 +1574,7 @@ static INT32 Raiders5Frame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -1629,7 +1621,7 @@ static INT32 NinjakunFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -1761,8 +1753,8 @@ struct BurnDriver BurnDrvNova2001 = {
 static struct BurnRomInfo nova2001hRomDesc[] = {
 	// roms 1 and 2 had green stickers, but looks like an unofficial mod, bytes have been added in empty space to fix game checksum after mods were made to code.
 	// one of the mods fixes the game resetting if the coin input is held down for too short / long of a period, the purpose of the other is unknown.
-	{ "1(green).6c",	0x2000, 0x1a8731b3, 1 | BRF_PRG | BRF_ESS}, //  0 Z80 Code
-	{ "2(green).6d",	0x2000, 0xbc4e442b, 1 | BRF_PRG | BRF_ESS}, //  1
+	{ "1,green.6c",		0x2000, 0x1a8731b3, 1 | BRF_PRG | BRF_ESS}, //  0 Z80 Code
+	{ "2,green.6d",		0x2000, 0xbc4e442b, 1 | BRF_PRG | BRF_ESS}, //  1
 	{ "3.6f",			0x2000, 0xb2849038, 1 | BRF_PRG | BRF_ESS}, //  2
 	{ "4.6g",	        0x1000, 0x6b5bb12d, 1 | BRF_PRG | BRF_ESS}, //  3
 

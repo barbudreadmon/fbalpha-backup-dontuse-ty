@@ -764,14 +764,14 @@ void MSM5232Update(INT16 *buffer, INT32 samples)
 	
 			sample = BURN_SND_CLIP(sample);
 	
-			buffer[0] += BURN_SND_CLIP(buffer[0]+sample);
-			buffer[1] += BURN_SND_CLIP(buffer[1]+sample);
+			buffer[0] = BURN_SND_CLIP(buffer[0]+sample);
+			buffer[1] = BURN_SND_CLIP(buffer[1]+sample);
 			buffer += 2;
 		}
 	}
 }
 
-INT32 MSM5232Scan(INT32 nAction, INT32 *)
+void MSM5232Scan(INT32 nAction, INT32 *)
 {
 #if defined FBA_DEBUG
 	if (!DebugSnd_MSM5232Initted) bprintf(PRINT_ERROR, _T("MSM5232Scan called without init\n"));
@@ -806,6 +806,4 @@ INT32 MSM5232Scan(INT32 nAction, INT32 *)
 	if (nAction & ACB_WRITE) {
 		init_tables();
 	}
-
-	return 0;
 }

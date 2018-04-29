@@ -257,7 +257,7 @@ UINT8 __fastcall bionicc_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0x8001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xa000:
 			return *soundlatch;
@@ -755,7 +755,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		SekScan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 
 		SCAN_VAR(fg_scroll_x);
 		SCAN_VAR(fg_scroll_y);
@@ -804,7 +804,7 @@ static struct BurnRomInfo bioniccRomDesc[] = {
 
 	{ "63s141.18f",		0x00100, 0xb58d0023, 0 | BRF_OPT },				// 24 Priority (not used)
 	
-	{ "c8751h-88",          0x01000, 0x00000000, 0 | BRF_OPT | BRF_NODUMP },
+	{ "d8751h.bin",     0x01000, 0x3ed7f0be, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(bionicc)
@@ -856,7 +856,7 @@ static struct BurnRomInfo bionicc1RomDesc[] = {
 
 	{ "63s141.18f",		0x00100, 0xb58d0023, 0 | BRF_OPT },				// 24 Priority (not used)
 	
-	{ "c8751h-88",      0x01000, 0x00000000, 0 | BRF_OPT | BRF_NODUMP },
+	{ "d8751h.bin",     0x01000, 0x3ed7f0be, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(bionicc1)
@@ -908,7 +908,7 @@ static struct BurnRomInfo bionicc2RomDesc[] = {
 
 	{ "63s141.18f",		0x00100, 0xb58d0023, 0 | BRF_OPT },				// 24 Priority (not used)
 	
-	{ "c8751h-88",      0x01000, 0x00000000, 0 | BRF_OPT | BRF_NODUMP },
+	{ "d8751h.bin",     0x01000, 0x3ed7f0be, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(bionicc2)
@@ -1009,7 +1009,7 @@ static struct BurnRomInfo bioniccblRomDesc[] = {
 	
 	{ "63s141.18f",		0x00100, 0xb58d0023, 0 | BRF_OPT },				// 20 Priority (not used)
 	
-	{ "c8751h-88",     	0x01000, 0x00000000, 0 | BRF_OPT | BRF_NODUMP },
+	{ "d8751h.bin",     0x01000, 0x3ed7f0be, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(bioniccbl)
@@ -1063,7 +1063,7 @@ static struct BurnRomInfo bioniccbl2RomDesc[] = {
 
 	{ "63s141.18f",		0x00100, 0xb58d0023, 0 | BRF_OPT },				// 24 Priority (not used)
 	
-	{ "c8751h-88",          0x01000, 0x00000000, 0 | BRF_OPT | BRF_NODUMP },
+	{ "d8751h.bin",     0x01000, 0x3ed7f0be, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(bioniccbl2)

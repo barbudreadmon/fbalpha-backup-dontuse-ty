@@ -74,12 +74,15 @@
 UINT16 *tms32010_ram = NULL;
 UINT16 *tms32010_rom = NULL;
 
+static UINT32 tms32010_cycles = 0;
+static UINT32 tms32010_current_cycles = 0;
+
 static void (*tms32010_write_port)(INT32,UINT16);
 static UINT16 (*tms32010_read_port)(INT32);
 
 static UINT16 program_read_word_16be(UINT16 address)
 {
-	UINT16 r = tms32010_rom[(address & 0xfff)/2];
+	UINT16 r = tms32010_rom[address & 0xfff];
 	r = (r << 8) | (r >> 8);
 	return r;
 }
@@ -93,7 +96,7 @@ static void program_write_word_16be(UINT16 address, UINT16 data)
 
 static UINT16 data_read_word_16be(UINT16 address)
 {
-	UINT16 r = tms32010_ram[(address & 0xff)/2];
+	UINT16 r = tms32010_ram[address & 0xff];
 
 	r = (r << 8) | (r >> 8);
 
@@ -104,7 +107,7 @@ static void data_write_word_16be(UINT16 address, UINT16 data)
 {
 	data = (data << 8) | (data >> 8);
 
-	tms32010_ram[(address & 0xff)/2] = data;
+	tms32010_ram[address & 0xff] = data;
 }
 
 UINT16 io_read_word(INT32 offset)
@@ -139,12 +142,12 @@ void tms32010_set_read_port_handler(UINT16 (*pointer)(INT32))
 #define TMS32010_BIO_In (io_read_word(TMS32010_BIO))
 #define TMS32010_In(Port) (io_read_word(Port))
 #define TMS32010_Out(Port,Value) (io_write_word(Port,Value))
-#define TMS32010_ROM_RDMEM(A) (program_read_word_16be((A)<<1))
-#define TMS32010_ROM_WRMEM(A,V) (program_write_word_16be((A)<<1,V))
-#define TMS32010_RAM_RDMEM(A) (data_read_word_16be((A)<<1))
-#define TMS32010_RAM_WRMEM(A,V) (data_write_word_16be((A)<<1,V))
-#define TMS32010_RDOP(A) (program_read_word_16be((A)<<1))
-#define TMS32010_RDOP_ARG(A) (program_read_word_16be((A)<<1))
+#define TMS32010_ROM_RDMEM(A) (program_read_word_16be((A)))
+#define TMS32010_ROM_WRMEM(A,V) (program_write_word_16be((A),V))
+#define TMS32010_RAM_RDMEM(A) (data_read_word_16be((A)))
+#define TMS32010_RAM_WRMEM(A,V) (data_write_word_16be((A),V))
+#define TMS32010_RDOP(A) (program_read_word_16be((A)))
+#define TMS32010_RDOP_ARG(A) (program_read_word_16be((A)))
 
 
 
@@ -826,6 +829,8 @@ void tms32010_reset (void)
 						/* however other TMS3201x devices   */
 						/* can address up to 0xffff (incase */
 						/* their support is ever added).    */
+
+	tms32010_cycles = 0;
 }
 
 
@@ -864,6 +869,8 @@ int tms32010_execute(int cycles)
 {
 	tms32010_icount = cycles;
 
+	tms32010_current_cycles = cycles;
+
 	do
 	{
 		if (R.INTF) {
@@ -889,7 +896,20 @@ int tms32010_execute(int cycles)
 		}
 	} while (tms32010_icount>0);
 
+	tms32010_current_cycles = 0;
+	tms32010_cycles += cycles - tms32010_icount;
+
 	return cycles - tms32010_icount;
+}
+
+UINT32 tms32010TotalCycles()
+{
+	return tms32010_cycles + (tms32010_current_cycles - tms32010_icount);
+}
+
+void tms32010NewFrame()
+{
+	tms32010_cycles = 0;
 }
 
 void tms32010RunEnd()

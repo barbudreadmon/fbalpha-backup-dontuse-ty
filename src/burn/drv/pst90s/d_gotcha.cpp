@@ -201,7 +201,7 @@ void __fastcall gotcha_sound_write(UINT16 address, UINT8 data)
 
 		case 0xc002:
 		case 0xc003:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -211,7 +211,7 @@ UINT8 __fastcall gotcha_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0xc001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xc006:
 			return *soundlatch;
@@ -586,8 +586,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekScan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
 
 		set_okibank(*DrvSndBank);
 	}

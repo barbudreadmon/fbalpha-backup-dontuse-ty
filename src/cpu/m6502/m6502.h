@@ -57,10 +57,11 @@ typedef struct
 	UINT8	irq_state;
 	UINT8   so_state;
 	UINT8   hold_irq;
+	UINT8   cpu7written;
 
 	UINT8   ddr; // 6501/8502/7501 stuff
 	UINT8   port;
- 
+
 	UINT8	(*port_read)(UINT8 direction);
 	void	(*port_write)(UINT8 direction, UINT8 data);
 

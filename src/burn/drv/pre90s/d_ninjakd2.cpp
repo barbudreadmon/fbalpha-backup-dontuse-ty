@@ -1055,16 +1055,6 @@ inline static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 5000000;
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 5000000.0;
-}
-
 static void ninjakd2_sound_init()
 {
 	ZetInit(1);
@@ -1081,7 +1071,7 @@ static void ninjakd2_sound_init()
 	ZetSetReadHandler(ninjakd2_sound_read);
 	ZetClose();
 
-	BurnYM2203Init(2,  1500000, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(2,  1500000, &DrvYM2203IRQHandler, 0);
 	BurnTimerAttachZet(5000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.10, BURN_SND_ROUTE_BOTH);
@@ -2183,11 +2173,11 @@ struct BurnDriver BurnDrvNinjakd2b = {
 // close to set 3
 
 static struct BurnRomInfo ninjakd2cRomDesc[] = {
-	{ "1.3U",			0x08000, 0x06096412, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "2.3T",			0x08000, 0x9ed9a994, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "1.3u",			0x08000, 0x06096412, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "2.3t",			0x08000, 0x9ed9a994, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "nk2_03.rom",		0x08000, 0xad275654, 1 | BRF_PRG | BRF_ESS }, //  2
 	{ "nk2_04.rom",		0x08000, 0xe7692a77, 1 | BRF_PRG | BRF_ESS }, //  3
-	{ "5.3M",			0x08000, 0x800d4951, 1 | BRF_PRG | BRF_ESS }, //  4
+	{ "5.3m",			0x08000, 0x800d4951, 1 | BRF_PRG | BRF_ESS }, //  4
 
 	{ "nk2_06.rom",		0x10000, 0xd3a18a79, 2 | BRF_PRG | BRF_ESS }, //  5 Z80 #1 Code (mc8123 encrypted)
 

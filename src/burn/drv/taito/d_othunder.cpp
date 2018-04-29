@@ -29,10 +29,10 @@ static struct BurnInputInfo OthunderInputList[] =
 	{"Coin 2"            , BIT_DIGITAL   , TC0220IOCInputPort0 + 2, "p2 coin"        },
 	{"Start 2"           , BIT_DIGITAL   , TC0220IOCInputPort0 + 7, "p2 start"       },
 
-	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0      , "p1 x-axis"      ),
-	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1      , "p1 y-axis"      ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 0, "p1 fire 1"      },
-	{"P1 Fire 2"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 2, "p1 fire 2"      },
+	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0      , "mouse x-axis"   ),
+	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1      , "mouse y-axis"   ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 0, "mouse button 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL   , TC0220IOCInputPort2 + 2, "mouse button 2" },
 	
 	A("P2 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort2      , "p2 x-axis"      ),
 	A("P2 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort3      , "p2 y-axis"      ),	
@@ -798,21 +798,7 @@ static const UINT8 othunder_default_eeprom[128] = {
 
 static void OthunderFMIRQHandler(INT32, INT32 nStatus)
 {
-	if (nStatus & 1) {
-		ZetSetIRQLine(0xFF, CPU_IRQSTATUS_ACK);
-	} else {
-		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
-	}
-}
-
-static INT32 OthunderSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / (16000000 / 4);
-}
-
-static double OthunderGetTime()
-{
-	return (double)ZetTotalCycles() / (16000000 / 4);
+	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 CharPlaneOffsets[4]   = { 0, 1, 2, 3 };
@@ -911,7 +897,7 @@ static INT32 OthunderInit()
 	ZetMapArea(0xc000, 0xdfff, 2, TaitoZ80Ram1               );
 	ZetClose();	
 	
-	BurnYM2610Init(16000000 / 2, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, &OthunderFMIRQHandler, OthunderSynchroniseStream, OthunderGetTime, 0);
+	BurnYM2610Init(16000000 / 2, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, &OthunderFMIRQHandler, 0);
 	BurnTimerAttachZet(16000000 / 4);
 	OthunderYM2610AY8910RouteMasterVol = 0.25;
 	OthunderYM2610Route1MasterVol = 1.00;

@@ -31,8 +31,6 @@ extern "C" {
 	#include "ay8910.h"
 }
 
-static INT16 *pAY8910Buffer[6];
-
 static UINT8 *AllMem	= NULL;
 static UINT8 *MemEnd	= NULL;
 static UINT8 *AllRam	= NULL;
@@ -206,7 +204,7 @@ static INT32 MapCursorToJoy1 = 0; // Map Cursor Keys & space to Joy1
 
 static INT32 VBlankKludge = 0; // For VoidRunner (joystick selection hangs)
 static INT32 SwapRamslot = 0; // For Toshiba-EMI's Break Out!
-static INT32 SwapButton2 = 0; // Swaps Joy button#2 with 'm', for Xenon and Astro Marine Corps
+static INT32 SwapButton2 = 0; // Swaps Joy button#2 with 'm', for Xenon, Astro Marine Corps and Nayade Resistance
 static INT32 SwapSlash = 0; // For Square Dancer, swaps the / key with the Japanese Underscore key
 
 static INT32 CASMode = 0;      // Using .cas file?
@@ -661,6 +659,7 @@ static void Mapper_write(UINT16 address, UINT8 data)
 				}
 				rtype_bank_base[1] = ROMData[PSlot] + rtype_selected_bank * 0x4000;
 			}
+			return;
 
 		case MAP_KONGEN8:
 			if ((address < 0x4000) || (address > 0xbfff)) break;
@@ -817,6 +816,7 @@ static INT32 Mapper_read(UINT16 address, UINT8 *data)
 				  *data = bank_base[address & 0x3fff];
 				  return 1;
 			  }
+			  break;
 		  }
 	  case MAP_DOOLY:
 		  {
@@ -830,6 +830,7 @@ static INT32 Mapper_read(UINT16 address, UINT8 *data)
 				  *data = rb;
 				  return 1;
 			  }
+			  break;
 		  }
 	  case MAP_RTYPE:
 		  {
@@ -838,6 +839,7 @@ static INT32 Mapper_read(UINT16 address, UINT8 *data)
 				  *data = rtype_bank_base[address >> 15][address & 0x3fff];
 				  return 1;
 			  }
+			  break;
 		  }
   }
   return 0;
@@ -1328,23 +1330,19 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
-	maincpu		    = Next; Next += 0x020000;
-	game		    = Next; Next += MAX_MSX_CARTSIZE;
-	game2		    = Next; Next += MAX_MSX_CARTSIZE;
-	kanji_rom       = Next; Next += 0x040000;
+	maincpu		    	= Next; Next += 0x020000;
+	game		    	= Next; Next += MAX_MSX_CARTSIZE;
+	game2		    	= Next; Next += MAX_MSX_CARTSIZE;
+	kanji_rom       	= Next; Next += 0x040000;
 
-	game_sram       = Next; Next += 0x004000;
+	game_sram       	= Next; Next += 0x004000;
 
 	AllRam			= Next;
 
 	main_mem		= Next; Next += 0x020000;
-	EmptyRAM        = Next; Next += 0x010000;
+	EmptyRAM       		= Next; Next += 0x010000;
 
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -1448,7 +1446,8 @@ static INT32 DrvInit()
 	ZetSetReadHandler(msx_read);
 	ZetClose();
 
-	AY8910Init(0, 3579545/2, nBurnSoundRate, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
+	AY8910Init(0, 3579545/2, 0);
+	AY8910SetPorts(0, ay8910portAread, NULL, ay8910portAwrite, ay8910portBwrite);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 
 	K051649Init(3579545/2);
@@ -1591,7 +1590,7 @@ static INT32 DrvFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			K051649Update(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
@@ -1604,7 +1603,7 @@ static INT32 DrvFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			K051649Update(pSoundBuf, nSegmentLength);
 		}
 		DACUpdate(pBurnSoundOut, nBurnSoundLen);
@@ -19209,7 +19208,7 @@ struct BurnDriver BurnDrvMSX_crazy = {
 	"Crazy Buggy\0", NULL, "Crappysoft", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
-	MSXGetZipName, MSX_crazyRomInfo, MSX_crazyRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,
+	MSXGetZipName, MSX_crazyRomInfo, MSX_crazyRomName, NULL, NULL, MSXInputInfo, MSXJoyCursor60hzDIPInfo,
 	DrvInit, DrvExit, DrvFrame, TMS9928ADraw, DrvScan, NULL, 0x10,
 	272, 228, 4, 3
 };
@@ -19682,11 +19681,11 @@ STD_ROM_FN(MSX_nayade)
 
 struct BurnDriver BurnDrvMSX_nayade = {
 	"msx_nayade", NULL, "msx_msx", NULL, "2013",
-	"Nayade Resistance\0", "Control w/ Arrow-keys, M to select weapon", "Pentacour", "MSX",
+	"Nayade Resistance\0", NULL, "Pentacour", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
-	MSXGetZipName, MSX_nayadeRomInfo, MSX_nayadeRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,
-	DrvInit, DrvExit, DrvFrame, TMS9928ADraw, DrvScan, NULL, 0x10,
+	MSXGetZipName, MSX_nayadeRomInfo, MSX_nayadeRomName, NULL, NULL, MSXInputInfo, MSXJoyCursorDIPInfo,
+	SwapButton2DrvInit, DrvExit, DrvFrame, TMS9928ADraw, DrvScan, NULL, 0x10,
 	272, 228, 4, 3
 };
 
@@ -21338,7 +21337,7 @@ STD_ROM_FN(MSX_splash)
 
 struct BurnDriver BurnDrvMSX_splash = {
 	"msx_splash", NULL, "msx_msx", NULL, "1986",
-	"Splash (Spa)\0", NULL, "Mind Games España", "MSX",
+	"Splash (Spa)\0", NULL, "Mind Games Espa??a", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
 	MSXGetZipName, MSX_splashRomInfo, MSX_splashRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,
@@ -22082,7 +22081,7 @@ STD_ROM_FN(MSX_kingleon)
 
 struct BurnDriver BurnDrvMSX_kingleon = {
 	"msx_kingleon", NULL, "msx_msx", NULL, "1986",
-	"King Leonard (Spa)\0", NULL, "Mind Games España", "MSX",
+	"King Leonard (Spa)\0", NULL, "Mind Games Espa??a", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
 	MSXGetZipName, MSX_kingleonRomInfo, MSX_kingleonRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,
@@ -22482,7 +22481,7 @@ STD_ROM_FN(MSX_heatseek)
 
 struct BurnDriver BurnDrvMSX_heatseek = {
 	"msx_heatseek", NULL, "msx_msx", NULL, "1986",
-	"Heat Seeker - Missil (Spa)\0", NULL, "Mind Games España", "MSX",
+	"Heat Seeker - Missil (Spa)\0", NULL, "Mind Games Espa??a", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
 	MSXGetZipName, MSX_heatseekRomInfo, MSX_heatseekRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,
@@ -22750,7 +22749,7 @@ STD_ROM_FN(MSX_ffruit)
 
 struct BurnDriver BurnDrvMSX_ffruit = {
 	"msx_ffruit", NULL, "msx_msx", NULL, "1985",
-	"Forbidden Fruit (Spa)\0", NULL, "Mind Games España", "MSX",
+	"Forbidden Fruit (Spa)\0", NULL, "Mind Games Espa??a", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
 	MSXGetZipName, MSX_ffruitRomInfo, MSX_ffruitRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,
@@ -22940,7 +22939,7 @@ STD_ROM_FN(MSX_destroyr)
 
 struct BurnDriver BurnDrvMSX_destroyr = {
 	"msx_destroyr", NULL, "msx_msx", NULL, "1986",
-	"Destroyer (Spa)\0", NULL, "Mind Games España", "MSX",
+	"Destroyer (Spa)\0", NULL, "Mind Games Espa??a", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
 	MSXGetZipName, MSX_destroyrRomInfo, MSX_destroyrRomName, NULL, NULL, MSXInputInfo, MSXJoyport2DIPInfo,
@@ -23511,7 +23510,7 @@ STD_ROM_FN(MSX_adel)
 
 struct BurnDriver BurnDrvMSX_adel = {
 	"msx_adel", NULL, "msx_msx", NULL, "1986",
-	"Adel (Spa)\0", NULL, "Mind Games España", "MSX",
+	"Adel (Spa)\0", NULL, "Mind Games Espa??a", "MSX",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MSX, GBF_MISC, 0,
 	MSXGetZipName, MSX_adelRomInfo, MSX_adelRomName, NULL, NULL, MSXInputInfo, MSXDIPInfo,

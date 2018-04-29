@@ -3,11 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-
-#include "driver.h"
-extern "C" {
- #include "ay8910.h"
-}
+#include "ay8910.h"
 
 static UINT8 KyugoInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 KyugoInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -39,7 +35,6 @@ static UINT8 *KyugoSprites          = NULL;
 static UINT8 *KyugoTempRom          = NULL;
 static UINT32 *KyugoPalette         = NULL;
 static INT16* pFMBuffer;
-static INT16* pAY8910Buffer[6];
 
 static UINT8 KyugoIRQEnable;
 static UINT8 KyugoSubCPUEnable;
@@ -561,6 +556,7 @@ static struct BurnRomInfo AirwolfRomDesc[] = {
 	{ "pal16l8a.2j",   0x00104, 0x00000000, BRF_OPT | BRF_NODUMP },	     //  13	PLDs
 	{ "epl12p6a.9j",   0x00034, 0x19808f14, BRF_OPT },		     //  14
 	{ "epl12p6a.9k",   0x00034, 0xf5acad85, BRF_OPT },		     //  15
+	{ "74s288-2.bin",  0x00020, 0x190a55ad, BRF_OPT },
 };
 
 STD_ROM_PICK(Airwolf)
@@ -589,6 +585,7 @@ static struct BurnRomInfo AirwolfaRomDesc[] = {
 	{ "pal16l8a.2j",   0x00104, 0x00000000, BRF_OPT | BRF_NODUMP },	     //  13	PLDs
 	{ "epl12p6a.9j",   0x00034, 0x19808f14, BRF_OPT },		     //  14
 	{ "epl12p6a.9k",   0x00034, 0xf5acad85, BRF_OPT },		     //  15
+	{ "74s288-2.bin",  0x00020, 0x190a55ad, BRF_OPT },
 };
 
 STD_ROM_PICK(Airwolfa)
@@ -618,6 +615,7 @@ static struct BurnRomInfo SkywolfRomDesc[] = {
 	{ "01h.bin",       0x00100, 0xec0923d3, BRF_GRA },	     //  13
 	{ "01f.bin",       0x00100, 0xade97052, BRF_GRA },	     //  14
 	{ "m1.2c",         0x00020, 0x83a39201, BRF_GRA },	     //  15
+	{ "74s288-2.bin",  0x00020, 0x190a55ad, BRF_OPT },
 };
 
 STD_ROM_PICK(Skywolf)
@@ -646,6 +644,7 @@ static struct BurnRomInfo Skywolf2RomDesc[] = {
 	{ "01h.bin",       0x00100, 0xec0923d3, BRF_GRA },	     //  14
 	{ "01f.bin",       0x00100, 0xade97052, BRF_GRA },	     //  15
 	{ "m1.2c",         0x00020, 0x83a39201, BRF_GRA },	     //  16
+	{ "74s288-2.bin",  0x00020, 0x190a55ad, BRF_OPT },
 };
 
 STD_ROM_PICK(Skywolf2)
@@ -673,6 +672,10 @@ static struct BurnRomInfo Skywolf3RomDesc[] = {
 	{ "82s129-3.bin",  0x00100, 0xade97052, BRF_GRA },	     //  13
 	{ "74s288-2.bin",  0x00020, 0x190a55ad, BRF_GRA },	     //  14
 	{ "74s288-1.bin",  0x00020, 0x5ddb2d15, BRF_GRA },	     //  15
+	
+	{ "pal16l8nc.1",   0x00104, 0x00000000, BRF_OPT | BRF_NODUMP},
+	{ "pal16l8nc.2",   0x00104, 0x00000000, BRF_OPT | BRF_NODUMP },
+	{ "pal16l8nc.3",   0x00104, 0x00000000, BRF_OPT | BRF_NODUMP },
 };
 
 STD_ROM_PICK(Skywolf3)
@@ -707,6 +710,9 @@ static struct BurnRomInfo FlashgalRomDesc[] = {
 	{ "7159.1f",       0x00100, 0x1e0a1cd3, BRF_GRA },	     //  20
 	{ "7162.5j",       0x00020, 0xcce2e29f, BRF_GRA },	     //  21
 	{ "bpr.2c",        0x00020, 0x83a39201, BRF_GRA },	     //  22
+	
+	{ "pal12l6.5n",    0x00117, 0x453ce64a, BRF_OPT },
+	{ "pal12l6.4m",    0x00117, 0xb52fbcc0, BRF_OPT },
 };
 
 STD_ROM_PICK(Flashgal)
@@ -741,6 +747,9 @@ static struct BurnRomInfo FlashgalkRomDesc[] = {
 	{ "7159.1f",       0x00100, 0x1e0a1cd3, BRF_GRA },	     //  20
 	{ "7162.5j",       0x00020, 0xcce2e29f, BRF_GRA },	     //  21
 	{ "bpr.2c",        0x00020, 0x83a39201, BRF_GRA },	     //  22
+	
+	{ "pal12l6.5n",    0x00117, 0x453ce64a, BRF_OPT },
+	{ "pal12l6.4m",    0x00117, 0xb52fbcc0, BRF_OPT },
 };
 
 STD_ROM_PICK(Flashgalk)
@@ -775,6 +784,9 @@ static struct BurnRomInfo FlashgalaRomDesc[] = {
 	{ "7159.1f",       0x00100, 0x1e0a1cd3, BRF_GRA },	     //  20
 	{ "7162.5j",       0x00020, 0xcce2e29f, BRF_GRA },	     //  21
 	{ "bpr.2c",        0x00020, 0x83a39201, BRF_GRA },	     //  22
+	
+	{ "pal12l6.5n",    0x00117, 0x453ce64a, BRF_OPT },
+	{ "pal12l6.4m",    0x00117, 0xb52fbcc0, BRF_OPT },
 };
 
 STD_ROM_PICK(Flashgala)
@@ -1000,6 +1012,10 @@ static struct BurnRomInfo Lstwar99RomDesc[] = {
 	{ "g.1h",          0x00100, 0xacd7a69e, BRF_GRA },	     //  18
 	{ "r.1f",          0x00100, 0xb7f48b41, BRF_GRA },	     //  19
 	{ "m1.2c",         0x00020, 0x83a39201, BRF_GRA },	     //  20
+	
+	{ "pal12l6.5n",	   0x00117, 0x453ce64a, BRF_OPT },
+	{ "pal12l6.4m",    0x00117, 0xb52fbcc0, BRF_OPT },
+	{ "n82s123n.5j",   0x00020, 0xcce2e29f, BRF_OPT },
 };
 
 STD_ROM_PICK(Lstwar99)
@@ -1032,43 +1048,90 @@ static struct BurnRomInfo Lstwra99RomDesc[] = {
 	{ "g.1h",          0x00100, 0xacd7a69e, BRF_GRA },	     //  18
 	{ "r.1f",          0x00100, 0xb7f48b41, BRF_GRA },	     //  19
 	{ "m1.2c",         0x00020, 0x83a39201, BRF_GRA },	     //  20
+	
+	{ "pal12l6.5n",	   0x00117, 0x453ce64a, BRF_OPT },
+	{ "pal12l6.4m",    0x00117, 0xb52fbcc0, BRF_OPT },
+	{ "n82s123n.5j",   0x00020, 0xcce2e29f, BRF_OPT },
 };
 
 STD_ROM_PICK(Lstwra99)
 STD_ROM_FN(Lstwra99)
 
 static struct BurnRomInfo Lstwrk99RomDesc[] = {
-	{ "1999.4f",       0x02000, 0xe3cfc09f, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
-	{ "1999.4h",       0x02000, 0xfd58c6e1, BRF_ESS | BRF_PRG }, //  1
-	{ "7.j4",          0x02000, 0x57a8e900, BRF_ESS | BRF_PRG }, //  2
+	{ "88.4f",         0x02000, 0xe3cfc09f, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "89.4h",         0x02000, 0xfd58c6e1, BRF_ESS | BRF_PRG }, //  1
+	{ "90.j4",         0x02000, 0x57a8e900, BRF_ESS | BRF_PRG }, //  2
 	
-	{ "1.f2",          0x02000, 0xc485c621, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program 
-	{ "2.h2",          0x02000, 0xb3c6a886, BRF_ESS | BRF_PRG }, //  4
-	{ "3.j2",          0x02000, 0x197e314c, BRF_ESS | BRF_PRG }, //  5
-	{ "repulse.b4",    0x02000, 0x86b267f3, BRF_ESS | BRF_PRG }, //  6
+	{ "84.f2",         0x02000, 0xc485c621, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program 
+	{ "85.h2",         0x02000, 0xb3c6a886, BRF_ESS | BRF_PRG }, //  4
+	{ "86.j2",         0x02000, 0x197e314c, BRF_ESS | BRF_PRG }, //  5
+	{ "87.k2",         0x02000, 0x86b267f3, BRF_ESS | BRF_PRG }, //  6
 	
-	{ "1999-14.rom",   0x01000, 0xb4995072, BRF_GRA },	     //  7	Characters
+	{ "97.4a",         0x02000, 0x15ad6867, BRF_GRA },	     //  7	Characters
 	
-	{ "15.9h",         0x02000, 0xc9213469, BRF_GRA },	     //  8	Tiles
-	{ "16.10h",        0x02000, 0x7de5d39e, BRF_GRA },	     //  9
-	{ "17.11h",        0x02000, 0x0ba5f72c, BRF_GRA },	     //  10
+	{ "98.9h",         0x02000, 0xc9213469, BRF_GRA },	     //  8	Tiles
+	{ "99.10h",        0x02000, 0x7de5d39e, BRF_GRA },	     //  9
+	{ "00.11h",        0x02000, 0x0ba5f72c, BRF_GRA },	     //  10
 	
-	{ "8.6a",          0x04000, 0x0e9f757e, BRF_GRA },	     //  11	Sprites
-	{ "9.7a",          0x04000, 0xf7d2e650, BRF_GRA },	     //  12
-	{ "10.8a",         0x04000, 0xe717baf4, BRF_GRA },	     //  13
-	{ "11.9a",         0x04000, 0x04b2250b, BRF_GRA },	     //  14
-	{ "12.10a",        0x04000, 0xd110e140, BRF_GRA },	     //  15
-	{ "13.11a",        0x04000, 0x8fdc713c, BRF_GRA },	     //  16
+	{ "91.6a",         0x04000, 0x0e9f757e, BRF_GRA },	     //  11	Sprites
+	{ "92.7a",         0x04000, 0xf7d2e650, BRF_GRA },	     //  12
+	{ "93.8a",         0x04000, 0xe717baf4, BRF_GRA },	     //  13
+	{ "94.9a",         0x04000, 0x04b2250b, BRF_GRA },	     //  14
+	{ "95.10a",        0x04000, 0xd110e140, BRF_GRA },	     //  15
+	{ "96.11a",        0x04000, 0x8fdc713c, BRF_GRA },	     //  16
 	
 	{ "b.1j",          0x00100, 0x3ea35431, BRF_GRA },	     //  17	PROMs
 	{ "g.1h",          0x00100, 0xacd7a69e, BRF_GRA },	     //  18
 	{ "r.1f",          0x00100, 0xb7f48b41, BRF_GRA },	     //  19
 	{ "m1.2c",         0x00020, 0x83a39201, BRF_GRA },	     //  20
 	{ "1999-00.rom",   0x00800, 0x0c0c449f, BRF_GRA },	     //  21
+	
+	{ "pal12l6.5n",	   0x00117, 0x453ce64a, BRF_OPT },
+	{ "pal12l6.4m",    0x00117, 0xb52fbcc0, BRF_OPT },
+	{ "n82s123n.5j",   0x00020, 0xcce2e29f, BRF_OPT },
 };
 
 STD_ROM_PICK(Lstwrk99)
 STD_ROM_FN(Lstwrk99)
+
+static struct BurnRomInfo Lstwrb99RomDesc[] = {
+	// copyright blanked, seems based on 99lstwara, given it has a second shot type instead of the shields.
+	// bg_tilemap is wrong in some levels
+	{ "15.2764",       0x02000, 0xf9367b9d, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
+	{ "16.2764",       0x02000, 0x04c3316a, BRF_ESS | BRF_PRG }, //  1
+	{ "17.2764",       0x02000, 0x02aa4de5, BRF_ESS | BRF_PRG }, //  2
+	
+	{ "11.2764",       0x02000, 0xaa3e0996, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program 
+	{ "12.2764",       0x02000, 0xa59d3d1b, BRF_ESS | BRF_PRG }, //  4
+	{ "13.2764",       0x02000, 0xfe31975e, BRF_ESS | BRF_PRG }, //  5
+	{ "14.2764",       0x02000, 0x683481a5, BRF_ESS | BRF_PRG }, //  6
+	
+	{ "1.2732",   	   0x01000, 0x8ed6855b, BRF_GRA },	     //  7	Characters
+	
+	{ "8.2764",        0x02000, 0xb161c853, BRF_GRA },	     //  8	Tiles
+	{ "9.2764",        0x02000, 0x44fd4c31, BRF_GRA },	     //  9
+	{ "10.2764",       0x02000, 0xb3dbc16b, BRF_GRA },	     //  10
+	
+	{ "2.27128",       0x04000, 0x34dba8f9, BRF_GRA },	     //  11	Sprites
+	{ "3.27128",       0x04000, 0x8bd7d5b6, BRF_GRA },	     //  12
+	{ "4.27128",       0x04000, 0x64036ea0, BRF_GRA },	     //  13
+	{ "5.27128",       0x04000, 0x2f7352e4, BRF_GRA },	     //  14
+	{ "6.27128",       0x04000, 0x7d9e1e7e, BRF_GRA },	     //  15
+	{ "7.27128",       0x04000, 0x8b6fa1c4, BRF_GRA },	     //  16
+	
+	// not dumped for this PCB
+	{ "b.1j",          0x00100, 0x3ea35431, BRF_GRA },	     //  17	PROMs
+	{ "g.1h",          0x00100, 0xacd7a69e, BRF_GRA },	     //  18
+	{ "r.1f",          0x00100, 0xb7f48b41, BRF_GRA },	     //  19
+	{ "m1.2c",         0x00020, 0x83a39201, BRF_GRA },	     //  20
+	
+	{ "pal12l6.5n",	   0x00117, 0x453ce64a, BRF_OPT },
+	{ "pal12l6.4m",    0x00117, 0xb52fbcc0, BRF_OPT },
+	{ "n82s123n.5j",   0x00020, 0xcce2e29f, BRF_OPT },
+};
+
+STD_ROM_PICK(Lstwrb99)
+STD_ROM_FN(Lstwrb99)
 
 static struct BurnRomInfo SrdmissnRomDesc[] = {
 	{ "5.t2",          0x04000, 0xa682b48c, BRF_ESS | BRF_PRG }, //  0	Z80 #1 Program Code
@@ -1125,6 +1188,10 @@ static struct BurnRomInfo FxRomDesc[] = {
 	{ "mb.1f",         0x00100, 0xa342890c, BRF_GRA },	     //  16
 	{ "m2.5j",         0x00020, 0x190a55ad, BRF_GRA },	     //  17
 	{ "m1.2c",         0x00020, 0x83a39201, BRF_GRA },	     //  18
+	
+	{ "pal16l8.1",     0x00104, 0x00000000, BRF_OPT | BRF_NODUMP},
+	{ "pal16l8.2",     0x00104, 0x00000000, BRF_OPT | BRF_NODUMP },
+	{ "pal16l8.3",     0x00104, 0x00000000, BRF_OPT | BRF_NODUMP },
 };
 
 STD_ROM_PICK(Fx)
@@ -1215,7 +1282,7 @@ static INT32 KyugoDoReset()
 	return 0;
 }
 
-UINT8 __fastcall KyugoRead1(UINT16 a)
+static UINT8 __fastcall KyugoRead1(UINT16 a)
 {
 	if (a >= 0x9800 && a <= 0x9fff) {
 		return KyugoSprite2Ram[a - 0x9800] | 0xf0;
@@ -1230,7 +1297,7 @@ UINT8 __fastcall KyugoRead1(UINT16 a)
 	return 0;
 }
 
-void __fastcall KyugoWrite1(UINT16 a, UINT8 d)
+static void __fastcall KyugoWrite1(UINT16 a, UINT8 d)
 {
 	switch (a) {
 		case 0xa800: {
@@ -1262,7 +1329,7 @@ void __fastcall KyugoWrite1(UINT16 a, UINT8 d)
 	}
 }
 
-void __fastcall FlashgalPortWrite1(UINT16 a, UINT8 d)
+static void __fastcall FlashgalPortWrite1(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1288,7 +1355,7 @@ void __fastcall FlashgalPortWrite1(UINT16 a, UINT8 d)
 	}
 }
 
-void __fastcall FlashgalaPortWrite1(UINT16 a, UINT8 d)
+static void __fastcall FlashgalaPortWrite1(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1314,7 +1381,7 @@ void __fastcall FlashgalaPortWrite1(UINT16 a, UINT8 d)
 	}
 }
 
-void __fastcall GyrodinePortWrite1(UINT16 a, UINT8 d)
+static void __fastcall GyrodinePortWrite1(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1340,7 +1407,7 @@ void __fastcall GyrodinePortWrite1(UINT16 a, UINT8 d)
 	}
 }
 
-void __fastcall SrdmissnPortWrite1(UINT16 a, UINT8 d)
+static void __fastcall SrdmissnPortWrite1(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1366,7 +1433,7 @@ void __fastcall SrdmissnPortWrite1(UINT16 a, UINT8 d)
 	}
 }
 
-UINT8 __fastcall FlashgalRead2(UINT16 a)
+static UINT8 __fastcall FlashgalRead2(UINT16 a)
 {
 	switch (a) {
 		case 0xc000: {
@@ -1389,7 +1456,7 @@ UINT8 __fastcall FlashgalRead2(UINT16 a)
 	return 0;
 }
 
-UINT8 __fastcall FlashgalaRead2(UINT16 a)
+static UINT8 __fastcall FlashgalaRead2(UINT16 a)
 {
 	switch (a) {
 		case 0xc040: {
@@ -1412,7 +1479,7 @@ UINT8 __fastcall FlashgalaRead2(UINT16 a)
 	return 0;
 }
 
-UINT8 __fastcall GyrodineRead2(UINT16 a)
+static UINT8 __fastcall GyrodineRead2(UINT16 a)
 {
 	switch (a) {
 		case 0x8000: {
@@ -1435,7 +1502,7 @@ UINT8 __fastcall GyrodineRead2(UINT16 a)
 	return 0;
 }
 
-UINT8 __fastcall SrdmissnRead2(UINT16 a)
+static UINT8 __fastcall SrdmissnRead2(UINT16 a)
 {
 	switch (a) {
 		case 0xf400: {
@@ -1458,7 +1525,7 @@ UINT8 __fastcall SrdmissnRead2(UINT16 a)
 	return 0;
 }
 
-UINT8 __fastcall LegendRead2(UINT16 a)
+static UINT8 __fastcall LegendRead2(UINT16 a)
 {
 	switch (a) {
 		case 0xf800: {
@@ -1481,7 +1548,7 @@ UINT8 __fastcall LegendRead2(UINT16 a)
 	return 0;
 }
 
-void __fastcall KyugoWrite2(UINT16 a, UINT8 d)
+static void __fastcall KyugoWrite2(UINT16 a, UINT8 d)
 {
 	switch (a) {
 		default: {
@@ -1490,7 +1557,7 @@ void __fastcall KyugoWrite2(UINT16 a, UINT8 d)
 	}
 }
 
-UINT8 __fastcall KyugoPortRead2(UINT16 a)
+static UINT8 __fastcall KyugoPortRead2(UINT16 a)
 {
 	a &= 0xff;
 	
@@ -1507,7 +1574,7 @@ UINT8 __fastcall KyugoPortRead2(UINT16 a)
 	return 0;
 }
 
-UINT8 __fastcall FlashgalaPortRead2(UINT16 a)
+static UINT8 __fastcall FlashgalaPortRead2(UINT16 a)
 {
 	a &= 0xff;
 	
@@ -1524,7 +1591,7 @@ UINT8 __fastcall FlashgalaPortRead2(UINT16 a)
 	return 0;
 }
 
-UINT8 __fastcall SrdmissnPortRead2(UINT16 a)
+static UINT8 __fastcall SrdmissnPortRead2(UINT16 a)
 {
 	a &= 0xff;
 	
@@ -1541,7 +1608,7 @@ UINT8 __fastcall SrdmissnPortRead2(UINT16 a)
 	return 0;
 }
 
-void __fastcall FlashgalPortWrite2(UINT16 a, UINT8 d)
+static void __fastcall FlashgalPortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1572,7 +1639,7 @@ void __fastcall FlashgalPortWrite2(UINT16 a, UINT8 d)
 	}
 }
 
-void __fastcall FlashgalaPortWrite2(UINT16 a, UINT8 d)
+static void __fastcall FlashgalaPortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1603,7 +1670,7 @@ void __fastcall FlashgalaPortWrite2(UINT16 a, UINT8 d)
 	}
 }
 
-void __fastcall GyrodinePortWrite2(UINT16 a, UINT8 d)
+static void __fastcall GyrodinePortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1634,7 +1701,7 @@ void __fastcall GyrodinePortWrite2(UINT16 a, UINT8 d)
 	}
 }
 
-void __fastcall SrdmissnPortWrite2(UINT16 a, UINT8 d)
+static void __fastcall SrdmissnPortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 	
@@ -1712,7 +1779,7 @@ static INT32 KyugoInit()
 		 KyugoSizeZ80Rom1 = 0x4000;
 		 KyugoSizeZ80Rom2 = 0x2000;
 	}
-	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "sonofphx") || !strcmp(BurnDrvGetTextA(DRV_NAME), "repulse") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwar") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwara") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwark")) {
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "sonofphx") || !strcmp(BurnDrvGetTextA(DRV_NAME), "repulse") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwar") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwara") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwark") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwarb")) {
 		KyugoNumZ80Rom1 = 3;
 	}
 	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "skywolf") || !strcmp(BurnDrvGetTextA(DRV_NAME), "srdmissn") || !strcmp(BurnDrvGetTextA(DRV_NAME), "fx")) {
@@ -1916,7 +1983,7 @@ static INT32 KyugoInit()
 		ZetClose();
 	}
 	
-	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "sonofphx") || !strcmp(BurnDrvGetTextA(DRV_NAME), "repulse") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwar") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwara") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwark")) {
+	if (!strcmp(BurnDrvGetTextA(DRV_NAME), "sonofphx") || !strcmp(BurnDrvGetTextA(DRV_NAME), "repulse") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwar") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwara") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwark") || !strcmp(BurnDrvGetTextA(DRV_NAME), "99lstwarb")) {
 		ZetOpen(0);
 		ZetSetOutHandler(GyrodinePortWrite1);
 		ZetClose();
@@ -1950,16 +2017,10 @@ static INT32 KyugoInit()
 		ZetMapArea(0x8800, 0x8fff, 2, KyugoZ80Ram2             );
 		ZetClose();
 	}
-	
-	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
-	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
-	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
-	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
-	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
-	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
 
-	AY8910Init(0, 18432000 / 12, nBurnSoundRate, &KyugoDip0Read, &KyugoDip1Read, NULL, NULL);
-	AY8910Init(1, 18432000 / 12, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 18432000 / 12, 0);
+	AY8910Init(1, 18432000 / 12, 1);
+	AY8910SetPorts(0, &KyugoDip0Read, &KyugoDip1Read, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.30, BURN_SND_ROUTE_BOTH);
 
@@ -2077,16 +2138,10 @@ static INT32 Skywolf3Init()
 	ZetMapArea(0x8000, 0x87ff, 1, KyugoSharedZ80Ram        );
 	ZetMapArea(0x8000, 0x87ff, 2, KyugoSharedZ80Ram        );
 	ZetClose();
-	
-	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
-	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
-	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
-	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
-	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
-	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
 
-	AY8910Init(0, 18432000 / 12, nBurnSoundRate, &KyugoDip0Read, &KyugoDip1Read, NULL, NULL);
-	AY8910Init(1, 18432000 / 12, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 18432000 / 12, 0);
+	AY8910Init(1, 18432000 / 12, 1);
+	AY8910SetPorts(0, &KyugoDip0Read, &KyugoDip1Read, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.30, BURN_SND_ROUTE_BOTH);
 	
@@ -2414,7 +2469,7 @@ static INT32 KyugoFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 
@@ -2425,7 +2480,7 @@ static INT32 KyugoFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 	}
 
@@ -2615,7 +2670,7 @@ struct BurnDriver BurnDrvRepulse = {
 
 struct BurnDriver BurnDrv99lstwar = {
 	"99lstwar", "repulse", NULL, NULL, "1985",
-	"'99: The Last War\0", NULL, "Proma", "Kyugo",
+	"'99: The Last War (set 1)\0", NULL, "Crux / Proma", "Kyugo",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT, 0,
 	NULL, Lstwar99RomInfo, Lstwar99RomName, NULL, NULL, KyugoInputInfo, SonofphxDIPInfo,
@@ -2625,7 +2680,7 @@ struct BurnDriver BurnDrv99lstwar = {
 
 struct BurnDriver BurnDrv99lstwara = {
 	"99lstwara", "repulse", NULL, NULL, "1985",
-	"'99: The Last War (alternate)\0", NULL, "Proma", "Kyugo",
+	"'99: The Last War (set 2)\0", NULL, "Crux / Proma", "Kyugo",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT, 0,
 	NULL, Lstwra99RomInfo, Lstwra99RomName, NULL, NULL, KyugoInputInfo, SonofphxDIPInfo,
@@ -2635,10 +2690,20 @@ struct BurnDriver BurnDrv99lstwara = {
 
 struct BurnDriver BurnDrv99lstwark = {
 	"99lstwark", "repulse", NULL, NULL, "1985",
-	"'99: The Last War (Kyugo)\0", NULL, "Kyugo", "Kyugo",
+	"'99: The Last War (Kyugo)\0", NULL, "Crux / Kyugo", "Kyugo",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT, 0,
 	NULL, Lstwrk99RomInfo, Lstwrk99RomName, NULL, NULL, KyugoInputInfo, SonofphxDIPInfo,
+	KyugoInit, KyugoExit, KyugoFrame, NULL, KyugoScan,
+	NULL, 0x100, 224, 288, 3, 4
+};
+
+struct BurnDriver BurnDrv99lstwarb = {
+	"99lstwarb", "repulse", NULL, NULL, "1985",
+	"'99: The Last War (bootleg)\0", "Bad colors in some scenes", "bootleg", "Kyugo",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT, 0,
+	NULL, Lstwrb99RomInfo, Lstwrb99RomName, NULL, NULL, KyugoInputInfo, SonofphxDIPInfo,
 	KyugoInit, KyugoExit, KyugoFrame, NULL, KyugoScan,
 	NULL, 0x100, 224, 288, 3, 4
 };

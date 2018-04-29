@@ -268,11 +268,11 @@ void __fastcall seibu_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x6000:
-			if ((seibu_snd_type & 8) == 0) MSM6295Command(0, data);
+			if ((seibu_snd_type & 8) == 0) MSM6295Write(0, data);
 		return;
 
 		case 0x6002:
-			if (seibu_snd_type & 4) MSM6295Command(1, data);
+			if (seibu_snd_type & 4) MSM6295Write(1, data);
 		return;
 
 		case 0x6005:
@@ -312,7 +312,7 @@ UINT8 __fastcall seibu_sound_read(UINT16 address)
 					return BurnYM3812Read(0, 0);
 
 				case 1:
-					return BurnYM2151ReadStatus();
+					return BurnYM2151Read();
 
 				case 2:
 					return BurnYM2203Read(0, 0);
@@ -320,7 +320,7 @@ UINT8 __fastcall seibu_sound_read(UINT16 address)
 			return 0;
 
 		case 0x4009: {
-			if ((seibu_snd_type&3)==1) return BurnYM2151ReadStatus();
+			if ((seibu_snd_type&3)==1) return BurnYM2151Read();
 			if ((seibu_snd_type&3) < 2) return 0;
 			return BurnYM2203Read(0, 1);
 		}
@@ -336,10 +336,10 @@ UINT8 __fastcall seibu_sound_read(UINT16 address)
 			return seibu_coin_input;
 
 		case 0x6000:
-			return (((seibu_snd_type & 8) == 0) ? MSM6295ReadStatus(0) : 0);
+			return (((seibu_snd_type & 8) == 0) ? MSM6295Read(0) : 0);
 
 		case 0x6002:
-			if (seibu_snd_type & 4) return MSM6295ReadStatus(1);
+			if (seibu_snd_type & 4) return MSM6295Read(1);
 	}
 
 	return 0;
@@ -389,11 +389,6 @@ static void seibu_sound_decrypt(INT32 length)
 	}
 }
 
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / seibu_sndcpu_frequency;
-}
-
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (nStatus) {
@@ -406,11 +401,6 @@ static void DrvFMIRQHandler(INT32, INT32 nStatus)
 static void Drv2151FMIRQHandler(INT32 nStatus)
 {
 	DrvFMIRQHandler(0, nStatus);
-}
-
-static double Drv2203GetTime()
-{
-	return (double)ZetTotalCycles() / seibu_sndcpu_frequency;
 }
 
 void seibu_sound_reset()
@@ -482,7 +472,7 @@ void seibu_sound_init(INT32 type, INT32 len, INT32 freq0 /*cpu*/, INT32 freq1 /*
 	switch (seibu_snd_type & 3)
 	{
 		case 0:
-			BurnYM3812Init(1, freq1, &DrvFMIRQHandler, &DrvSynchroniseStream, 0);
+			BurnYM3812Init(1, freq1, &DrvFMIRQHandler, 0);
 			BurnTimerAttachZetYM3812(freq0);
 		break;
 
@@ -493,7 +483,7 @@ void seibu_sound_init(INT32 type, INT32 len, INT32 freq0 /*cpu*/, INT32 freq1 /*
 		break;
 
 		case 2:
-			BurnYM2203Init(2, freq1, DrvFMIRQHandler, DrvSynchroniseStream, Drv2203GetTime, 0);
+			BurnYM2203Init(2, freq1, DrvFMIRQHandler, 0);
 			BurnTimerAttachZet(freq0);
 		break;
 	}
@@ -688,7 +678,7 @@ void seibu_sound_update_cabal(INT16 *pbuf, INT32 nLen)
 	adpcm_update(1, pbuf, nLen);
 }
 
-void seibu_sound_scan(INT32 *pnMin, INT32 nAction)
+void seibu_sound_scan(INT32 nAction, INT32 *pnMin)
 {
 #if defined FBA_DEBUG
 	if (!DebugDev_SeibuSndInitted) bprintf(PRINT_ERROR, _T("seibu_sound_scan called without init\n"));
@@ -704,11 +694,11 @@ void seibu_sound_scan(INT32 *pnMin, INT32 nAction)
 			case 0:
 				BurnYM3812Scan(nAction, pnMin);
 			break;
-	
+
 			case 1:
-				BurnYM2151Scan(nAction);
+				BurnYM2151Scan(nAction, pnMin);
 			break;
-	
+
 			case 2:
 				BurnYM2203Scan(nAction, pnMin);
 			break;
@@ -716,16 +706,11 @@ void seibu_sound_scan(INT32 *pnMin, INT32 nAction)
 		ZetClose();
 		
 		if ((seibu_snd_type & 8) == 0) {
-			MSM6295Scan(0, nAction);
-			if (seibu_snd_type & 4) {
-				MSM6295Scan(1, nAction);
-			}
+			MSM6295Scan(nAction, pnMin);
 		}
 
-		SCAN_VAR(main2sub[0]);
-		SCAN_VAR(main2sub[1]);
-		SCAN_VAR(sub2main[0]);
-		SCAN_VAR(sub2main[1]);
+		SCAN_VAR(main2sub);
+		SCAN_VAR(sub2main);
 		SCAN_VAR(main2sub_pending);
 		SCAN_VAR(sub2main_pending);
 		SCAN_VAR(SeibuSoundBank);

@@ -193,7 +193,7 @@ UINT8 __fastcall NewsRead(UINT16 a)
 		}
 
 		case 0xc002: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 	}
 
@@ -204,7 +204,7 @@ void __fastcall NewsWrite(UINT16 a, UINT8 d)
 {
 	switch (a) {
 		case 0xc002: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 
@@ -425,7 +425,7 @@ static INT32 NewsScan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);			// Scan Z80
 
-		MSM6295Scan(0, nAction);	// Scan OKIM6295
+		MSM6295Scan(nAction, pnMin);	// Scan OKIM6295
 
 		// Scan critical driver variables
 		SCAN_VAR(NewsInput);

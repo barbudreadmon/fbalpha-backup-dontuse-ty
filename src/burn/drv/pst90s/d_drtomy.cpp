@@ -151,7 +151,7 @@ static UINT8 __fastcall drtomy_read_byte(UINT32 address)
 			return DrvInputs[1];
 
 		case 0x70000f:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -166,7 +166,7 @@ static void __fastcall drtomy_write_byte(UINT32 address, UINT8 data)
 		return;
 
 		case 0x70000f:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -451,7 +451,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA)
 	{
 		SekScan(nAction);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(m6295bank);
 

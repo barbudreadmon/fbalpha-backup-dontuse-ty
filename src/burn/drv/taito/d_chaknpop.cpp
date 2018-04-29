@@ -4,10 +4,7 @@
 #include "tiles_generic.h"
 #include "taito_m68705.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *RamEnd;
@@ -23,7 +20,6 @@ static UINT8 *DrvRAM;
 static UINT8 *DrvMcuRAM;
 static UINT8 *DrvTxtRAM;
 static UINT8 *DrvSprRAM;
-static INT16 *pAY8910Buffer[6];
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
@@ -173,7 +169,7 @@ static struct BurnDIPInfo ChaknpopDIPList[]=
 
 STDDIPINFO(Chaknpop)
 
-UINT8 __fastcall chaknpop_read(UINT16 address)
+static UINT8 __fastcall chaknpop_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -230,7 +226,7 @@ static void bankswitch(INT32 bank)
 	}
 }
 
-void __fastcall chaknpop_write(UINT16 address, UINT8 data)
+static void __fastcall chaknpop_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -362,13 +358,6 @@ static INT32 MemIndex()
 
 	DrvPalette		= (UINT32*)Next; Next += 0x0400 * sizeof(UINT32);
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	AllRam			= Next;
 
 	DrvRAM			= Next; Next += 0x000800;
@@ -441,8 +430,9 @@ static INT32 DrvInit()
 	
 	m67805_taito_init(DrvMcuROM, DrvMcuRAM, &standard_m68705_interface);
 
-	AY8910Init(0, 1536000, nBurnSoundRate, &ay8910_0_read_port_A, &ay8910_0_read_port_B, NULL, NULL);
-	AY8910Init(1, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1536000, 0);
+	AY8910Init(1, 1536000, 1);
+	AY8910SetPorts(0, &ay8910_0_read_port_A, &ay8910_0_read_port_B, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.10, BURN_SND_ROUTE_BOTH);
 
@@ -623,7 +613,7 @@ static INT32 DrvFrame()
 	}
 	
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {

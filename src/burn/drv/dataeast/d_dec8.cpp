@@ -1055,7 +1055,7 @@ static void bankswitch(INT32 data)
 	HD6309MapMemory(DrvMainROM + 0x10000 + RomBank, 0x4000, 0x7fff, MAP_ROM); // bank
 }
 
-void ghostb_main_write(UINT16 address, UINT8 data)
+static void ghostb_main_write(UINT16 address, UINT8 data)
 {
 //	bprintf (0, _T("%4.4x, %2.2x\n"), address, data);
 
@@ -1087,7 +1087,7 @@ void ghostb_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 ghostb_main_read(UINT16 address)
+static UINT8 ghostb_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -1118,7 +1118,7 @@ UINT8 ghostb_main_read(UINT16 address)
 	return 0;
 }
 
-void ghostb_sound_write(UINT16 address, UINT8 data)
+static void ghostb_sound_write(UINT16 address, UINT8 data)
 {
 //	bprintf (0, _T("%4.4x, %2.2x\n"), address, data);
 
@@ -1136,7 +1136,7 @@ void ghostb_sound_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 ghostb_sound_read(UINT16 address)
+static UINT8 ghostb_sound_read(UINT16 address)
 {
 //	bprintf (0, _T("%4.4x, \n"), address);
 
@@ -1148,56 +1148,6 @@ UINT8 ghostb_sound_read(UINT16 address)
 	}
 
 	return 0;
-}
-
-static INT32 DrvYM3812SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6502TotalCycles() * nSoundRate / 1500000;
-}
-
-static INT32 DrvYM3812SynchroniseStreamCsilver(INT32 nSoundRate)
-{
-	return (INT64)M6502TotalCycles() * nSoundRate / (1500000);
-}
-
-static INT32 DrvYM2203SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)HD6309TotalCycles() * nSoundRate / 12000000;
-}
-
-static double DrvYM2203GetTime()
-{
-	return (double)HD6309TotalCycles() / 12000000;
-}
-
-static INT32 DrvYM2203SynchroniseStream6000000(INT32 nSoundRate)
-{
-	return (INT64)HD6309TotalCycles() * nSoundRate / 6000000;
-}
-
-static double DrvYM2203GetTime6000000()
-{
-	return (double)HD6309TotalCycles() / 6000000;
-}
-
-static INT32 DrvYM2203M6809SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6809TotalCycles() * nSoundRate / 2000000;
-}
-
-static double DrvYM2203M6809GetTime()
-{
-	return (double)M6809TotalCycles() / 2000000;
-}
-
-static INT32 DrvYM2203M6809SynchroniseStream1500000(INT32 nSoundRate)
-{
-	return (INT64)M6809TotalCycles() * nSoundRate / (1500000);
-}
-
-static double DrvYM2203M6809GetTime1500000()
-{
-	return (double)M6809TotalCycles() / 1500000;
 }
 
 inline static INT32 CsilverMSM5205SynchroniseStream(INT32 nSoundRate)
@@ -1457,11 +1407,11 @@ static INT32 DrvInit()
 
 	BurnSetRefreshRate(58.00);
 
-	BurnYM3812Init(1, 3000000, &DrvYM3812FMIRQHandler, &DrvYM3812SynchroniseStream, 0);
+	BurnYM3812Init(1, 3000000, &DrvYM3812FMIRQHandler, 0);
 	BurnTimerAttachM6502YM3812(1500000);
 	BurnYM3812SetRoute(0, BURN_SND_YM3812_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203SynchroniseStream, DrvYM2203GetTime, 1);
+	BurnYM2203Init(1, 1500000, NULL, 1);
 	BurnTimerAttachHD6309(12000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.23, BURN_SND_ROUTE_BOTH);
@@ -2139,7 +2089,7 @@ static void m6809_bankswitch(INT32 data)
 
 
 
-void cobra_main_write(UINT16 address, UINT8 data)
+static void cobra_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -2169,7 +2119,7 @@ void cobra_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 cobra_main_read(UINT16 address)
+static UINT8 cobra_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -2342,7 +2292,7 @@ static INT32 CobraInit()
 		CobraGfxDecode();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvMainRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvPf0RAM,		0x0800, 0x0fff, MAP_RAM);
@@ -2368,14 +2318,14 @@ static INT32 CobraInit()
 
 	BurnSetRefreshRate(58.00);
 
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203M6809SynchroniseStream, DrvYM2203M6809GetTime, 0);
+	BurnYM2203Init(1, 1500000, NULL, 0);
 	BurnTimerAttachM6809(2000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.53, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_2, 0.53, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_3, 0.53, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM3812Init(1, 3000000, &DrvYM3812FMIRQHandler, &DrvYM3812SynchroniseStream, 1);
+	BurnYM3812Init(1, 3000000, &DrvYM3812FMIRQHandler, 1);
 	BurnTimerAttachM6502YM3812(1500000);
 	BurnYM3812SetRoute(0, BURN_SND_YM3812_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 
@@ -2873,7 +2823,7 @@ static void srdarwin_i8751_w(INT32 offset, INT32 data)
 	if (i8751_value == 0x800a) i8751_return = 0xf580 + 42; /* End Game(bad address?) */
 }
 
-void srdarwin_main_write(UINT16 address, UINT8 data)
+static void srdarwin_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -2911,7 +2861,7 @@ void srdarwin_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 srdarwin_main_read(UINT16 address)
+static UINT8 srdarwin_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -3016,7 +2966,7 @@ static INT32 SrdarwinInit()
 		SrdarwinGfxDecode();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvMainRAM,		0x0000, 0x05ff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x0600, 0x07ff, MAP_RAM);
@@ -3042,14 +2992,14 @@ static INT32 SrdarwinInit()
 
 	BurnSetRefreshRate(58.00);
 
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203M6809SynchroniseStream, DrvYM2203M6809GetTime, 0);
+	BurnYM2203Init(1, 1500000, NULL, 0);
 	BurnTimerAttachM6809(2000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.23, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_2, 0.23, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_3, 0.23, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM3812Init(1, 3000000, &DrvYM3812FMIRQHandler, &DrvYM3812SynchroniseStream, 1);
+	BurnYM3812Init(1, 3000000, &DrvYM3812FMIRQHandler, 1);
 	BurnTimerAttachM6502YM3812(1500000);
 	BurnYM3812SetRoute(0, BURN_SND_YM3812_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 
@@ -3341,7 +3291,7 @@ static struct BurnRomInfo srdarwnjRomDesc[] = {
 	{ "dy03.b4",		0x10000, 0x44f2a4f9, 5 }, // 10 gfx3
 	{ "dy02.b5",		0x10000, 0x522d9a9e, 5 }, // 11
 
-	{ "id8751h.mcu",	0x01000, 0x11cd6ca4, 6  }, // 12 mcu
+	{ "id8751h_japan.mcu",	0x01000, 0x4ac2ca9d, 6  }, // 12 mcu
 
 	{ "dy12.f4",		0x00100, 0xebfaaed9, 7 }, // 13 proms
 };
@@ -3430,7 +3380,7 @@ static void garyoret_i8751_write(INT32 offset, UINT8 data)
 	if ((i8751_value >> 8) == 0x06 && coin1 && !offset) {i8751_return = 0x600; coin1--; } /* Coin 1 clear */
 }
 
-void gondo_main_write(UINT16 address, UINT8 data)
+static void gondo_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -3471,7 +3421,7 @@ void gondo_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 gondo_main_read(UINT16 address)
+static UINT8 gondo_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -3507,7 +3457,7 @@ UINT8 gondo_main_read(UINT16 address)
 	return 0;
 }
 
-UINT8 garyoret_main_read(UINT16 address)
+static UINT8 garyoret_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -3533,7 +3483,7 @@ UINT8 garyoret_main_read(UINT16 address)
 	return 0;
 }
 
-void gondo_sound_write(UINT16 address, UINT8 data)
+static void gondo_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -3729,11 +3679,11 @@ static INT32 GondoInit()
 
 	BurnSetRefreshRate(58.00);
 
-	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, &DrvYM3812SynchroniseStream, 0);
+	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, 0);
 	BurnTimerAttachM6502YM3526(1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203SynchroniseStream, DrvYM2203GetTime, 1);
+	BurnYM2203Init(1, 1500000, NULL, 1);
 	BurnTimerAttachHD6309(12000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.23, BURN_SND_ROUTE_BOTH);
@@ -4113,7 +4063,7 @@ struct BurnDriver BurnDrvGaryoret = {
 
 
 
-UINT8 oscar_main_read(UINT16 address)
+static UINT8 oscar_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -4136,7 +4086,7 @@ UINT8 oscar_main_read(UINT16 address)
 	return 0;
 }
 
-void oscar_main_write(UINT16 address, UINT8 data)
+static void oscar_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -4185,7 +4135,7 @@ void oscar_main_write(UINT16 address, UINT8 data)
 }
 
 
-void oscar_sub_write(UINT16 address, UINT8 )
+static void oscar_sub_write(UINT16 address, UINT8 )
 {
 	switch (address)
 	{
@@ -4340,11 +4290,11 @@ static INT32 OscarInit()
 
 	BurnSetRefreshRate(58.00);
 
-	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, &DrvYM3812SynchroniseStream, 0);
+	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, 0);
 	BurnTimerAttachM6502YM3526(1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203SynchroniseStream6000000, DrvYM2203GetTime6000000, 1);
+	BurnYM2203Init(1, 1500000, NULL, 1);
 	BurnTimerAttachHD6309(6000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.23, BURN_SND_ROUTE_BOTH);
@@ -4500,8 +4450,6 @@ static struct BurnRomInfo oscarRomDesc[] = {
 	{ "ed03",		0x10000, 0x4fc4fb0f, 6 }, // 10
 	{ "ed00",		0x10000, 0xac201f2d, 6 }, // 11
 	{ "ed02",		0x10000, 0x7ddc5651, 6 }, // 12
-
-	{ "id8751h.mcu",	0x01000, 0x00000000, 7 | BRF_NODUMP }, // 13 mcu
 };
 
 STD_ROM_PICK(oscar)
@@ -4539,8 +4487,6 @@ static struct BurnRomInfo oscaruRomDesc[] = {
 	{ "ed03",		0x10000, 0x4fc4fb0f, 6 }, // 10
 	{ "ed00",		0x10000, 0xac201f2d, 6 }, // 11
 	{ "ed02",		0x10000, 0x7ddc5651, 6 }, // 12
-
-	{ "id8751h.mcu",	0x01000, 0x00000000, 7 | BRF_NODUMP }, // 13 mcu
 
 	{ "du-13.bin",		0x00200, 0xbea1f87e, 8 }, // 14 proms
 };
@@ -4581,8 +4527,6 @@ static struct BurnRomInfo oscarj1RomDesc[] = {
 	{ "ed00",		0x10000, 0xac201f2d, 6 }, // 11
 	{ "ed02",		0x10000, 0x7ddc5651, 6 }, // 12
 
-	{ "id8751h.mcu",	0x01000, 0x00000000, 7 | BRF_NODUMP }, // 13 mcu
-
 	{ "du-13.bin",		0x00200, 0xbea1f87e, 8 }, // 14 proms
 };
 
@@ -4621,8 +4565,6 @@ static struct BurnRomInfo oscarj2RomDesc[] = {
 	{ "ed03",		0x10000, 0x4fc4fb0f, 6 }, // 10
 	{ "ed00",		0x10000, 0xac201f2d, 6 }, // 11
 	{ "ed02",		0x10000, 0x7ddc5651, 6 }, // 12
-
-	{ "id8751h.mcu",	0x01000, 0x00000000, 7 | BRF_NODUMP }, // 13 mcu
 
 	{ "du-13.bin",		0x00200, 0xbea1f87e, 8 }, // 14 proms
 };
@@ -4714,7 +4656,7 @@ static void shackled_i8751_write(INT32 offset, INT32 data)
 static INT32 stopsubcpu = 0;
 static INT32 nLastMiss = 0;
 
-void lastmiss_main_write(UINT16 address, UINT8 data)
+static void lastmiss_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -4804,7 +4746,7 @@ void lastmiss_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 lastmiss_main_read(UINT16 address)
+static UINT8 lastmiss_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -4959,7 +4901,7 @@ static INT32 LastmissInit()
 		LastmissGfxDecode();
 	}
 
-	M6809Init(2);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvMainRAM,		 0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvPalRAM,		 0x1000, 0x17ff, MAP_RAM);
@@ -4973,6 +4915,7 @@ static INT32 LastmissInit()
 	M6809SetReadHandler(lastmiss_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvMainRAM,		 0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvPalRAM,		 0x1000, 0x17ff, MAP_RAM);
@@ -4995,11 +4938,11 @@ static INT32 LastmissInit()
 
 	BurnSetRefreshRate(58.00);
 
-	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, &DrvYM3812SynchroniseStream, 0);
+	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, 0);
 	BurnTimerAttachM6502YM3526(1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203M6809SynchroniseStream, DrvYM2203M6809GetTime, 1);
+	BurnYM2203Init(1, 1500000, NULL, 1);
 	BurnTimerAttachM6809(2000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.23, BURN_SND_ROUTE_BOTH);
@@ -5381,7 +5324,7 @@ static struct BurnRomInfo shackledRomDesc[] = {
 	{ "dk-09.15k",		0x10000, 0xc1557fac, 7 }, // 19
 	{ "dk-08.17k",		0x10000, 0x5e54e9f5, 7 }, // 20
 
-	{ "dk.18a",			0x01000, 0x00000000, 4 | BRF_NODUMP }, //  7 mcu
+	{ "dk.18a",			0x01000, 0x1af06149, 4 | BRF_OPT }, //  7 mcu
 	
 	{ "dk-20.9c",		0x00100, 0xff3cd588, 0 | BRF_OPT }, // priority PROM
 };
@@ -5429,7 +5372,7 @@ static struct BurnRomInfo breywoodRomDesc[] = {
 	{ "dj09.15k",	0x10000, 0xe37d5dbe, 7 }, // 19
 	{ "dj08.17k",	0x10000, 0xbeee880f, 7 }, // 20
 
-	{ "dj.18a",		0x01000, 0x00000000, 4 | BRF_NODUMP }, //  7 mcu
+	{ "dj.18a",		0x01000, 0x4cb20332, 4 }, //  7 mcu
 	
 	{ "dk-20.9c",		0x00100, 0xff3cd588, 0 | BRF_OPT }, // priority PROM
 };
@@ -5496,7 +5439,7 @@ static void csilver_i8751_write(INT32 offset, UINT8 data)
 	}
 }
 
-void csilver_main_write(UINT16 address, UINT8 data)
+static void csilver_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -5557,7 +5500,7 @@ void csilver_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 csilver_main_read(UINT16 address)
+static UINT8 csilver_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -5593,7 +5536,7 @@ static void csilver_sound_bank(INT32 data)
 	M6502MapMemory(DrvM6502ROM + 0x10000 + SndRomBank * 0x4000, 0x4000, 0x7fff, MAP_ROM);
 }
 
-void csilver_sound_write(UINT16 address, UINT8 data)
+static void csilver_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -5621,7 +5564,7 @@ void csilver_sound_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 csilver_sound_read(UINT16 address)
+static UINT8 csilver_sound_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -5690,7 +5633,7 @@ static INT32 CsilverInit()
 		LastmissGfxDecode();
 	}
 
-	M6809Init(2);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvMainRAM + 0x00000,		0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvPalRAM,			0x1000, 0x17ff, MAP_RAM); // xxxxbbbbggggrrrr
@@ -5704,6 +5647,7 @@ static INT32 CsilverInit()
 	M6809SetReadHandler(csilver_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvMainRAM + 0x00000,		0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvPalRAM,			0x1000, 0x17ff, MAP_RAM); // xxxxbbbbggggrrrr
@@ -5727,11 +5671,11 @@ static INT32 CsilverInit()
 
 	BurnSetRefreshRate(58.00);
 
-	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, &DrvYM3812SynchroniseStreamCsilver, 0);
+	BurnYM3526Init(3000000, &DrvYM3812FMIRQHandler, 0);
 	BurnTimerAttachM6502YM3526(1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 0.70, BURN_SND_ROUTE_BOTH);
 	
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203M6809SynchroniseStream1500000, DrvYM2203M6809GetTime1500000, 1);
+	BurnYM2203Init(1, 1500000, NULL, 1);
 	BurnTimerAttachM6809(1500000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.23, BURN_SND_ROUTE_BOTH);

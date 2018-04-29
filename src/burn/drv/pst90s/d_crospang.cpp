@@ -240,7 +240,7 @@ void __fastcall crospang_sound_out(UINT16 port, UINT8 data)
 		return;
 
 		case 0x02:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -253,7 +253,7 @@ UINT8 __fastcall crospang_sound_in(UINT16 port)
 			return BurnYM3812Read(0, 0);
 
 		case 0x02:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x06:
 			return *soundlatch;
@@ -666,7 +666,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		ZetScan(nAction);
 
 		BurnYM3812Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 	}
 
 	return 0;

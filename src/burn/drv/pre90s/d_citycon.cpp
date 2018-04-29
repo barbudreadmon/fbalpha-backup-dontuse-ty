@@ -171,6 +171,9 @@ static UINT8 citycon_sound_read(UINT16 address)
 		case 0x6000:
 		case 0x6001:
 			return BurnYM2203Read(0, address & 1);
+
+		case 0x4002:
+			return BurnYM2203Read(1, 1); // psg status
 	}
 
 	return 0;
@@ -184,16 +187,6 @@ static UINT8 citycon_ym2203_portA(UINT32 )
 static UINT8 citycon_ym2203_portB(UINT32 )
 {
 	return soundlatch[1];
-}
-
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6809TotalCycles() * nSoundRate / 640000;
-}
-
-inline static double DrvGetTime()
-{
-	return (double)M6809TotalCycles() / 640000.0;
 }
 
 static INT32 DrvDoReset()
@@ -344,7 +337,7 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 
-	M6809Init(2);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM0,	0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvVidRAM,	0x1000, 0x1fff, MAP_RAM);
@@ -356,6 +349,7 @@ static INT32 DrvInit()
 	M6809SetReadHandler(citycon_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809RAM1,	0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM1,	0x8000, 0xffff, MAP_ROM);
@@ -363,7 +357,8 @@ static INT32 DrvInit()
 	M6809SetReadHandler(citycon_sound_read);
 	M6809Close();
 
-	BurnYM2203Init(2, 1250000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	// note: 2nd ym2203 is used only for its ay8910 psg
+	BurnYM2203Init(2, 1250000, NULL, 0);
 	BurnYM2203SetPorts(0, &citycon_ym2203_portA, &citycon_ym2203_portB, NULL, NULL);
 	BurnTimerAttachM6809(640000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.40, BURN_SND_ROUTE_BOTH);

@@ -816,7 +816,7 @@ UINT8 __fastcall twin16_sound_read(UINT16 address)
 
 		case 0xc000:
 		case 0xc001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xf000:
 			return UPD7759BusyRead(0) ? 1 : 0;
@@ -1498,8 +1498,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		SekScan(nAction);
 		ZetScan(nAction);
 
-		UPD7759Scan(0, nAction, pnMin);
-		BurnYM2151Scan(nAction);
+		UPD7759Scan(nAction, pnMin);
+		BurnYM2151Scan(nAction, pnMin);
 		K007232Scan(nAction, pnMin);
 
 		SCAN_VAR(gfx_bank);

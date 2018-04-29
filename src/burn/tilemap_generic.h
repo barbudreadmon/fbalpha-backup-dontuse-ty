@@ -13,8 +13,11 @@
 // flip the tilemap on the screen vertically and horizontally (used with GenericTilemapSetFlip )
 #define TMAP_FLIPXY		(TMAP_FLIPX | TMAP_FLIPY)
 
-// force the tilemap to ignore any transparency settings
+// force the tilemap to ignore any transparency settings and any tile skipping
 #define TMAP_FORCEOPAQUE	(1 << 24)
+
+// force the tilemap to ignore transparency, but do not skip tiles
+#define TMAP_DRAWOPAQUE		(1 << 25)
 
 // set tilemap to use transparent color (is set when using GenericTilemapSetTransparent)
 #define TMAP_TRANSPARENT	(1 <<  9)
@@ -51,11 +54,12 @@
 #define TILE_GROUP(x)		(((x) << 16) | TILE_GROUP_ENABLE)
 
 // This are used to make sure the tilemap functions are given standard names
-#define tilemap_callback( xname )	void xname##_map_callback(INT32 offs, INT32 *tile_gfx, INT32 *tile_code, INT32 *tile_color, UINT32 *tile_flags)
+#define tilemap_callback( xname )	void xname##_map_callback(INT32 offs, INT32 *tile_gfx, INT32 *tile_code, INT32 *tile_color, UINT32 *tile_flags, INT32 *category)
 #define tilemap_scan( xname )		INT32 xname##_map_scan(INT32 col, INT32 row)
 
 // Pass the tilemap callback variables using this macro (looks nice)
 #define TILE_SET_INFO(ttgfx, ttcode, ttcolor, ttflags)	\
+	*category = 0;		\
 	*tile_gfx = (ttgfx);	\
 	*tile_code = (ttcode);	\
 	*tile_color = (ttcolor);	\
@@ -78,7 +82,7 @@ extern tilemap_scan( scan_cols );
 // tile_height	- how many pixels tall are the tiles
 // map_width	- how many tiles wide is the tile map
 // map_height	- how many tiles high is the tile map
-void GenericTilemapInit(INT32 which, INT32 (*pScan)(INT32 col, INT32 row), void (*pTile)(INT32 offs, INT32 *tile_gfx, INT32 *tile_code, INT32 *tile_color, UINT32 *tile_flags), UINT32 tile_width, UINT32 tile_height, UINT32 map_width, UINT32 map_height);
+void GenericTilemapInit(INT32 which, INT32 (*pScan)(INT32 col, INT32 row), void (*pTile)(INT32 offs, INT32 *tile_gfx, INT32 *tile_code, INT32 *tile_color, UINT32 *tile_flags, INT32 *category), UINT32 tile_width, UINT32 tile_height, UINT32 map_width, UINT32 map_height);
 
 // SetGfx sets information on the tile data the tile map is drawing.
 // This MUST be used in conjunction with GenericTilemapInit
@@ -98,12 +102,14 @@ void GenericTilemapExit();
 // Set a single transparent color 0 - 255
 void GenericTilemapSetTransparent(INT32 which, UINT32 transparent);
 
-// Set a mask for transparent colors, only works with 4bpp or less tiles
-void GenericTilemapSetTransMask(INT32 which, UINT16 transmask);
+// Set how many categories for this tilemap
+void GenericTilemapCategoryConfig(INT32 which, INT32 categories);
 
-// Set entry (color) in transparency table (1 if transparent, 0 if opaque)
-// works for depths from 1bpp (2 entries) to 8bpp (256 entries)
-void GenericTilemapSetTransTable(INT32 which, INT32 color, INT32 transparent);
+// Set each entry - (1 if transparent, 0 if opaque) (configure categories first!)
+void GenericTilemapSetCategoryEntry(INT32 which, INT32 category, INT32 entry, INT32 transparent);
+
+// Set a mask for transparent colors, only works with 4bpp or less tiles (configure categories first!)
+void GenericTilemapSetTransMask(INT32 which, INT32 category, UINT16 transmask);
 
 // Set scroll x (horizontal) for the tilemap
 void GenericTilemapSetScrollX(INT32 which, INT32 scrollx);
@@ -139,3 +145,6 @@ void GenericTilemapSetEnable(INT32 which, INT32 enable);
 // Bitmap	- pointer to the bitmap to draw the tilemap
 // priority	- this will be used to set priority data, group is data passed in this variable using TILE_GROUP(x)
 void GenericTilemapDraw(INT32 which, UINT16 *Bitmap, INT32 priority);
+
+// Dump all tilemaps to bitmap files
+void GenericTilemapDumpToBitmap();

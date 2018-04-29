@@ -169,16 +169,16 @@ STD_ROM_FN(bgaregtw)
 static struct BurnRomInfo bgareggablRomDesc[] = {
 	{ "xt-8m.bin",    0x100000, 0x4a6657cb, BRF_ESS | BRF_PRG }, //  0 CPU #0 code
 
-	{ "6#-322",       0x400000, 0x37fe48ed, BRF_GRA },			 //  1 GP9001 Tile data // rom4.bin + rom3.bin
-	{ "5#-322",       0x400000, 0x5a06c031, BRF_GRA },			 //  2					// rom2.bin + rom1.bin
+	{ "6@-322",       0x400000, 0x37fe48ed, BRF_GRA },			 //  1 GP9001 Tile data // rom4.bin + rom3.bin
+	{ "5@-322",       0x400000, 0x5a06c031, BRF_GRA },			 //  2					// rom2.bin + rom1.bin
 
-	{ "1#-256",       0x008000, 0x760dcd14, BRF_GRA },			 //  3 Extra text layer tile data
+	{ "1@-256",       0x008000, 0x760dcd14, BRF_GRA },			 //  3 Extra text layer tile data
 
 	{ "snd.bin",      0x020000, 0x68632952, BRF_ESS | BRF_PRG }, //  4 Z80 program
 
 	{ "rom5.bin",     0x100000, 0xF6D49863, BRF_SND },			 //  5 MSM6295 ADPCM data
 	
-	{ "2#-256",       0x008000, 0x456dd16e, BRF_GRA },			 //  6 (looks like garbage)
+	{ "2@-256",       0x008000, 0x456dd16e, BRF_GRA },			 //  6 (looks like garbage)
 };
 
 
@@ -469,8 +469,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);				// Scan Z80
 		SCAN_VAR(nCurrentBank);
 
-		MSM6295Scan(0, nAction);
-		BurnYM2151Scan(nAction);
+		MSM6295Scan(nAction, pnMin);
+		BurnYM2151Scan(nAction, pnMin);
 
 		ToaScanGP9001(nAction, pnMin);
 
@@ -561,10 +561,10 @@ UINT8 __fastcall battlegZ80Read(UINT16 nAddress)
 //	bprintf(0, _T("z80 read %4X\n"), nAddress);
 	switch (nAddress) {
 		case 0xE001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xE004:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xE01C:
 			return nSoundCommand;
@@ -588,7 +588,7 @@ void __fastcall battlegZ80Write(UINT16 nAddress, UINT8 nValue)
 			break;
 
 		case 0xE004:
-			MSM6295Command(0, nValue);
+			MSM6295Write(0, nValue);
 			break;
 
 		case 0xE006:

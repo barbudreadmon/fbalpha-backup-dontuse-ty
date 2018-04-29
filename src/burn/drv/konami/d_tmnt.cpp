@@ -69,6 +69,8 @@ static UINT8 DrvVBlank;
 
 static INT32 InitEEPROMCount;
 
+static INT32 uses_k007232 = 0;
+
 static const eeprom_interface BlswhstlEEPROMInterface =
 {
 	7,
@@ -2440,6 +2442,7 @@ static INT32 DrvDoReset()
 	ZetReset();
 	ZetClose();
 	
+	if (uses_k007232) K007232Reset(0);
 	BurnYM2151Reset();
 	
 	KonamiICReset();
@@ -2458,6 +2461,7 @@ static INT32 TmntDoReset()
 {
 	INT32 nRet = DrvDoReset();
 	
+	if (uses_k007232) K007232Reset(0);
 	UPD7759Reset();
 	
 	UPD7759StartWrite(0, 0);
@@ -2868,7 +2872,7 @@ UINT8 __fastcall Cuebrick68KReadByte(UINT32 a)
 			return 0xff;
 			
 		case 0x0c0002: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		default: {
@@ -4031,7 +4035,7 @@ UINT8 __fastcall TmntZ80Read(UINT16 a)
 		}
 		
 		case 0xc001: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		case 0xf000: {
@@ -4106,8 +4110,10 @@ UINT8 __fastcall MiaZ80Read(UINT16 a)
 		}
 		
 		case 0xc001: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
+
+		case 0xf000: return 0; // NOP
 		
 		default: {
 			bprintf(PRINT_NORMAL, _T("Z80 Read => %04X\n"), a);
@@ -4134,6 +4140,8 @@ void __fastcall MiaZ80Write(UINT16 a, UINT8 d)
 			BurnYM2151WriteRegister(d);
 			return;
 		}
+
+		case 0xf000: return; // NOP
 		
 		default: {
 			bprintf(PRINT_NORMAL, _T("Z80 Write => %04X, %02X\n"), a, d);
@@ -4150,7 +4158,7 @@ UINT8 __fastcall BlswhstlZ80Read(UINT16 a)
 	
 	switch (a) {
 		case 0xf801: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		default: {
@@ -4228,7 +4236,7 @@ UINT8 __fastcall Thndrx2Z80Read(UINT16 a)
 	{
 		case 0xf801:
 		case 0xf811:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 	}
 
 	return 0;
@@ -4263,7 +4271,7 @@ UINT8 __fastcall LgtnfghtZ80Read(UINT16 a)
 	switch (a)
 	{
 		case 0xa001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 	}
 
 	return 0;
@@ -4654,7 +4662,8 @@ static INT32 TmntInit()
 	K007232Init(0, 3579545, DrvSoundRom, 0x20000);
 	K007232SetPortWriteHandler(0, DrvK007232VolCallback);
 	K007232PCMSetAllRoutes(0, 0.33, BURN_SND_ROUTE_BOTH);
-	
+	uses_k007232 = 1;
+
 	UPD7759Init(0, UPD7759_STANDARD_CLOCK, DrvUPD7759CRom);
 	UPD7759SetRoute(0, 0.60, BURN_SND_ROUTE_BOTH);
 	
@@ -4754,6 +4763,7 @@ static INT32 MiaInit()
 	K007232Init(0, 3579545, DrvSoundRom, 0x20000);
 	K007232SetPortWriteHandler(0, DrvK007232VolCallback);
 	K007232PCMSetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
+	uses_k007232 = 1;
 	
 	LayerColourBase[0] = 0;
 	LayerColourBase[1] = 32;
@@ -5471,6 +5481,7 @@ static INT32 CommonExit()
 	BlswhstlTileRomBank = 0;
 	DrvVBlank = 0;
 	InitEEPROMCount = 0;
+	uses_k007232 = 0;
 
 	return 0;
 }
@@ -6344,7 +6355,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
 		
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 
 		// Scan critical driver variables
 		SCAN_VAR(nCyclesDone);
@@ -6369,7 +6380,7 @@ static INT32 TmntScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
 		K007232Scan(nAction, pnMin);
-		UPD7759Scan(0, nAction, pnMin);
+		UPD7759Scan(nAction, pnMin);
 	}
 	
 	return DrvScan(nAction, pnMin);
@@ -6409,7 +6420,7 @@ static INT32 BlswhstlScan(INT32 nAction, INT32 *pnMin)
 {
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
-		K053260Scan(nAction);
+		K053260Scan(nAction, pnMin);
 				
 		SCAN_VAR(InitEEPROMCount);
 	}
@@ -6423,7 +6434,7 @@ static INT32 SsridersScan(INT32 nAction, INT32 *pnMin)
 {
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
-		K053260Scan(nAction);
+		K053260Scan(nAction, pnMin);
 				
 		SCAN_VAR(InitEEPROMCount);
 		SCAN_VAR(DrvVBlank);
@@ -6438,7 +6449,7 @@ static INT32 Thndrx2aScan(INT32 nAction, INT32 *pnMin)
 {
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
-		K053260Scan(nAction);
+		K053260Scan(nAction, pnMin);
 	}
 	
 	return DrvScan(nAction, pnMin);

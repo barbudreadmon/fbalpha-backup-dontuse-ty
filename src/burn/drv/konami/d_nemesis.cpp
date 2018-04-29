@@ -11,10 +11,7 @@
 #include "vlm5030.h"
 #include "burn_ym2151.h"
 #include "flt_rc.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 #include "burn_shift.h"
 
 static UINT8 *AllMem;
@@ -40,8 +37,6 @@ static UINT8 *DrvCharRAMExp;
 static UINT8 *DrvScrollRAM;
 static UINT8 *DrvShareRAM;
 static UINT8 *DrvZ80RAM;
-
-static INT16 *pAY8910Buffer[6];
 
 static UINT32 *DrvPalette;
 static UINT8  DrvRecalc;
@@ -71,7 +66,7 @@ static UINT8 DrvJoy4[16];
 static UINT8 DrvDips[4];
 static UINT8 DrvReset;
 static UINT16 DrvInputs[4];
-static INT32 DrvAnalogPort0 = 0;
+static INT16 DrvAnalogPort0 = 0;
 static INT16 DrvDial1;
 
 static INT32 ay8910_enable = 0;
@@ -146,6 +141,36 @@ static struct BurnInputInfo SalamandInputList[] = {
 };
 
 STDINPUTINFO(Salamand)
+
+static struct BurnInputInfo LifefrcejInputList[] = {
+	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 start"	},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 up"		},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 down"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 2"	},
+	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 fire 3"	},
+
+	{"P2 Coin",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 coin"	},
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p2 start"	},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 up"		},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 down"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy3 + 0,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
+	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy3 + 6,	"p2 fire 3"	},
+
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
+	{"Service",		BIT_DIGITAL,	DrvJoy1 + 2,	"service"	},
+	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
+	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
+	{"Dip C",		BIT_DIPSWITCH,	DrvDips + 2,	"dip"		},
+};
+
+STDINPUTINFO(Lifefrcej)
 
 static struct BurnInputInfo TwinbeeInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
@@ -328,11 +353,11 @@ STDINPUTINFO(Citybomb)
 
 static struct BurnInputInfo KonamigtInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
-	{"Accelerator",		BIT_DIGITAL,	DrvJoy4 + 6,	"p1 fire 1"	},
-	{"Brake",		BIT_DIGITAL,	DrvJoy4 + 5,	"p1 fire 2"	},
-	{"Gear Shift",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 3"	},
+	{"P1 Accelerator",		BIT_DIGITAL,	DrvJoy4 + 6,	"p1 fire 1"	},
+	{"P1 Brake",		BIT_DIGITAL,	DrvJoy4 + 5,	"p1 fire 2"	},
+	{"P1 Gear Shift",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 3"	},
 
-	A("Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
+	A("P1 Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 2,	"service"	},
@@ -347,11 +372,11 @@ STDINPUTINFO(Konamigt)
 static struct BurnInputInfo HcrashInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 start"	},
-	{"Accelerator",		BIT_DIGITAL,	DrvJoy4 + 6,	"p1 fire 1"	},
-	{"Brake",		BIT_DIGITAL,	DrvJoy4 + 5,	"p1 fire 2"	},
-	{"Jump",		BIT_DIGITAL,	DrvJoy4 + 4,	"p1 fire 3"	},
+	{"P1 Accelerator",		BIT_DIGITAL,	DrvJoy4 + 6,	"p1 fire 1"	},
+	{"P1 Brake",		BIT_DIGITAL,	DrvJoy4 + 5,	"p1 fire 2"	},
+	{"P1 Jump",		BIT_DIGITAL,	DrvJoy4 + 4,	"p1 fire 3"	},
 
-	A("Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
+	A("P1 Wheel"             , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Service",		BIT_DIGITAL,	DrvJoy1 + 2,	"service"	},
@@ -516,70 +541,70 @@ static struct BurnDIPInfo SalamandDIPList[]=
 
 STDDIPINFO(Salamand)
 
-static struct BurnDIPInfo LifefrcjDIPList[]=
+static struct BurnDIPInfo LifefrcejDIPList[]=
 {
-	{0x12, 0xff, 0xff, 0xff, NULL			},
-	{0x13, 0xff, 0xff, 0x42, NULL			},
-	{0x14, 0xff, 0xff, 0x0e, NULL			},
+	{0x14, 0xff, 0xff, 0xff, NULL			},
+	{0x15, 0xff, 0xff, 0x42, NULL			},
+	{0x16, 0xff, 0xff, 0x0e, NULL			},
 
 	{0   , 0xfe, 0   ,   16, "Coinage"		},
-	{0x12, 0x01, 0x0f, 0x02, "4 Coins 1 Credits"	},
-	{0x12, 0x01, 0x0f, 0x05, "3 Coins 1 Credits"	},
-	{0x12, 0x01, 0x0f, 0x08, "2 Coins 1 Credits"	},
-	{0x12, 0x01, 0x0f, 0x04, "3 Coins 2 Credits"	},
-	{0x12, 0x01, 0x0f, 0x01, "4 Coins 3 Credits"	},
-	{0x12, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"	},
-	{0x12, 0x01, 0x0f, 0x03, "3 Coins 4 Credits"	},
-	{0x12, 0x01, 0x0f, 0x07, "2 Coins 3 Credits"	},
-	{0x12, 0x01, 0x0f, 0x0e, "1 Coin  2 Credits"	},
-	{0x12, 0x01, 0x0f, 0x06, "2 Coins 5 Credits"	},
-	{0x12, 0x01, 0x0f, 0x0d, "1 Coin  3 Credits"	},
-	{0x12, 0x01, 0x0f, 0x0c, "1 Coin  4 Credits"	},
-	{0x12, 0x01, 0x0f, 0x0b, "1 Coin  5 Credits"	},
-	{0x12, 0x01, 0x0f, 0x0a, "1 Coin  6 Credits"	},
-	{0x12, 0x01, 0x0f, 0x09, "1 Coin  7 Credits"	},
-	{0x12, 0x01, 0x0f, 0x00, "Disabled"		},
+	{0x14, 0x01, 0x0f, 0x02, "4 Coins 1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x05, "3 Coins 1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x08, "2 Coins 1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x04, "3 Coins 2 Credits"	},
+	{0x14, 0x01, 0x0f, 0x01, "4 Coins 3 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0f, "1 Coin  1 Credits"	},
+	{0x14, 0x01, 0x0f, 0x03, "3 Coins 4 Credits"	},
+	{0x14, 0x01, 0x0f, 0x07, "2 Coins 3 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0e, "1 Coin  2 Credits"	},
+	{0x14, 0x01, 0x0f, 0x06, "2 Coins 5 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0d, "1 Coin  3 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0c, "1 Coin  4 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0b, "1 Coin  5 Credits"	},
+	{0x14, 0x01, 0x0f, 0x0a, "1 Coin  6 Credits"	},
+	{0x14, 0x01, 0x0f, 0x09, "1 Coin  7 Credits"	},
+	{0x14, 0x01, 0x0f, 0x00, "Disabled"		},
 
 	{0   , 0xfe, 0   ,    4, "Lives"		},
-	{0x13, 0x01, 0x03, 0x03, "2"			},
-	{0x13, 0x01, 0x03, 0x02, "3"			},
-	{0x13, 0x01, 0x03, 0x01, "5"			},
-	{0x13, 0x01, 0x03, 0x00, "7"			},
+	{0x15, 0x01, 0x03, 0x03, "2"			},
+	{0x15, 0x01, 0x03, 0x02, "3"			},
+	{0x15, 0x01, 0x03, 0x01, "5"			},
+	{0x15, 0x01, 0x03, 0x00, "7"			},
 
 	{0   , 0xfe, 0   ,    2, "Coin Slot(s)"		},
-	{0x13, 0x01, 0x04, 0x04, "1"			},
-	{0x13, 0x01, 0x04, 0x00, "2"			},
+	{0x15, 0x01, 0x04, 0x04, "1"			},
+	{0x15, 0x01, 0x04, 0x00, "2"			},
 
 	{0   , 0xfe, 0   ,    4, "Max Credit(s)"	},
-	{0x13, 0x01, 0x18, 0x18, "1"			},
-	{0x13, 0x01, 0x18, 0x10, "3"			},
-	{0x13, 0x01, 0x18, 0x08, "5"			},
-	{0x13, 0x01, 0x18, 0x00, "9"			},
+	{0x15, 0x01, 0x18, 0x18, "1"			},
+	{0x15, 0x01, 0x18, 0x10, "3"			},
+	{0x15, 0x01, 0x18, 0x08, "5"			},
+	{0x15, 0x01, 0x18, 0x00, "9"			},
 
 	{0   , 0xfe, 0   ,    4, "Difficulty"		},
-	{0x13, 0x01, 0x60, 0x60, "Easy"			},
-	{0x13, 0x01, 0x60, 0x40, "Normal"		},
-	{0x13, 0x01, 0x60, 0x20, "Hard"			},
-	{0x13, 0x01, 0x60, 0x00, "Hardest"		},
+	{0x15, 0x01, 0x60, 0x60, "Easy"			},
+	{0x15, 0x01, 0x60, 0x40, "Normal"		},
+	{0x15, 0x01, 0x60, 0x20, "Hard"			},
+	{0x15, 0x01, 0x60, 0x00, "Hardest"		},
 
 	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
-	{0x13, 0x01, 0x80, 0x80, "Off"			},
-	{0x13, 0x01, 0x80, 0x00, "On"			},
+	{0x15, 0x01, 0x80, 0x80, "Off"			},
+	{0x15, 0x01, 0x80, 0x00, "On"			},
 
 //	{0   , 0xfe, 0   ,    2, "Flip Screen"		},
-//	{0x14, 0x01, 0x02, 0x02, "Off"			},
-//	{0x14, 0x01, 0x02, 0x00, "On"			},
+//	{0x16, 0x01, 0x02, 0x02, "Off"			},
+//	{0x16, 0x01, 0x02, 0x00, "On"			},
 
 	{0   , 0xfe, 0   ,    2, "Service Mode"		},
-	{0x14, 0x01, 0x08, 0x08, "Off"			},
-	{0x14, 0x01, 0x08, 0x00, "On"			},
+	{0x16, 0x01, 0x08, 0x08, "Off"			},
+	{0x16, 0x01, 0x08, 0x00, "On"			},
 
 	{0   , 0xfe, 0   ,    2, "Cabinet"		},
-	{0x14, 0x01, 0x80, 0x00, "Upright"		},
-	{0x14, 0x01, 0x80, 0x80, "Cocktail"		},
+	{0x16, 0x01, 0x80, 0x00, "Upright"		},
+	{0x16, 0x01, 0x80, 0x80, "Cocktail"		},
 };
 
-STDDIPINFO(Lifefrcj)
+STDDIPINFO(Lifefrcej)
 
 static struct BurnDIPInfo TwinbeeDIPList[]=
 {
@@ -1224,12 +1249,12 @@ static UINT32 scalerange(UINT32 x, UINT32 in_min, UINT32 in_max, UINT32 out_min,
 
 static UINT8 konamigt_read_wheel()
 {
-	UINT8 Temp = 0x7f + (DrvAnalogPort0 >> 4);
-	UINT8 Temp2 = 0;
+	INT16 Temp = 0x80 + (DrvAnalogPort0 / 16);  // - for reversed, + for normal
+	if (Temp < 0x3f) Temp = 0x3f;       // clamping for happy scalerange()
+	if (Temp > 0xbf) Temp = 0xbf;
+	Temp = scalerange(Temp, 0x3f, 0xbf, 0x00, 0x7f);
 
-	Temp2 = scalerange(Temp, 0x3f, 0xc0, 0x00, 0x7f); // konami gt scalings
-	//bprintf(0, _T("Port0-temp[%X] scaled[%X]\n"), Temp, Temp2); // debug, do not remove.
-	return Temp2;
+	return Temp;
 }
 
 static UINT16 konamigt_read_analog(int /*Offset*/)
@@ -1858,7 +1883,7 @@ static UINT8 __fastcall salamand_sound_read(UINT16 address)
 
 		case 0xc000:
 		case 0xc001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xe000:
 			static int flipper;
@@ -2120,13 +2145,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0] 	= (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1] 	= (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2] 	= (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3] 	= (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4] 	= (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5] 	= (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -2150,7 +2168,7 @@ static INT32 DrvDoReset()
 	if (ym2151_enable) BurnYM2151Reset();
 	if (ym3812_enable) BurnYM3812Reset();
 	if (vlm5030_enable) vlm5030Reset(0);
-//	if (k007232_enable) K007232Reset();
+	if (k007232_enable) K007232Reset(0);
 	if (k005289_enable) K005289Reset();
 	if (k051649_enable) K051649Reset();
 	ZetClose();
@@ -2179,8 +2197,10 @@ static void NemesisSoundInit(INT32 konamigtmode)
 	K005289Init(3579545, K005289ROM);
 	K005289SetRoute(BURN_SND_K005289_ROUTE_1, 0.35, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(0, 14318180/8, nBurnSoundRate, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
-	AY8910Init(1, 14318180/8, nBurnSoundRate, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
+	AY8910Init(0, 14318180/8, 0);
+	AY8910Init(1, 14318180/8, 1);
+	AY8910SetPorts(0, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
+	AY8910SetPorts(1, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
 	AY8910SetAllRoutes(0, 0.35, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, (konamigtmode) ? 0.20 : 1.00, BURN_SND_ROUTE_BOTH);
 
@@ -2220,8 +2240,10 @@ static void Gx400SoundInit(INT32 rf2mode)
 	K005289Init(3579545, K005289ROM);
 	K005289SetRoute(BURN_SND_K005289_ROUTE_1, (rf2mode) ? 0.60 : 0.35, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(0, 14318180/8, nBurnSoundRate, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
-	AY8910Init(1, 14318180/8, nBurnSoundRate, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
+	AY8910Init(0, 14318180/8, 0);
+	AY8910Init(1, 14318180/8, 1);
+	AY8910SetPorts(0, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
+	AY8910SetPorts(1, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
 	AY8910SetAllRoutes(0, (rf2mode) ? 0.80 : 0.20, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, (rf2mode) ? 0.40 : 1.00, BURN_SND_ROUTE_BOTH);
 
@@ -2247,8 +2269,10 @@ static void TwinbeeGx400SoundInit()
 	K005289Init(3579545, K005289ROM);
 	K005289SetRoute(BURN_SND_K005289_ROUTE_1, 0.20, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(0, 14318180/8, nBurnSoundRate, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
-	AY8910Init(1, 14318180/8, nBurnSoundRate, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
+	AY8910Init(0, 14318180/8, 0);
+	AY8910Init(1, 14318180/8, 1);
+	AY8910SetPorts(0, &nemesis_AY8910_0_portA, NULL, NULL, NULL);
+	AY8910SetPorts(1, NULL, NULL, &k005289_control_A_write, &k005289_control_B_write);
 	AY8910SetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH); // melody & hat
 	AY8910SetAllRoutes(1, 1.00, BURN_SND_ROUTE_BOTH); // drums, explosions
 
@@ -3138,18 +3162,8 @@ static INT32 NemesisFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
-
-#if 0
-			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
-			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
-			filter_rc_update(2, pAY8910Buffer[2], pSoundBuf, nSegmentLength);
-			filter_rc_update(3, pAY8910Buffer[3], pSoundBuf, nSegmentLength);
-			filter_rc_update(4, pAY8910Buffer[4], pSoundBuf, nSegmentLength);
-			filter_rc_update(5, pAY8910Buffer[5], pSoundBuf, nSegmentLength);
-#endif
-
 		}
 	}
 
@@ -3161,15 +3175,7 @@ static INT32 NemesisFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
-#if 0
-			filter_rc_update(0, pAY8910Buffer[0], pSoundBuf, nSegmentLength);
-			filter_rc_update(1, pAY8910Buffer[1], pSoundBuf, nSegmentLength);
-			filter_rc_update(2, pAY8910Buffer[2], pSoundBuf, nSegmentLength);
-			filter_rc_update(3, pAY8910Buffer[3], pSoundBuf, nSegmentLength);
-			filter_rc_update(4, pAY8910Buffer[4], pSoundBuf, nSegmentLength);
-			filter_rc_update(5, pAY8910Buffer[5], pSoundBuf, nSegmentLength);
-#endif
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 		K005289Update(pBurnSoundOut, nBurnSoundLen);
 	}
@@ -3256,7 +3262,7 @@ static INT32 KonamigtFrame()
 	SekClose();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 		K005289Update(pBurnSoundOut, nBurnSoundLen);
 	}
 
@@ -3560,7 +3566,7 @@ static INT32 Gx400Frame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -3573,7 +3579,7 @@ static INT32 Gx400Frame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 		vlm5030Update(0, pBurnSoundOut, nBurnSoundLen);
 		K005289Update(pBurnSoundOut, nBurnSoundLen);
@@ -3663,13 +3669,13 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekScan(nAction);
 		ZetScan(nAction);
 
-		if (ym2151_enable) BurnYM2151Scan(nAction);
+		if (ym2151_enable) BurnYM2151Scan(nAction, pnMin);
 		if (ym3812_enable) BurnYM3812Scan(nAction, pnMin);
 		if (ay8910_enable) AY8910Scan(nAction, pnMin);
 		if (k005289_enable) K005289Scan(nAction, pnMin);
 		if (k007232_enable) K007232Scan(nAction, pnMin);
 		if (k051649_enable) K051649Scan(nAction, pnMin);
-		if (vlm5030_enable) vlm5030Scan(nAction);
+		if (vlm5030_enable) vlm5030Scan(nAction, pnMin);
 		if (bUseShifter) BurnShiftScan(nAction);
 
 		SCAN_VAR(selected_ip);
@@ -3894,7 +3900,7 @@ struct BurnDriver BurnDrvLifefrcej = {
 	"Lifeforce (Japan)\0", NULL, "Konami", "GX587",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_KONAMI_68K_Z80, GBF_HORSHOOT, 0,
-	NULL, lifefrcejRomInfo, lifefrcejRomName, NULL, NULL, SalamandInputInfo, LifefrcjDIPInfo,
+	NULL, lifefrcejRomInfo, lifefrcejRomName, NULL, NULL, LifefrcejInputInfo, LifefrcejDIPInfo,
 	SalamandInit, DrvExit, SalamandFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	256, 224, 4, 3
 };

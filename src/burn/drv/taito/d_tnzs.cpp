@@ -778,7 +778,7 @@ UINT8 __fastcall tnzs_cpu1_read(UINT16 address)
 
 		case 0xb001:
 			if (tnzs_mcu_type() == MCU_NONE_JPOPNICS)
-				return BurnYM2151ReadStatus();
+				return BurnYM2151Read();
 			return BurnYM2203Read(0, 1);
 
 		case 0xc000:
@@ -913,16 +913,6 @@ static void kageki_ym2203_write_portB(UINT32, UINT32 data)
 inline static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 {
 	Z80SetIrqLine(Z80_INPUT_LINE_NMI, nStatus & 1);
-}
-
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 6000000;
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 6000000;
 }
 
 static INT32 kabukizSyncDAC()
@@ -1358,7 +1348,7 @@ static INT32 Type1Init(INT32 mcutype)
 		BurnYM2151Init(3000000); // jpopnics
 		BurnYM2151SetAllRoutes(0.30, BURN_SND_ROUTE_BOTH);
 	} else {
-		BurnYM2203Init(1, 3000000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+		BurnYM2203Init(1, 3000000, NULL, 0);
 		BurnYM2203SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 
 		if (mcutype == MCU_EXTRMATN || mcutype == MCU_DRTOPPEL) {
@@ -1479,7 +1469,7 @@ static INT32 Type2Init()
 	ZetSetInHandler(tnzs_cpu2_in);
 	ZetClose();
 
-	BurnYM2203Init(1, 3000000, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 3000000, &DrvYM2203IRQHandler, 0);
 	BurnYM2203SetPorts(0, NULL, NULL, &kabukiz_sound_bankswitch, &kabukiz_dac_write);
 	BurnTimerAttachZet(6000000);
 	BurnYM2203SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
@@ -1902,7 +1892,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		ZetScan(nAction);
 
 		if (tnzs_mcu_type() == MCU_NONE_JPOPNICS) {
-			BurnYM2151Scan(nAction);
+			BurnYM2151Scan(nAction, pnMin);
 		} else {
 			BurnYM2203Scan(nAction, pnMin);
 		}
@@ -2075,10 +2065,10 @@ struct BurnDriver BurnDrvExtrmatu = {
 // Extermination (US, Romstar)
 
 static struct BurnRomInfo extrmaturRomDesc[] = {
-	{ "b06_15",			0x10000, 0x4b3ee597, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
-	{ "b06_16",			0x10000, 0x86175ea4, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "b06-15.11c",		0x10000, 0x4b3ee597, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b06-16.9c",		0x10000, 0x86175ea4, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "b06_17",			0x10000, 0x744f2c84, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
+	{ "b06-17.4e",		0x10000, 0x744f2c84, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
 	{ "b06__14.1g",		0x00800, 0x28907072, 3 },        //  3 I8742 MCU
 
@@ -2482,13 +2472,13 @@ struct BurnDriver BurnDrvDrtopplj = {
 };
 
 
-// Kageki (US)
+// Kageki (World)
 
 static struct BurnRomInfo kagekiRomDesc[] = {
-	{ "b35-16.11c",		0x10000, 0xa4e6fd58, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b35-13.bin",		0x10000, 0xdc4b025f, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "b35-10.9c",		0x10000, 0xb150457d, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "b35-17.43e",		0x10000, 0xfdd9c246, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
+	{ "b35-14.bin",		0x10000, 0x8adef2d0, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
 
 	{ "b35__01.13a",	0x20000, 0x01d83a69, 4 | BRF_GRA },	      	  //  3 Graphics
 	{ "b35__02.12a",	0x20000, 0xd8af47ac, 4 | BRF_GRA },	      	  //  4
@@ -2518,10 +2508,50 @@ static INT32 KagekiInit()
 
 struct BurnDriver BurnDrvKageki = {
 	"kageki", NULL, NULL, NULL, "1988",
-	"Kageki (US)\0", NULL, "Taito America Corporation (Romstar license)", "Miscellaneous",
+	"Kageki (World)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
 	NULL, kagekiRomInfo, kagekiRomName, NULL, NULL, CommonInputInfo, KagekiDIPInfo,
+	KagekiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
+	224, 256, 3, 4
+};
+
+
+// Kageki (US)
+
+static struct BurnRomInfo kagekiuRomDesc[] = {
+	{ "b35-16.11c",		0x10000, 0xa4e6fd58, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b35-10.9c",		0x10000, 0xb150457d, 1 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "b35-17.43e",		0x10000, 0xfdd9c246, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
+
+	{ "b35__01.13a",	0x20000, 0x01d83a69, 4 | BRF_GRA },	      	  //  3 Graphics
+	{ "b35__02.12a",	0x20000, 0xd8af47ac, 4 | BRF_GRA },	      	  //  4
+	{ "b35__03.10a",	0x20000, 0x3cb68797, 4 | BRF_GRA },	      	  //  5
+	{ "b35__04.8a",		0x20000, 0x71c03f91, 4 | BRF_GRA },	      	  //  6
+	{ "b35__05.7a",		0x20000, 0xa4e20c08, 4 | BRF_GRA },	      	  //  7
+	{ "b35__06.5a",		0x20000, 0x3f8ab658, 4 | BRF_GRA },	      	  //  8
+	{ "b35__07.4a",		0x20000, 0x1b4af049, 4 | BRF_GRA },	      	  //  9
+	{ "b35__08.2a",		0x20000, 0xdeb2268c, 4 | BRF_GRA },	      	  // 10
+
+	{ "b35-15.98g",		0x10000, 0xe6212a0f, 6 | BRF_SND },	      	  // 11 Samples
+	
+	/* these are shared with extermination except d9 */
+	{ "b06-101.pal16l8a.d9.jed", 0x01000, 0x00000000, 7 | BRF_OPT | BRF_NODUMP }, // 12 Pal
+	{ "b06-11.pal16l8a.d6.jed",  0x01000, 0x00000000, 7 | BRF_OPT | BRF_NODUMP }, // 13 
+	{ "b06-12.pal16l8a.c3.jed",  0x01000, 0x00000000, 7 | BRF_OPT | BRF_NODUMP }, // 14
+	{ "b06-13.pal16l8a.c2.jed",  0x01000, 0x00000000, 7 | BRF_OPT | BRF_NODUMP }, // 15
+};
+
+STD_ROM_PICK(kagekiu)
+STD_ROM_FN(kagekiu)
+
+struct BurnDriver BurnDrvKagekiu = {
+	"kagekiu", "kageki", NULL, NULL, "1988",
+	"Kageki (US)\0", NULL, "Taito America Corporation (Romstar license)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_VSFIGHT, 0,
+	NULL, kagekiuRomInfo, kagekiuRomName, NULL, NULL, CommonInputInfo, KagekiDIPInfo,
 	KagekiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
 };
@@ -2607,7 +2637,7 @@ struct BurnDriver BurnDrvKagekih = {
 };
 
 
-// Chuka Taisen (World)
+// Chuka Taisen (World) (P0-028-A PCB)
 
 static struct BurnRomInfo chukataiRomDesc[] = {
 	{ "b44-10",			0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -2644,7 +2674,7 @@ static INT32 ChukataiInit()
 
 struct BurnDriver BurnDrvChukatai = {
 	"chukatai", NULL, NULL, NULL, "1988",
-	"Chuka Taisen (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
+	"Chuka Taisen (World) (P0-028-A PCB)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
 	NULL, chukataiRomInfo, chukataiRomName, NULL, NULL, CommonInputInfo, ChukataiDIPInfo,
@@ -2653,7 +2683,7 @@ struct BurnDriver BurnDrvChukatai = {
 };
 
 
-// Chuka Taisen (US)
+// Chuka Taisen (US) (P0-028-A PCB)
 
 static struct BurnRomInfo chukatauRomDesc[] = {
 	{ "b44-10",			0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -2686,7 +2716,7 @@ STD_ROM_FN(chukatau)
 
 struct BurnDriver BurnDrvChukatau = {
 	"chukataiu", "chukatai", NULL, NULL, "1988",
-	"Chuka Taisen (US)\0", NULL, "Taito America Corporation", "Miscellaneous",
+	"Chuka Taisen (US) (P0-028-A PCB)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
 	NULL, chukatauRomInfo, chukatauRomName, NULL, NULL, CommonInputInfo, ChukatauDIPInfo,
@@ -2695,7 +2725,7 @@ struct BurnDriver BurnDrvChukatau = {
 };
 
 
-// Chuka Taisen (Japan)
+// Chuka Taisen (Japan) (P0-028-A PCB)
 
 static struct BurnRomInfo chukatajRomDesc[] = {
 	{ "b44-10",			0x10000, 0x8c69e008, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -2727,11 +2757,60 @@ STD_ROM_FN(chukataj)
 
 struct BurnDriver BurnDrvChukataj = {
 	"chukataij", "chukatai", NULL, NULL, "1988",
-	"Chuka Taisen (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
+	"Chuka Taisen (Japan) (P0-028-A PCB)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
 	NULL, chukatajRomInfo, chukatajRomName, NULL, NULL, CommonInputInfo, ChukatauDIPInfo,
 	ChukataiInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
+	256, 224, 4, 3
+};
+
+
+// Chuka Taisen (Japan) (P0-025-A PCB)
+
+static struct BurnRomInfo chukatajaRomDesc[] = {
+	{ "b44-31.11c",		0x10000, 0x134d3c9e, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
+	{ "b44-11.9c",		0x10000, 0x32484094, 1 | BRF_PRG | BRF_ESS }, //  1
+
+	{ "b44-32.4e",		0x10000, 0xf52d2f90, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 #1 Code
+
+	/* Labeled B06-14 and under printed label "Taito M-001, 128P, 720100", is a mask 8042 */
+	{ "b06__14.1g",		0x00800, 0x28907072, 3 | BRF_PRG | BRF_OPT }, //  3 I8742 MCU
+
+	{ "b44-21.rom4l",	0x20000, 0xaae7b3d5, 4 | BRF_GRA },	      	  //  4 Graphics
+	{ "b44-22.rom4h",	0x20000, 0x7f0b9568, 4 | BRF_GRA },	      	  //  5
+	{ "b44-23.rom3l",	0x20000, 0x5a54a3b9, 4 | BRF_GRA },	      	  //  6
+	{ "b44-24.rom3h",	0x20000, 0x3c5f544b, 4 | BRF_GRA },	      	  //  7
+	{ "b44-25.rom2l",	0x20000, 0xd1b7e314, 4 | BRF_GRA },	      	  //  8
+	{ "b44-26.rom2h",	0x20000, 0x269978a8, 4 | BRF_GRA },	      	  //  9
+	{ "b44-27.rom1l",	0x20000, 0x3e0e737e, 4 | BRF_GRA },	      	  // 10
+	{ "b44-28.rom1h",	0x20000, 0x6cb1e8fc, 4 | BRF_GRA },	      	  // 11
+	
+	{ "b44-30.15f",		0x00200, 0xb3de8312, 5 | BRF_GRA },	      	  // 12 Color PROMs
+	{ "b44-29.17f",		0x00200, 0xae44b8fb, 5 | BRF_GRA },	      	  // 13
+	
+	/* these are shared with extermination */
+	{ "b06-10.pal16l8a.d9.jed",  0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 14 Pal
+	{ "b06-11.pal16l8a.d6.jed",  0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 15 
+	{ "b06-12.pal16l8a.c3.jed",  0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 16
+	{ "b06-13.pal16l8a.c2.jed",  0x01000, 0x00000000, 5 | BRF_OPT | BRF_NODUMP }, // 17
+};
+
+STD_ROM_PICK(chukataja)
+STD_ROM_FN(chukataja)
+
+static INT32 ChukataijaInit()
+{
+	return Type1Init(MCU_DRTOPPEL);
+}
+
+struct BurnDriver BurnDrvChukataja = {
+	"chukataija", "chukatai", NULL, NULL, "1988",
+	"Chuka Taisen (Japan) (P0-025-A PCB)\0", NULL, "Taito Corporation", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_HORSHOOT, 0,
+	NULL, chukatajaRomInfo, chukatajaRomName, NULL, NULL, CommonInputInfo, ChukatauDIPInfo,
+	ChukataijaInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3
 };
 
@@ -2987,7 +3066,7 @@ static struct BurnRomInfo tnzsopRomDesc[] = {
 
 	{ "e-3__6-24__c4ach.tmm27512d-20.u38",	0x10000, 0xc7662e96, 2 | BRF_PRG | BRF_ESS }, //  1 Z80 #1 Code
 
-	{ "b8042h__'88-6-22__0fcc.d8742.u46",	0x00800, 0xa4bfce19, 3 | BRF_PRG | BRF_OPT }, //  2 I8742 MCU
+	{ "b8042h___88-6-22__0fcc.d8742.u46",	0x00800, 0xa4bfce19, 3 | BRF_PRG | BRF_OPT }, //  2 I8742 MCU
 
 	{ "a13__03e8.d27c1000d-15.a13",			0x20000, 0x7e0bd5bb, 4 | BRF_GRA },	      	  //  3 Graphics
 	{ "a12__f4ec.d27c1000d-15.a12",			0x20000, 0x95880726, 4 | BRF_GRA },	      	  //  4

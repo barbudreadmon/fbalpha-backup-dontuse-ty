@@ -653,6 +653,8 @@ void MenuUpdate()
 
 	CheckMenuItem(hMenu, MENU_TRIPLE, bVidTripleBuffer ? MF_CHECKED : MF_UNCHECKED);
 
+	CheckMenuItem(hMenu, MENU_DWMFIX, bVidDWMSync ? MF_CHECKED : MF_UNCHECKED);
+
 	var = nVidSelect + MENU_BLITTER_1;
 	CheckMenuRadioItem(hMenu, MENU_BLITTER_1, MENU_BLITTER_8, var, MF_BYCOMMAND);
 
@@ -971,6 +973,7 @@ void MenuUpdate()
 	CheckMenuItem(hMenu, MENU_DISPLAYINDICATOR, nVidSDisplayStatus ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(hMenu, MENU_MODELESS, bModelessMenu ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(hMenu, MENU_NOCHANGENUMLOCK, bNoChangeNumLock ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, MENU_HIGHRESTIMER, bEnableHighResTimer ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(hMenu, MENU_CREATEDIRS, bAlwaysCreateSupportFolders ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(hMenu, MENU_SAVEHISCORES, EnableHiscores ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(hMenu, MENU_USEBLEND, bBurnUseBlend ? MF_CHECKED : MF_UNCHECKED);
@@ -1035,6 +1038,7 @@ void MenuUpdate()
 	}
 	CheckMenuRadioItem(hMenu, MENU_ICONS_SIZE_16, MENU_ICONS_SIZE_32, var, MF_BYCOMMAND);
 	CheckMenuItem(hMenu, MENU_ENABLEICONS, bEnableIcons ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, MENU_ICONS_PARENTSONLY, bIconsOnlyParents ? MF_CHECKED : MF_UNCHECKED);
 	
 	// Previous games list
 	for (int i = 0; i < SHOW_PREV_GAMES; i++) {

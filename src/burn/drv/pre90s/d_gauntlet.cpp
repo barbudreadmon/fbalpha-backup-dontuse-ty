@@ -6,6 +6,7 @@
 #include "m6502_intf.h"
 #include "burn_ym2151.h"
 #include "pokey.h"
+#include "tms5220.h"
 
 //#define SNDCPUDBG
 
@@ -504,7 +505,8 @@ static INT32 nCyclesSegment;
 
 static UINT8 DrvGameType;
 
-
+static UINT8 speech_val;
+static UINT8 last_speech_write;
 
 
 struct atarigen_modesc
@@ -845,20 +847,20 @@ static struct BurnRomInfo GauntletRomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntlet)
@@ -875,7 +877,7 @@ static struct BurnRomInfo GauntletsRomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },		//  8	Characters
 	
 	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
 	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
@@ -905,20 +907,20 @@ static struct BurnRomInfo GauntletjRomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletj)
@@ -935,20 +937,20 @@ static struct BurnRomInfo GauntletgRomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletg)
@@ -965,20 +967,20 @@ static struct BurnRomInfo Gauntletj12RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletj12)
@@ -995,20 +997,20 @@ static struct BurnRomInfo Gauntletr9RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletr9)
@@ -1025,20 +1027,20 @@ static struct BurnRomInfo Gauntletgr8RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletgr8)
@@ -1055,20 +1057,20 @@ static struct BurnRomInfo Gauntletr7RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletr7)
@@ -1085,20 +1087,20 @@ static struct BurnRomInfo Gauntletgr6RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletgr6)
@@ -1115,20 +1117,20 @@ static struct BurnRomInfo Gauntletr5RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletr5)
@@ -1145,20 +1147,20 @@ static struct BurnRomInfo Gauntletr4RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletr4)
@@ -1175,20 +1177,20 @@ static struct BurnRomInfo Gauntletgr3RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletgr3)
@@ -1205,20 +1207,20 @@ static struct BurnRomInfo Gauntletr2RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletr2)
@@ -1235,20 +1237,20 @@ static struct BurnRomInfo Gauntletr1RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntletr1)
@@ -1265,20 +1267,20 @@ static struct BurnRomInfo Gauntlet2pRomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntlet2p)
@@ -1295,20 +1297,20 @@ static struct BurnRomInfo Gauntlet2pjRomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntlet2pj)
@@ -1325,20 +1327,20 @@ static struct BurnRomInfo Gauntlet2pgRomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntlet2pg)
@@ -1355,20 +1357,20 @@ static struct BurnRomInfo Gauntlet2pr3RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntlet2pr3)
@@ -1385,20 +1387,20 @@ static struct BurnRomInfo Gauntlet2pj2RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntlet2pj2)
@@ -1415,20 +1417,20 @@ static struct BurnRomInfo Gauntlet2pg1RomDesc[] = {
 	{ "136037-120.16r",       0x04000, 0x6ee7f3cc, BRF_ESS | BRF_PRG }, 	//  6	M6502 Program 
 	{ "136037-119.16s",       0x08000, 0xfa19861f, BRF_ESS | BRF_PRG }, 	//  7
 	
-	{ "136037-104.6p",        0x02000, 0x9e2a5b59, BRF_GRA },		//  8	Characters
+	{ "136037-104.6p",        0x04000, 0x6c276a1d, BRF_GRA },				//  8	Characters
 	
-	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },		//  9	Motion Objects
-	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },		//  10
-	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },		//  11
-	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },		//  12
-	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },		//  13
-	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },		//  14
-	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },		//  15
-	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },		//  16
+	{ "136037-111.1a",        0x08000, 0x91700f33, BRF_GRA },				//  9	Motion Objects
+	{ "136037-112.1b",        0x08000, 0x869330be, BRF_GRA },				//  10
+	{ "136037-113.1l",        0x08000, 0xd497d0a8, BRF_GRA },				//  11
+	{ "136037-114.1mn",       0x08000, 0x29ef9882, BRF_GRA },				//  12
+	{ "136037-115.2a",        0x08000, 0x9510b898, BRF_GRA },				//  13
+	{ "136037-116.2b",        0x08000, 0x11e0ac5b, BRF_GRA },				//  14
+	{ "136037-117.2l",        0x08000, 0x29a5db41, BRF_GRA },				//  15
+	{ "136037-118.2mn",       0x08000, 0x8bf3b263, BRF_GRA },				//  16
 		
-	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },		//  18	PROM (Motion Timing)
-	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },		//  19	PROM (Motion Flip Control)
-	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },		//  20	PROM (Motion Position/Size)
+	{ "74s472-136037-101.7u", 0x00200, 0x2964f76f, BRF_GRA },				//  18	PROM (Motion Timing)
+	{ "74s472-136037-102.5l", 0x00200, 0x4d4fec6c, BRF_GRA },				//  19	PROM (Motion Flip Control)
+	{ "74s287-136037-103.4r", 0x00100, 0x6c5ccf08, BRF_GRA },				//  20	PROM (Motion Position/Size)
 };
 
 STD_ROM_PICK(Gauntlet2pg1)
@@ -1657,7 +1659,9 @@ static INT32 DrvDoReset()
 	M6502Close();
 	
 	BurnYM2151Reset();
-	
+	tms5220_reset();
+	tms5220_set_frequency(14318180/2/11);
+
 	atarigen_SlapsticReset();
 	atarigen_eeprom_reset();
 	
@@ -1668,7 +1672,9 @@ static INT32 DrvDoReset()
 	DrvSoundtoCPUReady = 0;
 	DrvCPUtoSound = 0;
 	DrvSoundtoCPU = 0;
-	
+	last_speech_write = 0x80;
+	speech_val = 0;
+
 	return 0;
 }
 
@@ -1682,7 +1688,7 @@ UINT8 __fastcall Gauntlet68KReadByte(UINT32 a)
 	
 	switch (a) {
 		case 0x803009: {
-			UINT8 Res = DrvInput[4] | (DrvVBlank ? 0x40 : 0x00);
+			UINT8 Res = (DrvInput[4] | (DrvVBlank ? 0x00 : 0x40)) & ~0x30;
 			if (DrvCPUtoSoundReady) Res ^= 0x20;
 			if (DrvSoundtoCPUReady) Res ^= 0x10;
 			return Res;
@@ -1744,10 +1750,10 @@ UINT16 __fastcall Gauntlet68KReadWord(UINT32 a)
 		}
 		
 		case 0x803008: {
-			UINT8 Res = DrvInput[4] | (DrvVBlank ? 0x40 : 0x00);
+			UINT8 Res = (DrvInput[4] | (DrvVBlank ? 0x00 : 0x40)) & ~0x30;
 			if (DrvCPUtoSoundReady) Res ^= 0x20;
 			if (DrvSoundtoCPUReady) Res ^= 0x10;
-			return 0xff00 | Res;
+			return 0x0000 | Res;
 		}
 		
 		case 0x80300e: {
@@ -1812,7 +1818,7 @@ void __fastcall Gauntlet68KWriteWord(UINT32 a, UINT16 d)
 		}
 		
 		case 0x803140: {
-			// irq_ack
+			SekSetIRQLine(4, CPU_IRQSTATUS_NONE);
 			return;
 		}
 		
@@ -1826,9 +1832,9 @@ void __fastcall Gauntlet68KWriteWord(UINT32 a, UINT16 d)
 #ifdef SNDCPUDBG
 			if (DrvCPUtoSoundReady) bprintf(0, _T("68k: sound command missed!\n"));
 #endif
-			DrvCPUtoSoundReady = 1;
 			M6502Open(0);
 			soundcpuSync();
+			DrvCPUtoSoundReady = 1;
 			M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_ACK);
 			M6502Close();
 			return;
@@ -1872,13 +1878,13 @@ UINT8 GauntletSoundRead(UINT16 Address)
 			
 			if (DrvCPUtoSoundReady) Res ^= 0x80;
 			if (DrvSoundtoCPUReady) Res ^= 0x40;
-			Res ^= 0x20; // tms5220 ready status, no core yet.
+			if (tms5220_ready()) Res ^= 0x20; // tms5220 ready status
 			if (!(Input & 0x08)) Res ^= 0x10;
 			return Res;
 		}
 		
 		case 0x1811: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		default: {
@@ -1938,8 +1944,41 @@ void GauntletSoundWrite(UINT16 Address, UINT8 Data)
 		case 0x1032:
 		case 0x1033:
 		case 0x1034:
-		case 0x1035: {
+		case 0x1035:
+		case 0x1036:
+		case 0x1037:
+		case 0x1038:
+		case 0x1039:
+		case 0x103a:
+		case 0x103b:
+		case 0x103c:
+		case 0x103d:
+		case 0x103e:
+		case 0x103f:
+		{
 			// sound_ctl_w
+			switch (Address & 7)
+			{
+				case 0:
+					if (!Data&0x80) BurnYM2151Reset();
+					break;
+
+				case 1:	/* speech write, bit D7, active low */
+					if (((Data ^ last_speech_write) & 0x80) && (Data & 0x80))
+						tms5220_write(speech_val);
+					last_speech_write = Data;
+					break;
+
+				case 2:	/* speech reset, bit D7, active low */
+					if (((Data ^ last_speech_write) & 0x80) && (Data & 0x80))
+						tms5220_reset();
+					break;
+
+				case 3:	/* speech squeak, bit D7 */
+					Data = 5 | ((Data >> 6) & 2);
+					tms5220_set_frequency(14318180/2 / (16 - Data));
+					break;
+			}
 			return;
 		}
 		
@@ -1953,8 +1992,24 @@ void GauntletSoundWrite(UINT16 Address, UINT8 Data)
 			return;
 		}
 		
-		case 0x1820: {
-			// tms5220_w
+		case 0x1820:
+		case 0x1821:
+		case 0x1822:
+		case 0x1823:
+		case 0x1824:
+		case 0x1825:
+		case 0x1826:
+		case 0x1827:
+		case 0x1828:
+		case 0x1829:
+		case 0x182a:
+		case 0x182b:
+		case 0x182c:
+		case 0x182d:
+		case 0x182e:
+		case 0x182f:
+		{
+			speech_val = Data;
 			return;
 		}
 		
@@ -2080,6 +2135,8 @@ static INT32 DrvInit()
 
 	PokeyInit(14000000/8, 2, 1.00, 1);
 
+	tms5220_init();
+
 	GenericTilesInit();
 	
 	static struct atarigen_modesc gauntlet_modesc =
@@ -2193,6 +2250,8 @@ static INT32 Gaunt2pInit()
 	BurnYM2151SetRoute(BURN_SND_YM2151_YM2151_ROUTE_2, 0.48, BURN_SND_ROUTE_LEFT);
 
 	PokeyInit(14000000/8, 2, 1.00, 1);
+
+	tms5220_init();
 	
 	GenericTilesInit();
 	
@@ -2318,6 +2377,8 @@ static INT32 Gaunt2Init()
 	
 	PokeyInit(14000000/8, 2, 1.00, 1);
 
+	tms5220_init();
+
 	GenericTilesInit();
 	
 	static struct atarigen_modesc gauntlet_modesc =
@@ -2346,6 +2407,7 @@ static INT32 DrvExit()
 	M6502Exit();
 	
 	BurnYM2151Exit();
+	tms5220_exit();
 
 	PokeyExit();
 	
@@ -2504,7 +2566,7 @@ static INT32 DrvFrame()
 		nCyclesDone[nCurrentCPU] += SekRun(nCyclesSegment);
 		if (i == 11*nMult) DrvVBlank = 0;
 		if (i == 250*nMult) DrvVBlank = 1;
-		if (i == 261*nMult) SekSetIRQLine(4, CPU_IRQSTATUS_AUTO);
+		if (i == 261*nMult) SekSetIRQLine(4, CPU_IRQSTATUS_ACK);
 		SekClose();
 		
 		if (i%nMult==nMult-1 && i/nMult == NextScanline) {
@@ -2529,8 +2591,8 @@ static INT32 DrvFrame()
 			{
 				if ((i/nMult) & 32)
 					M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_ACK);
-				else
-					M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
+//				else
+//					M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_NONE);
 			}
 			M6502Close();
 		} else {
@@ -2555,6 +2617,7 @@ static INT32 DrvFrame()
 			BurnYM2151Render(pSoundBuf, nSegmentLength);
 		}
 		pokey_update(0, pBurnSoundOut, nBurnSoundLen);
+		tms5220_update(pBurnSoundOut, nBurnSoundLen);
 	}
 	
 	if (pBurnDraw) DrvDraw();
@@ -2582,8 +2645,9 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekScan(nAction);
 		M6502Scan(nAction);
 
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 		pokey_scan(nAction, pnMin);
+		tms5220_scan(nAction, pnMin);
 
 		SCAN_VAR(DrvVBlank);
 		SCAN_VAR(DrvSoundResetVal);
@@ -2593,6 +2657,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(DrvCPUtoSound);
 		SCAN_VAR(DrvSoundtoCPU);
 		SCAN_VAR(eeprom_unlocked);
+		SCAN_VAR(speech_val);
+		SCAN_VAR(last_speech_write);
 		// slapstic stuff
 		SCAN_VAR(state);
 		SCAN_VAR(next_bank);

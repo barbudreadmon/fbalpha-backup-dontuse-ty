@@ -62,10 +62,10 @@ static struct BurnInputInfo Opwolf3InputList[] =
 	{"Coin 3"            , BIT_DIGITAL   , TC0640FIOInputPort1 + 6, "p3 coin"        },
 	{"Coin 4"            , BIT_DIGITAL   , TC0640FIOInputPort1 + 7, "p4 coin"        },
 
-	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0      , "p1 x-axis"      ),
-	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1      , "p1 y-axis"      ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 0, "p1 fire 1"      },
-	{"P1 Fire 2"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 1, "p1 fire 2"      },
+	A("P1 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort0      , "mouse x-axis"   ),
+	A("P1 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort1      , "mouse y-axis"   ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 0, "mouse button 1" },
+	{"P1 Fire 2"         , BIT_DIGITAL   , TC0640FIOInputPort2 + 1, "mouse button 2" },
 	
 	A("P2 Gun X"         , BIT_ANALOG_REL, &TaitoAnalogPort2      , "p2 x-axis"      ),
 	A("P2 Gun Y"         , BIT_ANALOG_REL, &TaitoAnalogPort3      , "p2 y-axis"      ),	
@@ -466,21 +466,7 @@ void __fastcall SlapshotZ80Write(UINT16 a, UINT8 d)
 
 static void SlapshotFMIRQHandler(INT32, INT32 nStatus)
 {
-	if (nStatus & 1) {
-		ZetSetIRQLine(0xFF, CPU_IRQSTATUS_ACK);
-	} else {
-		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
-	}
-}
-
-static INT32 SlapshotSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 4000000;
-}
-
-static double SlapshotGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000;
+	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 CharPlaneOffsets[4]          = { 0, 1, 2, 3 };
@@ -566,7 +552,7 @@ static INT32 MachineInit()
 	ZetMapArea(0xc000, 0xdfff, 2, TaitoZ80Ram1               );
 	ZetClose();	
 	
-	BurnYM2610Init(8000000, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, &SlapshotFMIRQHandler, SlapshotSynchroniseStream, SlapshotGetTime, 0);
+	BurnYM2610Init(8000000, TaitoYM2610ARom, (INT32*)&TaitoYM2610ARomSize, TaitoYM2610BRom, (INT32*)&TaitoYM2610BRomSize, &SlapshotFMIRQHandler, 0);
 	BurnTimerAttachZet(4000000);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);

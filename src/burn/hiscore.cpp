@@ -518,7 +518,7 @@ void HiscoreInit()
 	
 	TCHAR szFilename[MAX_PATH];
 #ifndef __LIBRETRO__
-	_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
+ 	_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
 #else
 	_stprintf(szFilename, _T("%s%s.hi"), szAppEEPROMPath, BurnDrvGetText(DRV_NAME));
 #endif
@@ -719,7 +719,7 @@ void HiscoreExit()
 
 		TCHAR szFilename[MAX_PATH];
 #ifndef __LIBRETRO__
-		_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
+ 		_stprintf(szFilename, _T("%s%s.hi"), szAppHiscorePath, BurnDrvGetText(DRV_NAME));
 #else
 		_stprintf(szFilename, _T("%s%s.hi"), szAppEEPROMPath, BurnDrvGetText(DRV_NAME));
 #endif

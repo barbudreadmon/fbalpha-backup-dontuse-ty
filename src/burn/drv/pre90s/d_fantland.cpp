@@ -304,7 +304,7 @@ static UINT8 __fastcall fantland_sound_read_port(UINT32 port)
 			return soundlatch;
 
 		case 0x0101:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 	}
 	bprintf(0, _T("rp %X. "), port);
 	return 0;
@@ -960,7 +960,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 		if (game_select < 2)
 		{
-			BurnYM2151Scan(nAction);
+			BurnYM2151Scan(nAction, pnMin);
 			DACScan(nAction,pnMin);
 		}
 

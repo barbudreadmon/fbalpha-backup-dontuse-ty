@@ -122,6 +122,7 @@ static INT32  nRotateTarget[2]      = {0, 0};
 static INT32  nRotateTry[2]         = {0, 0};
 static UINT32 nRotateTime[2]        = {0, 0};
 static UINT8  game_rotates = 0;
+static UINT8  clear_opposites = 0;
 
 #define A(a, b, c, d) { a, b, (UINT8*)(c), d }
 
@@ -967,10 +968,10 @@ STDINPUTINFO(Metafox)
 static struct BurnInputInfo ZombraidInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 start"	},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"p1 fire 1"	},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"p1 fire 2"	},
-	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"p1 x-axis"),
-	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"p1 y-axis"),
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"mouse button 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"mouse button 2"	},
+	A("P1 Right / left",	BIT_ANALOG_REL, DrvAxis + 0,	"mouse x-axis"),
+	A("P1 Up / Down",	BIT_ANALOG_REL, DrvAxis + 1,	"mouse y-axis"),
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 coin"	},
 	{"P2 Start",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 start"	},
@@ -4991,7 +4992,7 @@ void __fastcall wiggie_sound_write(UINT16 address, UINT8 data)
 	switch (address)
 	{
 		case 0x9800:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -5001,7 +5002,7 @@ UINT8 __fastcall wiggie_sound_read(UINT16 address)
 	switch (address)
 	{
 		case 0x9800:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xa000:
 			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
@@ -5533,7 +5534,7 @@ void __fastcall crazyfgt_write_byte(UINT32 address, UINT8 data)
 
 		case 0x658000:
 		case 0x658001:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -5552,7 +5553,7 @@ void __fastcall crazyfgt_write_word(UINT32 address, UINT16 data)
 
 		case 0x658000:
 		case 0x658001:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -6123,13 +6124,13 @@ static void krzybowl68kInit()
 void __fastcall triplfun_sound_write_byte(UINT32 address, UINT8 data)
 {
 	if ((address & ~1) == 0x500006) {
-		MSM6295Command(0, data);
+		MSM6295Write(0, data);
 	}
 }
 
 UINT8 __fastcall triplfun_sound_read_byte(UINT32)
 {
-	return MSM6295ReadStatus(0);
+	return MSM6295Read(0);
 }
 
 static void triplfun68kInit()
@@ -6671,36 +6672,7 @@ static void usclssic68kInit()
 
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
-	if (nStatus) {
-		ZetSetIRQLine(0x20, CPU_IRQSTATUS_ACK);
-	} else {
-		ZetSetIRQLine(0x20, CPU_IRQSTATUS_NONE);
-	}
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 4000000;
-}
-
-static INT32 DrvSynchroniseStream2203(INT32 nSoundRate)
-{
-	return (INT64)M6502TotalCycles() * nSoundRate / 2000000;
-}
-
-static INT32 DrvYM3812SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)SekTotalCycles() * nSoundRate / 16000000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000.0;
-}
-
-static double DrvGetTime2203()
-{
-	return (double)M6502TotalCycles() / 2000000.0;
+	ZetSetIRQLine(0x20, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static UINT8 DrvYM2203ReadPortA(UINT32)
@@ -7100,11 +7072,11 @@ static INT32 DrvInit(void (*p68kInit)(), INT32 cpu_speed, INT32 irq_type, INT32 
 	if (strstr(BurnDrvGetTextA(DRV_NAME), "kamenrid") || strstr(BurnDrvGetTextA(DRV_NAME), "wrofaero") || strstr(BurnDrvGetTextA(DRV_NAME), "sokonuke"))
 		x1010_set_route(BURN_SND_X1010_ROUTE_2, 1.00, BURN_SND_ROUTE_BOTH);
 
-	BurnYM3812Init(1, 4000000, NULL, DrvYM3812SynchroniseStream, 0);
+	BurnYM3812Init(1, 4000000, NULL, 0);
 	BurnTimerAttachSekYM3812(16000000);
 	BurnYM3812SetRoute(0, BURN_SND_YM3812_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
 
-	BurnYM3438Init(1, 16000000/4, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 1);
+	BurnYM3438Init(1, 16000000/4, &DrvFMIRQHandler, 1);
 	BurnTimerAttachZet(4000000);
 	BurnYM3438SetRoute(0, BURN_SND_YM3438_YM3438_ROUTE_1, 0.30, BURN_SND_ROUTE_LEFT);
 	BurnYM3438SetRoute(0, BURN_SND_YM3438_YM3438_ROUTE_2, 0.30, BURN_SND_ROUTE_RIGHT);
@@ -7113,7 +7085,7 @@ static INT32 DrvInit(void (*p68kInit)(), INT32 cpu_speed, INT32 irq_type, INT32 
 		has_2203 = 1;
 
 	if (has_2203) {
-		BurnYM2203Init(1,  4000000, NULL, DrvSynchroniseStream2203, DrvGetTime2203, 1);
+		BurnYM2203Init(1,  4000000, NULL, 1);
 		BurnYM2203SetPorts(0, &DrvYM2203ReadPortA, &DrvYM2203ReadPortB, NULL, NULL);
 		BurnYM2203SetAllRoutes(0, 0.35, BURN_SND_ROUTE_BOTH);
 		BurnTimerAttachM6502(2000000);
@@ -7176,6 +7148,7 @@ static INT32 DrvExit()
 	watchdog_enable = 0;
 	refresh_rate = 6000;
 	game_rotates = 0;
+	clear_opposites = 0;
 	has_2203 = 0;
 	trackball_mode = 0;
 	usclssic = 0;
@@ -7627,6 +7600,16 @@ static void sprite_buffer()
 	}
 }
 
+inline void ClearOppositesActiveLow(UINT8* nJoystickInputs)
+{
+	if ((*nJoystickInputs & 0x03) == 0x00) {
+		*nJoystickInputs |= 0x03;
+	}
+	if ((*nJoystickInputs & 0x0c) == 0x00) {
+		*nJoystickInputs |= 0x0c;
+	}
+}
+
 static INT32 DrvCommonFrame(void (*pFrameCallback)())
 {
 	if (DrvReset) {
@@ -7650,6 +7633,11 @@ static INT32 DrvCommonFrame(void (*pFrameCallback)())
 			DrvInputs[4] ^= (DrvJoy5[i] & 1) << i;
 			DrvInputs[5] ^= (DrvJoy6[i] & 1) << i;
 			DrvInputs[6] ^= (DrvJoy7[i] & 1) << i;
+		}
+
+		if (clear_opposites) {
+			ClearOppositesActiveLow((UINT8*)&DrvInputs[0]);
+			ClearOppositesActiveLow((UINT8*)&DrvInputs[1]);
 		}
 
 		if (game_rotates) {
@@ -8085,7 +8073,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		BurnYM3438Scan(nAction, pnMin);
 		if (has_2203)
 			BurnYM2203Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(seta_samples_bank);
 		SCAN_VAR(usclssic_port_select);
@@ -8118,27 +8106,27 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 //  Visco Roulette
 
 static struct BurnRomInfo setaroulRomDesc[] = {
-	{ "uf1002.u14",		0x10000, 0xb3a622b0, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "uf1003.u16",		0x10000, 0xa6afd769, 0x01 | BRF_PRG | BRF_ESS }, //  1
+	{ "uf1-002.u14",	0x10000, 0xb3a622b0, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "uf1-003.u16",	0x10000, 0xa6afd769, 0x01 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "uf0005.u3",		0x08000, 0x383c2d57, 0x03 | BRF_GRA },           //  2 Sprites
-	{ "uf0006.u4",		0x08000, 0x90c9dae6, 0x03 | BRF_GRA },           //  3
-	{ "uf0007.u5",		0x08000, 0xe72c3dba, 0x03 | BRF_GRA },           //  4
-	{ "uf0008.u6",		0x08000, 0xe198e602, 0x03 | BRF_GRA },           //  5
+	{ "uf0-005.u3",		0x08000, 0x383c2d57, 0x03 | BRF_GRA },           //  2 Sprites
+	{ "uf0-006.u4",		0x08000, 0x90c9dae6, 0x03 | BRF_GRA },           //  3
+	{ "uf0-007.u5",		0x08000, 0xe72c3dba, 0x03 | BRF_GRA },           //  4
+	{ "uf0-008.u6",		0x08000, 0xe198e602, 0x03 | BRF_GRA },           //  5
 
-	{ "uf0010.u15",		0x80000, 0x0af13a56, 0x04 | BRF_GRA },           //  6 Layer 1 tiles
-	{ "uf0009.u13",		0x80000, 0x20f2d7f5, 0x04 | BRF_GRA },           //  7
-	{ "uf0012.u29",		0x80000, 0xcba2a6b7, 0x04 | BRF_GRA },           //  8
-	{ "uf0011.u22",		0x80000, 0xaf60adf9, 0x04 | BRF_GRA },           //  9
-	{ "uf0014.u38",		0x80000, 0xda2bd4e4, 0x04 | BRF_GRA },           // 10
-	{ "uf0013.u37",		0x80000, 0x645ec3c3, 0x04 | BRF_GRA },           // 11
-	{ "uf0015.u40",		0x80000, 0x11dc19fa, 0x04 | BRF_GRA },           // 12
-	{ "uf0016.u48",		0x80000, 0x10f99fa8, 0x04 | BRF_GRA },           // 13
+	{ "uf0-010.u15",	0x80000, 0x0af13a56, 0x04 | BRF_GRA },           //  6 Layer 1 tiles
+	{ "uf0-009.u13",	0x80000, 0x20f2d7f5, 0x04 | BRF_GRA },           //  7
+	{ "uf0-012.u29",	0x80000, 0xcba2a6b7, 0x04 | BRF_GRA },           //  8
+	{ "uf0-011.u22",	0x80000, 0xaf60adf9, 0x04 | BRF_GRA },           //  9
+	{ "uf0-014.u38",	0x80000, 0xda2bd4e4, 0x04 | BRF_GRA },           // 10
+	{ "uf0-013.u37",	0x80000, 0x645ec3c3, 0x04 | BRF_GRA },           // 11
+	{ "uf0-015.u40",	0x80000, 0x11dc19fa, 0x04 | BRF_GRA },           // 12
+	{ "uf0-016.u48",	0x80000, 0x10f99fa8, 0x04 | BRF_GRA },           // 13
 
-	{ "uf1004.u52",		0x20000, 0xd63ea334, 0x06 | BRF_SND },           // 14 x1-010 Samples
+	{ "uf1-004.u52",	0x20000, 0x6638054d, 0x06 | BRF_SND },           // 14 x1-010 Samples
 
-	{ "ufo017.bin",		0x00200, 0xbf50c303, 0x00 | BRF_GRA },           // 15 Color Proms
-	{ "ufo018.bin",		0x00200, 0x1c584d5f, 0x00 | BRF_GRA },           // 16
+	{ "uf0-017.u50",	0x00200, 0xbf50c303, 0x00 | BRF_GRA },           // 15 Color Proms
+	{ "uf0-018.u51",	0x00200, 0x1c584d5f, 0x00 | BRF_GRA },           // 16
 };
 
 STD_ROM_PICK(setaroul)
@@ -9533,41 +9521,41 @@ struct BurnDriver BurnDrvGundhara = {
 // Gundhara (Chinese, bootleg?)
 
 static struct BurnRomInfo gundharacRomDesc[] = {
-	{ "4.U3",			0x080000, 0x14e9970a, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "2.U4",			0x080000, 0x96dfc658, 0x01 | BRF_PRG | BRF_ESS }, //  1
-	{ "3.U103",			0x080000, 0x312f58e2, 0x01 | BRF_PRG | BRF_ESS }, //  2
-	{ "1.U102",			0x080000, 0x8d23a23c, 0x01 | BRF_PRG | BRF_ESS }, //  3
+	{ "4.u3",			0x080000, 0x14e9970a, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "2.u4",			0x080000, 0x96dfc658, 0x01 | BRF_PRG | BRF_ESS }, //  1
+	{ "3.u103",			0x080000, 0x312f58e2, 0x01 | BRF_PRG | BRF_ESS }, //  2
+	{ "1.u102",			0x080000, 0x8d23a23c, 0x01 | BRF_PRG | BRF_ESS }, //  3
 
-	{ "19.U140",		0x080000, 0x32d92c28, 0x0b | BRF_GRA },           //  4 Sprites
-	{ "23.U142",		0x080000, 0xff44db9b, 0x0b | BRF_GRA },           //  5
-	{ "21.U141",		0x080000, 0x1901dc08, 0x0b | BRF_GRA },           //  6
-	{ "25.U143",		0x080000, 0x877289a2, 0x0b | BRF_GRA },           //  7
-	{ "18.U140-B",		0x080000, 0x4f023fb0, 0x0b | BRF_GRA },           //  8
-	{ "22.U142-B",		0x080000, 0x6f3fe7e7, 0x0b | BRF_GRA },           //  9
-	{ "20.U141-B",		0x080000, 0x7f1932e0, 0x0b | BRF_GRA },           // 10
-	{ "24.U143-B",		0x080000, 0x066a2e2b, 0x0b | BRF_GRA },           // 11
-	{ "9.U144",			0x080000, 0x6b4a531f, 0x0b | BRF_GRA },           // 12
-	{ "13.U146",		0x080000, 0x45be3df4, 0x0b | BRF_GRA },           // 13
-	{ "11.U145",		0x080000, 0xf5210aa5, 0x0b | BRF_GRA },           // 14
-	{ "15.U147",		0x080000, 0x17003119, 0x0b | BRF_GRA },           // 15
-	{ "8.U144-B",		0x080000, 0xad9d9338, 0x0b | BRF_GRA },           // 16
-	{ "12.U146-B",		0x080000, 0x0fd4c062, 0x0b | BRF_GRA },           // 17
-	{ "10.U145-B",		0x080000, 0x7c5d12b9, 0x0b | BRF_GRA },           // 18
-	{ "14.U147-B",		0x080000, 0x5a8af50f, 0x0b | BRF_GRA },           // 19
+	{ "19.u140",		0x080000, 0x32d92c28, 0x0b | BRF_GRA },           //  4 Sprites
+	{ "23.u142",		0x080000, 0xff44db9b, 0x0b | BRF_GRA },           //  5
+	{ "21.u141",		0x080000, 0x1901dc08, 0x0b | BRF_GRA },           //  6
+	{ "25.u143",		0x080000, 0x877289a2, 0x0b | BRF_GRA },           //  7
+	{ "18.u140-b",		0x080000, 0x4f023fb0, 0x0b | BRF_GRA },           //  8
+	{ "22.u142-b",		0x080000, 0x6f3fe7e7, 0x0b | BRF_GRA },           //  9
+	{ "20.u141-b",		0x080000, 0x7f1932e0, 0x0b | BRF_GRA },           // 10
+	{ "24.u143-b",		0x080000, 0x066a2e2b, 0x0b | BRF_GRA },           // 11
+	{ "9.u144",			0x080000, 0x6b4a531f, 0x0b | BRF_GRA },           // 12
+	{ "13.u146",		0x080000, 0x45be3df4, 0x0b | BRF_GRA },           // 13
+	{ "11.u145",		0x080000, 0xf5210aa5, 0x0b | BRF_GRA },           // 14
+	{ "15.u147",		0x080000, 0x17003119, 0x0b | BRF_GRA },           // 15
+	{ "8.u144-b",		0x080000, 0xad9d9338, 0x0b | BRF_GRA },           // 16
+	{ "12.u146-b",		0x080000, 0x0fd4c062, 0x0b | BRF_GRA },           // 17
+	{ "10.u145-b",		0x080000, 0x7c5d12b9, 0x0b | BRF_GRA },           // 18
+	{ "14.u147-b",		0x080000, 0x5a8af50f, 0x0b | BRF_GRA },           // 19
 
-	{ "5.U148",			0x080000, 0x0c740f9b, 0x1c | BRF_GRA },           // 20 Layer 1 tiles
-	{ "6.U150",			0x080000, 0xba60eb98, 0x1c | BRF_GRA },           // 21
-	{ "7.U154",			0x080000, 0xb768e666, 0x1c | BRF_GRA },           // 22
+	{ "5.u148",			0x080000, 0x0c740f9b, 0x1c | BRF_GRA },           // 20 Layer 1 tiles
+	{ "6.u150",			0x080000, 0xba60eb98, 0x1c | BRF_GRA },           // 21
+	{ "7.u154",			0x080000, 0xb768e666, 0x1c | BRF_GRA },           // 22
 
-	{ "26.U164",		0x080000, 0xbe3ccaba, 0x1d | BRF_GRA },           // 23 Layer 2 tiles
-	{ "28.U166",		0x080000, 0x8a650a4e, 0x1d | BRF_GRA },		  	  // 24
-	{ "27.U165",		0x080000, 0x47994ff0, 0x1d | BRF_GRA },		  	  // 25
-	{ "29.U167",		0x080000, 0x453c3d3f, 0x1d | BRF_GRA },		  	  // 26
-	{ "16.U152",		0x080000, 0x5ccc500b, 0x1d | BRF_GRA },		  	  // 27
-	{ "17.U153",		0x080000, 0x5586d086, 0x1d | BRF_GRA },		  	  // 28
+	{ "26.u164",		0x080000, 0xbe3ccaba, 0x1d | BRF_GRA },           // 23 Layer 2 tiles
+	{ "28.u166",		0x080000, 0x8a650a4e, 0x1d | BRF_GRA },		  	  // 24
+	{ "27.u165",		0x080000, 0x47994ff0, 0x1d | BRF_GRA },		  	  // 25
+	{ "29.u167",		0x080000, 0x453c3d3f, 0x1d | BRF_GRA },		  	  // 26
+	{ "16.u152",		0x080000, 0x5ccc500b, 0x1d | BRF_GRA },		  	  // 27
+	{ "17.u153",		0x080000, 0x5586d086, 0x1d | BRF_GRA },		  	  // 28
 
-	{ "30.U69",			0x080000, 0x3111a98a, 0x06 | BRF_SND },           // 29 x1-010 Samples
-	{ "31.U70",			0x080000, 0x30cb2524, 0x06 | BRF_SND },           // 30 
+	{ "30.u69",			0x080000, 0x3111a98a, 0x06 | BRF_SND },           // 29 x1-010 Samples
+	{ "31.u70",			0x080000, 0x30cb2524, 0x06 | BRF_SND },           // 30 
 };
 
 STD_ROM_PICK(gundharac)
@@ -9952,14 +9940,14 @@ struct BurnDriver BurnDrvOrbs = {
 // Kero Kero Keroppi's Let's Play Together (USA, Version 2.0)
 
 static struct BurnRomInfo keroppiRomDesc[] = {
-	{ "keroppi jr. code (u10) v1.0.u10", 0x40000, 0x1fc2e895, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "keroppi jr. code (u9) v1.0.u9",   0x40000, 0xe0599e7b, 0x01 | BRF_PRG | BRF_ESS }, //  1
+	{ "keroppi jr. code =u10= v1.0.u10", 0x40000, 0x1fc2e895, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "keroppi jr. code =u9= v1.0.u9",   0x40000, 0xe0599e7b, 0x01 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "keroppi jr. chr(u11) v1.0.u11", 	 0x80000, 0x74148c23, 0x03 | BRF_GRA },            //  2
-	{ "keroppi jr. chr(u12) v1.0.u12", 	 0x80000, 0x6f4dae98, 0x03 | BRF_GRA },            //  3
+	{ "keroppi jr. chr=u11= v1.0.u11", 	 0x80000, 0x74148c23, 0x03 | BRF_GRA },            //  2
+	{ "keroppi jr. chr=u12= v1.0.u12", 	 0x80000, 0x6f4dae98, 0x03 | BRF_GRA },            //  3
 
-	{ "keroppi jr. snd (u15) v1.0.u15",	 0x80000, 0xc98dacf0, 0x06 | BRF_SND },            //  4 x1-010 Samples
-	{ "keroppi jr. snd (u16) v1.0.u16",	 0x80000, 0xd61e5a32, 0x06 | BRF_SND },            //  5
+	{ "keroppi jr. snd =u15= v1.0.u15",	 0x80000, 0xc98dacf0, 0x06 | BRF_SND },            //  4 x1-010 Samples
+	{ "keroppi jr. snd =u16= v1.0.u16",	 0x80000, 0xd61e5a32, 0x06 | BRF_SND },            //  5
 };
 
 STD_ROM_PICK(keroppi)
@@ -10682,6 +10670,8 @@ static INT32 arbalestInit()
 	X1010_Arbalester_Mode = 1;
 	rc = DrvInit(metafox68kInit, 8000000, SET_IRQLINES(3, NOIRQ2), NO_SPRITE_BUFFER, SET_GFX_DECODE(0, 1, -1));
 
+	if (!rc) clear_opposites = 1;
+
 	return rc;
 }
 
@@ -10723,6 +10713,37 @@ static struct BurnRomInfo metafoxRomDesc[] = {
 STD_ROM_PICK(metafox)
 STD_ROM_FN(metafox)
 
+static void __fastcall metafox_protection_write_byte(UINT32 address, UINT8 data)
+{
+	Drv68KRAM2[(address / 2) & 0x1fff] = data;
+}
+
+static UINT8 __fastcall metafox_protection_read_byte(UINT32 address)
+{
+	switch (address & 0x3ffe)
+	{
+		case 0x0000: // 21c001
+			return Drv68KRAM2[0x0101/2];
+
+		case 0x1000: // 21d001
+			return Drv68KRAM2[0x10a1/2];
+
+		case 0x2000: // 21e001
+			return Drv68KRAM2[0x2149/2];
+	}
+
+	return Drv68KRAM2[(address / 2) & 0x1fff];
+}
+
+static void metafox_protection_install()
+{
+	SekOpen(0);
+	SekMapHandler(4,			0x21c000, 0x21ffff, MAP_READ | MAP_WRITE);
+	SekSetReadByteHandler (4,		metafox_protection_read_byte);
+	SekSetWriteByteHandler(4,		metafox_protection_write_byte);
+	SekClose();
+}
+
 static INT32 metafoxInit()
 {
 	DrvSetVideoOffsets(0, 0, 16, -19);
@@ -10731,9 +10752,8 @@ static INT32 metafoxInit()
 	INT32 nRet = DrvInit(metafox68kInit, 8000000, SET_IRQLINES(3, NOIRQ2), NO_SPRITE_BUFFER, SET_GFX_DECODE(0, 1, -1));
 
 	if (nRet == 0) {
-		*((UINT16*)(Drv68KROM + 0x8ab1c)) = 0x4e71;
-		*((UINT16*)(Drv68KROM + 0x8ab1e)) = 0x4e71;
-		*((UINT16*)(Drv68KROM + 0x8ab20)) = 0x4e71;
+		clear_opposites = 1;
+		metafox_protection_install();
 	}
 
 	return nRet;
@@ -10816,6 +10836,7 @@ static INT32 twineaglInit()
 
 	DrvSetVideoOffsets(0, 0, 0, -3);
 	DrvSetColorOffsets(0, 0, 0);
+	clear_opposites = 1;
 
 	return DrvInit(twineagle68kInit, 8000000, SET_IRQLINES(3, NOIRQ2), NO_SPRITE_BUFFER, SET_GFX_DECODE(0, 1, -1));
 }
@@ -11295,25 +11316,25 @@ static INT32 jockeycFrame()
 // Jockey Club
 
 static struct BurnRomInfo jockeycRomDesc[] = {
-	{ "ya-007-002-u23.bin",	0x10000, 0xc499bf4d, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "ya-007-003-u33.bin",	0x10000, 0xe7b0677e, 0x01 | BRF_PRG | BRF_ESS }, //  1
-	{ "ya_002_001.u18",	0x80000, 0xdd108016, 0x01 | BRF_PRG | BRF_ESS }, //  2
+	{ "ya_007_002.u23",	0x10000, 0xc499bf4d, 0x01 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "ya_007_003.u33",	0x10000, 0xe7b0677e, 0x01 | BRF_PRG | BRF_ESS }, //  1
+	{ "ya-002-001.u18",	0x80000, 0xdd108016, 0x01 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "ya_011_004.u10",	0x80000, 0xeb74d2e0, 0x03 | BRF_GRA },           //  3 Sprites
-	{ "ya_011_005.u17",	0x80000, 0x4a6c804b, 0x03 | BRF_GRA },           //  4
-	{ "ya_011_006.u22",	0x80000, 0xbfae01a5, 0x03 | BRF_GRA },           //  5
-	{ "ya_011_007.u27",	0x80000, 0x2dc7a294, 0x03 | BRF_GRA },           //  6
+	{ "ya-001-004-t74.u10",	0x80000, 0xeb74d2e0, 0x03 | BRF_GRA },           //  3 Sprites
+	{ "ya-001-005-t75.u17",	0x80000, 0x4a6c804b, 0x03 | BRF_GRA },           //  4
+	{ "ya-001-006-t76.u22",	0x80000, 0xbfae01a5, 0x03 | BRF_GRA },           //  5
+	{ "ya-001-007-t77.u27",	0x80000, 0x2dc7a294, 0x03 | BRF_GRA },           //  6
 
-	{ "ya_011_008.u35",	0x40000, 0x4b890f83, 0x04 | BRF_GRA },           //  7 Layer 1 tiles
-	{ "ya_011_009.u41",	0x40000, 0xcaa5e3c1, 0x04 | BRF_GRA },           //  8
+	{ "ya-001-008-t59.u35",	0x40000, 0x4b890f83, 0x04 | BRF_GRA },           //  7 Layer 1 tiles
+	{ "ya-001-009-t60.u41",	0x40000, 0xcaa5e3c1, 0x04 | BRF_GRA },           //  8
 // double this so that we can use the graphics decoding routines...
-	{ "ya_011_009.u41",	0x40000, 0xcaa5e3c1, 0x04 | BRF_GRA },           //  9
+	{ "ya-001-009-t60.u41",	0x40000, 0xcaa5e3c1, 0x04 | BRF_GRA },           //  9
 
-	{ "ya_011_013.u71",	0x80000, 0x2bccaf47, 0x06 | BRF_SND },           // 10 x1snd
-	{ "ya_011_012.u64",	0x80000, 0xa8015ce6, 0x06 | BRF_SND },           // 11
+	{ "ya-001-013.u71",	0x80000, 0x2bccaf47, 0x06 | BRF_SND },           // 10 x1snd
+	{ "ya-001-012.u64",	0x80000, 0xa8015ce6, 0x06 | BRF_SND },           // 11
 
-	{ "ya-011.prom",	0x00200, 0xbd4fe2f6, 0x0f | BRF_GRA },           // 13
-	{ "ya-010.prom",	0x00200, 0x778094b3, 0x0f | BRF_GRA },           // 12 Color PROMs
+	{ "ya1-011.prom",	0x00200, 0xbd4fe2f6, 0x0f | BRF_GRA },           // 13
+	{ "ya1-010.prom",	0x00200, 0x778094b3, 0x0f | BRF_GRA },           // 12 Color PROMs
 };
 
 STD_ROM_PICK(jockeyc)

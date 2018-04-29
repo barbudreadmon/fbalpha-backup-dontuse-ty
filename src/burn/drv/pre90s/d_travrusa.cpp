@@ -5,11 +5,8 @@
 #include "z80_intf.h"
 #include "m6800_intf.h"
 #include "msm5205.h"
-#include "driver.h"
 #include "bitswap.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -28,8 +25,6 @@ static UINT8 *DrvSprRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[6];
 
 static UINT8 m6803_port1;
 static UINT8 m6803_port2;
@@ -441,18 +436,11 @@ static INT32 MemIndex()
 	AllRam			= Next;
 
 	DrvZ80RAM		= Next; Next += 0x001000;
-	M62M6803Ram     = Next; Next += 0x000100;
+	M62M6803Ram     	= Next; Next += 0x000100;
 	DrvVidRAM		= Next; Next += 0x001000;
 	DrvSprRAM		= Next; Next += 0x000200;
 
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -623,8 +611,10 @@ static INT32 DrvInit(void (*pRomCallback)(), INT32 sndromsmall, INT32 gfxtype)
 	MSM5205Init(0, DrvSynchroniseStream, 384000, adpcm_int, MSM5205_S96_4B, 1);
 	MSM5205SetRoute(0, 1.00, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(0, 3579545/4, nBurnSoundRate, &ay8910_0_read_A, NULL, NULL, &ay8910_0_write_B);
-	AY8910Init(1, 3579545/4, nBurnSoundRate, NULL, NULL, NULL, &ay8910_1_write_B);
+	AY8910Init(0, 3579545/4, 0);
+	AY8910Init(1, 3579545/4, 1);
+	AY8910SetPorts(0, &ay8910_0_read_A, NULL, NULL, &ay8910_0_write_B);
+	AY8910SetPorts(1, NULL, NULL, NULL, &ay8910_1_write_B);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 
@@ -635,7 +625,7 @@ static INT32 DrvInit(void (*pRomCallback)(), INT32 sndromsmall, INT32 gfxtype)
 	GenericTilemapSetGfx(1, DrvGfxROM0, 3, 8, 8, 0x10000, 0, 0xf); // this needed? -dink
 	GenericTilemapSetScrollRows(0, 4);
 	GenericTilemapSetScrollRows(1, 4);
-	GenericTilemapSetTransMask(1, 0x3f);
+	GenericTilemapSetTransMask(1, 0, 0x3f);
 	GenericTilemapSetScrollRow(0, 3, 0);
 	GenericTilemapSetScrollRow(1, 3, 0);
 	GenericTilemapSetOffsets(0, -8, 0);
@@ -794,7 +784,7 @@ static INT32 DrvFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 		MSM5205Render(0, pBurnSoundOut, nBurnSoundLen);
 	}
 

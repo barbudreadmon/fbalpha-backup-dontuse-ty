@@ -1,3 +1,6 @@
+// license:BSD-3-Clause
+// copyright-holders:R. Belmont
+
 /*
 C140.c
 
@@ -44,6 +47,7 @@ Unmapped registers:
 
 
 #include "burnint.h"
+#include "burn_sound.h"
 #include "c140.h"
 
 // --- Future NOTE: if asic219 DOES NOT WORK, this is why!! (line below) -dink
@@ -73,6 +77,11 @@ static INT32 m_banking_type;
 static INT16 *m_mixer_buffer_left;
 static INT16 *m_mixer_buffer_right;
 
+// for resampling
+static UINT32 nSampleSize;
+static INT32 nFractionalPosition;
+static INT32 nPosition;
+
 static INT32 m_baserate;
 static INT8 *m_pRom;
 static UINT8 m_REG[0x200];
@@ -84,13 +93,6 @@ static C140_VOICE m_voi[C140_MAX_VOICE];
 //**************************************************************************
 //  LIVE DEVICE
 //**************************************************************************
-
-static INT32 limit(INT32 in)
-{
-	if(in>0x7fff)       return 0x7fff;
-	else if(in<-0x8000) return -0x8000;
-	return in;
-}
 
 static void init_voice( C140_VOICE *v )
 {
@@ -114,7 +116,7 @@ static void init_voice( C140_VOICE *v )
    is done by a small PAL or GAL external to the sound chip, which can be switched
    per-game or at least per-PCB revision as addressing range needs grow.
 */
-static long find_sample(long adrs, long bank, int voice)
+static long find_sample(long adrs, long bank, INT32 voice)
 {
 	long newadr = 0;
 
@@ -174,6 +176,12 @@ void c140_init(INT32 clock, INT32 devtype, UINT8 *c140_rom)
 	/* allocate a pair of buffers to mix into - 1 second's worth should be more than enough */
 	m_mixer_buffer_left = (INT16*)BurnMalloc(2 * sizeof(INT16) * m_sample_rate);
 	m_mixer_buffer_right = m_mixer_buffer_left + m_sample_rate;
+	memset(m_mixer_buffer_left, 0, 2 * sizeof(INT16) * m_sample_rate);
+
+	// for resampling
+	nSampleSize = (UINT32)m_sample_rate * (1 << 16) / nBurnSoundRate;
+	nFractionalPosition = 0;
+	nPosition = 0;
 }
 
 void c140_exit()
@@ -193,10 +201,16 @@ void c140_reset()
 	}
 }
 
-void c140_scan()
+void c140_scan(INT32 nAction, INT32 *)
 {
 	SCAN_VAR(m_REG);
 	SCAN_VAR(m_voi);
+
+	if (nAction & ACB_WRITE) {
+		nFractionalPosition = 0;
+		nPosition = 0;
+		memset(m_mixer_buffer_left, 0, 2 * sizeof(INT16) * m_sample_rate);
+	}
 }
 
 
@@ -204,7 +218,7 @@ void c140_scan()
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void c140_update(INT16 *outputs, int samples_len)
+void c140_update(INT16 *outputs, INT32 samples_len)
 {
 	INT32   rvol,lvol;
 	INT32   dt;
@@ -219,15 +233,20 @@ void c140_update(INT16 *outputs, int samples_len)
 
 	INT16   *lmix, *rmix;
 
-	// fingers crossed *dink*
-	INT32 samples = (((((m_sample_rate*1000) / nBurnFPS) * samples_len) / nBurnSoundLen)) / 10; // from gaelco
+	if (samples_len != nBurnSoundLen) {
+		bprintf(0, _T("c140_update(): once per frame, please!\n"));
+		return;
+	}
 
-	if(samples>m_sample_rate) samples=m_sample_rate;
+	INT32 nSamplesNeeded = ((((((m_sample_rate * 1000) / nBurnFPS) * samples_len) / nBurnSoundLen)) / 10) + 1;
+	if (nBurnSoundRate < 44100) nSamplesNeeded += 2; // so we don't end up with negative nPosition below
+
+	lmix = m_mixer_buffer_left  + 5 + nPosition;
+	rmix = m_mixer_buffer_right + 5 + nPosition;
 
 	/* zap the contents of the mixer buffer */
-	//memset(m_mixer_buffer_left, 0, samples * sizeof(INT16));
-	//memset(m_mixer_buffer_right, 0, samples * sizeof(INT16));
-	memset(m_mixer_buffer_left, 0, 2 * sizeof(INT16) * m_sample_rate); // full thing.
+	memset(lmix, 0, nSamplesNeeded * sizeof(INT16));
+	memset(rmix, 0, nSamplesNeeded * sizeof(INT16));
 
 	/* get the number of voices to update */
 	voicecnt = (m_banking_type == C140_TYPE_ASIC219) ? 16 : 24;
@@ -253,8 +272,8 @@ void c140_update(INT16 *outputs, int samples_len)
 			rvol=(vreg->volume_right*32)/C140_MAX_VOICE;
 
 			/* Set mixer outputs base pointers */
-			lmix = m_mixer_buffer_left;
-			rmix = m_mixer_buffer_right;
+			lmix = m_mixer_buffer_left  + 5 + nPosition;
+			rmix = m_mixer_buffer_right + 5 + nPosition;
 
 			/* Retrieve sample start/end and calculate size */
 			st=v->sample_start;
@@ -276,7 +295,7 @@ void c140_update(INT16 *outputs, int samples_len)
 			{
 				//compressed PCM (maybe correct...)
 				/* Loop for enough to fill sample buffer as requested */
-				for(INT32 j=0;j<samples;j++)
+				for(INT32 j=0;j<(nSamplesNeeded - nPosition);j++)
 				{
 					offset += delta;
 					cnt = (offset>>16)&0x7fff;
@@ -323,7 +342,7 @@ void c140_update(INT16 *outputs, int samples_len)
 			else
 			{
 				/* linear 8bit signed PCM */
-				for(INT32 j=0;j<samples;j++)
+				for(INT32 j=0;j<(nSamplesNeeded - nPosition);j++)
 				{
 					offset += delta;
 					cnt = (offset>>16)&0x7fff;
@@ -386,21 +405,46 @@ void c140_update(INT16 *outputs, int samples_len)
 		}
 	}
 
-	/* render to MAME's stream buffer */
-	lmix = m_mixer_buffer_left;
-	rmix = m_mixer_buffer_right;
+	INT16 *pBufL = m_mixer_buffer_left  + 5;
+	INT16 *pBufR = m_mixer_buffer_right + 5;
 
-	for (INT32 j = 0; j < samples_len; j++)
-	{
-		INT32 k = (((((m_sample_rate*1000) / nBurnFPS) * (j & ~2)) / nBurnSoundLen)) / 10;
+	for (INT32 i = (nFractionalPosition & 0xFFFF0000) >> 15; i < (samples_len << 1); i += 2, nFractionalPosition += nSampleSize) {
+		INT32 nLeftSample[4] = {0, 0, 0, 0};
+		INT32 nRightSample[4] = {0, 0, 0, 0};
+		INT32 nTotalLeftSample, nTotalRightSample;
 
-		INT32 l = 8 * lmix[k];
-		INT32 r = 8 * rmix[k];
-		outputs[0] = BURN_SND_CLIP(outputs[0] + limit(l));
-		outputs[1] = BURN_SND_CLIP(outputs[1] + limit(r));
-		outputs += 2;
+		nLeftSample[0] += (INT32)(pBufL[(nFractionalPosition >> 16) - 3]);
+		nLeftSample[1] += (INT32)(pBufL[(nFractionalPosition >> 16) - 2]);
+		nLeftSample[2] += (INT32)(pBufL[(nFractionalPosition >> 16) - 1]);
+		nLeftSample[3] += (INT32)(pBufL[(nFractionalPosition >> 16) - 0]);
+
+		nRightSample[0] += (INT32)(pBufR[(nFractionalPosition >> 16) - 3]);
+		nRightSample[1] += (INT32)(pBufR[(nFractionalPosition >> 16) - 2]);
+		nRightSample[2] += (INT32)(pBufR[(nFractionalPosition >> 16) - 1]);
+		nRightSample[3] += (INT32)(pBufR[(nFractionalPosition >> 16) - 0]);
+
+		nTotalLeftSample  = INTERPOLATE4PS_16BIT((nFractionalPosition >> 4) & 0x0fff, nLeftSample[0] * 8, nLeftSample[1] * 8, nLeftSample[2] * 8, nLeftSample[3] * 8);
+		nTotalRightSample = INTERPOLATE4PS_16BIT((nFractionalPosition >> 4) & 0x0fff, nRightSample[0] * 8, nRightSample[1] * 8, nRightSample[2] * 8, nRightSample[3] * 8);
+
+		nTotalLeftSample  = BURN_SND_CLIP(nTotalLeftSample);
+		nTotalRightSample = BURN_SND_CLIP(nTotalRightSample);
+
+		outputs[i + 0] = BURN_SND_CLIP(outputs[i + 0] + nTotalLeftSample);
+		outputs[i + 1] = BURN_SND_CLIP(outputs[i + 1] + nTotalRightSample);
 	}
 
+	if (samples_len >= nBurnSoundLen) {
+		INT32 nExtraSamples = nSamplesNeeded - (nFractionalPosition >> 16);
+
+		for (INT32 i = -4; i < nExtraSamples; i++) {
+			pBufL[i] = pBufL[(nFractionalPosition >> 16) + i];
+			pBufR[i] = pBufR[(nFractionalPosition >> 16) + i];
+		}
+
+		nFractionalPosition &= 0xFFFF;
+
+		nPosition = nExtraSamples;
+	}
 }
 
 

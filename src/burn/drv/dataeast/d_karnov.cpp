@@ -38,6 +38,7 @@ static UINT16 i8751_needs_ack;
 static UINT16 i8751_coin_pending;
 static UINT16 i8751_command_queue;
 static INT32 i8751_level;
+static INT32 i8751_reset;
 
 static UINT8 DrvJoy1[16];
 static UINT8 DrvJoy2[16];
@@ -603,7 +604,7 @@ static UINT16 karnov_control_r(INT32 offset)
 
 //------------------------------------------------------------------------------------------
 
-void __fastcall karnov_main_write_word(UINT32 address, UINT16 data)
+static void __fastcall karnov_main_write_word(UINT32 address, UINT16 data)
 {
 	if ((address & 0xfff800) == 0x0a1800) {
 		UINT16 *ptr = (UINT16*)DrvPfRAM;
@@ -621,7 +622,7 @@ void __fastcall karnov_main_write_word(UINT32 address, UINT16 data)
 	}
 }
 
-void __fastcall karnov_main_write_byte(UINT32 address, UINT8 data)
+static void __fastcall karnov_main_write_byte(UINT32 address, UINT8 data)
 {
 	if ((address & 0xfff800) == 0x0a1800) {
 		INT32 offset = (address >> 1) & 0x3ff;
@@ -637,7 +638,7 @@ void __fastcall karnov_main_write_byte(UINT32 address, UINT8 data)
 	}
 }
 
-UINT16 __fastcall karnov_main_read_word(UINT32 address)
+static UINT16 __fastcall karnov_main_read_word(UINT32 address)
 {
 	if ((address & 0xfffff0) == 0x0c0000) {
 		return karnov_control_r((address >> 1) & 7);
@@ -646,7 +647,7 @@ UINT16 __fastcall karnov_main_read_word(UINT32 address)
 	return 0;
 }
 
-UINT8 __fastcall karnov_main_read_byte(UINT32 address)
+static UINT8 __fastcall karnov_main_read_byte(UINT32 address)
 {
 	if ((address & 0xfffff0) == 0x0c0000) {
 		return karnov_control_r((address >> 1) & 7) >> ((~address & 1) << 3);
@@ -655,7 +656,7 @@ UINT8 __fastcall karnov_main_read_byte(UINT32 address)
 	return 0;
 }
 
-void karnov_sound_write(UINT16 address, UINT8 data)
+static void karnov_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -692,21 +693,6 @@ static void DrvYM3526FMIRQHandler(INT32, INT32 nStatus)
 	}
 }
 
-static INT32 DrvYM3526SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6502TotalCycles() * nSoundRate / 1500000;
-}
-
-static INT32 DrvYM2203SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)SekTotalCycles() * nSoundRate / 10000000;
-}
-
-static double DrvYM2203GetTime()
-{
-	return (double)SekTotalCycles() / 10000000;
-}
-
 static INT32 DrvDoReset()
 {
 	DrvReset = 0;
@@ -732,6 +718,7 @@ static INT32 DrvDoReset()
 	i8751_coin_pending = 0;
 	i8751_command_queue = 0;
 	i8751_level = 0;
+	i8751_reset = 0;
 
 	return 0;
 }
@@ -866,7 +853,7 @@ static INT32 DrvInit()
 			if (BurnLoadRom(DrvColPROM + 0x00400, 17, 1)) return 1;
 
 			// hack to bypass infinite loop waiting for mcu response
-			*((UINT16*)(Drv68KROM + 0x062a)) = BURN_ENDIAN_SWAP_INT16(0x4E71);
+		//	*((UINT16*)(Drv68KROM + 0x062a)) = BURN_ENDIAN_SWAP_INT16(0x4E71);
 		} else {
 			if (BurnLoadRom(DrvGfxROM2 + 0x00000, 12, 1)) return 1;
 			if (BurnLoadRom(DrvGfxROM2 + 0x10000, 13, 1)) return 1;
@@ -916,11 +903,11 @@ static INT32 DrvInit()
 	M6502SetWriteHandler(karnov_sound_write);
 	M6502Close();
 
-	BurnYM3526Init(3000000, &DrvYM3526FMIRQHandler, &DrvYM3526SynchroniseStream, 0);
+	BurnYM3526Init(3000000, &DrvYM3526FMIRQHandler, 0);
 	BurnTimerAttachM6502YM3526(1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
 
-	BurnYM2203Init(1, 1500000, NULL, DrvYM2203SynchroniseStream, DrvYM2203GetTime, 1);
+	BurnYM2203Init(1, 1500000, NULL, 1);
 	BurnTimerAttachSek(10000000);
 	BurnYM2203SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 
@@ -1178,6 +1165,11 @@ static INT32 DrvFrame()
 		BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
 	}
 
+	if (i8751_reset == 0) {
+		chelnov_i8751_w(0);
+		i8751_reset = 1;
+	}
+
 	SekClose();
 	M6502Close();
 
@@ -1224,6 +1216,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(i8751_coin_pending);
 		SCAN_VAR(i8751_command_queue);
 		SCAN_VAR(i8751_level);
+		SCAN_VAR(i8751_reset);
 	}
 
 	return 0;

@@ -40,8 +40,6 @@ static UINT8 DrvSoundLatch;
 
 static INT32 RomLoadOffset = 0;
 
-static INT32 nCyclesDone[2], nCyclesTotal[2];
-static INT32 nCyclesSegment;
 static INT32 nExtraCycles = 0;
 
 static INT32 Diamond;
@@ -510,7 +508,7 @@ static struct BurnRomInfo DrvprotRomDesc[] = {
 	
 	{ "gg14h.bin",     0x08000, 0x55cfb196, BRF_ESS | BRF_PRG }, //  5	Z80 Program 
 	
-	{ "1.84490.11e",   0x04000, 0xecfccf07, BRF_GRA },	     //  6	Characters
+	{ "gg11e.bin",	   0x04000, 0xccea9365, BRF_GRA },	     //  6	Characters
 	
 	{ "gg3e.bin",      0x04000, 0x68db22c8, BRF_GRA },	     //  7	Tiles
 	{ "gg1e.bin",      0x04000, 0xdad8dd2f, BRF_GRA },	     //  8
@@ -826,7 +824,7 @@ void DrvGngM6809WriteByte(UINT16 Address, UINT8 Data)
 		}
 	}
 	
-	bprintf(PRINT_NORMAL, _T("M6809 Write Byte -> %04X, %02X\n"), Address, Data);
+	//bprintf(PRINT_NORMAL, _T("M6809 Write Byte -> %04X, %02X\n"), Address, Data);
 }
 
 UINT8 __fastcall DrvGngZ80Read(UINT16 a)
@@ -874,7 +872,7 @@ void __fastcall DrvGngZ80Write(UINT16 a, UINT8 d)
 }
 
 static void DrvRandPalette()
-{ // On first boot we fill the palette with some arbatrary values to see the boot-up messages
+{ // On first boot we fill the palette with some arbitrary values to see the boot-up messages
 	DrvPaletteRam1[0] = 0x00;
 	DrvPaletteRam2[0] = 0x00;
 	for (INT32 i = 1; i < 0x100; i++) {
@@ -892,16 +890,6 @@ static INT32 TileYOffsets[16]      = { 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80,
 static INT32 SpritePlaneOffsets[4] = { 0x80004, 0x80000, 4, 0 };
 static INT32 SpriteXOffsets[16]    = { 0, 1, 2, 3, 8, 9, 10, 11, 256, 257, 258, 259, 264, 265, 266, 267 };
 static INT32 SpriteYOffsets[16]    = { 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240 };
-
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)(ZetTotalCycles() * nSoundRate / 3000000);
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 3000000;
-}
 
 static INT32 DrvInit()
 {
@@ -962,7 +950,7 @@ static INT32 DrvInit()
 	BurnFree(DrvTempRom);
 	
 	// Setup the M6809 emulation
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x1dff, MAP_RAM);
 	M6809MapMemory(DrvSpriteRam         , 0x1e00, 0x1fff, MAP_RAM);
@@ -988,7 +976,7 @@ static INT32 DrvInit()
 	ZetMapArea(0xc000, 0xc7ff, 2, DrvZ80Ram             );
 	ZetClose();	
 	
-	BurnYM2203Init(2, 1500000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(2, 1500000, NULL, 0);
 	BurnTimerAttachZet(3000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.40, BURN_SND_ROUTE_BOTH);
@@ -1082,7 +1070,7 @@ static INT32 DiamondInit()
 	ZetMapArea(0xc000, 0xc7ff, 2, DrvZ80Ram             );
 	ZetClose();	
 	
-	BurnYM2203Init(2, 1500000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(2, 1500000, NULL, 0);
 	BurnTimerAttachZet(3000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.20, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.40, BURN_SND_ROUTE_BOTH);
@@ -1379,29 +1367,22 @@ static INT32 DrvFrame()
 
 	DrvMakeInputs();
 
-	nCyclesTotal[0] = (UINT32)((double)1500000 / 59.59);
-	nCyclesTotal[1] = (UINT32)((double)3000000 / 59.59);
-	nCyclesDone[0] = nCyclesDone[1] = 0;
+	INT32 nCyclesTotal[2] = { (UINT32)((double)1500000 / 59.59), (UINT32)((double)3000000 / 59.59) };
+	INT32 nCyclesDone[2] = { nExtraCycles, 0 };
 	
 	ZetNewFrame();
 
 	for (INT32 i = 0; i < nInterleave; i++) {
-		INT32 nCurrentCPU, nNext;
-		
 		// Run M6809
-		nCurrentCPU = 0;
 		M6809Open(0);
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += M6809Run((i == nInterleave-1) ? nCyclesSegment - nExtraCycles : nCyclesSegment );
+		nCyclesDone[0] += M6809Run(((i + 1) * nCyclesTotal[0] / nInterleave) - nCyclesDone[0]);
 		if (i == 239) {
 			memcpy(DrvSpriteRamBuffer, DrvSpriteRam, 0x200);
 			M6809SetIRQLine(0, CPU_IRQSTATUS_AUTO);
 		}
 		M6809Close();
-		
+
 		// Run Z80
-		nCurrentCPU = 1;
 		ZetOpen(0);
 		BurnTimerUpdate((i + 1) * (nCyclesTotal[1] / nInterleave));
 		if (i % 64 == 63) ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);

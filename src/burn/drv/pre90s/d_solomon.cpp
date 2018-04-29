@@ -3,11 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-
-#include "driver.h"
-extern "C" {
- #include "ay8910.h"
-}
+#include "ay8910.h"
 
 static UINT8 SolomonInputPort0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 SolomonInputPort1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -41,9 +37,6 @@ static INT32 SolomonIrqFire = 0;
 static INT32 SolomonFlipScreen = 0;
 
 static INT32 SolomonSoundLatch = 0;
-static INT16* pFMBuffer;
-static INT16* pAY8910Buffer[9];
-
 
 static INT32 nCyclesDone[2], nCyclesTotal[2];
 static INT32 nCyclesSegment;
@@ -208,7 +201,7 @@ static struct BurnRomInfo SolomonjRomDesc[] = {
 STD_ROM_PICK(Solomonj)
 STD_ROM_FN(Solomonj)
 
-INT32 SolomonDoReset()
+static INT32 SolomonDoReset()
 {
 	SolomonIrqFire = 0;
 	SolomonFlipScreen = 0;
@@ -229,7 +222,7 @@ INT32 SolomonDoReset()
 	return 0;
 }
 
-UINT8 __fastcall SolomonRead1(UINT16 a)
+static UINT8 __fastcall SolomonRead1(UINT16 a)
 {
 	switch (a) {
 		case 0xe600: {
@@ -256,7 +249,7 @@ UINT8 __fastcall SolomonRead1(UINT16 a)
 	return 0;
 }
 
-void __fastcall SolomonWrite1(UINT16 a, UINT8 d)
+static void __fastcall SolomonWrite1(UINT16 a, UINT8 d)
 {
 	switch (a) {
 		case 0xe600: {
@@ -281,7 +274,7 @@ void __fastcall SolomonWrite1(UINT16 a, UINT8 d)
 	}
 }
 
-UINT8 __fastcall SolomonRead2(UINT16 a)
+static UINT8 __fastcall SolomonRead2(UINT16 a)
 {
 	switch (a) {
 		case 0x8000: {
@@ -292,7 +285,7 @@ UINT8 __fastcall SolomonRead2(UINT16 a)
 	return 0;
 }
 
-void __fastcall SolomonPortWrite2(UINT16 a, UINT8 d)
+static void __fastcall SolomonPortWrite2(UINT16 a, UINT8 d)
 {
 	a &= 0xff;
 
@@ -352,7 +345,7 @@ static INT32 SolomonMemIndex()
 	SolomonBgTiles         = Next; Next += 2048 * 8 * 8;
 	SolomonFgTiles         = Next; Next += 2048 * 8 * 8;
 	SolomonSprites         = Next; Next += 2048 * 8 * 8;
-	pFMBuffer              = (INT16*)Next; Next += nBurnSoundLen * 9 * sizeof(INT16);
+
 	SolomonPalette         = (UINT32*)Next; Next += 0x00200 * sizeof(UINT32);
 
 	MemEnd                 = Next;
@@ -459,19 +452,9 @@ INT32 SolomonInit()
 
 	BurnFree(SolomonTempRom);
 
-	pAY8910Buffer[0] = pFMBuffer + nBurnSoundLen * 0;
-	pAY8910Buffer[1] = pFMBuffer + nBurnSoundLen * 1;
-	pAY8910Buffer[2] = pFMBuffer + nBurnSoundLen * 2;
-	pAY8910Buffer[3] = pFMBuffer + nBurnSoundLen * 3;
-	pAY8910Buffer[4] = pFMBuffer + nBurnSoundLen * 4;
-	pAY8910Buffer[5] = pFMBuffer + nBurnSoundLen * 5;
-	pAY8910Buffer[6] = pFMBuffer + nBurnSoundLen * 6;
-	pAY8910Buffer[7] = pFMBuffer + nBurnSoundLen * 7;
-	pAY8910Buffer[8] = pFMBuffer + nBurnSoundLen * 8;
-
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(2, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910Init(2, 1500000, 1);
 	AY8910SetAllRoutes(0, 0.12, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.12, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(2, 0.12, BURN_SND_ROUTE_BOTH);
@@ -717,7 +700,7 @@ INT32 SolomonFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -727,7 +710,7 @@ INT32 SolomonFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 	}
 

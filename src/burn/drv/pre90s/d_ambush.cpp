@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -21,9 +18,8 @@ static UINT8 *DrvSprRAM;
 static UINT8 *DrvZ80RAM;
 static UINT8 *DrvColRAM;
 static UINT8 *DrvScrRAM;
-static INT16 *pAY8910Buffer[6];
-static UINT32 *DrvPalette;
 
+static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
 
 static UINT8 DrvJoy1[8];
@@ -95,7 +91,7 @@ static struct BurnDIPInfo AmbushDIPList[]=
 
 STDDIPINFO(Ambush)
 
-UINT8 __fastcall ambush_read_byte(UINT16 address)
+static UINT8 __fastcall ambush_read_byte(UINT16 address)
 {
 	switch (address)
 	{
@@ -106,7 +102,7 @@ UINT8 __fastcall ambush_read_byte(UINT16 address)
 	return 0;
 }
 
-void __fastcall ambush_write_byte(UINT16 address, UINT8 data)
+static void __fastcall ambush_write_byte(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -120,7 +116,7 @@ void __fastcall ambush_write_byte(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 __fastcall ambush_in_port(UINT16 port)
+static UINT8 __fastcall ambush_in_port(UINT16 port)
 {
 	switch (port & 0xff)
 	{
@@ -134,7 +130,7 @@ UINT8 __fastcall ambush_in_port(UINT16 port)
 	return 0;
 }
 
-void __fastcall ambush_out_port(UINT16 port, UINT8 data)
+static void __fastcall ambush_out_port(UINT16 port, UINT8 data)
 {
 	switch (port & 0xff)
 	{
@@ -156,12 +152,12 @@ void __fastcall ambush_out_port(UINT16 port, UINT8 data)
 	}
 }
 
-UINT8 AY8910_0_port0(UINT32)
+static UINT8 AY8910_0_port0(UINT32)
 {
 	return DrvInputs[0];
 }
 
-UINT8 AY8910_1_port0(UINT32)
+static UINT8 AY8910_1_port0(UINT32)
 {
 	return DrvInputs[1];
 }
@@ -250,13 +246,6 @@ static INT32 MemIndex()
 
 	RamEnd		= Next;
 
-	pAY8910Buffer[0] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd		= Next;
 
 	return 0;
@@ -288,31 +277,22 @@ static INT32 DrvInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM);
-	ZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM);
-	ZetMapArea(0x8000, 0x87ff, 0, DrvZ80RAM);
-	ZetMapArea(0x8000, 0x87ff, 1, DrvZ80RAM);
-	ZetMapArea(0x8000, 0x87ff, 2, DrvZ80RAM);
-	ZetMapArea(0xc000, 0xc0ff, 0, DrvScrRAM);
-	ZetMapArea(0xc000, 0xc0ff, 1, DrvScrRAM);
-	ZetMapArea(0xc000, 0xc0ff, 2, DrvScrRAM);
-	ZetMapArea(0xc100, 0xc1ff, 0, DrvColRAM);
-	ZetMapArea(0xc100, 0xc1ff, 1, DrvColRAM);
-	ZetMapArea(0xc100, 0xc1ff, 2, DrvColRAM);
-	ZetMapArea(0xc200, 0xc3ff, 0, DrvSprRAM);
-	ZetMapArea(0xc200, 0xc3ff, 1, DrvSprRAM);
-	ZetMapArea(0xc200, 0xc3ff, 2, DrvSprRAM);
-	ZetMapArea(0xc400, 0xc7ff, 0, DrvVidRAM);
-	ZetMapArea(0xc400, 0xc7ff, 1, DrvVidRAM);
-	ZetMapArea(0xc400, 0xc7ff, 2, DrvVidRAM);
+	ZetMapMemory(DrvZ80ROM,		0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,		0x8000, 0x87ff, MAP_RAM);
+	ZetMapMemory(DrvScrRAM,		0xc000, 0xc0ff, MAP_RAM);
+	ZetMapMemory(DrvColRAM,		0xc100, 0xc1ff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM,		0xc200, 0xc3ff, MAP_RAM);
+	ZetMapMemory(DrvVidRAM,		0xc400, 0xc7ff, MAP_RAM);
 	ZetSetWriteHandler(ambush_write_byte);
 	ZetSetReadHandler(ambush_read_byte);
 	ZetSetOutHandler(ambush_out_port);
 	ZetSetInHandler(ambush_in_port);
 	ZetClose();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, &AY8910_0_port0, NULL, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, &AY8910_1_port0, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
+	AY8910SetPorts(0, &AY8910_0_port0, NULL, NULL, NULL);
+	AY8910SetPorts(1, &AY8910_1_port0, NULL, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.33, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.33, BURN_SND_ROUTE_BOTH);
 
@@ -485,7 +465,7 @@ static INT32 DrvFrame()
 	ZetClose();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -527,14 +507,14 @@ static struct BurnRomInfo ambushRomDesc[] = {
 	{ "a3.f7",        0x2000, 0x8db57ab5, BRF_ESS | BRF_PRG }, //  2
 	{ "a4.e7",        0x2000, 0x4a34d2a4, BRF_ESS | BRF_PRG }, //  3
 
-	{ "fa2.n4",       0x2000, 0xe7f134ba, BRF_GRA },	   //  4 Graphics tiles
-	{ "fa1.m4",       0x2000, 0xad10969e, BRF_GRA },	   //  5
+	{ "fa2.n4",       0x2000, 0xe7f134ba, BRF_GRA },	   	   //  4 Graphics tiles
+	{ "fa1.m4",       0x2000, 0xad10969e, BRF_GRA },	       //  5
 
-	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	   //  6 color PROMs
+	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	       //  6 color PROMs
 
-	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	   //  7 Proms - Not used
-	{ "13.bpr",	  0x0100, 0x547e970f, BRF_OPT },	   //  8
-	{ "14.bpr",	  0x0100, 0x622a8ce7, BRF_OPT },	   //  9
+	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	       //  7 Proms - Not used
+	{ "13.bpr",	      0x0100, 0x547e970f, BRF_OPT },	       //  8
+	{ "14.bpr",	      0x0100, 0x622a8ce7, BRF_OPT },	       //  9
 };
 
 STD_ROM_PICK(ambush)
@@ -558,14 +538,14 @@ static struct BurnRomInfo ambushjRomDesc[] = {
 	{ "ambush.f7",    0x2000, 0xd023ca29, BRF_ESS | BRF_PRG }, //  2
 	{ "ambush.e7",    0x2000, 0x6cc2d3ee, BRF_ESS | BRF_PRG }, //  3
 
-	{ "ambush.n4",    0x2000, 0xecc0dc85, BRF_GRA },	   //  4 Graphics tiles
-	{ "ambush.m4",    0x2000, 0xe86ca98a, BRF_GRA },	   //  5
+	{ "ambush.n4",    0x2000, 0xecc0dc85, BRF_GRA },	       //  4 Graphics tiles
+	{ "ambush.m4",    0x2000, 0xe86ca98a, BRF_GRA },	       //  5
 
-	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	   //  6 color PROMs
+	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	       //  6 color PROMs
 
-	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	   //  7 Proms - Not used
-	{ "13.bpr",	  0x0100, 0x547e970f, BRF_OPT },	   //  8
-	{ "14.bpr",	  0x0100, 0x622a8ce7, BRF_OPT },	   //  9
+	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	       //  7 Proms - Not used
+	{ "13.bpr",	  	  0x0100, 0x547e970f, BRF_OPT },	       //  8
+	{ "14.bpr",	      0x0100, 0x622a8ce7, BRF_OPT },	       //  9
 };
 
 STD_ROM_PICK(ambushj)
@@ -590,14 +570,14 @@ static struct BurnRomInfo ambushhRomDesc[] = {
 	{ "a3.f7",        0x2000, 0x8db57ab5, BRF_ESS | BRF_PRG }, //  2
 	{ "a4.e7",        0x2000, 0x4a34d2a4, BRF_ESS | BRF_PRG }, //  3
 
-	{ "fa2.n4",       0x2000, 0xe7f134ba, BRF_GRA },	   //  4 Graphics tiles
-	{ "fa1.m4",       0x2000, 0xad10969e, BRF_GRA },	   //  5
+	{ "fa2.n4",       0x2000, 0xe7f134ba, BRF_GRA },	   	   //  4 Graphics tiles
+	{ "fa1.m4",       0x2000, 0xad10969e, BRF_GRA },	       //  5
 
-	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	   //  6 color PROMs
+	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	       //  6 color PROMs
 
-	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	   //  7 Proms - Not used
-	{ "13.bpr",	  0x0100, 0x547e970f, BRF_OPT },	   //  8
-	{ "14.bpr",	  0x0100, 0x622a8ce7, BRF_OPT },	   //  9
+	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	       //  7 Proms - Not used
+	{ "13.bpr",	      0x0100, 0x547e970f, BRF_OPT },	       //  8
+	{ "14.bpr",	      0x0100, 0x622a8ce7, BRF_OPT },	       //  9
 };
 
 STD_ROM_PICK(ambushh)
@@ -622,14 +602,14 @@ static struct BurnRomInfo ambushvRomDesc[] = {
 	{ "n3.f7",        0x2000, 0xd023ca29, BRF_ESS | BRF_PRG }, //  2
 	{ "n4.e7",        0x2000, 0x6cc2d3ee, BRF_ESS | BRF_PRG }, //  3
 
-	{ "f2.n4",        0x2000, 0xecc0dc85, BRF_GRA },	   //  4 Graphics tiles
-	{ "f1.m4",        0x2000, 0xe86ca98a, BRF_GRA },	   //  5
+	{ "f2.n4",        0x2000, 0xecc0dc85, BRF_GRA },	       //  4 Graphics tiles
+	{ "f1.m4",        0x2000, 0xe86ca98a, BRF_GRA },	       //  5
 
-	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	   //  6 color PROMs
+	{ "a.bpr",        0x0100, 0x5f27f511, BRF_GRA },	       //  6 color PROMs
 
-	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	   //  7 Proms - Not used
-	{ "13.bpr",	  0x0100, 0x547e970f, BRF_OPT },	   //  8
-	{ "14.bpr",	  0x0100, 0x622a8ce7, BRF_OPT },	   //  9
+	{ "b.bpr",        0x0100, 0x1b03fd3b, BRF_OPT },	       //  7 Proms - Not used
+	{ "13.bpr",	      0x0100, 0x547e970f, BRF_OPT },	       //  8
+	{ "14.bpr",	      0x0100, 0x622a8ce7, BRF_OPT },	       //  9
 };
 
 STD_ROM_PICK(ambushv)
@@ -644,5 +624,3 @@ struct BurnDriver BurnDrvAmbushv = {
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	256, 224, 4, 3
 };
-
-

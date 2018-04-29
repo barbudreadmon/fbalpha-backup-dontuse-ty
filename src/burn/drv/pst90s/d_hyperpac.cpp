@@ -756,6 +756,27 @@ static struct BurnRomInfo Cookbib2RomDesc[] = {
 STD_ROM_PICK(Cookbib2)
 STD_ROM_FN(Cookbib2)
 
+static struct BurnRomInfo Cookbib2aRomDesc[] = {
+	{ "uh12.020",      		0x40000, 0xa44ec1f8, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
+	{ "ui12.020",      		0x40000, 0xbdbcd0d1, BRF_ESS | BRF_PRG }, //  1	68000 Program Code
+
+	{ "ua4.040",   			0x80000, 0xf458d52e, BRF_GRA },			 //  2	Sprites
+	{ "ua6.040",   			0x80000, 0x249e89b4, BRF_GRA },			 //  3	Sprites
+	{ "ua8.040",   			0x80000, 0xcaa25138, BRF_GRA },			 //  4	Sprites
+
+	{ "u1.512",   	   		0x10000, 0xf59f1c9a, BRF_SND },			 //  5	Z80 Program Code
+
+	{ "uj15.010",   		0x20000, 0x5e6f76b8, BRF_SND },			 //  6	Samples
+	
+	{ "87c52.mcu",     		0x10000, 0x00000000, BRF_NODUMP },
+	
+	{ "protdata_alt.bin",  	0x00200, 0xbc136ead, BRF_ESS | BRF_PRG }, //  Data from shared RAM
+};
+
+
+STD_ROM_PICK(Cookbib2a)
+STD_ROM_FN(Cookbib2a)
+
 static struct BurnRomInfo Cookbib3RomDesc[] = {
 	{ "u52.bin",       0x40000, 0x65134893, BRF_ESS | BRF_PRG }, //  0	68000 Program Code
 	{ "u74.bin",       0x40000, 0xc4ab8435, BRF_ESS | BRF_PRG }, //  1	68000 Program Code
@@ -1326,19 +1347,19 @@ static void Snowbro3PlayMusic(INT32 data)
 
 static void Snowbro3PlaySound(INT32 data)
 {
-	INT32 Status = MSM6295ReadStatus(0);
+	INT32 Status = MSM6295Read(0);
 	
 	if ((Status & 0x01) == 0x00) {
-		MSM6295Command(0, 0x80 | data);
-		MSM6295Command(0, 0x12);
+		MSM6295Write(0, 0x80 | data);
+		MSM6295Write(0, 0x12);
 	} else {
 		if ((Status & 0x02) == 0x00) {
-			MSM6295Command(0, 0x80 | data);
-			MSM6295Command(0, 0x12);
+			MSM6295Write(0, 0x80 | data);
+			MSM6295Write(0, 0x12);
 		} else {
 			if ((Status & 0x04) == 0x00) {
-				MSM6295Command(0, 0x80 | data);
-				MSM6295Command(0, 0x42);
+				MSM6295Write(0, 0x80 | data);
+				MSM6295Write(0, 0x42);
 			}
 		}	
 	}
@@ -1625,7 +1646,7 @@ UINT8 __fastcall HyperpacZ80Read(UINT16 a)
 {
 	switch (a) {
 		case 0xf001: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 
 		case 0xf008: {
@@ -1656,7 +1677,7 @@ void __fastcall HyperpacZ80Write(UINT16 a, UINT8 d)
 		}
 
 		case 0xf002: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 		
@@ -1676,7 +1697,7 @@ UINT8 __fastcall TwinadvZ80PortRead(UINT16 a)
 		}
 		
 		case 0x06: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 	}
 	
@@ -1702,7 +1723,7 @@ void __fastcall TwinadvZ80PortWrite(UINT16 a, UINT8 d)
 		}
 		
 		case 0x06: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 	}
@@ -1714,7 +1735,7 @@ UINT8 __fastcall HoneydolZ80Read(UINT16 a)
 {
 	switch (a) {
 		case 0xe010: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 	}
 	
@@ -1729,7 +1750,7 @@ void __fastcall HoneydolZ80Write(UINT16 a, UINT8 d)
 	
 	switch (a) {
 		case 0xe010: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 	}
@@ -1875,7 +1896,7 @@ void __fastcall Snowbro3WriteWord(UINT32 a, UINT16 d)
 		case 0x300000: {
 			if (d == 0xfe) {
 				Snowbro3MusicPlaying = 0;
-				MSM6295Command(0, 0x78);
+				MSM6295Write(0, 0x78);
 			} else {
 				d = d >> 8;
 				
@@ -1904,7 +1925,7 @@ void __fastcall Snowbro3WriteByte(UINT32 a, UINT8 d)
 		case 0x300000: {
 			if (d == 0xfe) {
 				Snowbro3MusicPlaying = 0;
-				MSM6295Command(0, 0x78);
+				MSM6295Write(0, 0x78);
 			} else {
 				//d = d >> 8;
 				
@@ -2186,7 +2207,7 @@ static INT32 Cookbib2Init()
 	memset(Mem, 0, nLen);
 	MemIndex();
 
-	HyperpacTempGfx = (UINT8*)BurnMalloc(0x140000);
+	HyperpacTempGfx = (UINT8*)BurnMalloc(0x200000);
 	
 	// Load and byte-swap 68000 Program roms
 	nRet = BurnLoadRom(HyperpacRom + 0x00000, 0, 2); if (nRet != 0) return 1;
@@ -3894,15 +3915,15 @@ static INT32 Snowbro3Frame()
 		if (i == 2) SekSetIRQLine(3, CPU_IRQSTATUS_AUTO);
 		if (i == 3) SekSetIRQLine(2, CPU_IRQSTATUS_AUTO);
 		
-		INT32 Status = MSM6295ReadStatus(0);
+		INT32 Status = MSM6295Read(0);
 		if (Snowbro3MusicPlaying) {
 			if ((Status & 0x08) == 0x00) {
-				MSM6295Command(0, 0x80 | Snowbro3Music);
-				MSM6295Command(0, 0x82);
+				MSM6295Write(0, 0x80 | Snowbro3Music);
+				MSM6295Write(0, 0x82);
 			}
 		} else {
 			if ((Status & 0x08) == 0x00) {
-				MSM6295Command(0, 0x40);
+				MSM6295Write(0, 0x40);
 			}
 		}
 	}
@@ -3938,8 +3959,8 @@ static INT32 HyperpacScan(INT32 nAction,INT32 *pnMin)
 		SekScan(nAction);				// Scan 68000
 		ZetScan(nAction);					// Scan Z80
 
-		MSM6295Scan(0, nAction);			// Scan OKIM6295
-		BurnYM2151Scan(nAction);
+		MSM6295Scan(nAction, pnMin);			// Scan OKIM6295
+		BurnYM2151Scan(nAction, pnMin);
 
 		// Scan critical driver variables
 		SCAN_VAR(HyperpacSoundLatch);
@@ -4002,7 +4023,7 @@ static INT32 Snowbro3Scan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {	
 		SekScan(nAction);				// Scan 68000
 
-		MSM6295Scan(0, nAction);			// Scan OKIM6295
+		MSM6295Scan(nAction, pnMin);			// Scan OKIM6295
 
 		// Scan critical driver variables
 		SCAN_VAR(HyperpacSoundLatch);
@@ -4037,10 +4058,20 @@ struct BurnDriver BurnDrvHyperpacb = {
 
 struct BurnDriver BurnDrvCookbib2 = {
 	"cookbib2", NULL, NULL, NULL, "1996",
-	"Cookie & Bibi 2\0", NULL, "SemiCom", "Kaneko Pandora based",
+	"Cookie & Bibi 2 (set 1)\0", NULL, "SemiCom", "Kaneko Pandora based",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_MISC_POST90S, GBF_PUZZLE, 0,
 	NULL, Cookbib2RomInfo, Cookbib2RomName, NULL, NULL, HyperpacInputInfo, Cookbib2DIPInfo,
+	Cookbib2Init, HyperpacExit, HyperpacFrame, NULL, HyperpacScan,
+	NULL, 0x200, 256, 224, 4, 3
+};
+
+struct BurnDriver BurnDrvCookbib2a = {
+	"cookbib2a", "cookbib2", NULL, NULL, "1996",
+	"Cookie & Bibi 2 (set 2)\0", NULL, "SemiCom", "Kaneko Pandora based",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_POST90S, GBF_PUZZLE, 0,
+	NULL, Cookbib2aRomInfo, Cookbib2aRomName, NULL, NULL, HyperpacInputInfo, Cookbib2DIPInfo,
 	Cookbib2Init, HyperpacExit, HyperpacFrame, NULL, HyperpacScan,
 	NULL, 0x200, 256, 224, 4, 3
 };

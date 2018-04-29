@@ -235,7 +235,7 @@ static struct BurnRomInfo DrvjRomDesc[] = {
 	{ "ta18-08.bin",   0x08000, 0xc9312613, BRF_GRA },	     //  23
 	{ "ta18-07.bin",   0x08000, 0x02e3f3ed, BRF_GRA },	     //  24
 	
-	{ "nz-0.bin",      0x00800, 0x650bb5f0, BRF_ESS | BRF_PRG },	// 25 MCU
+	{ "nz-0.bin",      0x00800, 0x98a39880, BRF_ESS | BRF_PRG },	// 25 MCU
 };
 
 STD_ROM_PICK(Drvj)
@@ -761,7 +761,7 @@ static INT32 DrvInit(INT32 nMcuType)
 	M6502SetWriteHandler(RenegadeWriteByte);
 	M6502Close();
 	
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809Ram          , 0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvM6809Rom          , 0x8000, 0xffff, MAP_ROM);

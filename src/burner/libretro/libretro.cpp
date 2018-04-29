@@ -12,7 +12,7 @@
 #include "cd/cd_interface.h"
 #include <streams/file_stream.h>
 
-#define FBA_VERSION "v0.2.97.42"
+#define FBA_VERSION "v0.2.97.43"
 
 #define RETROPAD_CLASSIC	RETRO_DEVICE_ANALOG
 #define RETROPAD_MODERN		RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1)
@@ -81,6 +81,7 @@ bool is_neogeo_game = false;
 bool allow_neogeo_mode = true;
 UINT16 switch_ncode = 0;
 int kNetGame = 1;
+INT32 nReplayStatus = 0;
 
 enum neo_geo_modes
 {
@@ -3572,6 +3573,8 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 	//INT32        family     = BurnDrvGetFamilyFlags();
 	//INT32        hardware   = BurnDrvGetHardwareCode();
 	
+	//log_cb(RETRO_LOG_INFO, "!!!!!!!!!!!!!!!!!!!!!!!! : %s / %s / %s.\n", szi, szn, description);
+	
 	// Fix part of issue #102 (Crazy Fight)
 	// Can't really manage to have a decent mapping on this one if you don't have a stick/pad with the following 2 rows of 3 buttons :
 	// Y X R1
@@ -3794,6 +3797,151 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 		if (strcmp("Turn + (digital)", description) == 0) {
 			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
+		}
+	}
+	
+	// Chequered Flag, Konami GT, Hyper Crash
+	if ((parentrom && strcmp(parentrom, "chqflag") == 0) ||
+		(drvname && strcmp(drvname, "chqflag") == 0) ||
+		(parentrom && strcmp(parentrom, "konamigt") == 0) ||
+		(drvname && strcmp(drvname, "konamigt") == 0) ||
+		(parentrom && strcmp(parentrom, "hcrash") == 0) ||
+		(drvname && strcmp(drvname, "hcrash") == 0)
+	) {
+		if (strcmp("Wheel", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, GIT_JOYSLIDER);
+		}
+	}
+	
+	// Pop 'n Bounce / Gapporin
+	if ((parentrom && strcmp(parentrom, "popbounc") == 0) ||
+		(drvname && strcmp(drvname, "popbounc") == 0)
+	) {
+		if (strcmp("Paddle", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Button D", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_X, description);
+		}
+	}
+	
+	// The Irritating Maze / Ultra Denryu Iraira Bou, Shoot the Bull
+	if ((parentrom && strcmp(parentrom, "irrmaze") == 0) ||
+		(drvname && strcmp(drvname, "irrmaze") == 0) ||
+		(parentrom && strcmp(parentrom, "shootbul") == 0) ||
+		(drvname && strcmp(drvname, "shootbul") == 0)
+	) {
+		if (strcmp("X Axis", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Y Axis", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 1, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Button A", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
+		}
+		if (strcmp("Button B", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
+		}
+	}
+	
+	// Laser Ghost
+	if ((parentrom && strcmp(parentrom, "lghost") == 0) ||
+		(drvname && strcmp(drvname, "lghost") == 0) ||
+		(parentrom && strcmp(parentrom, "loffire") == 0) ||
+		(drvname && strcmp(drvname, "loffire") == 0)
+	) {
+		if (strcmp("X-Axis", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Y-Axis", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 1, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Fire 1", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
+		}
+		if (strcmp("Fire 2", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
+		}
+	}
+	
+	// Lord of Gun, ...
+	if ((parentrom && strcmp(parentrom, "lordgun") == 0) ||
+		(drvname && strcmp(drvname, "lordgun") == 0) ||
+		(parentrom && strcmp(parentrom, "deerhunt") == 0) ||
+		(drvname && strcmp(drvname, "deerhunt") == 0) ||
+		(parentrom && strcmp(parentrom, "turkhunt") == 0) ||
+		(drvname && strcmp(drvname, "turkhunt") == 0) ||
+		(parentrom && strcmp(parentrom, "wschamp") == 0) ||
+		(drvname && strcmp(drvname, "wschamp") == 0) ||
+		(parentrom && strcmp(parentrom, "trophyh") == 0) ||
+		(drvname && strcmp(drvname, "trophyh") == 0) ||
+		(parentrom && strcmp(parentrom, "zombraid") == 0) ||
+		(drvname && strcmp(drvname, "zombraid") == 0)
+	) {
+		if (strcmp("Right / left", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Up / Down", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 1, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Button 1", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
+		}
+		if (strcmp("Button 2", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
+		}
+	}
+	
+	// Lethal Enforcers, Beast Busters, Bang!, Zero Point 1 & 2, Operation Thunderbolt, Operation Wolf 1 & 3, Space Gun
+	if ((parentrom && strcmp(parentrom, "lethalen") == 0) ||
+		(drvname && strcmp(drvname, "lethalen") == 0) ||
+		(parentrom && strcmp(parentrom, "bbusters") == 0) ||
+		(drvname && strcmp(drvname, "bbusters") == 0) ||
+		(parentrom && strcmp(parentrom, "bang") == 0) ||
+		(drvname && strcmp(drvname, "bang") == 0) ||
+		(parentrom && strcmp(parentrom, "zeropnt") == 0) ||
+		(drvname && strcmp(drvname, "zeropnt") == 0) ||
+		(parentrom && strcmp(parentrom, "zeropnt2") == 0) ||
+		(drvname && strcmp(drvname, "zeropnt2") == 0) ||
+		(parentrom && strcmp(parentrom, "othunder") == 0) ||
+		(drvname && strcmp(drvname, "othunder") == 0) ||
+		(parentrom && strcmp(parentrom, "opwolf3") == 0) ||
+		(drvname && strcmp(drvname, "opwolf3") == 0) ||
+		(parentrom && strcmp(parentrom, "opwolf") == 0) ||
+		(drvname && strcmp(drvname, "opwolf") == 0) ||
+		(parentrom && strcmp(parentrom, "spacegun") == 0) ||
+		(drvname && strcmp(drvname, "spacegun") == 0)
+	) {
+		if (strcmp("Gun X", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Gun Y", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 1, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Button 1", description) == 0 || strcmp("Fire 1", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
+		}
+		if (strcmp("Button 2", description) == 0 || strcmp("Fire 2", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
+		}
+		if (strcmp("Button 3", description) == 0 || strcmp("Fire 3", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_Y, description);
+		}
+	}
+
+	// Rail Chase
+	if ((parentrom && strcmp(parentrom, "rchase") == 0) ||
+		(drvname && strcmp(drvname, "rchase") == 0)
+	) {
+		if (strcmp("Left/Right", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Up/Down", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 1, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Fire 1", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
 		}
 	}
 	

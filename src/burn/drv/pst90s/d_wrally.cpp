@@ -185,7 +185,7 @@ static void __fastcall wrally_main_write_byte(UINT32 address, UINT8 data)
 		return;
 
 		case 0x70000f:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 
@@ -209,7 +209,7 @@ static UINT16 __fastcall wrally_main_read_word(UINT32 address)
 			return DrvInputs[1];
 
 		case 0x70000e:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -241,7 +241,7 @@ static UINT8 __fastcall wrally_main_read_byte(UINT32 address)
 
 		case 0x70000e:
 		case 0x70000f:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -578,23 +578,23 @@ static INT32 DrvDraw()
 	GenericTilemapDraw(1, pTransDraw, 0 | TMAP_FORCEOPAQUE);
 
 	transparent_select = 0;
-	GenericTilemapSetTransMask(0, 0xff01);
+	GenericTilemapSetTransMask(0, 0, 0xff01);
 	if (nBurnLayer & 1) GenericTilemapDraw(0, pTransDraw, 0 | TMAP_SET_GROUP(0));
 
 	transparent_select = 1;
-	GenericTilemapSetTransMask(0, 0x00ff);
+	GenericTilemapSetTransMask(0, 0, 0x00ff);
 	if (nBurnLayer & 2) GenericTilemapDraw(0, pTransDraw, 0 | TMAP_SET_GROUP(0));
 
 	if (nBurnLayer & 4) GenericTilemapDraw(1, pTransDraw, 0 | TMAP_SET_GROUP(1));
 
 	transparent_select = 0;
-	GenericTilemapSetTransMask(0, 0xff01);
+	GenericTilemapSetTransMask(0, 0, 0xff01);
 	if (nBurnLayer & 8) GenericTilemapDraw(0, pTransDraw, 0 | TMAP_SET_GROUP(1));
 
 	if (nSpriteEnable & 1) draw_sprites(0);
 
 	transparent_select = 1;
-	GenericTilemapSetTransMask(0, 0x00ff);
+	GenericTilemapSetTransMask(0, 0, 0x00ff);
 	if (nBurnLayer & 8) GenericTilemapDraw(0, pTransDraw, 0 | TMAP_SET_GROUP(1));
 
 	if (nSpriteEnable & 2) draw_sprites(1);
@@ -674,7 +674,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekScan(nAction);
 		mcs51_scan(nAction);
 
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(flipscreen);
 		SCAN_VAR(okibank);

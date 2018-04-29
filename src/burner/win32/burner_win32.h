@@ -29,6 +29,7 @@
 #include <mmsystem.h>
 #include <shellapi.h>
 #include <shlwapi.h>
+#include "d3dkmt_sync.h"
 
 INT32 DSCore_Init();
 INT32 DICore_Init();
@@ -196,7 +197,8 @@ int MediaInit();
 int MediaExit();
 
 // misc_win32.cpp
-extern bool bIsWindowsXPorGreater; 
+extern bool bEnableHighResTimer;
+extern bool bIsWindowsXPorGreater;
 extern bool bIsWindowsXP;
 BOOL DetectWindowsVersion();
 int AppDirectory();
@@ -207,7 +209,6 @@ int WndInMid(HWND hMid, HWND hBase);
 char* DecorateGameName(unsigned int nBurnDrv);
 void EnableHighResolutionTiming();
 void DisableHighResolutionTiming();
-
 
 // drv.cpp
 extern int bDrvOkay;								// 1 if the Driver has been initted okay, and it's okay to use the BurnDrv functions
@@ -307,6 +308,7 @@ void UnloadDrvIcons();
 #define		ICON_32x32			2
 extern bool bEnableIcons;
 extern bool bIconsLoaded;
+extern bool bIconsOnlyParents;
 extern int nIconsSize, nIconsSizeXY, nIconsYDiff;
 extern bool bGameInfoOpen;
 

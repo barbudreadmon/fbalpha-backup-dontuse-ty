@@ -264,11 +264,11 @@ UINT8 __fastcall pwrinst2ZIn(UINT16 nAddress)
 
 	switch (nAddress) {
 		case 0x00: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		case 0x08: {
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 		}
 		
 		case 0x40: {
@@ -303,12 +303,12 @@ void __fastcall pwrinst2ZOut(UINT16 nAddress, UINT8 nValue)
 
 	switch (nAddress) {
 		case 0x00: {
-			MSM6295Command(0, nValue);
+			MSM6295Write(0, nValue);
 			return;
 		}
 		
 		case 0x08: {
-			MSM6295Command(1, nValue);
+			MSM6295Write(1, nValue);
 			return;
 		}
 		
@@ -740,8 +740,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 
 		BurnYM2203Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
-		MSM6295Scan(1, nAction);
+		MSM6295Scan(nAction, pnMin);
+		//MSM6295Scan(1, nAction);
 		NMK112_Scan(nAction);
 
 		SCAN_VAR(nVideoIRQ);
@@ -775,16 +775,6 @@ static void DrvFMIRQHandler(INT32, INT32 nStatus)
 	} else {
 		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 8000000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 8000000;
 }
 
 static INT32 drvZInit()
@@ -869,7 +859,7 @@ static INT32 DrvInit()
 	nCaveExtraXOffset = -112;
 	nCaveExtraYOffset = 1;
 	
-	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, 0);
 	BurnTimerAttachZet(8000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.80, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.40, BURN_SND_ROUTE_BOTH);
@@ -954,7 +944,7 @@ static INT32 PlegendsInit()
 	nCaveExtraXOffset = -112;
 	nCaveExtraYOffset = 1;
 	
-	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 4000000, &DrvFMIRQHandler, 0);
 	BurnTimerAttachZet(8000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.80, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.40, BURN_SND_ROUTE_BOTH);
@@ -965,6 +955,8 @@ static INT32 PlegendsInit()
 	MSM6295Init(1, 3000000 / 165, 1);
 	MSM6295SetRoute(0, 0.80, BURN_SND_ROUTE_BOTH);
 	MSM6295SetRoute(1, 1.00, BURN_SND_ROUTE_BOTH);
+
+	NMK112_init(0, MSM6295ROM, MSM6295ROM + 0x400000, 0x400000, 0x400000);
 	
 	bDrawScreen = true;
 

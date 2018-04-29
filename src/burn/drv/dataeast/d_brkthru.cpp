@@ -1,9 +1,6 @@
 // FB Alpha Break Thru driver module
 // Based on MAME driver by Phil Stroffolino
 
-// Tofix:
-//   background layer in Breakthru has the wrong colors.
-
 // Notes:
 //  Due to our 6809 core being very cycle-inaccurate, our cpu's need an extra
 //  1.5mhz tacked on to match the same performance as MAME running the same
@@ -330,16 +327,6 @@ static void DrvFMIRQHandler(INT32, INT32 nStatus)
 	M6809SetIRQLine(M6809_IRQ_LINE, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
-inline static double DrvGetTime()
-{
-	return (double)M6809TotalCycles() / (1500000*2);
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6809TotalCycles() * nSoundRate / (1500000*2);
-}
-
 static INT32 DrvDoReset()
 {
 	memset (AllRam,	0, RamEnd - AllRam);
@@ -483,7 +470,7 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 
-	M6809Init(2); // this init is only called once with the maximum cpus to init.
+	M6809Init(0);
 	M6809Open(0);
 	if (darwin) {
 		M6809MapMemory(DrvSprRAM,		0x0000, 0x00ff, MAP_RAM); // 0-ff
@@ -499,7 +486,7 @@ static INT32 DrvInit()
 	M6809SetReadHandler(brkthru_main_read);
 	M6809Close();
 
-	//M6809Init(1);
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809RAM1,			0x0000, 0x1fff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM1 + 0x8000,		0x8000, 0xffff, MAP_ROM);
@@ -507,12 +494,12 @@ static INT32 DrvInit()
 	M6809SetReadHandler(brkthru_sound_read);
 	M6809Close();
 
-	BurnYM2203Init(1, 1500000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 1500000, NULL, 0);
 	BurnTimerAttachM6809(1500000*2);
 	BurnYM2203SetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetPSGVolume(0, 0.10);
 
-	BurnYM3526Init(3000000, &DrvFMIRQHandler, &DrvSynchroniseStream, 1);
+	BurnYM3526Init(3000000, &DrvFMIRQHandler, 1);
 	BurnTimerAttachM6809YM3526(1500000*2);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
 
@@ -696,8 +683,8 @@ static INT32 DrvFrame()
 	{
 		M6809Open(0);
 		BurnTimerUpdate((i+1) * (nCyclesTotal[0] / nInterleave));
-		if (i == 248) vblank = 1;
-		if (i == 248 && nmi_mask) M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
+		if (i == (248-2)) vblank = 1;
+		if (i == (248-2) && nmi_mask) M6809SetIRQLine(0x20, CPU_IRQSTATUS_AUTO);
 		M6809Close();
 
 		M6809Open(1);

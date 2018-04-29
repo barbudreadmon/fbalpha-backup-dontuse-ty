@@ -34,7 +34,7 @@ __extension__ typedef unsigned long long	UINT64;
 __extension__ typedef long long				INT64;
 #endif
 
-// Macro to determine the size of a struct up to a member (included)
+// Macro to determine the size of a struct up to and including "member"
 #define STRUCT_SIZE_HELPER(type, member) offsetof(type, member) + sizeof(((type*)0)->member)
 
 #define OSD_CPU_H

@@ -655,7 +655,7 @@ static void PausedRedraw(void)
 {
     if (bVidOkay && bRunPause && bDrvOkay && (hSelDlg == NULL)) { // Redraw the screen to show certain messages while paused. - dink
         INT16 *pBtemp = pBurnSoundOut;
-        pBurnSoundOut = NULL; // Mute the sound as VidRedraw() draws the frame
+        pBurnSoundOut = NULL; // Mute the sound as VidRedraw() draws the frame (if no driver Redraw function is available)
 
         VidRedraw();
         VidPaint(0);
@@ -811,6 +811,8 @@ static void UpdatePreviousGameList()
 	}
 }
 
+static bool bSramLoad = true; // always true, unless BurnerLoadDriver() is called from StartFromReset()
+
 // Compact driver loading module
 int BurnerLoadDriver(TCHAR *szDriverName)
 {
@@ -829,7 +831,7 @@ int BurnerLoadDriver(TCHAR *szDriverName)
 			StopReplay();
 			
 			DrvExit();
-			DrvInit(j, true);	// Init the game driver
+			DrvInit(j, bSramLoad);	// Init the game driver
 			MenuEnableItems();
 			bAltPause = 0;
 			AudSoundPlay();			// Restart sound
@@ -849,7 +851,9 @@ int BurnerLoadDriver(TCHAR *szDriverName)
 int StartFromReset(TCHAR *szDriverName)
 {
 	if (!bDrvOkay || (szDriverName && _tcscmp(szDriverName, BurnDrvGetText(DRV_NAME))) ) {
+		bSramLoad = false;
 		BurnerLoadDriver(szDriverName);
+		bSramLoad = true;
 		return 1;
 	}
 	//if(nBurnDrvActive < 1) return 0;
@@ -1289,6 +1293,14 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 
 		case MENU_TRIPLE:
 			bVidTripleBuffer = !bVidTripleBuffer;
+			POST_INITIALISE_MESSAGE;
+			break;
+
+		case MENU_DWMFIX:
+			bVidDWMSync = !bVidDWMSync;
+			if (bVidDWMSync && bVidVSync)
+				bVidVSync = 0;
+
 			POST_INITIALISE_MESSAGE;
 			break;
 
@@ -1779,6 +1791,9 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			
 		case MENU_VIDEOVSYNC:
 			bVidVSync = !bVidVSync;
+			if (bVidVSync && bVidDWMSync)
+				bVidDWMSync = 0;
+
 			POST_INITIALISE_MESSAGE;
 			break;
 
@@ -1933,6 +1948,12 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 		case MENU_NOCHANGENUMLOCK:
 			bNoChangeNumLock = !bNoChangeNumLock;
 			break;
+
+		case MENU_HIGHRESTIMER:
+			bEnableHighResTimer = !bEnableHighResTimer;
+			DisableHighResolutionTiming();  // disable if active
+			EnableHighResolutionTiming();   // use new setting.
+			break;
 			
 		case MENU_CREATEDIRS:
 			bAlwaysCreateSupportFolders = !bAlwaysCreateSupportFolders;
@@ -2008,7 +2029,7 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			szGamelistLocalisationTemplate[0] = _T('\0');
 			nGamelistLocalisationActive = false;
 			break;
-		
+
 		case MENU_ENABLEICONS: {
 			bEnableIcons = !bEnableIcons;
 			if(!bEnableIcons && bIconsLoaded) {
@@ -2017,6 +2038,19 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 				bIconsLoaded = 0;
 			} 
 			if(bEnableIcons && !bIconsLoaded) {
+				// load icons
+				LoadDrvIcons();
+				bIconsLoaded = 1;
+			}
+			break;
+		}
+
+		case MENU_ICONS_PARENTSONLY: {
+			bIconsOnlyParents = !bIconsOnlyParents;
+			if(bEnableIcons && bIconsLoaded) {
+				// unload icons
+				UnloadDrvIcons();
+				bIconsLoaded = 0;
 				// load icons
 				LoadDrvIcons();
 				bIconsLoaded = 1;
@@ -2396,7 +2430,7 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 
 		case MENU_WWW_NSFORUM:
 			if (!nVidFullscreen) {
-				ShellExecute(NULL, _T("open"), _T("http://neosource.1emu.net/forums/"), NULL, NULL, SW_SHOWNORMAL);
+				ShellExecute(NULL, _T("open"), _T("http://neo-source.com/"), NULL, NULL, SW_SHOWNORMAL);
 			}
 			break;
 

@@ -165,16 +165,6 @@ static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 	M6809SetIRQLine(0, nStatus ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6809TotalCycles() * nSoundRate / 1500000;
-}
-
-static double DrvGetTime()
-{
-	return (double)M6809TotalCycles() / 1500000;
-}
-
 static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
@@ -319,7 +309,7 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvVidRAM0,		0x0800, 0x0bff, MAP_RAM);
@@ -333,7 +323,7 @@ static INT32 DrvInit()
 	M6809SetReadHandler(chanbara_read);
 	M6809Close();
 
-	BurnYM2203Init(1, 1500000, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 1500000, &DrvYM2203IRQHandler, 0);
 	BurnYM2203SetPorts(0, NULL, NULL, &chanbara_ay_writeA, &chanbara_ay_writeB);
 	BurnTimerAttachM6809(1500000);
 	BurnYM2203SetAllRoutes(0, 1.00, BURN_SND_ROUTE_BOTH);
@@ -412,9 +402,10 @@ static void draw_sprites()
 		{
 			INT32 attr0 = DrvSprRAM[offs + 0x00];
 			INT32 attr1 = DrvSprRAM[offs + 0x80];
-			INT32 code = DrvSprRAM[offs + 0x01] | ((attr1 & 0x10) << 5) |  ((attr1 & 0x20) << 5) | ((attr1 & 0x40) << 2);
+			INT32 code = DrvSprRAM[offs + 0x01] | ((attr1 & 0x10) << 5) | ((attr1 & 0x20) << 5) | ((attr1 & 0x40) << 2);
 			INT32 color = (attr1 & 0x0f) + (0x80>>3);
 			INT32 flipy = attr0 & 0x2;
+			INT32 flipx = attr0 & 0x4;
 			INT32 sx = 240 - DrvSprRAM[offs + 0x03];
 			INT32 sy = (232 - DrvSprRAM[offs + 0x02]);
 
@@ -422,21 +413,39 @@ static void draw_sprites()
 			{
 				if (flipy)
 				{
-					Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code+0, sx, sy     , color, 3, 0, 0, DrvGfxROM1);
-					Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code+1, sx, sy - 16, color, 3, 0, 0, DrvGfxROM1);
+					if (flipx) {
+						Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, code+0, sx, sy     , color, 3, 0, 0, DrvGfxROM1);
+						Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, code+1, sx, sy - 16, color, 3, 0, 0, DrvGfxROM1);
+					} else {
+						Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code+0, sx, sy     , color, 3, 0, 0, DrvGfxROM1);
+						Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code+1, sx, sy - 16, color, 3, 0, 0, DrvGfxROM1);
+					}
 				}
 				else
 				{
-					Render16x16Tile_Mask_Clip(pTransDraw, code+0, sx, sy - 16, color, 3, 0, 0, DrvGfxROM1);
-					Render16x16Tile_Mask_Clip(pTransDraw, code+1, sx, sy     , color, 3, 0, 0, DrvGfxROM1);
+					if (flipx) {
+						Render16x16Tile_Mask_FlipX_Clip(pTransDraw, code+0, sx, sy - 16, color, 3, 0, 0, DrvGfxROM1);
+						Render16x16Tile_Mask_FlipX_Clip(pTransDraw, code+1, sx, sy     , color, 3, 0, 0, DrvGfxROM1);
+					} else {
+						Render16x16Tile_Mask_Clip(pTransDraw, code+0, sx, sy - 16, color, 3, 0, 0, DrvGfxROM1);
+						Render16x16Tile_Mask_Clip(pTransDraw, code+1, sx, sy     , color, 3, 0, 0, DrvGfxROM1);
+					}
 				}
 			}
 			else
 			{
 				if (flipy) {
-					Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code, sx, sy, color, 3, 0, 0, DrvGfxROM1);
+					if (flipx) {
+						Render16x16Tile_Mask_FlipXY_Clip(pTransDraw, code, sx, sy, color, 3, 0, 0, DrvGfxROM1);
+					} else {
+						Render16x16Tile_Mask_FlipY_Clip(pTransDraw, code, sx, sy, color, 3, 0, 0, DrvGfxROM1);
+					}
 				} else {
-					Render16x16Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 3, 0, 0, DrvGfxROM1);
+					if (flipx) {
+						Render16x16Tile_Mask_FlipX_Clip(pTransDraw, code, sx, sy, color, 3, 0, 0, DrvGfxROM1);
+					} else {
+						Render16x16Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 3, 0, 0, DrvGfxROM1);
+					}
 				}
 			}
 		}

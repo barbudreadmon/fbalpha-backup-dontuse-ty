@@ -268,7 +268,7 @@ UINT8 __fastcall games88_sound_read(UINT16 address)
 
 		case 0xc000:
 		case 0xc001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 	}
 
 	return 0;
@@ -310,7 +310,7 @@ static void K051960Callback(INT32 *, INT32 *color, INT32 *priority, INT32 *)
 
 static void K051316Callback(INT32 *code,INT32 *color,INT32 *flags)
 {
-	*flags = *color & 0x40;
+	*flags = (*color & 0x40) ? 1 : 0;
 	*code |= ((*color & 0x07) << 8);
 	*color = 48 + ((*color & 0x38) >> 3) + ((*color & 0x80) >> 4);
 }
@@ -618,9 +618,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		konamiCpuScan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
-		UPD7759Scan(0, nAction, pnMin);
-		UPD7759Scan(0, nAction, pnMin);
+		BurnYM2151Scan(nAction, pnMin);
+		UPD7759Scan(nAction, pnMin);
 
 		KonamiICScan(nAction);
 

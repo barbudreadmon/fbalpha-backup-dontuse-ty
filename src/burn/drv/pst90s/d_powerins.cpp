@@ -373,7 +373,7 @@ UINT8 __fastcall powerinsReadByte(UINT32 sekAddress)
 	switch (sekAddress) {
 		
 		case 0x10003f:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 			
 //		default:
 //			bprintf(PRINT_NORMAL, _T("Attempt to read byte value of location %x\n"), sekAddress);
@@ -421,7 +421,7 @@ void __fastcall powerinsWriteByte(UINT32 sekAddress, UINT8 byteValue)
 
 		case 0x10003f:
 			// powerina only!
-			MSM6295Command(0, byteValue);
+			MSM6295Write(0, byteValue);
 			break;
 			
 //		default:
@@ -449,7 +449,7 @@ void __fastcall powerinsWriteWord(UINT32 sekAddress, UINT16 wordValue)
 
 		case 0x10003e:
 			// powerina only!
-			MSM6295Command(0, wordValue & 0xff);
+			MSM6295Write(0, wordValue & 0xff);
 			break;
 
 		case 0x130000:	RamVReg[0] = wordValue; break;
@@ -518,10 +518,10 @@ UINT8 __fastcall powerinsZ80In(UINT16 p)
 				return 0;
 
 		case 0x80:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x88:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 
 //		default:
 //			bprintf(PRINT_NORMAL, _T("Z80 Attempt to read port %04x\n"), p);
@@ -546,11 +546,11 @@ void __fastcall powerinsZ80Out(UINT16 p, UINT8 v)
 			break;
 
 		case 0x80:
-			MSM6295Command(0, v);
+			MSM6295Write(0, v);
 			break;
 
 		case 0x88:
-			MSM6295Command(1, v);
+			MSM6295Write(1, v);
 			break;
 
 		case 0x90:
@@ -578,16 +578,6 @@ static void powerinsIRQHandler(INT32, INT32 nStatus)
 	} else {
 		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
 	}
-}
-
-static INT32 powerinsSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 6000000;
-}
-
-static double powerinsGetTime()
-{
-	return (double)ZetTotalCycles() / 6000000;
 }
 
 static INT32 DrvDoReset()
@@ -849,7 +839,7 @@ static INT32 powerinsInit()
 	}
 	
 	if (game_drv == GAME_POWERINS ) {
-		BurnYM2203Init(1, 12000000 / 8, &powerinsIRQHandler, powerinsSynchroniseStream, powerinsGetTime, 0);
+		BurnYM2203Init(1, 12000000 / 8, &powerinsIRQHandler, 0);
 		BurnTimerAttachZet(6000000);
 		BurnYM2203SetAllRoutes(0, 2.00, BURN_SND_ROUTE_BOTH);
 		BurnSetRefreshRate(56.0);
@@ -1136,21 +1126,19 @@ static INT32 powerinsScan(INT32 nAction,INT32 *pnMin)
 
 		if ( game_drv != GAME_POWERINA ) ZetScan(nAction);										// Scan Z80 state
 
-	  if ( game_drv == GAME_POWERINS ) BurnYM2203Scan(nAction, pnMin);
+		if ( game_drv == GAME_POWERINS ) BurnYM2203Scan(nAction, pnMin);
 
-		MSM6295Scan(0, nAction);
-		if ( game_drv != GAME_POWERINA ) MSM6295Scan(1, nAction);
+		MSM6295Scan(nAction, pnMin);
+		if ( game_drv != GAME_POWERINA ) //MSM6295Scan(1, nAction);
 
-		SCAN_VAR(m6295size);
 		SCAN_VAR(soundlatch);
 		if ( game_drv == GAME_POWERINA ) SCAN_VAR(oki_bank);
 
 		SCAN_VAR(tile_bank);
-		SCAN_VAR(RamCurPal);
 
 		if (nAction & ACB_WRITE) {
 			bRecalcPalette = 1;
-	   if ( game_drv == GAME_POWERINA ) memcpy(&MSM6295ROM[0x30000],&MSM6295ROM[0x40000 + 0x10000*oki_bank],0x10000);
+			if ( game_drv == GAME_POWERINA )  MSM6295SetBank(0, MSM6295ROM + 0x40000 + 0x10000*oki_bank, 0x30000, 0x3ffff);
 		}
 	}
 

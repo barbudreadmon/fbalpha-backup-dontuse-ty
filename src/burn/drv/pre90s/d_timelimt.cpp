@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -27,13 +24,11 @@ static UINT8 *DrvColPROM;
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
 
-static INT16 *pAY8910Buffer[6];
-
-static UINT8  DrvJoy1[8];
-static UINT8  DrvJoy2[8];
-static UINT8  DrvDips[1];
-static UINT8  DrvInputs[2];
-static UINT8  DrvReset;
+static UINT8 DrvJoy1[8];
+static UINT8 DrvJoy2[8];
+static UINT8 DrvDips[1];
+static UINT8 DrvInputs[2];
+static UINT8 DrvReset;
 
 static UINT8 soundlatch;
 static UINT8 nmi_enable;
@@ -285,13 +280,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -419,10 +407,11 @@ static INT32 DrvInit()
 	ZetSetInHandler(timelimt_sound_read_port);
 	ZetClose();
 
-	AY8910Init(0, 1536000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1536000, 0);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(1, 1536000, nBurnSoundRate, &timelimt_ay8910_1_portA_read, NULL, NULL, NULL);
+	AY8910Init(1, 1536000, 1);
+	AY8910SetPorts(1, &timelimt_ay8910_1_portA_read, NULL, NULL, NULL);
 	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -616,7 +605,7 @@ static INT32 DrvFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -675,7 +664,7 @@ static struct BurnRomInfo timelimtRomDesc[] = {
 
 	{ "clr.35",	0x0020, 0x9c9e6073, 5 | BRF_GRA },           // 11 Color proms
 	{ "clr.48",	0x0020, 0xa0bcac59, 5 | BRF_GRA },           // 12
-	{ "clr.57",	0x0020, 0x00000000, 5 | BRF_NODUMP | BRF_GRA },           // 13
+	{ "clr.57",	0x0020, 0x3a9f5394, 5 | BRF_GRA },           // 13
 
 	{ "tl5",	0x1000, 0x5b782e4a, 6 | BRF_PRG | BRF_ESS }, // 14 Z80 #1 code
 	{ "tl4",	0x1000, 0xa32883a9, 6 | BRF_PRG | BRF_ESS }, // 15

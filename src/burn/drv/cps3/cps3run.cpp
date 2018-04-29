@@ -22,6 +22,7 @@ Port to FBA by OopsWare
 
 #define	BE_GFX		1
 //#define	FAST_BOOT	1
+#define SPEED_HACK	1		// Default should be 1, if not FPS would drop.
 
 static UINT8 *Mem = NULL, *MemEnd = NULL;
 static UINT8 *RamStart, *RamEnd;
@@ -85,7 +86,6 @@ static INT32 cps3_gfx_width, cps3_gfx_height;
 static INT32 cps3_gfx_max_x, cps3_gfx_max_y;
 
 extern int kNetGame;
-
 
 // -- AMD/Fujitsu 29F016 --------------------------------------------------
 
@@ -216,6 +216,7 @@ inline static void Cps3ClearOpposites(UINT16* nJoystickInputs)
 	if ((*nJoystickInputs & 0x0c) == 0x0c) {
 		*nJoystickInputs &= ~0x0c;
 	}
+
 	if ((*nJoystickInputs & 0x0300) == 0x0300) {
 		*nJoystickInputs &= ~0x0300;
 	}
@@ -1065,10 +1066,12 @@ static INT32 Cps3Reset()
 		EEPROM[0x29] = 0x000 + (EEPROM[0x29] & 0xff);
 	}
 
-	cps3_current_eeprom_read = 0;	
-	cps3SndReset();	
-	cps3_reset = 0;	
+	cps3_current_eeprom_read = 0;
+	cps3SndReset();
+	cps3_reset = 0;
+
 	HiscoreReset();
+
 	return 0;
 }
 
@@ -1156,7 +1159,7 @@ INT32 cps3Init()
 		Sh2Init(1);
 		Sh2Open(0);
 
-#ifdef USE_SPEEDHACKS
+#ifdef SPEED_HACK
 		cps3speedhack = 1;
 #endif
 
@@ -1230,7 +1233,7 @@ INT32 cps3Init()
 		Sh2SetWriteWordHandler(4, cps3VidWriteWord);
 		Sh2SetWriteLongHandler(4, cps3VidWriteLong);
 
-#ifdef USE_SPEEDHACKS
+#ifdef SPEED_HACK
 		// install speedup read handler
 		Sh2MapHandler(5,			0x02000000 | (cps3_speedup_ram_address & 0x030000),
 							0x0200ffff | (cps3_speedup_ram_address & 0x030000), MAP_READ);

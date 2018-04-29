@@ -63,6 +63,7 @@ INT32 CpsLoadTilesKodb(INT32 nStart);
 INT32 CpsLoadTilesWonder3b(INT32 nStart);
 INT32 CpsLoadTilesPang3r1a(INT32 nStart);
 INT32 CpsLoadTilesPunisherb(INT32 nStart);
+INT32 CpsLoadTilesKnightsb2(INT32 nStart);
 INT32 CpsLoadStars(UINT8 *pStar, INT32 nStart);
 INT32 CpsLoadStarsByte(UINT8 *pStar, INT32 nStart);
 INT32 CpsLoadStarsForgottnAlt(UINT8 *pStar, INT32 nStart);
@@ -443,12 +444,12 @@ INT32 PsndInit();
 INT32 PsndExit();
 void PsndNewFrame();
 INT32 PsndSyncZ80(INT32 nCycles);
-INT32 PsndScan(INT32 nAction);
+INT32 PsndScan(INT32 nAction, INT32 *pnMin);
 
 // ps_z.cpp
 INT32 PsndZInit();
 INT32 PsndZExit();
-INT32 PsndZScan(INT32 nAction);
+INT32 PsndZScan(INT32 nAction, INT32 *pnMin);
 extern INT32 Kodb;
 
 // ps_m.cpp

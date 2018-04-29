@@ -274,7 +274,7 @@ static void lemmings_sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x1000:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x1800:
@@ -289,10 +289,10 @@ static UINT8 lemmings_sound_read(UINT16 address)
 	{
 		case 0x0800:
 		case 0x0801:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0x1000:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x1800:
 			return *soundlatch;
@@ -447,7 +447,7 @@ static INT32 DrvInit()
 	SekSetReadByteHandler(0,		lemmings_main_read_byte);
 	SekClose();
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM + 0x8000,	0x8000, 0xffff, MAP_ROM);
@@ -728,8 +728,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
 
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
 		
 		SCAN_VAR(FakeTrackBallX);
 		SCAN_VAR(FakeTrackBallY);

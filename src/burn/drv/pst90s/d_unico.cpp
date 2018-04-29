@@ -96,9 +96,9 @@ static struct BurnInputInfo ZeropntInputList[] =
 	{"Coin 2"            , BIT_DIGITAL  , DrvInputPort0 + 1, "p2 coin"   },
 	{"Start 2"           , BIT_DIGITAL  , DrvInputPort0 + 5, "p2 start"  },
 
-	A("P1 Gun X"         , BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
-	A("P1 Gun Y"         , BIT_ANALOG_REL, &DrvAnalogPort1 , "p1 y-axis"),
-	{"P1 Fire 1"         , BIT_DIGITAL  , DrvInputPort1 + 0, "p1 fire 1" },
+	A("P1 Gun X"         , BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
+	A("P1 Gun Y"         , BIT_ANALOG_REL, &DrvAnalogPort1 , "mouse y-axis"),
+	{"P1 Fire 1"         , BIT_DIGITAL  , DrvInputPort1 + 0, "mouse button 1" },
 	
 	A("P2 Gun X"         , BIT_ANALOG_REL, &DrvAnalogPort2 , "p2 x-axis"),
 	A("P2 Gun Y"         , BIT_ANALOG_REL, &DrvAnalogPort3 , "p2 y-axis"),
@@ -556,7 +556,7 @@ static UINT8 __fastcall Burglarx68KReadByte(UINT32 a)
 		}
 		
 		case 0x800189: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		case 0x80018c: {
@@ -575,7 +575,7 @@ static void __fastcall Burglarx68KWriteByte(UINT32 a, UINT8 d)
 {
 	switch (a) {
 		case 0x800189: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 		
@@ -721,7 +721,7 @@ static UINT8 __fastcall Zeropnt68KReadByte(UINT32 a)
 		}
 		
 		case 0x800189: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		case 0x80018c: {
@@ -740,7 +740,7 @@ static void __fastcall Zeropnt68KWriteByte(UINT32 a, UINT8 d)
 {
 	switch (a) {
 		case 0x800189: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 		
@@ -835,15 +835,15 @@ static UINT8 __fastcall Zeropnt268KReadByte(UINT32 a)
 		}
 		
 		case 0x800025: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		case 0x80002d: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		case 0x800031: {
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 		}
 		
 		case 0x800140: {
@@ -886,7 +886,7 @@ static void __fastcall Zeropnt268KWriteByte(UINT32 a, UINT8 d)
 {
 	switch (a) {
 		case 0x800025: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 		
@@ -901,7 +901,7 @@ static void __fastcall Zeropnt268KWriteByte(UINT32 a, UINT8 d)
 		}
 		
 		case 0x800031: {
-			MSM6295Command(1, d);
+			MSM6295Write(1, d);
 			return;
 		}
 		
@@ -1818,7 +1818,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		if (nBurnGunNumPlayers) BurnGunScan();
 
@@ -1870,8 +1870,8 @@ static INT32 Zeropnt2Scan(INT32 nAction, INT32 *pnMin)
 	EEPROMScan(nAction, pnMin);
 	
 	if (nAction & ACB_DRIVER_DATA) {
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(1, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		//MSM6295Scan(1, nAction);
 	}
 	
 	if (nAction & ACB_WRITE) {

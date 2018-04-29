@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -27,8 +24,6 @@ static UINT8 *DrvSprRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[9];
 
 static UINT8 sound_nmi_mask = 0;
 static UINT8 soundlatch = 0;
@@ -304,16 +299,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[6]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[7]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[8]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -444,9 +429,9 @@ static INT32 DrvInit()
 	ZetSetReadHandler(rollrace_sound_read);
 	ZetClose();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL); // RIGHT SPEAKER
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL); // RIGHT SPEAKER
-	AY8910Init(2, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL); // LEFT SPEAKER
+	AY8910Init(0, 1500000, 0); // RIGHT SPEAKER
+	AY8910Init(1, 1500000, 1); // RIGHT SPEAKER
+	AY8910Init(2, 1500000, 2); // LEFT SPEAKER
 	AY8910SetAllRoutes(0, 0.10, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.10, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(2, 0.10, BURN_SND_ROUTE_BOTH);
@@ -526,40 +511,6 @@ static void draw_road()
 		}
 	}
 }
-
-/*static void draw_road()
-{
-	for (INT32 offs = 0; offs < 32 * 32; offs++)
-	{
-		INT32 sy = (offs / 0x20) * 8;
-		INT32 sx = (offs & 0x1f) * 8;
-
-		INT32 flipy = 1;
-		INT32 flipx = 0;
-
-		if (backgroundflip == 0) { sy ^= 0xf8; flipy ^= 1; }
-		if (screen_flipx) { sx ^= 0xf8; flipx ^= 1; }
-		if (screen_flipy) { sy ^= 0xf8; flipy ^= 1; }
-
-		INT32 ofst = offs + (backgroundpage * 0x400);
-		INT32 code = DrvGfxROM3[ofst] + ((DrvGfxROM3[ofst + 0x4000] & 0xc0) << 2);
-		INT32 color = backgroundcolor & 0x1f;
-
-		if (flipy) {
-			if (flipx) {
-				Render8x8Tile_FlipXY_Clip(pTransDraw, code, sx, sy, color, 3, 0, DrvGfxROM1);
-			} else {
-				Render8x8Tile_FlipY_Clip(pTransDraw, code, sx, sy, color, 3, 0, DrvGfxROM1);
-			}
-		} else {
-			if (flipx) {
-				Render8x8Tile_FlipX_Clip(pTransDraw, code, sx, sy, color, 3, 0, DrvGfxROM1);
-			} else {
-				Render8x8Tile_Clip(pTransDraw, code, sx, sy, color, 3, 0, DrvGfxROM1);
-			}
-		}
-	}
-}*/
 
 static void draw_text()
 {
@@ -696,7 +647,7 @@ static INT32 DrvFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -787,7 +738,7 @@ struct BurnDriver BurnDrvFightrol = {
 	"fightrol", NULL, NULL, NULL, "1983",
 	"Fighting Roller\0", NULL, "Kaneko (Taito license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_16BIT_ONLY, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
 	NULL, fightrolRomInfo, fightrolRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	224, 240, 3, 4
@@ -839,7 +790,7 @@ struct BurnDriver BurnDrvRollace = {
 	"rollace", "fightrol", NULL, NULL, "1983",
 	"Roller Aces (set 1)\0", NULL, "Kaneko (Williams license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE  | BDF_ORIENTATION_VERTICAL | BDF_16BIT_ONLY, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE  | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
 	NULL, RollaceRomInfo, RollaceRomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	224, 240, 3, 4
@@ -899,7 +850,7 @@ struct BurnDriver BurnDrvRollace2 = {
 	"rollace2", "fightrol", NULL, NULL, "1983",
 	"Roller Aces (set 2)\0", NULL, "Kaneko (Williams license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_16BIT_ONLY, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
 	NULL, Rollace2RomInfo, Rollace2RomName, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	Rollace2DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	224, 240, 3, 4

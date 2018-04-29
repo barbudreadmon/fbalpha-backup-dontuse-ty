@@ -375,7 +375,7 @@ static INT32 DrvInit()
 		DrvPaletteInit();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvColRAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvVidRAM,		0x0800, 0x0fff, MAP_RAM);
@@ -517,6 +517,16 @@ static INT32 DrvDraw()
 	return 0;
 }
 
+static inline void DrvClearOpposites(UINT8* nJoystickInputs) // active low version
+{
+	if ((*nJoystickInputs & 0x03) == 0x00) {
+		*nJoystickInputs |= 0x03;
+	}
+	if ((*nJoystickInputs & 0x0c) == 0x00) {
+		*nJoystickInputs |= 0x0c;
+	}
+}
+
 static INT32 DrvFrame()
 {
 	watchdog++;
@@ -537,6 +547,8 @@ static INT32 DrvFrame()
 			DrvInputs[1] ^= (DrvJoy2[i] & 1) << i;
 			DrvInputs[2] ^= (DrvJoy3[i] & 1) << i;
 		}
+		DrvClearOpposites(&DrvInputs[1]);
+		DrvClearOpposites(&DrvInputs[2]);
 	}
 
 	INT32 nInterleave = 9;
@@ -580,7 +592,7 @@ static INT32 DrvFrame()
 	return 0;
 }
 
-static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
+static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
 
@@ -599,8 +611,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		M6809Scan(nAction);
 
-		vlm5030Scan(nAction);
-		SN76496Scan(nAction,pnMin);
+		vlm5030Scan(nAction, pnMin);
+		SN76496Scan(nAction, pnMin);
 
 		SCAN_VAR(scrolldirection);
 		SCAN_VAR(nmi_enable);

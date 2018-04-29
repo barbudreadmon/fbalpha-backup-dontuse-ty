@@ -5,10 +5,7 @@
 #include "m68000_intf.h"
 #include "m6809_intf.h"
 #include "burn_y8950.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -31,8 +28,6 @@ static UINT8 *DrvSprRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[3];
 
 static UINT8 *soundlatch;
 static UINT8 *flipscreen;
@@ -137,7 +132,7 @@ static struct BurnDIPInfo GinganinDIPList[]=
 
 STDDIPINFO(Ginganin)
 
-void __fastcall ginganin_write_word(UINT32 address, UINT16 data)
+static void __fastcall ginganin_write_word(UINT32 address, UINT16 data)
 {
 	if (address < 0x20000) return;
 
@@ -165,7 +160,7 @@ void __fastcall ginganin_write_word(UINT32 address, UINT16 data)
 	}
 }
 
-UINT16 __fastcall ginganin_read_word(UINT32 address)
+static UINT16 __fastcall ginganin_read_word(UINT32 address)
 {
 	switch (address)
 	{
@@ -179,17 +174,17 @@ UINT16 __fastcall ginganin_read_word(UINT32 address)
 	return 0;
 }
 
-void __fastcall ginganin_write_byte(UINT32 /*address*/, UINT8 /*data*/)
+static void __fastcall ginganin_write_byte(UINT32 /*address*/, UINT8 /*data*/)
 {
 	return;
 }
 
-UINT8 __fastcall ginganin_read_byte(UINT32 /*address*/)
+static UINT8 __fastcall ginganin_read_byte(UINT32 /*address*/)
 {
 	return 0;
 }
 
-void ginganin_sound_write(UINT16 address, UINT8 data)
+static void ginganin_sound_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -228,7 +223,7 @@ void ginganin_sound_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 ginganin_sound_read(UINT16 address)
+static UINT8 ginganin_sound_read(UINT16 address)
 {
 	if (address == 0x1800) {
 		return *soundlatch;
@@ -310,10 +305,6 @@ static INT32 MemIndex()
 
 	DrvPalette		= (UINT32*)Next; Next += 0x400 * sizeof(UINT32);
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	AllRam			= Next;
 
 	Drv68KRAM		= Next; Next += 0x004000;
@@ -391,7 +382,7 @@ static INT32 DrvInit()
 	SekSetReadByteHandler(0,		ginganin_read_byte);
 	SekClose();
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM + 0x4000,	0x4000, 0xffff, MAP_ROM);
@@ -399,7 +390,7 @@ static INT32 DrvInit()
 	M6809SetReadHandler(ginganin_sound_read);
 	M6809Close();
 
-	AY8910Init(0, 3579545 / 2, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 3579545 / 2, 0);
 	AY8910SetAllRoutes(0, 0.10, BURN_SND_ROUTE_BOTH);
 	
 	BurnY8950Init(1, 3579545, DrvSndROM, 0x20000, NULL, 0, NULL, &DrvSynchroniseStream, 1);
@@ -624,7 +615,7 @@ static INT32 DrvFrame()
 	BurnTimerEndFrameY8950(nCyclesTotal[1]);
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 		
 		BurnY8950Update(pBurnSoundOut, nBurnSoundLen);
 	}

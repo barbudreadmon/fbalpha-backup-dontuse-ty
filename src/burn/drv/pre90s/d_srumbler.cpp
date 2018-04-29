@@ -221,16 +221,6 @@ UINT8 __fastcall srumbler_sound_read(UINT16 address)
 	return 0;
 }
 
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)(ZetTotalCycles() * nSoundRate / 3000000);
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 3000000;
-}
-
 static void DrvPaletteInit()
 {
 	for (INT32 i = 0; i < 0x200; i++) {
@@ -394,7 +384,7 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM,		0x0000, 0x1dff, MAP_RAM);
 	M6809MapMemory(DrvSprRAM,		0x1e00, 0x1fff, MAP_RAM);
@@ -416,7 +406,7 @@ static INT32 DrvInit()
 	ZetSetReadHandler(srumbler_sound_read);
 	ZetClose();
 
-	BurnYM2203Init(2, 4000000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(2, 4000000, NULL, 0);
 	BurnTimerAttachZet(3000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.30, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.10, BURN_SND_ROUTE_BOTH);

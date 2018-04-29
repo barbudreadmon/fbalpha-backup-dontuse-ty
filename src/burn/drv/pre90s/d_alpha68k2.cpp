@@ -1522,16 +1522,6 @@ static INT32 DrvSyncDAC()
 	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / ((3579545.00 * 2) / (nBurnFPS / 100.0000))));
 }
 
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / (3579545 * 2);
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / (3579545.0 * 2);
-}
-
 static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
@@ -1678,7 +1668,7 @@ static INT32 Drv2Init(INT32 (*pLoadCb)(), UINT8 invert, UINT16 mc_id, UINT16 coi
 	BurnYM2413Init(3579545);
 	BurnYM2413SetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 
-	BurnYM2203Init(1, 3000000, NULL, DrvSynchroniseStream, DrvGetTime, 1);
+	BurnYM2203Init(1, 3000000, NULL, 1);
 	BurnYM2203SetPorts(0, &DrvYM2203ReadPortA, NULL, &DrvYM2203WritePortA, NULL);
 	BurnTimerAttachZet(3579545*2);
 	BurnYM2203SetAllRoutes(0, 0.65, BURN_SND_ROUTE_BOTH);
@@ -1746,7 +1736,7 @@ static INT32 Drv5Init(INT32 (*pLoadCb)(), UINT8 invert, UINT16 mc_id, UINT16 coi
 	BurnYM2413Init(3579545);
 	BurnYM2413SetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 
-	BurnYM2203Init(1, 3000000, NULL, DrvSynchroniseStream, DrvGetTime, 1);
+	BurnYM2203Init(1, 3000000, NULL, 1);
 	BurnYM2203SetPorts(0, &DrvYM2203ReadPortA, NULL, &DrvYM2203WritePortA, NULL);
 	BurnTimerAttachZet(3579545*2);
 	BurnYM2203SetAllRoutes(0, 0.65, BURN_SND_ROUTE_BOTH);
@@ -2114,7 +2104,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 
 		BurnYM2203Scan(nAction, pnMin);
-		BurnYM2413Scan(nAction);
+		BurnYM2413Scan(nAction, pnMin);
 		DACScan(nAction, pnMin);
 
 		SCAN_VAR(bankdata);
@@ -2767,7 +2757,7 @@ static INT32 GoldmedlRomCb()
 	if (BurnLoadRom(DrvGfxROM1 + 0x000000, 11, 1)) return 1;
 	if (BurnLoadRom(DrvGfxROM1 + 0x080000, 12, 1)) return 1;
 	if (BurnLoadRom(DrvGfxROM1 + 0x100000, 13, 1)) return 1;
-	if (BurnLoadRom(DrvGfxROM1 + 0x180000, 24, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM1 + 0x180000, 14, 1)) return 1;
 
 	return 0;
 }
@@ -2839,7 +2829,7 @@ static INT32 GoldmedlaRomCb()
 	if (BurnLoadRom(DrvGfxROM1 + 0x000000, 11, 1)) return 1;
 	if (BurnLoadRom(DrvGfxROM1 + 0x080000, 12, 1)) return 1;
 	if (BurnLoadRom(DrvGfxROM1 + 0x100000, 13, 1)) return 1;
-	if (BurnLoadRom(DrvGfxROM1 + 0x180000, 24, 1)) return 1;
+	if (BurnLoadRom(DrvGfxROM1 + 0x180000, 14, 1)) return 1;
 
 	return 0;
 }

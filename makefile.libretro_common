@@ -86,7 +86,14 @@ BURN_BLACKLIST := $(FBA_CPU_DIR)/arm7/arm7exec.c \
 	$(FBA_CPU_DIR)/v60/op5.c \
 	$(FBA_CPU_DIR)/v60/optable.c \
 	$(FBA_CPU_DIR)/v60/v60mem.c \
-	$(FBA_CPU_DIR)/v60/v60d.c
+	$(FBA_CPU_DIR)/v60/v60d.c \
+	$(FBA_CPU_DIR)/i8x41/8x41dasm.c \
+	$(FBA_CPU_DIR)/z180/z180xy.c \
+	$(FBA_CPU_DIR)/z180/z180fd.c \
+	$(FBA_CPU_DIR)/z180/z180op.c \
+	$(FBA_CPU_DIR)/z180/z180ed.c \
+	$(FBA_CPU_DIR)/z180/z180dd.c \
+	$(FBA_CPU_DIR)/z180/z180cb.c
 
 ifeq ($(NO_MD), 1)
 	MD_DIR		:= 
@@ -165,6 +172,7 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/arm7 \
 	$(FBA_CPU_DIR)/h6280 \
 	$(FBA_CPU_DIR)/hd6309 \
+	$(FBA_CPU_DIR)/i8x41 \
 	$(FBA_CPU_DIR)/i8039 \
 	$(FBA_CPU_DIR)/i8051 \
 	$(FBA_CPU_DIR)/konami \
@@ -185,7 +193,8 @@ FBA_CPU_DIRS := $(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/upd7725 \
 	$(FBA_CPU_DIR)/upd7810 \
 	$(FBA_CPU_DIR)/v60 \
-	$(FBA_CPU_DIR)/z80
+	$(FBA_CPU_DIR)/z80 \
+	$(FBA_CPU_DIR)/z180
 
 FBA_INTERFACE_DIRS := $(FBA_INTERFACE_DIR)/audio
 
@@ -252,10 +261,14 @@ INCLUDE_DIRS := $(FBA_BURNER_DIR)/win32 \
 	$(FBA_CPU_DIR) \
 	$(FBA_CPU_DIR)/i8039 \
 	$(FBA_CPU_DIR)/i8051 \
+	$(FBA_CPU_DIR)/i8x41 \
+	$(FBA_CPU_DIR)/m6805 \
 	$(FBA_CPU_DIR)/tms32010 \
 	$(FBA_CPU_DIR)/upd7725 \
 	$(FBA_CPU_DIR)/upd7810 \
 	$(FBA_CPU_DIR)/v60 \
+	$(FBA_CPU_DIR)/z80 \
+	$(FBA_CPU_DIR)/z180 \
 	$(FBA_LIB_DIR)/zlib \
 	$(FBA_LIB_DIR)/lib7z \
 	$(FBA_BURN_DIR)/drv/capcom \

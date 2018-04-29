@@ -271,16 +271,6 @@ static UINT8 __fastcall ironhors_sound_read_port(UINT16 port)
 	return 0;
 }
 
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 3072000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 3072000;
-}
-
 static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
@@ -415,7 +405,7 @@ static INT32 DrvInit()
 		DrvPaletteInit();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM0,		0x0000, 0x00ff, MAP_RAM);
 	M6809MapMemory(DrvColRAM,		0x2000, 0x23ff, MAP_RAM);
@@ -437,7 +427,7 @@ static INT32 DrvInit()
 	ZetSetInHandler(ironhors_sound_read_port);
 	ZetClose();
 
-	BurnYM2203Init(1, 3072000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 3072000, NULL, 0);
 	BurnTimerAttachZet(3072000);
 	BurnYM2203SetAllRoutes(0, 1.00, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetPSGVolume(0, 1.00);
@@ -663,15 +653,15 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 // Iron Horse
 
 static struct BurnRomInfo ironhorsRomDesc[] = {
-	{ "13c_h03.bin",	0x8000, 0x24539af1, 1 | BRF_PRG | BRF_ESS }, //  0 M6809 Code
-	{ "12c_h02.bin",	0x4000, 0xfab07f86, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "560_k03.13c",	0x8000, 0x395351b4, 1 | BRF_PRG | BRF_ESS }, //  0 M6809 Code
+	{ "560_k02.12c",	0x4000, 0x1cff3d59, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "10c_h01.bin",	0x4000, 0x2b17930f, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 Code
+	{ "560_h01.10c",	0x4000, 0x2b17930f, 2 | BRF_PRG | BRF_ESS }, //  2 Z80 Code
 
-	{ "08f_h06.bin",	0x8000, 0xf21d8c93, 3 | BRF_GRA },           //  3 Graphics Tiles
-	{ "07f_h05.bin",	0x8000, 0x60107859, 3 | BRF_GRA },           //  4
-	{ "09f_h07.bin",	0x8000, 0xc761ec73, 3 | BRF_GRA },           //  5
-	{ "06f_h04.bin",	0x8000, 0xc1486f61, 3 | BRF_GRA },           //  6
+	{ "560_h06.08f",	0x8000, 0xf21d8c93, 3 | BRF_GRA },           //  3 Graphics Tiles
+	{ "560_h05.07f",	0x8000, 0x60107859, 3 | BRF_GRA },           //  4
+	{ "560_h07.09f",	0x8000, 0xc761ec73, 3 | BRF_GRA },           //  5
+	{ "560_h04.06f",	0x8000, 0xc1486f61, 3 | BRF_GRA },           //  6
 
 	{ "03f_h08.bin",	0x0100, 0x9f6ddf83, 4 | BRF_GRA },           //  7 Color PROMs
 	{ "04f_h09.bin",	0x0100, 0xe6773825, 4 | BRF_GRA },           //  8

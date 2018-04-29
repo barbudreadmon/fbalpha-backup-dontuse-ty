@@ -11,10 +11,7 @@
 #include "burn_ym3526.h"
 #include "burn_ym3812.h"
 #include "burn_y8950.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -38,8 +35,6 @@ static UINT8 *DrvShareRAM;
 static UINT8 *DrvSprRAM;
 static UINT8 *DrvTxtRAM;
 static UINT8 *DrvTransTab;
-
-static INT16 *pAY8910Buffer[6];
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
@@ -4044,13 +4039,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -4693,10 +4681,10 @@ static INT32 MarvinsInit()
 	ZetSetReadHandler(marvins_sound_read);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(1, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, 2000000, 1);
 	AY8910SetAllRoutes(1, 0.20, BURN_SND_ROUTE_BOTH);
 
 	snkwave_volume = 0.50;
@@ -4756,10 +4744,10 @@ static INT32 MadcrashInit()
 	ZetSetReadHandler(marvins_sound_read);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(1, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, 2000000, 1);
 	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 
 	snkwave_volume = 0.30; // for vangrd2
@@ -4819,10 +4807,10 @@ static INT32 MadcrushInit()
 	ZetSetReadHandler(marvins_sound_read);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.35, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(1, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, 2000000, 1);
 	AY8910SetAllRoutes(1, 0.35, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -4875,10 +4863,10 @@ static INT32 JcrossInit()
 	ZetSetInHandler(jcross_sound_read_port);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(1, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, 2000000, 1);
 	AY8910SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -4932,10 +4920,10 @@ static INT32 SgladiatInit()
 	ZetSetInHandler(jcross_sound_read_port);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.35, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(1, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, 2000000, 1);
 	AY8910SetAllRoutes(1, 0.35, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -4988,10 +4976,10 @@ static INT32 Hal21Init()
 	ZetSetReadHandler(jcross_sound_read);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
 	AY8910SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 
-	AY8910Init(1, 2000000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(1, 2000000, 1);
 	AY8910SetAllRoutes(1, 0.15, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -6171,7 +6159,7 @@ static INT32 MarvinsFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 		snkwave_render(pBurnSoundOut, nBurnSoundLen);
 	}
 
@@ -6235,7 +6223,7 @@ static INT32 JcrossFrame()
 		if (pBurnSoundOut && i%8==7) {
 			INT32 nSegmentLength = nBurnSoundLen / 100; //nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -6245,7 +6233,7 @@ static INT32 JcrossFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 	}
 
@@ -7721,6 +7709,85 @@ struct BurnDriver BurnDrvAthena = {
 };
 
 
+// Athena (bootleg)
+// is this really a bootleg?
+
+static struct BurnRomInfo athenabRomDesc[] = {
+	{ "p4.bin",			0x04000, 0xa341677e, 1 | BRF_ESS | BRF_PRG }, //  0 Z80 #0 Code
+	{ "m4.bin",			0x08000, 0x26e2b14f, 1 | BRF_ESS | BRF_PRG }, //  1
+
+	{ "p8.bin",			0x04000, 0xdf50af7e, 2 | BRF_ESS | BRF_PRG }, //  2 Z80 #1 Code
+	{ "m8.bin",			0x08000, 0xf3c933df, 2 | BRF_ESS | BRF_PRG }, //  3
+
+	{ "g6.bin",			0x04000, 0x42dbe029, 3 | BRF_ESS | BRF_PRG }, //  4 Z80 #2 Code
+	{ "k6.bin",			0x08000, 0x596f1c8a, 3 | BRF_ESS | BRF_PRG }, //  5
+
+	{ "c2.bin",			0x00400, 0x294279ae, 14 | BRF_GRA },	      //  6 Color Data
+	{ "b1.bin",			0x00400, 0xd25c9099, 14 | BRF_GRA },	      //  7
+	{ "c1.bin",			0x00400, 0xa4a4e7dc, 14 | BRF_GRA },	      //  8
+
+	{ "d2.bin",			0x04000, 0x18b4bcca, 4 | BRF_GRA },	      //  9 Text Characters
+
+	{ "b2.bin",			0x08000, 0xf269c0eb, 6 | BRF_GRA },	      // 10 Background Characters
+
+	{ "p2.bin",			0x08000, 0xc63a871f, 9 | BRF_GRA },	      // 11 Sprites
+	{ "s2.bin",			0x08000, 0x760568d8, 9 | BRF_GRA },	      // 12
+	{ "t2.bin",			0x08000, 0x57b35c73, 9 | BRF_GRA },	      // 13
+};
+
+STD_ROM_PICK(athenab)
+STD_ROM_FN(athenab)
+
+struct BurnDriver BurnDrvAthenab = {
+	"athenab", "athena", NULL, NULL, "1986",
+	"Athena (bootleg)\0", NULL, "SNK", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, athenabRomInfo, athenabRomName, NULL, NULL, AthenaInputInfo, AthenaDIPInfo,
+	AthenaInit, DrvExit, AthenaFrame, Tnk3Draw, DrvScan, &DrvRecalc, 0x400,
+	288, 216, 4, 3
+};
+
+
+// Super Athena (bootleg)
+
+static struct BurnRomInfo sathenaRomDesc[] = {
+	{ "1.128",			0x04000, 0x26eb2ce1, 1 | BRF_ESS | BRF_PRG }, //  0 Z80 #0 Code
+	{ "2.256",			0x08000, 0x925f60ce, 1 | BRF_ESS | BRF_PRG }, //  1
+
+	{ "3.128",			0x04000, 0xd0853f62, 2 | BRF_ESS | BRF_PRG }, //  2 Z80 #1 Code
+	{ "4.256",			0x08000, 0x8c697bca, 2 | BRF_ESS | BRF_PRG }, //  3
+
+	{ "0.128",			0x04000, 0x42dbe029, 3 | BRF_ESS | BRF_PRG }, //  4 Z80 #2 Code
+	{ "5.256",			0x08000, 0x596f1c8a, 3 | BRF_ESS | BRF_PRG }, //  5
+
+	{ "up02_c2.rom",	0x00400, 0x294279ae, 14 | BRF_GRA },	      //  6 Color Data
+	{ "up02_b1.rom",	0x00400, 0xd25c9099, 14 | BRF_GRA },	      //  7
+	{ "up02_c1.rom",	0x00400, 0xa4a4e7dc, 14 | BRF_GRA },	      //  8
+
+	{ "11.128",			0x04000, 0x18b4bcca, 4 | BRF_GRA },	      //  9 Text Characters
+
+	{ "10.256",			0x08000, 0xf269c0eb, 6 | BRF_GRA },	      // 10 Background Characters
+
+	{ "7.256",			0x08000, 0xc63a871f, 9 | BRF_GRA },	      // 11 Sprites
+	{ "8.256",			0x08000, 0x760568d8, 9 | BRF_GRA },	      // 12
+	{ "9.256",			0x08000, 0x57b35c73, 9 | BRF_GRA },	      // 13
+};
+
+STD_ROM_PICK(sathena)
+STD_ROM_FN(sathena)
+
+struct BurnDriver BurnDrvSathena = {
+	"sathena", "athena", NULL, NULL, "1987",
+	"Super Athena (bootleg)\0", NULL, "bootleg", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PLATFORM, 0,
+	NULL, sathenaRomInfo, sathenaRomName, NULL, NULL, AthenaInputInfo, AthenaDIPInfo,
+	AthenaInit, DrvExit, AthenaFrame, Tnk3Draw, DrvScan, &DrvRecalc, 0x400,
+	288, 216, 4, 3
+};
+
+
 // ASO - Armored Scrum Object
 
 static struct BurnRomInfo asoRomDesc[] = {
@@ -7862,30 +7929,30 @@ struct BurnDriver BurnDrvArian = {
 // Fighting Golf (World?)
 
 static struct BurnRomInfo fitegolfRomDesc[] = {
-	{ "gu2",		0x04000, 0x19be7ad6, 1 | BRF_ESS | BRF_PRG }, //  0 Z80 #0 Code
-	{ "gu1",		0x08000, 0xbc32568f, 1 | BRF_ESS | BRF_PRG }, //  1
+	{ "gu2.4p",		0x04000, 0x19be7ad6, 1 | BRF_ESS | BRF_PRG }, //  0 Z80 #0 Code
+	{ "gu1.4m",		0x08000, 0xbc32568f, 1 | BRF_ESS | BRF_PRG }, //  1
 
-	{ "gu6",		0x04000, 0x2b9978c5, 2 | BRF_ESS | BRF_PRG }, //  2 Z80 #1 Code
-	{ "gu5",		0x08000, 0xea3d138c, 2 | BRF_ESS | BRF_PRG }, //  3
+	{ "gu6.8p",		0x04000, 0x2b9978c5, 2 | BRF_ESS | BRF_PRG }, //  2 Z80 #1 Code
+	{ "gu5.8m",		0x08000, 0xea3d138c, 2 | BRF_ESS | BRF_PRG }, //  3
 
-	{ "gu3",		0x04000, 0x811b87d7, 3 | BRF_ESS | BRF_PRG }, //  4 Z80 #2 Code
-	{ "gu4",		0x08000, 0x2d998e2b, 3 | BRF_ESS | BRF_PRG }, //  5
+	{ "gu3.6g",		0x04000, 0x811b87d7, 3 | BRF_ESS | BRF_PRG }, //  4 Z80 #2 Code
+	{ "gu4.6k",		0x08000, 0x2d998e2b, 3 | BRF_ESS | BRF_PRG }, //  5
 
-	{ "82s137.2c",		0x00400, 0x6e4c7836, 14 | BRF_GRA },	      //  6 Color Data
-	{ "82s137.1b",		0x00400, 0x29e7986f, 14 | BRF_GRA },	      //  7
-	{ "82s137.1c",		0x00400, 0x27ba9ff9, 14 | BRF_GRA },	      //  8
+	{ "3.2c",		0x00400, 0x6e4c7836, 14 | BRF_GRA },	      //  6 Color Data
+	{ "1.1b",		0x00400, 0x29e7986f, 14 | BRF_GRA },	      //  7
+	{ "2.1c",		0x00400, 0x27ba9ff9, 14 | BRF_GRA },	      //  8
 
-	{ "gu8",		0x04000, 0xf1628dcf, 4 | BRF_GRA },	      //  9 Text Characters
+	{ "gu8.2d",		0x04000, 0xf1628dcf, 4 | BRF_GRA },	      //  9 Text Characters
 
-	{ "gu7",		0x08000, 0x4655f94e, 6 | BRF_GRA },	      // 10 Background Characters
+	{ "gu7.2b",		0x08000, 0x4655f94e, 6 | BRF_GRA },	      // 10 Background Characters
 
-	{ "gu9",		0x08000, 0xd4957ec5, 9 | BRF_GRA },	      // 11 Sprites
-	{ "gu10",		0x08000, 0xb3acdac2, 9 | BRF_GRA },	      // 12
-	{ "gu11",		0x08000, 0xb99cf73b, 9 | BRF_GRA },	      // 13
+	{ "gu9.2p",		0x08000, 0xd4957ec5, 9 | BRF_GRA },	      // 11 Sprites
+	{ "gu10.2rs",	0x08000, 0xb3acdac2, 9 | BRF_GRA },	      // 12
+	{ "gu11.2t",	0x08000, 0xb99cf73b, 9 | BRF_GRA },	      // 13
 
-	{ "pal16r6a.6c",	0x00104, 0xde291f4e, 0 | BRF_OPT },	      // 14 PLDs
-	{ "pal16l8a.3f",	0x00104, 0xc5f1c1da, 0 | BRF_OPT },	      // 15
-	{ "pal20l8a.6r",	0x00144, 0x0f011673, 0 | BRF_OPT },	      // 16
+	{ "a6001-1.6c",	0x00104, 0xde291f4e, 0 | BRF_OPT },	      // 14 PLDs
+	{ "a6001-3.3f",	0x00104, 0xc5f1c1da, 0 | BRF_OPT },	      // 15
+	{ "a6001-2.6r",	0x00144, 0x0f011673, 0 | BRF_OPT },	      // 16
 };
 
 STD_ROM_PICK(fitegolf)
@@ -7905,30 +7972,30 @@ struct BurnDriver BurnDrvFitegolf = {
 // Fighting Golf (US)
 
 static struct BurnRomInfo fitegolfuRomDesc[] = {
-	{ "np45.128",		0x04000, 0x16e8e763, 1 | BRF_ESS | BRF_PRG }, //  0 Z80 #0 Code
-	{ "mn45.256",		0x08000, 0xa4fa09d5, 1 | BRF_ESS | BRF_PRG }, //  1
+	{ "np45.4p",	0x04000, 0x16e8e763, 1 | BRF_ESS | BRF_PRG }, //  0 Z80 #0 Code
+	{ "mn45.4m",	0x08000, 0xa4fa09d5, 1 | BRF_ESS | BRF_PRG }, //  1
 
-	{ "gu6",		0x04000, 0x2b9978c5, 2 | BRF_ESS | BRF_PRG }, //  2 Z80 #1 Code
-	{ "gu5",		0x08000, 0xea3d138c, 2 | BRF_ESS | BRF_PRG }, //  3
+	{ "gu6.8p",		0x04000, 0x2b9978c5, 2 | BRF_ESS | BRF_PRG }, //  2 Z80 #1 Code
+	{ "gu5.8m",		0x08000, 0xea3d138c, 2 | BRF_ESS | BRF_PRG }, //  3
 
-	{ "gu3",		0x04000, 0x811b87d7, 3 | BRF_ESS | BRF_PRG }, //  4 Z80 #2 Code
-	{ "gu4",		0x08000, 0x2d998e2b, 3 | BRF_ESS | BRF_PRG }, //  5
+	{ "gu3.6g",		0x04000, 0x811b87d7, 3 | BRF_ESS | BRF_PRG }, //  4 Z80 #2 Code
+	{ "gu4.6k",		0x08000, 0x2d998e2b, 3 | BRF_ESS | BRF_PRG }, //  5
 
-	{ "82s137.2c",		0x00400, 0x6e4c7836, 14 | BRF_GRA },	      //  6 Color Data
-	{ "82s137.1b",		0x00400, 0x29e7986f, 14 | BRF_GRA },	      //  7
-	{ "82s137.1c",		0x00400, 0x27ba9ff9, 14 | BRF_GRA },	      //  8
+	{ "3.2c",		0x00400, 0x6e4c7836, 14 | BRF_GRA },	      //  6 Color Data
+	{ "1.1b",		0x00400, 0x29e7986f, 14 | BRF_GRA },	      //  7
+	{ "2.1c",		0x00400, 0x27ba9ff9, 14 | BRF_GRA },	      //  8
 
-	{ "gu8",		0x04000, 0xf1628dcf, 4 | BRF_GRA },	      //  9 Text Characters
+	{ "gu8.2d",		0x04000, 0xf1628dcf, 4 | BRF_GRA },	      //  9 Text Characters
 
-	{ "gu7",		0x08000, 0x4655f94e, 6 | BRF_GRA },	      // 10 Background Characters
+	{ "gu7.2b",		0x08000, 0x4655f94e, 6 | BRF_GRA },	      // 10 Background Characters
 
-	{ "gu9",		0x08000, 0xd4957ec5, 9 | BRF_GRA },	      // 11 Sprites
-	{ "gu10",		0x08000, 0xb3acdac2, 9 | BRF_GRA },	      // 12
-	{ "gu11",		0x08000, 0xb99cf73b, 9 | BRF_GRA },	      // 13
+	{ "gu9.2p",		0x08000, 0xd4957ec5, 9 | BRF_GRA },	      // 11 Sprites
+	{ "gu10.2rs",	0x08000, 0xb3acdac2, 9 | BRF_GRA },	      // 12
+	{ "gu11.2t",	0x08000, 0xb99cf73b, 9 | BRF_GRA },	      // 13
 
-	{ "pal16r6a.6c",	0x00104, 0xde291f4e, 0 | BRF_OPT },	      // 14 PLDs
-	{ "pal16l8a.3f",	0x00104, 0xc5f1c1da, 0 | BRF_OPT },	      // 15
-	{ "pal20l8a.6r",	0x00144, 0x0f011673, 0 | BRF_OPT },	      // 16
+	{ "a6001-1.6c",	0x00104, 0xde291f4e, 0 | BRF_OPT },	      // 14 PLDs
+	{ "a6001-3.3f",	0x00104, 0xc5f1c1da, 0 | BRF_OPT },	      // 15
+	{ "a6001-2.6r",	0x00144, 0x0f011673, 0 | BRF_OPT },	      // 16
 };
 
 STD_ROM_PICK(fitegolfu)
@@ -8368,6 +8435,11 @@ static struct BurnRomInfo victroadRomDesc[] = {
 
 	{ "p4.ef5",		0x10000, 0xe10fb8cc, 15 | BRF_SND },          // 20 Samples
 	{ "p5.g5",		0x10000, 0x93e5f110, 15 | BRF_SND },          // 21
+	
+	{ "pal20l8",	0x00144, 0x00000000, 0 | BRF_OPT | BRF_NODUMP },
+	{ "a6002-3.p2",	0x00104, 0x036b1a16, 0 | BRF_OPT },
+	{ "a5004-1.d6",	0x00104, 0x311e5ae6, 0 | BRF_OPT },
+	{ "a5004-4.s8",	0x00104, 0xfad4c493, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(victroad)

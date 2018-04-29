@@ -119,15 +119,15 @@ static struct BurnDIPInfo PktgaldxDIPList[]=
 
 STDDIPINFO(Pktgaldx)
 
-void __fastcall pktgaldx_write_word(UINT32 address, UINT16 data)
+static void __fastcall pktgaldx_write_word(UINT32 address, UINT16 data)
 {
 	if ((address & 0xfffff0) == 0x140000) {
-		MSM6295Command(0, data);
+		MSM6295Write(0, data);
 		return;
 	}
 
 	if ((address & 0xfffff0) == 0x150000) {
-		MSM6295Command(1, data);
+		MSM6295Write(1, data);
 		return;
 	}
 
@@ -139,15 +139,15 @@ void __fastcall pktgaldx_write_word(UINT32 address, UINT16 data)
 	}
 }
 
-void __fastcall pktgaldx_write_byte(UINT32 address, UINT8 data)
+static void __fastcall pktgaldx_write_byte(UINT32 address, UINT8 data)
 {
 	if ((address & 0xfffff0) == 0x140000) {
-		MSM6295Command(0, data);
+		MSM6295Write(0, data);
 		return;
 	}
 
 	if ((address & 0xfffff0) == 0x150000) {
-		MSM6295Command(1, data);
+		MSM6295Write(1, data);
 		return;
 	}
 
@@ -159,15 +159,15 @@ void __fastcall pktgaldx_write_byte(UINT32 address, UINT8 data)
 	}
 }
 
-UINT16 __fastcall pktgaldx_read_word(UINT32 address)
+static UINT16 __fastcall pktgaldx_read_word(UINT32 address)
 {
 	switch (address)
 	{
 		case 0x140006:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x150006:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 
 		case 0x167db2:
 			return (DrvInputs[0] & 0xfff7) | (deco16_vblank & 0x08);
@@ -188,17 +188,17 @@ UINT16 __fastcall pktgaldx_read_word(UINT32 address)
 	return 0;
 }
 
-UINT8 __fastcall pktgaldx_read_byte(UINT32 address)
+static UINT8 __fastcall pktgaldx_read_byte(UINT32 address)
 {
 	switch (address)
 	{
 		case 0x140006:
 		case 0x140007:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x150006:
 		case 0x150007:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 
 		case 0x167db2:
 		case 0x167db3:
@@ -531,8 +531,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 		deco16Scan();
 
-		MSM6295Scan(0, nAction);
-		MSM6295Scan(1, nAction);
+		MSM6295Scan(nAction, pnMin);
+		//MSM6295Scan(1, nAction);
 	}
 
 	return 0;

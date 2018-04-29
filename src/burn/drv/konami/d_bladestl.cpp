@@ -60,8 +60,8 @@ static struct BurnInputInfo BladestlInputList[] = {
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 2"	},
 	{"P1 Button 3",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 fire 3"	},
 
-	A("P1 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog0,    "p1 x-axis" ),
-	A("P1 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog1,    "p1 y-axis" ),
+	A("P1 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog0,    "mouse x-axis" ),
+	A("P1 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog1,    "mouse y-axis" ),
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvJoy1 + 1,	"p2 coin"	},
 	{"P2 Start",		BIT_DIGITAL,	DrvJoy1 + 4,	"p2 start"	},
@@ -73,8 +73,8 @@ static struct BurnInputInfo BladestlInputList[] = {
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy3 + 6,	"p2 fire 3"	},
 
-	A("P2 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog2,    "p2 x-axis" ),
-	A("P2 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog3,    "p2 y-axis" ),
+	A("P2 Trackball X",    	BIT_ANALOG_REL, &DrvAnalog2,    "mouse x-axis" ),
+	A("P2 Trackball Y",    	BIT_ANALOG_REL, &DrvAnalog3,    "mouse y-axis" ),
 
 	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"		},
@@ -311,16 +311,6 @@ static void bladestl_ym2203_write_portB(UINT32, UINT32 data)
 	memcpy (DrvUpdROM, DrvUpdROM + 0x20000 + (((data & 0x38) >> 3) * 0x20000), 0x20000);
 }
 
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)M6809TotalCycles() * nSoundRate / 2000000;
-}
-
-inline static double DrvGetTime()
-{
-	return (double)M6809TotalCycles() / 2000000.0;
-}
-
 static INT32 DrvDoReset(INT32 clear_ram)
 {
 	if (clear_ram) {
@@ -431,7 +421,7 @@ static INT32 DrvInit()
 	HD6309SetReadHandler(bladestl_main_read);
 	HD6309Close();
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM,		0x0000, 0x07ff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM  + 0x08000,	0x8000, 0xffff, MAP_ROM);
@@ -448,7 +438,7 @@ static INT32 DrvInit()
 	UPD7759Init(0, UPD7759_STANDARD_CLOCK, DrvUpdROM);
 	UPD7759SetRoute(0, 0.60, BURN_SND_ROUTE_BOTH);
 
-	BurnYM2203Init(1, 3579545, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 3579545, NULL, 0);
 	BurnYM2203SetPorts(0, NULL, NULL, &bladestl_ym2203_write_portA, &bladestl_ym2203_write_portB);
 	BurnTimerAttachM6809(2000000);
 	BurnYM2203SetAllRoutes(0, 0.45, BURN_SND_ROUTE_BOTH);
@@ -603,7 +593,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 
 		K051733Scan(nAction);
 		BurnYM2203Scan(nAction, pnMin);
-		UPD7759Scan(0, nAction, pnMin);
+		UPD7759Scan(nAction, pnMin);
 
 		K007342Scan(nAction);
 

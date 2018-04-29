@@ -111,6 +111,7 @@ int ConfigAppLoad()
 
 		VAR(bVidTripleBuffer);
 		VAR(bVidVSync);
+		VAR(bVidDWMSync);
 
 		VAR(bVidScanlines);
 		VAR(nVidScanIntensity);
@@ -239,6 +240,7 @@ int ConfigAppLoad()
 		STR(szAppHistoryPath);
 		STR(szAppEEPROMPath);
 		
+		VAR(bEnableHighResTimer);
 		VAR(bNoChangeNumLock);
 		VAR(bAlwaysCreateSupportFolders);
 		
@@ -256,6 +258,7 @@ int ConfigAppLoad()
 		VAR(nIpsSelectedLanguage);
 		
 		VAR(bEnableIcons);
+		VAR(bIconsOnlyParents);
 		VAR(nIconsSize);
 		
 		STR(szPrevGames[0]);
@@ -408,6 +411,8 @@ int ConfigAppSave()
 	VAR(bVidTripleBuffer);
 	_ftprintf(h, _T("\n// If non-zero, try to synchronise blits with the display\n"));
 	VAR(bVidVSync);
+	_ftprintf(h, _T("\n// If non-zero, try to synchronise to DWM on Windows 7+, this fixes frame stuttering problems.\n"));
+	VAR(bVidDWMSync);
 	_ftprintf(h, _T("\n// Transfer method:  0 = blit from system memory / use driver/DirectX texture management;\n"));
 	_ftprintf(h, _T("//                   1 = copy to a video memory surface, then use bltfast();\n"));
 	_ftprintf(h, _T("//                  -1 = autodetect for DirectDraw, equals 1 for Direct3D\n"));
@@ -433,7 +438,7 @@ int ConfigAppSave()
 	VAR(nVidScrnAspectY);
 	_ftprintf(h, _T("\n// If non-zero, force all games to use a 60Hz refresh rate\n"));
 	VAR(bForce60Hz);
-	_ftprintf(h, _T("\n// If non-zero, skip frames when needed to keep the emulation running at full speed\n"));
+	_ftprintf(h, _T("\n// If zero, skip frames when needed to keep the emulation running at full speed\n"));
 	VAR(bAlwaysDrawFrames);
 
 	_ftprintf(h, _T("\n"));
@@ -627,6 +632,9 @@ int ConfigAppSave()
 	_ftprintf(h, _T("\n\n\n"));
 	_ftprintf(h, _T("// --- miscellaneous ---------------------------------------------------------\n"));
 
+	_ftprintf(h, _T("\n// If non-zero, enable the high resolution system timer.\n"));
+	VAR(bEnableHighResTimer);
+
 	_ftprintf(h, _T("\n// If non-zero, don't change the status of the Num Lock key.\n"));
 	VAR(bNoChangeNumLock);
 	
@@ -658,6 +666,9 @@ int ConfigAppSave()
 	
 	_ftprintf(h, _T("\n// If non-zero, display drivers icons.\n"));
 	VAR(bEnableIcons);
+
+	_ftprintf(h, _T("\n// If non-zero, display drivers icons for parents only (use if all icons causes UI issues).\n"));
+	VAR(bIconsOnlyParents);
 
 	_ftprintf(h, _T("\n// Specify icons display size, 0 = 16x16 , 1 = 24x24, 2 = 32x32.\n"));
 	VAR(nIconsSize);

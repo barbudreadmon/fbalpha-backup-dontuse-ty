@@ -433,6 +433,9 @@ static INT32 DrvDoReset()
 	ZetReset();
 	ZetClose();
 
+	K007232Reset(0);
+	K007232Reset(1);
+
 	KonamiICReset();
 
 	bottom9_video_enable = 0;
@@ -540,7 +543,7 @@ static INT32 DrvInit()
 		K051960GfxDecode(DrvGfxROM1, DrvGfxROMExp1, 0x100000);
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM,	      0x4000, 0x5fff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM + 0x10000, 0x6000, 0x7fff, MAP_ROM);

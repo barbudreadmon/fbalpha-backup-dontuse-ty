@@ -365,7 +365,7 @@ void __fastcall airbustr_sound_out(UINT16 port, UINT8 data)
 		return;
 
 		case 0x04:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x06:
@@ -386,7 +386,7 @@ UINT8 __fastcall airbustr_sound_in(UINT16 port)
 			return BurnYM2203Read(0, 1);
 
 		case 0x04:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x06:
 			*sound_status = 0;
@@ -404,16 +404,6 @@ static UINT8 DrvYM2203PortA(UINT32)
 static UINT8 DrvYM2203PortB(UINT32)
 {
 	return DrvDips[1];
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 6000000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 6000000;
 }
 
 static INT32 DrvDoReset(INT32 full_reset)
@@ -639,7 +629,7 @@ static INT32 DrvInit()
 	ZetSetInHandler(airbustr_sound_in);
 	ZetClose();
 
-	BurnYM2203Init(1, 3000000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 3000000, NULL, 0);
 	BurnYM2203SetPorts(0, &DrvYM2203PortA, &DrvYM2203PortB, NULL, NULL);
 	BurnTimerAttachZet(6000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.50, BURN_SND_ROUTE_BOTH);
@@ -809,7 +799,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 
 		BurnYM2203Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(interrupt_vectors);
 

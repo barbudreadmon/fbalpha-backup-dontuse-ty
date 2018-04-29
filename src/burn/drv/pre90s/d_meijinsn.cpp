@@ -4,10 +4,7 @@
 #include "tiles_generic.h"
 #include "m68000_intf.h"
 #include "z80_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -24,8 +21,6 @@ static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
 
 static UINT8 *soundlatch;
-
-static INT16 *pAY8910Buffer[3];
 
 static UINT16 DrvInputs[3];
 static UINT8 DrvJoy1[16];
@@ -158,7 +153,7 @@ static UINT8 alpha_mcu_r(UINT8 offset)
 	return 0;
 }
 
-UINT8 __fastcall meijinsn_read_byte(UINT32 address)
+static UINT8 __fastcall meijinsn_read_byte(UINT32 address)
 {
 	if ((address & ~0xff) == 0x080e00) {
 		return alpha_mcu_r(address & 0xfe);
@@ -179,7 +174,7 @@ UINT8 __fastcall meijinsn_read_byte(UINT32 address)
 	return 0;
 }
 
-void __fastcall meijinsn_write_byte(UINT32 address, UINT8 data)
+static void __fastcall meijinsn_write_byte(UINT32 address, UINT8 data)
 {
 	if (address == 0x1a0001) {
 		*soundlatch = data;
@@ -187,7 +182,7 @@ void __fastcall meijinsn_write_byte(UINT32 address, UINT8 data)
 	}
 }
 
-UINT8 __fastcall meijinsn_in_port(UINT16 port)
+static UINT8 __fastcall meijinsn_in_port(UINT16 port)
 {
 	if ((port & 0xff) == 0x01) {
 		return AY8910Read(0);
@@ -196,7 +191,7 @@ UINT8 __fastcall meijinsn_in_port(UINT16 port)
 	return 0;
 }
 
-void __fastcall meijinsn_out_port(UINT16 port, UINT8 data)
+static void __fastcall meijinsn_out_port(UINT16 port, UINT8 data)
 {
 	switch (port & 0xff)
 	{
@@ -258,10 +253,6 @@ static INT32 MemIndex()
 	soundlatch		= Next; Next += 0x000001;
 
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -359,7 +350,8 @@ static INT32 DrvInit()
 	ZetSetInHandler(meijinsn_in_port);
 	ZetClose();
 
-	AY8910Init(0, 2000000, nBurnSoundRate, &ay8910_port_a_r, NULL, NULL, NULL);
+	AY8910Init(0, 2000000, 0);
+	AY8910SetPorts(0, &ay8910_port_a_r, NULL, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.75, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -463,7 +455,7 @@ static INT32 DrvFrame()
 	SekClose();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {

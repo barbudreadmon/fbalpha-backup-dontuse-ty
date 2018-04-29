@@ -402,7 +402,7 @@ static void __fastcall fuuki16_sound_write_port(UINT16 port, UINT8 data)
 		return;
 
 		case 0x61:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -423,7 +423,7 @@ static UINT8 __fastcall fuuki16_sound_read_port(UINT16 port)
 			return BurnYM3812Read(0, port & 1);
 
 		case 0x60:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -456,21 +456,6 @@ static tilemap_callback( layer2 )
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
 	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-}
-
-static INT32 DrvYM2203SynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)SekTotalCycles() * nSoundRate / 16000000;
-}
-
-static double DrvYM2203GetTime()
-{
-	return (double)SekTotalCycles() / 16000000;
-}
-
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 6000000;
 }
 
 static int DrvDoReset()
@@ -638,11 +623,11 @@ static INT32 DrvInit(INT32 nGame)
 	ZetSetInHandler(fuuki16_sound_read_port);
 	ZetClose();
 
-	BurnYM3812Init(1, 3580000, &DrvFMIRQHandler, DrvSynchroniseStream, 0);
+	BurnYM3812Init(1, 3580000, &DrvFMIRQHandler, 0);
 	BurnTimerAttachZetYM3812(6000000);
 	BurnYM3812SetRoute(0, BURN_SND_YM3812_ROUTE, 0.30, BURN_SND_ROUTE_BOTH);
 
-	BurnYM2203Init(1, 3580000, NULL, DrvYM2203SynchroniseStream, DrvYM2203GetTime, 1);
+	BurnYM2203Init(1, 3580000, NULL, 1);
 	BurnTimerAttachSek(16000000);
 	BurnYM2203SetAllRoutes(0, 0.15, BURN_SND_ROUTE_BOTH);
 
@@ -937,7 +922,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekClose();
 		ZetClose();
 
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(DrvBank);
 		SCAN_VAR(DrvOkiBank);

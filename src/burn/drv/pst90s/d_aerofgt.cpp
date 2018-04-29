@@ -26,7 +26,7 @@
  *   Add BurnHighCol support, and add BDF_16BIT_ONLY into driver.   thanks to KEV
  *
  *
- *  Priorities and row scroll are not implemented
+ *  Priorities and row scroll are not implemented (except turbofrc, where needed)
  *
  */
 
@@ -1218,18 +1218,6 @@ static void aerofgtFMIRQHandler(INT32, INT32 nStatus)
 	}
 }
 
-static INT32 aerofgtSynchroniseStream(INT32 nSoundRate)
-{
-	if (ZetGetActive() == -1) return 0;
-	return (INT64)ZetTotalCycles() * nSoundRate / 5000000;
-}
-
-static double aerofgtGetTime()
-{
-	if (ZetGetActive() == -1) return 0;
-	return (double)ZetTotalCycles() / 5000000.0;
-}
-
 static void aerofgtSndBankSwitch(UINT8 v)
 {
 	v &= 0x03;
@@ -1771,7 +1759,7 @@ static void aerofgt_sound_init()
 	ZetSetOutHandler(aerofgtZ80PortWrite);
 	ZetClose();
 	
-	BurnYM2610Init(8000000, RomSnd2, &RomSndSize2, RomSnd1, &RomSndSize1, &aerofgtFMIRQHandler, aerofgtSynchroniseStream, aerofgtGetTime, 0);
+	BurnYM2610Init(8000000, RomSnd2, &RomSndSize2, RomSnd1, &RomSndSize1, &aerofgtFMIRQHandler, 0);
 	BurnTimerAttachZet(5000000);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
@@ -1788,7 +1776,7 @@ static void turbofrc_sound_init()
 	ZetSetOutHandler(turbofrcZ80PortWrite);
 	ZetClose();
 
-	BurnYM2610Init(8000000, RomSnd2, &RomSndSize2, RomSnd1, &RomSndSize1, &aerofgtFMIRQHandler, aerofgtSynchroniseStream, aerofgtGetTime, 0);
+	BurnYM2610Init(8000000, RomSnd2, &RomSndSize2, RomSnd1, &RomSndSize1, &aerofgtFMIRQHandler, 0);
 	BurnTimerAttachZet(5000000);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
@@ -2618,9 +2606,11 @@ static INT32 turbofrcDraw()
 	INT32 scrollx0 = BURN_ENDIAN_SWAP_INT16(RamRaster[7]) - 11;
 	INT32 scrollx1 = bg2scrollx;
 
-	if (nBurnLayer & 1) TileBackground(RamBg1V, DeRomBg + 0x000000, 0, 0x000, scrollx0, bg1scrolly, RamGfxBank + 0);
+	BurnTransferClear();
+
+	if (nBurnLayer & 1) TileBackground(RamBg1V, DeRomBg + 0x000000, 0, 0x000, scrollx0, bg1scrolly + 2, RamGfxBank + 0);
 	memset(RamPrioBitmap, 0, 352 * 240); // clear priority
-	if (nBurnLayer & 2) TileBackgroundPrio(RamBg2V, DeRomBg + 0x140000, 1, 0x100, scrollx1, bg2scrolly, RamGfxBank + 4);
+	if (nBurnLayer & 2) TileBackgroundPrio(RamBg2V, DeRomBg + 0x140000, 1, 0x100, scrollx1, bg2scrolly + 2, RamGfxBank + 4);
 
 	// sprite priority-bitmap is only used between the first 2 calls to turbofrc_drawsprites()
 	// it probably could have been implemented better, but it works. -dink
@@ -2837,7 +2827,9 @@ struct BurnDriver BurnDrvAerofgt = {
 };
 
 
-// Turbo Force (World)
+// There is known to exist but not currently dumped a version of Turbo Force with the program roms stamped "7"
+
+// Turbo Force (World, set 1)
 // World version with no copyright notice
 
 static struct BurnRomInfo turbofrcRomDesc[] = {
@@ -2870,10 +2862,52 @@ STD_ROM_FN(turbofrc)
 
 struct BurnDriver BurnDrvTurbofrc = {
 	"turbofrc", NULL, NULL, NULL, "1991",
-	"Turbo Force (World)\0", NULL, "Video System Co.", "Video System",
+	"Turbo Force (World, set 1)\0", NULL, "Video System Co.", "Video System",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 3, HARDWARE_MISC_POST90S, GBF_VERSHOOT, 0,
 	NULL, turbofrcRomInfo, turbofrcRomName, NULL, NULL, turbofrcInputInfo, turbofrcDIPInfo,
+	turbofrcInit,DrvExit,DrvFrame,turbofrcDraw,DrvScan,&DrvRecalc,0x400,
+	240,352,3,4
+};
+
+
+// Turbo Force (World, set 2)
+// World version with no copyright notice
+
+static struct BurnRomInfo turbofrcoRomDesc[] = {
+	{ "3v2.subpcb.u2",	0x040000, 0x721300ee, BRF_ESS | BRF_PRG }, // 68000 code swapped
+	{ "3v1.subpcb.u1",  0x040000, 0x71b6431b, BRF_ESS | BRF_PRG },
+	{ "3v3.u14",    	0x040000, 0x63f50557, BRF_ESS | BRF_PRG },
+	
+	{ "lh534ggs.u94",  	0x080000, 0xbaa53978, BRF_GRA },		   // gfx1
+	{ "7.u95",  	  	0x020000, 0x71a6c573, BRF_GRA },
+	
+	{ "lh534ggy.u105", 	0x080000, 0x4de4e59e, BRF_GRA },		   // gfx2
+	{ "8.u106", 	  	0x020000, 0xc6479eb5, BRF_GRA },
+	
+	{ "lh534gh2.u116", 	0x080000, 0xdf210f3b, BRF_GRA },		   // gfx3
+	{ "5.u118", 	  	0x040000, 0xf61d1d79, BRF_GRA },
+	{ "lh534gh1.u117", 	0x080000, 0xf70812fd, BRF_GRA },
+	{ "4.u119", 	  	0x040000, 0x474ea716, BRF_GRA },
+
+	{ "lh532a52.u134", 	0x040000, 0x3c725a48, BRF_GRA },		   // gfx4
+	{ "lh532a51.u135", 	0x040000, 0x95c63559, BRF_GRA },
+
+	{ "6.u166", 	  	0x020000, 0x2ca14a65, BRF_ESS | BRF_PRG }, // Sound CPU
+	
+	{ "lh532h74.u180", 	0x040000, 0xa3d43254, BRF_SND },		   // samples
+	{ "lh538o7j.u179", 	0x100000, 0x60ca0333, BRF_SND },	
+};
+
+STD_ROM_PICK(turbofrco)
+STD_ROM_FN(turbofrco)
+
+struct BurnDriver BurnDrvTurbofrco = {
+	"turbofrco", "turbofrc", NULL, NULL, "1991",
+	"Turbo Force (World, set 2)\0", NULL, "Video System Co.", "Video System",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 3, HARDWARE_MISC_POST90S, GBF_VERSHOOT, 0,
+	NULL, turbofrcoRomInfo, turbofrcoRomName, NULL, NULL, turbofrcInputInfo, turbofrcDIPInfo,
 	turbofrcInit,DrvExit,DrvFrame,turbofrcDraw,DrvScan,&DrvRecalc,0x400,
 	240,352,3,4
 };

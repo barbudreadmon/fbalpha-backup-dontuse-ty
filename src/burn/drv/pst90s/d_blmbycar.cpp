@@ -299,7 +299,7 @@ UINT8 __fastcall Blmbycar68KReadByte(UINT32 a)
 		}
 		
 		case 0x70000f: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		default: {
@@ -416,7 +416,7 @@ void __fastcall Blmbycar68KWriteWord(UINT32 a, UINT16 d)
 		}
 		
 		case 0x70000e: {
-			MSM6295Command(0, d & 0xff);
+			MSM6295Write(0, d & 0xff);
 			return;
 		}
 		
@@ -799,7 +799,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 		
 		SCAN_VAR(DrvInput);
 		SCAN_VAR(DrvDip);

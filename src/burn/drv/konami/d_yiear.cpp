@@ -333,7 +333,7 @@ static INT32 DrvInit()
 		DrvPaletteInit();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM,	0x5000, 0x57ff, MAP_RAM);
 	M6809MapMemory(DrvVidRAM,	0x5800, 0x5fff, MAP_RAM);
@@ -525,7 +525,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 
 		M6809Scan(nAction);
 
-		vlm5030Scan(nAction);
+		vlm5030Scan(nAction, pnMin);
 		SN76496Scan(nAction, pnMin);
 
 		SCAN_VAR(sn76496_latch);

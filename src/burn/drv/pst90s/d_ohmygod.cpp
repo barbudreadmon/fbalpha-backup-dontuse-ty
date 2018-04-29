@@ -311,7 +311,7 @@ UINT16 __fastcall OhmygodReadWord(UINT32 a)
 		}
 
 		case 0xb00000: {
-			return 0xfff0 | MSM6295ReadStatus(0);
+			return 0xfff0 | MSM6295Read(0);
 		}
 
 		case 0xc00000: {
@@ -411,7 +411,7 @@ void __fastcall OhmygodWriteByte(UINT32 a, UINT8 d)
 		}
 
 		case 0xb00001: {
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 			return;
 		}
 	}
@@ -656,7 +656,7 @@ static INT32 OhmygodScan(INT32 nAction,INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);					// Scan 68000
 
-		MSM6295Scan(0, nAction);			// Scan OKIM6295
+		MSM6295Scan(nAction, pnMin);			// Scan OKIM6295
 
 		// Scan critical driver variables
 		SCAN_VAR(OhmygodInput);

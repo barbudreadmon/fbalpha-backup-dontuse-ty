@@ -270,7 +270,7 @@ static void __fastcall chinagat_sound_write(UINT16 address, UINT8 data)
 			if (BurnDrvGetFlags() & BDF_BOOTLEG) {
 			//	bprintf (0, _T("Bootleg MCU Command: %2.2x\n"), data);
 			} else {
-				MSM6295Command(0, data);
+				MSM6295Write(0, data);
 			}
 		return;
 	}
@@ -282,10 +282,10 @@ static UINT8 __fastcall chinagat_sound_read(UINT16 address)
 	{
 		case 0x8800:
 		case 0x8801:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0x9800:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xa000:
 			ZetSetIRQLine(0x20, CPU_IRQSTATUS_NONE);
@@ -340,16 +340,6 @@ static void DrvYM2151IrqHandler(INT32 nStatus)
 static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 {
 	ZetSetIRQLine(0, nStatus ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 3579545;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 3579545;
 }
 
 static INT32 DrvDoReset()
@@ -528,7 +518,7 @@ static INT32 DrvInit()
 		ZetSetReadHandler(chinagat_bootleg2_sound_read);
 		ZetClose();
 
-		BurnYM2203Init(2, 3579545, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+		BurnYM2203Init(2, 3579545, &DrvYM2203IRQHandler, 0);
 		BurnTimerAttachZet(3579545);
 		BurnYM2203SetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH);
 		BurnYM2203SetAllRoutes(1, 0.50, BURN_SND_ROUTE_BOTH);
@@ -895,8 +885,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		if (is_bootleg == 2) {
 			BurnYM2203Scan(nAction, pnMin);
 		} else {
-			BurnYM2151Scan(nAction);
-			MSM6295Scan(0, nAction);
+			BurnYM2151Scan(nAction, pnMin);
+			MSM6295Scan(nAction, pnMin);
 		}
 
 		SCAN_VAR(bankdata[0]);

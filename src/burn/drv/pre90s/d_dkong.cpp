@@ -24,6 +24,7 @@
 #include "i8039.h"
 #include "dac.h"
 #include "nes_apu.h"
+#include <math.h> // for exp()
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -46,6 +47,13 @@ static INT32 *DrvRevMap;
 static UINT8 *DrvSndRAM0;
 static UINT8 *DrvSndRAM1;
 
+static UINT8 *i8039_t;
+static UINT8 *i8039_p;
+
+static INT16 *dacbuf; // for dc offset removal
+static INT16 dac_lastin;
+static INT16 dac_lastout;
+
 static UINT32 *DrvPalette;
 static UINT8  DrvRecalc;
 
@@ -58,23 +66,38 @@ static UINT8 *grid_color;
 static UINT8 *flipscreen;
 static UINT8 *nmi_mask;
 
-static UINT8  DrvJoy1[8];
-static UINT8  DrvJoy2[8];
-static UINT8  DrvJoy3[8];
-static UINT8  DrvDips[2];
-static UINT8  DrvInputs[3];
-static UINT8  DrvReset;
+static UINT8 DrvJoy1[8];
+static UINT8 DrvJoy2[8];
+static UINT8 DrvJoy3[8];
+static UINT8 DrvDips[2];
+static UINT8 DrvInputs[3];
+static UINT8 DrvReset;
 
 static INT32 vblank;
-static INT32 sound_cpu_in_reset;
 static void (*DrvPaletteUpdate)();
 
-static INT32 s2650_protection = 0;
-static int dkongjr_walk = 0;
-static int page = 0,mcustatus;
-static int p[8] = { 255,255,255,255,255,255,255,255 };
-static int t[2] = { 1,1 };
+// set in init
+static UINT8 draktonmode = 0;
+static UINT8 brazemode = 0;
 static UINT8 radarscp1 = 0;
+static INT32 s2650_protection = 0;
+
+// driver variables
+static INT32 sound_cpu_in_reset; // dkong3
+static UINT8 dkongjr_walk = 0;
+static UINT8 sndpage = 0, mcustatus;
+static UINT8 dma_latch = 0;
+static UINT8 sample_state[8];
+static UINT8 sample_count;
+static UINT8 climb_data;
+static double envelope_ctr;
+static INT32 decay;
+static INT32 braze_bank = 0; // for braze & drakton(epos) banking
+static UINT8 decrypt_counter = 0; // drakton (epos)
+
+static INT32 hunch_prot_ctr = 0; // hunchback (s2650)
+static UINT8 hunchloopback = 0;
+static UINT8 main_fo = 0;
 
 static struct BurnInputInfo DkongInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 7,	"p1 coin"},
@@ -507,39 +530,36 @@ static struct BurnDIPInfo DraktonDIPList[]=
 
 STDDIPINFO(Drakton)
 
-
 static void dkong_sh1_write(INT32 offset, UINT8 data)
 {
-	static INT32 state[8];
-	static INT32 count = 0;
 	INT32 sample_order[7] = {1,2,1,2,0,1,0};
 
-	if (state[offset] != data)
+	if (sample_state[offset] != data)
 	{
 		if (data) {
 			if (offset) {
 				BurnSamplePlay(offset+2);
 			} else {
-				BurnSamplePlay(sample_order[count]);
-				count++;
-				if (count == 7) count = 0;
+				BurnSamplePlay(sample_order[sample_count]);
+				sample_count++;
+				if (sample_count == 7) sample_count = 0;
 			}
 		}
 
-		state[offset] = data;
+		sample_state[offset] = data;
 	}
 }
 
-void __fastcall dkong_main_write(UINT16 address, UINT8 data)
+static void __fastcall dkong_main_write(UINT16 address, UINT8 data)
 {
 	if ((address & 0xfff0) == 0x7800) {
-		i8257Write(address,data);
+		i8257Write(address, data);
 		return;
 	}
 
 	switch (address)
 	{
-		case 0x7c00:	// AM_LATCH8_WRITE("ls175.3d")
+		case 0x7c00:
 			*soundlatch = data ^ 0x0f;
 		return;
 
@@ -547,17 +567,6 @@ void __fastcall dkong_main_write(UINT16 address, UINT8 data)
 			*gfx_bank = data & 1; // inverted for dkong3
 		return;
 
-#if 0
-		case 0x7d00:
-		case 0x7d01:
-		case 0x7d02:
-		case 0x7d03:
-		case 0x7d04:
-		case 0x7d05:
-		case 0x7d06:
-		case 0x7d07:	// AM_DEVWRITE("ls259.6h", latch8_bit0_w)     		/* Sound signals */
-		return;
-#else
 		case 0x7d00:
 		case 0x7d01:
 		case 0x7d02:
@@ -565,17 +574,16 @@ void __fastcall dkong_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x7d03:
-			p[2] = (p[2] & ~0x20) | ((~data & 1) << 5);
+			i8039_p[2] = (i8039_p[2] & ~0x20) | ((~data & 1) << 5);
 		return;
 
 		case 0x7d04:
-			t[1] = ~data & 1;
+			i8039_t[1] = ~data & 1;
 		return;
 
 		case 0x7d05:
-			t[0] = ~data & 1;
+			i8039_t[0] = ~data & 1;
 		return;
-#endif
 
 		case 0x7d80:
 			I8039SetIrqState(data ? 1 : 0);
@@ -610,7 +618,7 @@ void __fastcall dkong_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 __fastcall dkong_main_read(UINT16 address)
+static UINT8 __fastcall dkong_main_read(UINT16 address)
 {
 	if ((address & 0xfff0) == 0x7800) {
 		return i8257Read(address);
@@ -642,34 +650,25 @@ UINT8 __fastcall dkong_main_read(UINT16 address)
 
 static inline void dkongjr_climb_write(UINT8 data)
 {
-	static INT32 climb = 0;
-	static INT32 count;
-	INT32 sample_order[7] = {1,2,1,2,0,1,0};
+	INT32 sample_order[7] = { 1, 2, 1, 2, 0, 1, 0 };
 
-	if (climb != data)
+	if (climb_data != data)
 	{
-		if (data && dkongjr_walk == 0)
+		if (data)
 		{
-			BurnSamplePlay(sample_order[count]+3);
-			count++;
-			if (count == 7) count = 0;
+			BurnSamplePlay(sample_order[sample_count]+((dkongjr_walk) ? 8 : 3));
+			sample_count++;
+			if (sample_count == 7) sample_count = 0;
 		}
-		else if (data && dkongjr_walk == 1)
-		{
-			BurnSamplePlay(sample_order[count]+8);
-			count++;
-			if (count == 7) count = 0;
-		}
-		climb = data;
+		climb_data = data;
 	}
 }
 
 static inline void dkongjr_sample_play(INT32 offs, UINT8 data, INT32 stop) // jump, land[s], roar, snapjaw[s], death[s], drop
 {
-	static INT32 select[8];
 	UINT8 sample[8] = { 0, 1, 2, 11, 6, 7 };
 
-	if (select[offs] != data)
+	if (sample_state[offs] != data)
 	{
 		if (stop) {
 			if (data) BurnSampleStop(7);
@@ -678,11 +677,11 @@ static inline void dkongjr_sample_play(INT32 offs, UINT8 data, INT32 stop) // ju
 			if (data) BurnSamplePlay(sample[offs]);
 		}
 
-		select[offs] = data;
+		sample_state[offs] = data;
 	}
 }
 
-void __fastcall dkongjr_main_write(UINT16 address, UINT8 data)
+static void __fastcall dkongjr_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -691,7 +690,7 @@ void __fastcall dkongjr_main_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0x7c81:
-			p[2] = (p[2] & ~0x40) | ((~data & 1) << 6);
+			i8039_p[2] = (i8039_p[2] & ~0x40) | ((~data & 1) << 6);
 		return;
 
 		case 0x7d00:
@@ -730,7 +729,7 @@ void __fastcall dkongjr_main_write(UINT16 address, UINT8 data)
 	dkong_main_write(address, data);
 }
 
-void __fastcall radarscp_main_write(UINT16 address, UINT8 data)
+static void __fastcall radarscp_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -746,7 +745,7 @@ void __fastcall radarscp_main_write(UINT16 address, UINT8 data)
 	dkong_main_write(address, data);
 }
 
-void __fastcall dkong3_main_write(UINT16 address, UINT8 data)
+static void __fastcall dkong3_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -811,7 +810,7 @@ void __fastcall dkong3_main_write(UINT16 address, UINT8 data)
 	}
 }
 
-UINT8 __fastcall dkong3_main_read(UINT16 address)
+static UINT8 __fastcall dkong3_main_read(UINT16 address)
 {
 	switch (address)
 	{
@@ -832,8 +831,6 @@ UINT8 __fastcall dkong3_main_read(UINT16 address)
 }
 
 
-static INT32 braze_bank = 0;
-
 static void braze_bankswitch(INT32 data)
 {
 	braze_bank = (data & 0x01) * 0x8000;
@@ -848,7 +845,7 @@ static void braze_bankswitch(INT32 data)
 	ZetMapArea(0x8000, 0xffff, 2, DrvZ80ROM + braze_bank);
 }
 
-void __fastcall braze_main_write(UINT16 address, UINT8 data)
+static void __fastcall braze_main_write(UINT16 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -864,7 +861,7 @@ void __fastcall braze_main_write(UINT16 address, UINT8 data)
 	dkong_main_write(address, data);
 }
 
-UINT8 __fastcall braze_main_read(UINT16 address)
+static UINT8 __fastcall braze_main_read(UINT16 address)
 {
 	// work-around for eeprom reading
 	if ((address & 0xff00) == 0xc800)
@@ -902,11 +899,6 @@ static void braze_decrypt_rom()
 	BurnFree (tmp);
 }
 
-
-
-static INT32 hunch_prot_ctr = 0;
-static UINT8 hunchloopback = 0;
-static UINT8 main_fo = 0;
 
 static void s2650_main_write(UINT16 address, UINT8 data)
 {
@@ -1079,32 +1071,32 @@ static UINT8 s2650_main_read_port(UINT16 port)
 	return 0;
 }
 
-UINT8 __fastcall i8039_sound_read(UINT32 address)
+static UINT8 __fastcall i8039_sound_read(UINT32 address)
 {
 	return DrvSndROM0[address & 0x0fff];
 }
 
-UINT8 __fastcall i8039_sound_read_port(UINT32 port)
+static UINT8 __fastcall i8039_sound_read_port(UINT32 port)
 {
 	if (port < 0x100) {
-		if ((page & 0x40) && port == 0x20) return *soundlatch;
+		if ((sndpage & 0x40) && port == 0x20) return *soundlatch;
 
-		return DrvSndROM0[0x1000 + (page & 7) * 0x100 + (port & 0xff)];
+		return DrvSndROM0[0x1000 + (sndpage & 7) * 0x100 + (port & 0xff)];
 	}
 
 	switch (port)
 	{
 		case I8039_p1:
-			return p[1];
+			return i8039_p[1];
 
 		case I8039_p2:
-			return p[2];
+			return i8039_p[2];
 
 		case I8039_t0:
-			return t[0];
+			return i8039_t[0];
 
 		case I8039_t1:
-			return t[1];
+			return i8039_t[1];
 	}
 	
 	return 0;
@@ -1115,25 +1107,20 @@ static INT32 DkongDACSync()
 	return (INT32)(float)(nBurnSoundLen * (I8039TotalCycles() / ((6000000.000 / 15) / (nBurnFPS / 100.000))));
 }
 
-#if 1
-#include <math.h>
-
-static double envelope,tt;
-static INT32 decay;
-
 static void dkong_sh_p1_write(UINT8 data)
 {
-	envelope=exp(-tt);
-	DACWrite(0,(INT32)(data*envelope));
-	if (decay) tt+=0.001;
-	else tt=0;
+	DACWrite(0, (INT32)(data * exp(-envelope_ctr)));
+	if (decay) {
+		envelope_ctr += 0.001;
+	} else {
+		if (envelope_ctr>0.088) envelope_ctr -= 0.088; // bring decay back to 0 nicely to avoid clicks
+		else if (envelope_ctr>0.001) envelope_ctr -= 0.001;
+		else envelope_ctr = 0.0;
+	}
 }
-#endif
 
 static void __fastcall i8039_sound_write_port(UINT32 port, UINT8 data)
 {
-//bprintf (0, _T("i8039 wp %x %x\n"), port,data);
-
 	switch (port)
 	{
 		case I8039_p1:
@@ -1142,7 +1129,7 @@ static void __fastcall i8039_sound_write_port(UINT32 port, UINT8 data)
 
 		case I8039_p2:
 			decay = !(data & 0x80);
-			page = (data & 0x47);
+			sndpage = (data & 0x47);
 			mcustatus = ((~data & 0x10) >> 4);
 		return;
 	}
@@ -1150,11 +1137,6 @@ static void __fastcall i8039_sound_write_port(UINT32 port, UINT8 data)
 
 static void dkong3_sound0_write(UINT16 a, UINT8 d)
 {
-	if (a <= 0x1ff) {
-		DrvSndRAM0[a] = d;
-		return;
-	}
-
 	if (a >= 0x4000 && a <= 0x4017) {
 		nesapuWrite(0, a - 0x4000, d);
 		return;
@@ -1163,12 +1145,6 @@ static void dkong3_sound0_write(UINT16 a, UINT8 d)
 
 static UINT8 dkong3_sound0_read(UINT16 a)
 {
-	if (a <= 0x1ff) {
-		return DrvSndRAM0[a];
-	}
-	if (a >= 0xe000) {
-		return DrvSndROM0[a - 0xe000];
-	}
 	switch (a) {
 		case 0x4016: return soundlatch[0];
 		case 0x4017: return soundlatch[1];
@@ -1182,10 +1158,6 @@ static UINT8 dkong3_sound0_read(UINT16 a)
 
 static void dkong3_sound1_write(UINT16 a, UINT8 d)
 {
-	if (a <= 0x1ff) {
-		DrvSndRAM1[a] = d;
-		return;
-	}
 	if (a >= 0x4000 && a <= 0x4017) {
 		nesapuWrite(1, a - 0x4000, d);
 		return;
@@ -1194,12 +1166,6 @@ static void dkong3_sound1_write(UINT16 a, UINT8 d)
 
 static UINT8 dkong3_sound1_read(UINT16 a)
 {
-	if (a <= 0x1ff) {
-		return DrvSndRAM1[a];
-	}
-	if (a >= 0xe000) {
-		return DrvSndROM1[a - 0xe000];
-	}
 	if (a >= 0x4000 && a <= 0x4017) {
 		if (a == 0x4016) return soundlatch[2];
 
@@ -1208,9 +1174,6 @@ static UINT8 dkong3_sound1_read(UINT16 a)
 
 	return 0;
 }
-
-
-static UINT8 dma_latch = 0;
 
 static void p8257ControlWrite(UINT16,UINT8 data)
 {
@@ -1231,6 +1194,26 @@ static INT32 DrvDoReset()
 	ZetClose();
 
 	I8039Reset();
+	memset(i8039_p, 0xff, 4);
+	memset(i8039_t, 0x01, 4);
+	dkongjr_walk = 0;
+	sndpage = 0; mcustatus = 0;
+	dma_latch = 0;
+	memset(sample_state, 0, sizeof(sample_state));
+	sample_count = 0;
+	climb_data = 0;
+	envelope_ctr = 0;
+	decay = 0;
+	decrypt_counter = 0x09;
+
+	dac_lastin = 0;
+	dac_lastout = 0;
+
+	if (brazemode) {
+		ZetOpen(0);
+		braze_bankswitch(0);
+		ZetClose();
+	}
 
 	BurnSampleReset();
 	DACReset();
@@ -1277,14 +1260,19 @@ static INT32 MemIndex()
 	soundlatch		= Next; Next += 0x000005;
 	gfx_bank		= Next; Next += 0x000001;
 	sprite_bank		= Next; Next += 0x000001;
-	palette_bank		= Next; Next += 0x000001;
+	palette_bank	= Next; Next += 0x000001;
 	flipscreen		= Next; Next += 0x000001;
 	nmi_mask		= Next; Next += 0x000001;
 
 	grid_color		= Next; Next += 0x000001;
 	grid_enable		= Next; Next += 0x000001;
 
+	i8039_t         = Next; Next += 0x000004;
+	i8039_p         = Next; Next += 0x000004;
+
 	RamEnd			= Next;
+
+	dacbuf          = (INT16*)Next; Next += nBurnSoundLen * 2 * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -1422,7 +1410,7 @@ static INT32 DrvInit(INT32 (*pRomLoadCallback)(), void (*pPaletteUpdate)(), UINT
 	DACSetRoute(0, 0.75, BURN_SND_ROUTE_BOTH);
 
 	BurnSampleInit(1);
-	BurnSampleSetAllRoutesAllSamples(0.75, BURN_SND_ROUTE_BOTH);
+	BurnSampleSetAllRoutesAllSamples(0.25, BURN_SND_ROUTE_BOTH);
 
 	i8257Init();
 	i8257Config(ZetReadByte, ZetWriteByte, ZetIdle, dkong_dma_read_functions, dkong_dma_write_functions);
@@ -1466,6 +1454,8 @@ static INT32 DrvExit()
 	BurnFree(AllMem);
 
 	radarscp1 = 0;
+	brazemode = 0;
+	draktonmode = 0;
 
 	return 0;
 }
@@ -1486,7 +1476,7 @@ static INT32 Dkong3DoReset()
 	M6502Reset();
 	M6502Close();
 
-	nesapuReset(); // necessary?
+	nesapuReset();
 
 	sound_cpu_in_reset = 0;
 
@@ -1560,29 +1550,25 @@ static INT32 Dkong3Init()
 
 	M6502Init(0, TYPE_N2A03);
 	M6502Open(0);
-	//M6502MapMemory(DrvSndRAM0, 0x0000, 0x01ff, MAP_RAM); // handled below
-	//M6502MapMemory(DrvSndROM0, 0xe000, 0xffff, MAP_ROM);
-	M6502SetReadOpArgHandler(dkong3_sound0_read);
-	M6502SetReadOpHandler(dkong3_sound0_read);
+	M6502MapMemory(DrvSndRAM0, 0x0000, 0x01ff, MAP_RAM);
+	M6502MapMemory(DrvSndROM0, 0xe000, 0xffff, MAP_ROM);
 	M6502SetWriteHandler(dkong3_sound0_write);
 	M6502SetReadHandler(dkong3_sound0_read);
 	M6502Close();
 
 	M6502Init(1, TYPE_N2A03);
 	M6502Open(1);
-	//M6502MapMemory(DrvSndRAM1, 0x0000, 0x01ff, MAP_RAM); // handled below
-	//M6502MapMemory(DrvSndROM1, 0xe000, 0xffff, MAP_ROM);
-	M6502SetReadOpArgHandler(dkong3_sound1_read);
-	M6502SetReadOpHandler(dkong3_sound1_read);
+	M6502MapMemory(DrvSndRAM1, 0x0000, 0x01ff, MAP_RAM);
+	M6502MapMemory(DrvSndROM1, 0xe000, 0xffff, MAP_ROM);
 	M6502SetWriteHandler(dkong3_sound1_write);
 	M6502SetReadHandler(dkong3_sound1_read);
 	M6502Close();
 
 	nesapuInit(0, 1789773, dkong3_nesapu_sync, 0);
-	nesapuSetAllRoutes(0, 0.50, BURN_SND_ROUTE_BOTH);
+	nesapuSetAllRoutes(0, 0.95, BURN_SND_ROUTE_BOTH);
 
 	nesapuInit(1, 1789773, dkong3_nesapu_sync, 1);
-	nesapuSetAllRoutes(1, 0.50, BURN_SND_ROUTE_BOTH);
+	nesapuSetAllRoutes(1, 0.95, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
 
@@ -1874,6 +1860,21 @@ static INT32 pestplceDraw()
 	return 0;
 }
 
+static void dcfilter_dac()
+{
+	for (INT32 i = 0; i < nBurnSoundLen; i++) {
+		INT16 r = dacbuf[i*2+0]; // dac is mono, ignore 'l'.
+		//INT16 l = dacbuf[i*2+1];
+
+		INT16 out = r - dac_lastin + 0.995 * dac_lastout;
+
+		dac_lastin = r;
+		dac_lastout = out;
+		pBurnSoundOut[i*2+0] = out;
+		pBurnSoundOut[i*2+1] = out;
+	}
+}
+
 static INT32 DrvFrame()
 {
 	if (DrvReset) {
@@ -1904,7 +1905,8 @@ static INT32 DrvFrame()
 	ZetClose();
 
 	if (pBurnSoundOut) {
-		DACUpdate(pBurnSoundOut, nBurnSoundLen);
+		DACUpdate(dacbuf, nBurnSoundLen);
+		dcfilter_dac();
 		BurnSampleRender(pBurnSoundOut, nBurnSoundLen);
 	}
 
@@ -1994,7 +1996,7 @@ static INT32 s2650DkongFrame()
 
 		if (i == 30) {
 			vblank = 0x80;
-	
+
 			s2650SetIRQLine(0, CPU_IRQSTATUS_ACK);
 			s2650Run(10);
 			s2650SetIRQLine(0, CPU_IRQSTATUS_NONE);
@@ -2040,6 +2042,8 @@ static struct BurnRomInfo radarscpRomDesc[] = {
 	{ "rs2-v.1hc",	0x0100, 0x1b828315, 6 }, // 13
 
 	{ "trs2v3ec",	0x0800, 0x0eca8d6b, 5 }, // 14 gfx3
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(radarscp)
@@ -2086,6 +2090,8 @@ static INT32 radarscpInit()
 	return ret;
 }
 
+static void epos_bankswitch(INT32 bank); // forward
+
 static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 {
 	struct BurnArea ba;
@@ -2109,22 +2115,42 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		} else {
 			ZetScan(nAction);
 		}
+
 		i8257Scan();
 		I8039Scan(nAction, pnMin);
 		BurnSampleScan(nAction, pnMin);
 		DACScan(nAction, pnMin);
 
-		SCAN_VAR(vblank);
-		SCAN_VAR(s2650_protection);
 		SCAN_VAR(dkongjr_walk);
-		SCAN_VAR(page);
+		SCAN_VAR(sndpage);
 		SCAN_VAR(mcustatus);
-		SCAN_VAR(p);
-		SCAN_VAR(t);
 
-		DrvRecalc = 1;
+		SCAN_VAR(dma_latch);
+		SCAN_VAR(sample_state);
+		SCAN_VAR(sample_count);
+		SCAN_VAR(climb_data);
+		SCAN_VAR(envelope_ctr);
+		SCAN_VAR(decay);
+		SCAN_VAR(braze_bank);  // braze and drakton
+		SCAN_VAR(decrypt_counter);
+		SCAN_VAR(hunch_prot_ctr); // hunchback (s2650)
+		SCAN_VAR(hunchloopback);
+		SCAN_VAR(main_fo);
+
+		SCAN_VAR(dac_lastin);
+		SCAN_VAR(dac_lastout);
 
 		if (nAction & ACB_WRITE) {
+			if (draktonmode) {
+				ZetOpen(0);
+				epos_bankswitch(braze_bank);
+				ZetClose();
+			}
+			if (brazemode) {
+				ZetOpen(0);
+				braze_bankswitch(braze_bank);
+				ZetClose();
+			}
 		}
 	}
 
@@ -2152,18 +2178,9 @@ static INT32 Dkong3Scan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 		M6502Scan(nAction);
 
-		SCAN_VAR(vblank);
-		SCAN_VAR(s2650_protection);
 		SCAN_VAR(dkongjr_walk);
-		SCAN_VAR(page);
+		SCAN_VAR(sndpage);
 		SCAN_VAR(mcustatus);
-		SCAN_VAR(p);
-		SCAN_VAR(t);
-
-		DrvRecalc = 1;
-
-		if (nAction & ACB_WRITE) {
-		}
 	}
 
 	return 0;
@@ -2210,6 +2227,8 @@ static struct BurnRomInfo radarscp1RomDesc[] = {
 	{ "trs-s__4h.4h",	0x0800, 0xd1f1b48c, 3 }, // 16 m58819 speech
 
 	{ "trs01v1d.bin",	0x0100, 0x1b828315, 8 }, // 17 unused proms
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(radarscp1)
@@ -2273,6 +2292,8 @@ static struct BurnRomInfo dkongRomDesc[] = {
 	{ "c-2k.bpr",		0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",		0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",		0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkong)
@@ -2356,6 +2377,8 @@ static struct BurnRomInfo dkonghrdRomDesc[] = {
 	{ "c-2k.bpr",		0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",		0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",		0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkonghrd)
@@ -2394,6 +2417,8 @@ static struct BurnRomInfo dkongoRomDesc[] = {
 	{ "c-2k.bpr",		0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",		0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",		0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongo)
@@ -2432,6 +2457,8 @@ static struct BurnRomInfo dkongjRomDesc[] = {
 	{ "c-2k.bpr",	0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",	0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",	0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongj)
@@ -2470,6 +2497,8 @@ static struct BurnRomInfo dkongjoRomDesc[] = {
 	{ "c-2k.bpr",	0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",	0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",	0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongjo)
@@ -2508,6 +2537,8 @@ static struct BurnRomInfo dkongjo1RomDesc[] = {
 	{ "c-2k.bpr",	0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",	0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",	0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongjo1)
@@ -2546,6 +2577,8 @@ static struct BurnRomInfo dkongfRomDesc[] = {
 	{ "c-2k.bpr",	0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",	0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",	0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongf)
@@ -2585,6 +2618,8 @@ static struct BurnRomInfo dkongpeRomDesc[] = {
 	{ "c-2k.bpr",		0x0100, 0xe273ede5, 5 }, // 12 proms
 	{ "c-2j.bpr",		0x0100, 0xd6412358, 5 }, // 13
 	{ "v-5e.bpr",		0x0100, 0xb869b8f5, 5 }, // 14
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongpe)
@@ -2664,6 +2699,8 @@ static struct BurnRomInfo dkongxRomDesc[] = {
 	{ "c-2k.bpr",		0x00100, 0xe273ede5, 6 }, // 13 proms
 	{ "c-2j.bpr",		0x00100, 0xd6412358, 6 }, // 14
 	{ "v-5e.bpr",		0x00100, 0xb869b8f5, 6 }, // 15
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongx)
@@ -2707,6 +2744,8 @@ static INT32 dkongxInit()
 		ZetClose();
 	}
 
+	brazemode = 1;
+
 	return ret;
 }
 
@@ -2745,6 +2784,8 @@ static struct BurnRomInfo dkongx11RomDesc[] = {
 	{ "c-2k.bpr",		0x00100, 0xe273ede5, 6 }, // 13 proms
 	{ "c-2j.bpr",		0x00100, 0xd6412358, 6 }, // 14
 	{ "v-5e.bpr",		0x00100, 0xb869b8f5, 6 }, // 15
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongx11)
@@ -2781,6 +2822,8 @@ static struct BurnRomInfo dkongjrRomDesc[] = {
 	{ "djr1-c-2e.2e",		0x0100, 0x463dc7ad, 5 }, // 10 proms
 	{ "djr1-c-2f.2f",		0x0100, 0x47ba0042, 5 }, // 11
 	{ "djr1-v-2n.2n",		0x0100, 0xdbf185bf, 5 }, // 12
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongjr)
@@ -2908,6 +2951,8 @@ static struct BurnRomInfo dkongjrjRomDesc[] = {
 	{ "c-2e.bpr",	0x0100, 0x463dc7ad, 5 }, // 10 proms
 	{ "c-2f.bpr",	0x0100, 0x47ba0042, 5 }, // 11
 	{ "v-2n.bpr",	0x0100, 0xdbf185bf, 5 }, // 12
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongjrj)
@@ -2944,6 +2989,8 @@ static struct BurnRomInfo dkongjnrjRomDesc[] = {
 	{ "c-2e.bpr",	0x0100, 0x463dc7ad, 5 }, // 10 proms
 	{ "c-2f.bpr",	0x0100, 0x47ba0042, 5 }, // 11
 	{ "v-2n.bpr",	0x0100, 0xdbf185bf, 5 }, // 12
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongjnrj)
@@ -2980,6 +3027,8 @@ static struct BurnRomInfo dkongjrbRomDesc[] = {
 	{ "c-2e.bpr",	0x0100, 0x463dc7ad, 5 }, // 10 proms
 	{ "c-2f.bpr",	0x0100, 0x47ba0042, 5 }, // 11
 	{ "v-2n.bpr",	0x0100, 0xdbf185bf, 5 }, // 12
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongjrb)
@@ -3016,6 +3065,8 @@ static struct BurnRomInfo jrkingRomDesc[] = {
 	{ "c-2e.bpr",	0x0100, 0x463dc7ad, 5 }, // 10 proms
 	{ "c-2f.bpr",	0x0100, 0x47ba0042, 5 }, // 11
 	{ "v-2n.bpr",	0x0100, 0xdbf185bf, 5 }, // 12
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(jrking)
@@ -3054,6 +3105,8 @@ static struct BurnRomInfo dkingjrRomDesc[] = {
 	{ "mb7052.6b",	0x0100, 0xdbf185bf, 5 }, // 12
 
 	{ "mb7051.8j",	0x0020, 0xa5a6f2ca, 5 }, // 13
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkingjr)
@@ -3158,6 +3211,8 @@ static struct BurnRomInfo dkongjrpbRomDesc[] = {
 	{ "c-2e.bpr",	0x0100, 0x463dc7ad, 5 }, // 10 proms
 	{ "c-2f.bpr",	0x0100, 0x47ba0042, 5 }, // 11
 	{ "v-2n.bpr",	0x0100, 0xdbf185bf, 5 }, // 12
+	
+	{ "diag.bin",	0x1000, 0x00000000, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(dkongjrpb)
@@ -3708,16 +3763,14 @@ struct BurnDriver BurnDrvHerodku = {
 };
 
 
-
-static UINT8 decrypt_counter = 0;
-
 static void epos_bankswitch(INT32 bank)
 {
+	braze_bank = bank;
 	ZetMapArea(0x0000, 0x3fff, 0, DrvZ80ROM + 0x10000 + (bank * 0x4000));
 	ZetMapArea(0x0000, 0x3fff, 2, DrvZ80ROM + 0x10000 + (bank * 0x4000));
 }
 
-UINT8 __fastcall epos_main_read_port(UINT16 port)
+static UINT8 __fastcall epos_main_read_port(UINT16 port)
 {
 	if (port & 0x01)
 	{
@@ -3783,8 +3836,6 @@ static INT32 eposRomLoad()
 }
 
 
-
-
 // Drakton (DK conversion)
 
 static struct BurnRomInfo draktonRomDesc[] = {
@@ -3830,8 +3881,6 @@ static INT32 draktonLoad()
 
 static INT32 draktonInit()
 {
-	decrypt_counter = 0x09;
-
 	INT32 ret = DrvInit(draktonLoad, dkongPaletteInit, 0);
 
 	if (ret == 0)
@@ -3842,6 +3891,8 @@ static INT32 draktonInit()
 		ZetReset(); // bankswitch changed vectors
 		ZetClose();
 	}
+
+	draktonmode = 1;
 
 	return ret;
 }
@@ -3883,8 +3934,6 @@ STD_ROM_FN(drktnjr)
 
 static INT32 drktnjrInit()
 {
-	decrypt_counter = 0x09;
-
 	INT32 ret = DrvInit(draktonLoad, dkongPaletteInit, 0);
 
 	if (ret == 0)
@@ -3896,6 +3945,8 @@ static INT32 drktnjrInit()
 		ZetReset(); // bankswitch changed vectors
 		ZetClose();
 	}
+
+	draktonmode = 1;
 
 	return ret;
 }

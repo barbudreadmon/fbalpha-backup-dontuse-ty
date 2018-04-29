@@ -388,7 +388,7 @@ static UINT8 __fastcall xexex_sound_read(UINT16 address)
 	{
 		case 0xec00:
 		case 0xec01:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xf002:
 			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
@@ -808,8 +808,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekScan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
-		K054539Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		K054539Scan(nAction, pnMin);
 
 		KonamiICScan(nAction);
 

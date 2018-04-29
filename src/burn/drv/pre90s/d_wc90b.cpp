@@ -579,11 +579,6 @@ inline static INT32 Wc90b1SynchroniseStream(INT32 nSoundRate)
 	return (INT64)(double)ZetTotalCycles() * nSoundRate / 5000000;
 }
 
-inline static double Wc90b1GetTime()
-{
-	return (double)ZetTotalCycles() / 5000000;
-}
-
 static void Wc90b1MSM5205Vck0()
 {
 	static INT32 Toggle = 0;
@@ -753,7 +748,7 @@ static INT32 Wc90b1Init()
 
 	GenericTilesInit();
 
-	BurnYM2203Init(1, 1250000, NULL, Wc90b1SynchroniseStream, Wc90b1GetTime, 0);
+	BurnYM2203Init(1, 1250000, NULL, 0);
 	BurnTimerAttachZet(5000000);
 	BurnYM2203SetAllRoutes(0, 0.20, BURN_SND_ROUTE_BOTH);
 	
@@ -1070,7 +1065,7 @@ static INT32 Wc90b1Scan(INT32 nAction,INT32 *pnMin)
 }
 
 struct BurnDriver BurnDrvWc90b1 = {
-	"wc90b1", "wc90", NULL, NULL, "1989",
+	"twcup90b1", "twcup90", NULL, NULL, "1989",
 	"Euro League (Italian hack of Tecmo World Cup '90)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSFOOTBALL, 0,
@@ -1080,7 +1075,7 @@ struct BurnDriver BurnDrvWc90b1 = {
 };
 
 struct BurnDriver BurnDrvWc90b2 = {
-	"wc90b2", "wc90", NULL, NULL, "1989",
+	"twcup90b2", "twcup90", NULL, NULL, "1989",
 	"World Cup '90 (bootleg, set 1)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSFOOTBALL, 0,
@@ -1090,7 +1085,7 @@ struct BurnDriver BurnDrvWc90b2 = {
 };
 
 struct BurnDriver BurnDrvWc90b3 = {
-	"wc90b3", "wc90", NULL, NULL, "1989",
+	"twcup90b3", "twcup90", NULL, NULL, "1989",
 	"World Cup '90 (bootleg, set 2)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSFOOTBALL, 0,
@@ -1100,7 +1095,7 @@ struct BurnDriver BurnDrvWc90b3 = {
 };
 
 struct BurnDriver BurnDrvWc90b4 = {
-	"wc90b4", "wc90", NULL, NULL, "1989",
+	"twcup90b4", "twcup90", NULL, NULL, "1989",
 	"World Cup '90 (bootleg, set 3)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSFOOTBALL, 0,
@@ -1110,7 +1105,7 @@ struct BurnDriver BurnDrvWc90b4 = {
 };
 
 struct BurnDriver BurnDrvWc90ba = {
-	"wc90ba", "wc90", NULL, NULL, "1989",
+	"twcup90ba", "twcup90", NULL, NULL, "1989",
 	"Euro League (Italian hack of Tecmo World Cup '90 - alt version)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_MISC_PRE90S, GBF_SPORTSFOOTBALL, 0,

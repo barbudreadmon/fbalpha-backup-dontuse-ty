@@ -18,8 +18,11 @@
 
 #include "driver.h"
 #include "state.h"
-#include "ay8910.h"
 #include <stddef.h>
+
+#define AY8910_CORE
+#include "ay8910.h"
+#undef AY8910_CORE
 
 #if defined FBA_DEBUG
 #ifdef __GNUC__ 
@@ -47,17 +50,17 @@ static INT32 num = 0, ym_num = 0;
 
 static double AY8910Volumes[3 * 6];
 static INT32 AY8910RouteDirs[3 * 6];
+INT16 *pAY8910Buffer[(MAX_8910 + 1) * 3];
+static INT32 nBurnSoundLenSave = 0;
+static INT32 AY8910AddSignal = 0;
 
 INT32 ay8910burgertime_mode = 0;
 
 struct AY8910
 {
-	INT32 Channel;
-	INT32 SampleRate;
 	INT32 register_latch;
 	UINT8 Regs[16];
 	INT32 lastEnable;
-	UINT32 UpdateStep;
 	INT32 PeriodA,PeriodB,PeriodC,PeriodN,PeriodE;
 	INT32 CountA,CountB,CountC,CountN,CountE;
 	UINT32 VolA,VolB,VolC,VolE;
@@ -66,6 +69,10 @@ struct AY8910
 	INT8 CountEnv;
 	UINT8 Hold,Alternate,Attack,Holding;
 	INT32 RNG;
+
+	// not scanned
+	UINT32 UpdateStep;
+	INT32 SampleRate;
 	UINT32 VolTable[32];
 
 	read8_handler PortAread;
@@ -715,8 +722,20 @@ void AY8910Exit(INT32 chip)
 
 	num = 0;
 	ym_num = 0;
-
+	AY8910AddSignal = 0;
+	nBurnSoundLenSave = 0;
 	ay8910_index_ym = 0;
+
+	{
+		INT32 i;
+		for (i = 0; i < 3; i++)
+		{
+			if (pAY8910Buffer[(chip * 3) + i]) {
+				free(pAY8910Buffer[(chip * 3) + i]);
+				pAY8910Buffer[(chip * 3) + i] = NULL;
+			}
+		}
+	}
 	
 #if defined FBA_DEBUG
 #ifdef __GNUC__ 
@@ -730,7 +749,7 @@ static void dummy_callback(void)
 	return;
 }
 
-INT32 AY8910Init(INT32 chip, INT32 clock, INT32 sample_rate,
+INT32 AY8910InitCore(INT32 chip, INT32 clock, INT32 sample_rate,
 		read8_handler portAread, read8_handler portBread,
 		write8_handler portAwrite, write8_handler portBwrite)
 {
@@ -774,12 +793,63 @@ INT32 AY8910Init(INT32 chip, INT32 clock, INT32 sample_rate,
 	return 0;
 }
 
+INT32 AY8910Init(INT32 chip, INT32 clock, INT32 add_signal)
+{
+	INT32 i;
+#if defined FBA_DEBUG
+#ifdef __GNUC__ 
+	DebugSnd_AY8910Initted = 1;
+#endif
+#endif
+	if (chip != num) {
+		return 1;
+	}
+
+	AYStreamUpdate = dummy_callback;
+	if (chip == 0) AY8910AddSignal = add_signal;
+	extern INT32 nBurnSoundLen, nBurnSoundRate;
+
+	struct AY8910 *PSG = &AYPSG[chip];
+
+	memset(PSG, 0, sizeof(struct AY8910));
+	PSG->SampleRate = nBurnSoundRate;
+	PSG->PortAread = NULL; //portAread;
+	PSG->PortBread = NULL; //portBread;
+	PSG->PortAwrite = NULL; //portAwrite;
+	PSG->PortBwrite = NULL; //portBwrite;
+
+	AY8910_set_clock(chip, clock);
+
+	build_mixer_table(chip);
+
+	// default routes
+	AY8910Volumes[(chip * 3) + BURN_SND_AY8910_ROUTE_1] = 1.00;
+	AY8910Volumes[(chip * 3) + BURN_SND_AY8910_ROUTE_2] = 1.00;
+	AY8910Volumes[(chip * 3) + BURN_SND_AY8910_ROUTE_3] = 1.00;
+	AY8910RouteDirs[(chip * 3) + BURN_SND_AY8910_ROUTE_1] = BURN_SND_ROUTE_BOTH;
+	AY8910RouteDirs[(chip * 3) + BURN_SND_AY8910_ROUTE_2] = BURN_SND_ROUTE_BOTH;
+	AY8910RouteDirs[(chip * 3) + BURN_SND_AY8910_ROUTE_3] = BURN_SND_ROUTE_BOTH;
+
+	AY8910Reset(chip);
+
+	nBurnSoundLenSave = nBurnSoundLen;
+
+	for (i = 0; i < 3; i++)
+	{
+		pAY8910Buffer[(chip * 3) + i] = (INT16 *)malloc(0x800 * sizeof(INT16)); // enough to handle any supported rate
+	}
+
+	num++;
+
+	return 0;
+}
+
 INT32 AY8910InitYM(INT32 chip, INT32 clock, INT32 sample_rate,
 		read8_handler portAread, read8_handler portBread,
 		write8_handler portAwrite, write8_handler portBwrite,
 		void (*update_callback)(void))
 {
-	INT32 val = AY8910Init(ay8910_index_ym + chip, clock, sample_rate, portAread, portBread, portAwrite, portBwrite);
+	INT32 val = AY8910InitCore(ay8910_index_ym + chip, clock, sample_rate, portAread, portBread, portAwrite, portBwrite);
 
 	AYStreamUpdate = update_callback;
 
@@ -812,7 +882,7 @@ INT32 AY8910SetPorts(INT32 chip, read8_handler portAread, read8_handler portBrea
 	return 0;
 }
 
-INT32 AY8910Scan(INT32 nAction, INT32* pnMin)
+void AY8910Scan(INT32 nAction, INT32* pnMin)
 {
 	struct BurnArea ba;
 	INT32 i;
@@ -824,7 +894,7 @@ INT32 AY8910Scan(INT32 nAction, INT32* pnMin)
 #endif
 
 	if ((nAction & ACB_DRIVER_DATA) == 0) {
-		return 1;
+		return;
 	}
 
 	if (pnMin && *pnMin < 0x029496) {			// Return minimum compatible version
@@ -832,19 +902,16 @@ INT32 AY8910Scan(INT32 nAction, INT32* pnMin)
 	}
 
 	for (i = 0; i < num; i++) {
-		struct AY8910 *PSG = &AYPSG[i];
 		char szName[16];
 
 		sprintf(szName, "AY8910 #%d", i);
 
 		ba.Data		= &AYPSG[i];
-		ba.nLen		= STRUCT_SIZE_HELPER(struct AY8910, VolTable);
+		ba.nLen		= STRUCT_SIZE_HELPER(struct AY8910, RNG);
 		ba.nAddress = 0;
 		ba.szName	= szName;
 		BurnAcb(&ba);
 	}
-
-	return 0;
 }
 
 #define AY8910_ADD_SOUND(route, output)												\
@@ -855,6 +922,61 @@ INT32 AY8910Scan(INT32 nAction, INT32* pnMin)
 		nRightSample += (INT32)(output[n] * AY8910Volumes[route]);					\
 	}
 
+void AY8910RenderInternal(INT32 length)
+{
+#if defined FBA_DEBUG
+#ifdef __GNUC__ 
+	if (!DebugSnd_AY8910Initted) bprintf(PRINT_ERROR, _T("AY8910RenderInternal called without init\n"));
+	if (num >= 7) bprintf(PRINT_ERROR, _T("AY8910RenderInternal called with invalid number of chips %i (max is 6)\n"), num);
+#endif
+#endif
+
+	INT32 i;
+
+	for (i = 0; i < num; i++) {
+		AY8910Update(i, pAY8910Buffer + (i * 3), length);
+	}
+}
+
+void AY8910Render(INT16* dest, INT32 length)
+{
+#if defined FBA_DEBUG
+#ifdef __GNUC__ 
+	if (!DebugSnd_AY8910Initted) bprintf(PRINT_ERROR, _T("AY8910Render called without init\n"));
+	if (num >= 7) bprintf(PRINT_ERROR, _T("AY8910Render called with invalid number of chips %i (max is 6)\n"), num);
+#endif
+#endif
+
+	INT32 i, n;
+
+	for (i = 0; i < num; i++) {
+		AY8910Update(i, pAY8910Buffer + (i * 3), length);
+	}
+
+	for (n = 0; n < length; n++) {
+		INT32 nLeftSample = 0, nRightSample = 0;
+
+		for (i = 0; i < num * 3; i+=3)
+		{
+			AY8910_ADD_SOUND(i + BURN_SND_AY8910_ROUTE_1, pAY8910Buffer[i + 0])
+			AY8910_ADD_SOUND(i + BURN_SND_AY8910_ROUTE_2, pAY8910Buffer[i + 1])
+			AY8910_ADD_SOUND(i + BURN_SND_AY8910_ROUTE_3, pAY8910Buffer[i + 2])
+		}
+
+		nLeftSample = BURN_SND_CLIP(nLeftSample);
+		nRightSample = BURN_SND_CLIP(nRightSample);
+
+		if (AY8910AddSignal) {
+			dest[(n << 1) + 0] = BURN_SND_CLIP(dest[(n << 1) + 0] + nLeftSample);
+			dest[(n << 1) + 1] = BURN_SND_CLIP(dest[(n << 1) + 1] + nRightSample);
+		} else {
+			dest[(n << 1) + 0] = nLeftSample;
+			dest[(n << 1) + 1] = nRightSample;
+		}
+	}
+}
+
+#if 0 // old, depreciated
 void AY8910Render(INT16** buffer, INT16* dest, INT32 length, INT32 bAddSignal)
 {
 #if defined FBA_DEBUG
@@ -864,83 +986,24 @@ void AY8910Render(INT16** buffer, INT16* dest, INT32 length, INT32 bAddSignal)
 #endif
 #endif
 
-	INT32 i;
-	INT16 *buf0 = buffer[0];
-	INT16 *buf1 = buffer[1];
-	INT16 *buf2 = buffer[2];
-	INT16 *buf3, *buf4, *buf5, *buf6, *buf7, *buf8, *buf9, *buf10, *buf11, *buf12, *buf13, *buf14, *buf15, *buf16, *buf17;
-	INT32 n;
+	INT32 i, n;
 	
 	for (i = 0; i < num; i++) {
 		AY8910Update(i, buffer + (i * 3), length);
 	}
-	
-	if (num >= 2) {
-		buf3 = buffer[3];
-		buf4 = buffer[4];
-		buf5 = buffer[5];
-	}
-	if (num >= 3) {
-		buf6 = buffer[6];
-		buf7 = buffer[7];
-		buf8 = buffer[8];
-	}
-	if (num >= 4) {
-		buf9 = buffer[9];
-		buf10 = buffer[10];
-		buf11 = buffer[11];
-	}
-	if (num >= 5) {
-		buf12 = buffer[12];
-		buf13 = buffer[13];
-		buf14 = buffer[14];
-	}
-	if (num >= 6) {
-		buf15 = buffer[15];
-		buf16 = buffer[16];
-		buf17 = buffer[17];
-	}
-		
+
 	for (n = 0; n < length; n++) {
 		INT32 nLeftSample = 0, nRightSample = 0;
-		
-		AY8910_ADD_SOUND(BURN_SND_AY8910_ROUTE_1, buf0)
-		AY8910_ADD_SOUND(BURN_SND_AY8910_ROUTE_2, buf1)
-		AY8910_ADD_SOUND(BURN_SND_AY8910_ROUTE_3, buf2)
-		
-		if (num >= 2) {
-			AY8910_ADD_SOUND(3 + BURN_SND_AY8910_ROUTE_1, buf3)
-			AY8910_ADD_SOUND(3 + BURN_SND_AY8910_ROUTE_2, buf4)
-			AY8910_ADD_SOUND(3 + BURN_SND_AY8910_ROUTE_3, buf5)
+
+		for (i = 0; i < num*3; i+=3) {
+			AY8910_ADD_SOUND(i + BURN_SND_AY8910_ROUTE_1, buffer[i + 0])
+			AY8910_ADD_SOUND(i + BURN_SND_AY8910_ROUTE_2, buffer[i + 1])
+			AY8910_ADD_SOUND(i + BURN_SND_AY8910_ROUTE_3, buffer[i + 2])
 		}
-		
-		if (num >= 3) {
-			AY8910_ADD_SOUND(6 + BURN_SND_AY8910_ROUTE_1, buf6)
-			AY8910_ADD_SOUND(6 + BURN_SND_AY8910_ROUTE_2, buf7)
-			AY8910_ADD_SOUND(6 + BURN_SND_AY8910_ROUTE_3, buf8)
-		}
-		
-		if (num >= 4) {
-			AY8910_ADD_SOUND(9 + BURN_SND_AY8910_ROUTE_1, buf9)
-			AY8910_ADD_SOUND(9 + BURN_SND_AY8910_ROUTE_2, buf10)
-			AY8910_ADD_SOUND(9 + BURN_SND_AY8910_ROUTE_3, buf11)
-		}
-		
-		if (num >= 5) {
-			AY8910_ADD_SOUND(12 + BURN_SND_AY8910_ROUTE_1, buf12)
-			AY8910_ADD_SOUND(12 + BURN_SND_AY8910_ROUTE_2, buf13)
-			AY8910_ADD_SOUND(12 + BURN_SND_AY8910_ROUTE_3, buf14)
-		}
-		
-		if (num >= 6) {
-			AY8910_ADD_SOUND(15 + BURN_SND_AY8910_ROUTE_1, buf15)
-			AY8910_ADD_SOUND(15 + BURN_SND_AY8910_ROUTE_2, buf16)
-			AY8910_ADD_SOUND(15 + BURN_SND_AY8910_ROUTE_3, buf17)
-		}
-		
+
 		nLeftSample = BURN_SND_CLIP(nLeftSample);
 		nRightSample = BURN_SND_CLIP(nRightSample);
-			
+
 		if (bAddSignal) {
 			dest[(n << 1) + 0] = BURN_SND_CLIP(dest[(n << 1) + 0] + nLeftSample);
 			dest[(n << 1) + 1] = BURN_SND_CLIP(dest[(n << 1) + 1] + nRightSample);
@@ -950,6 +1013,7 @@ void AY8910Render(INT16** buffer, INT16* dest, INT32 length, INT32 bAddSignal)
 		}
 	}
 }
+#endif
 
 void AY8910SetRoute(INT32 chip, INT32 nIndex, double nVolume, INT32 nRouteDir)
 {

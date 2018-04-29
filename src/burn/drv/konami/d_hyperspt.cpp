@@ -611,7 +611,7 @@ static INT32 DrvInit(INT32 select)
 	Konami1Decode();
 	DrvGfxDecode();
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvSprRAM,		0x1000, 0x10ff, MAP_RAM);
 	M6809MapMemory(DrvVidRAM,		0x2000, 0x27ff, MAP_RAM);
@@ -838,7 +838,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		M6809Scan(nAction);
 		ZetScan(nAction);
 
-		vlm5030Scan(nAction);
+		vlm5030Scan(nAction, pnMin);
 		SN76496Scan(nAction, pnMin);
 		DACScan(nAction, pnMin);
 
@@ -956,7 +956,7 @@ struct BurnDriver BurnDrvHypersptb = {
 	"hypersptb", "hyperspt", NULL, NULL, "1984",
 	"Hyper Sports (bootleg)\0", "imcomplete sound", "bootleg", "GX330",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
+	BDF_GAME_NOT_WORKING | BDF_CLONE | BDF_BOOTLEG, 2, HARDWARE_PREFIX_KONAMI, GBF_SPORTSMISC, 0,
 	NULL, hypersptbRomInfo, hypersptbRomName, NULL, NULL, HypersptInputInfo, HypersptDIPInfo,
 	HypersptbInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	256, 224, 4, 3

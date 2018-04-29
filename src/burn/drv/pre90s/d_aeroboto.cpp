@@ -3,10 +3,7 @@
 
 #include "tiles_generic.h"
 #include "m6809_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -27,8 +24,6 @@ static UINT8 *DrvVidRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[9];
 
 static UINT8 *soundlatch;
 static UINT8 counter201;
@@ -288,13 +283,6 @@ static INT32 MemIndex()
 
 	RamEnd		= Next;
 
-	pAY8910Buffer[0] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd		= Next;
 
 	return 0;
@@ -361,7 +349,7 @@ static INT32 DrvInit()
 		DrvGfxDecode();
 	}
 
-	M6809Init(2);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvM6809RAM0,		0x0000, 0x00ff, MAP_RAM);
 	M6809MapMemory(DrvM6809RAM0 + 0x0100,	0x0100, 0x01ff, MAP_ROM); // handler
@@ -375,6 +363,7 @@ static INT32 DrvInit()
 	M6809SetReadHandler(aeroboto_main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809MapMemory(DrvM6809RAM1,		0x0000, 0x0fff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM1 + 0xf000,	0xf000, 0xffff, MAP_ROM);
@@ -382,8 +371,9 @@ static INT32 DrvInit()
 	M6809SetReadHandler(aeroboto_sound_read);
 	M6809Close();
 
-	AY8910Init(0, 1250000, nBurnSoundRate, &aeroboto_AY8910_0_portA, &aeroboto_AY8910_0_portB, NULL, NULL);
-	AY8910Init(1,  625000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1250000, 0);
+	AY8910Init(1,  625000, 1);
+	AY8910SetPorts(0, &aeroboto_AY8910_0_portA, &aeroboto_AY8910_0_portB, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.25, BURN_SND_ROUTE_BOTH);
 
@@ -620,7 +610,7 @@ static INT32 DrvFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -629,7 +619,7 @@ static INT32 DrvFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 	}
 
@@ -696,9 +686,9 @@ static struct BurnRomInfo formatzRomDesc[] = {
 	{ "format_z.2",	0x1000, 0x3a821391, 5 | BRF_GRA },           //  7
 	{ "format_z.3",	0x1000, 0x7d1aec79, 5 | BRF_GRA },           //  8
 
-	{ "10c",	0x0100, 0xb756dd6d, 6 | BRF_GRA },           //  9 Color PROMs
-	{ "10b",	0x0100, 0x00df8809, 6 | BRF_GRA },           // 10
-	{ "10a",	0x0100, 0xe8733c8f, 6 | BRF_GRA },           // 11
+	{ "10c",		0x0100, 0xb756dd6d, 6 | BRF_GRA },           //  9 Color PROMs
+	{ "10b",		0x0100, 0x00df8809, 6 | BRF_GRA },           // 10
+	{ "10a",		0x0100, 0xe8733c8f, 6 | BRF_GRA },           // 11
 };
 
 STD_ROM_PICK(formatz)
@@ -732,9 +722,9 @@ static struct BurnRomInfo aerobotoRomDesc[] = {
 	{ "aeroboto.2",	0x1000, 0xc7f81a3c, 5 | BRF_GRA },           //  7
 	{ "aeroboto.3",	0x1000, 0x5203ad04, 5 | BRF_GRA },           //  8
 
-	{ "10c",	0x0100, 0xb756dd6d, 6 | BRF_GRA },           //  9 Color PROMs
-	{ "10b",	0x0100, 0x00df8809, 6 | BRF_GRA },           // 10
-	{ "10a",	0x0100, 0xe8733c8f, 6 | BRF_GRA },           // 11
+	{ "10c",		0x0100, 0xb756dd6d, 6 | BRF_GRA },           //  9 Color PROMs
+	{ "10b",		0x0100, 0x00df8809, 6 | BRF_GRA },           // 10
+	{ "10a",		0x0100, 0xe8733c8f, 6 | BRF_GRA },           // 11
 };
 
 STD_ROM_PICK(aeroboto)

@@ -452,6 +452,7 @@
 #define MENU_STATE_UNDO                         10037
 #define MENU_TRIPLE                     	10100
 #define MENU_FULL                       	10102
+#define MENU_DWMFIX							10103
 #define MENU_NOSTRETCH                  	10110
 #define MENU_STRETCH                    	10111
 #define MENU_ASPECT                     	10112
@@ -548,6 +549,7 @@
 #define MENU_PRIORITY_LOW               	10315
 #define MENU_SNAPFACT                   	10317
 #define MENU_SAVESNAP                   	10318
+#define MENU_HIGHRESTIMER                   10319
 #define MENU_ASSOCIATE						10330
 #define MENU_DISASSOCIATE					10331
 #define MENU_SAVEGAMEINPUTNOW				10332
@@ -616,9 +618,10 @@
 #define MENU_LANGUAGE_GL_EXPORT				10674
 #define MENU_LANGUAGE_GL_RESET				10675
 #define MENU_ENABLEICONS					10676
-#define MENU_ICONS_SIZE_16					10677
-#define MENU_ICONS_SIZE_24					10678
-#define MENU_ICONS_SIZE_32					10679
+#define MENU_ICONS_PARENTSONLY              10677
+#define MENU_ICONS_SIZE_16					10678
+#define MENU_ICONS_SIZE_24					10679
+#define MENU_ICONS_SIZE_32					10680
 #define MENU_RES_ARCADE_VERTICAL			10700
 #define MENU_RES_1_VERTICAL					10701
 #define MENU_RES_2_VERTICAL					10702

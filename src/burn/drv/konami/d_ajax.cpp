@@ -351,7 +351,7 @@ UINT8 __fastcall ajax_sound_read(UINT16 address)
 	{
 		case 0xc000:
 		case 0xc001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xe000:
 			ZetSetIRQLine(0, CPU_IRQSTATUS_NONE);
@@ -416,6 +416,8 @@ static INT32 DrvDoReset()
 	ZetReset();
 	ZetClose();
 
+	K007232Reset(0);
+	K007232Reset(1);
 	BurnYM2151Reset();
 
 	KonamiICReset();
@@ -558,7 +560,7 @@ static INT32 DrvInit(INT32 type)
 	konamiSetReadHandler(ajax_main_read);
 	konamiClose();
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvShareRAM,		0x2000, 0x3fff, MAP_RAM);
 	M6809MapMemory(DrvM6809ROM  + 0x10000,	0x8000, 0x9fff, MAP_ROM);
@@ -748,7 +750,7 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		M6809Scan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 		K007232Scan(nAction, pnMin);
 
 		KonamiICScan(nAction);

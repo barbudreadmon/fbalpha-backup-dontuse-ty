@@ -90,6 +90,8 @@ static INT32 has_zoom = 0;
 static UINT32 main_cpu_cycles = 12000000 / 60;
 static INT32 ymf278bint = 0;
 
+static INT32 bangballmode = 0;
+
 static UINT8 DrvJoy1[16];
 static UINT8 DrvJoy2[16];
 static UINT8 DrvJoy3[16];
@@ -1948,6 +1950,11 @@ static UINT16 __fastcall metro_common_read_word(UINT32 address)
 	}
 // end
 
+	// mirror or due to chip revision?
+	if ((address >= 0x078800 && address <= 0x078813) || (address >= 0x079700 && address <= 0x079713)) {
+		return *((UINT16*)(DrvVidRegs + (address & 0x1e)));
+	}
+
 	switch (address)
 	{
 		case 0x0788a2:
@@ -3410,30 +3417,11 @@ static void DrvFMIRQHandler(INT32, INT32 nStatus)
 	SekRun(100); // lame hack for overlapped irq's causing the ymf278b timer to die
 }
 
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)SekTotalCycles() * nSoundRate / 16000000;
-}
-
 static void blzntrndFMIRQHandler(INT32, INT32 nStatus)
 {
 	if (ZetGetActive() == -1) return;
 
 	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-}
-
-static INT32 blzntrndSynchroniseStream(INT32 nSoundRate)
-{
-	if (ZetGetActive() == -1) return 0;
-
-	return (INT64)ZetTotalCycles() * nSoundRate / 8000000;
-}
-
-static double blzntrndGetTime()
-{
-	if (ZetGetActive() == -1) return 0;
-
-	return (double)ZetTotalCycles() / 8000000.0;
 }
 
 static INT32 DrvDoReset()
@@ -3619,7 +3607,7 @@ static INT32 blzntrndInit()
 
 	INT32 RomSndSizeA = 0x80000;
 	INT32 RomSndSizeB = 0x400000;
-	BurnYM2610Init(8000000, DrvYMROMB, &RomSndSizeB, DrvYMROMA, &RomSndSizeA, &blzntrndFMIRQHandler, blzntrndSynchroniseStream, blzntrndGetTime, 0);
+	BurnYM2610Init(8000000, DrvYMROMB, &RomSndSizeB, DrvYMROMA, &RomSndSizeA, &blzntrndFMIRQHandler, 0);
 	BurnTimerAttachZet(8000000);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
@@ -3706,7 +3694,7 @@ static INT32 gstrik2Init()
 
 	INT32 RomSndSizeA = 0x200000;
 	INT32 RomSndSizeB = 0x200000;
-	BurnYM2610Init(8000000, DrvYMROMB, &RomSndSizeB, DrvYMROMA, &RomSndSizeA, &blzntrndFMIRQHandler, blzntrndSynchroniseStream, blzntrndGetTime, 0);
+	BurnYM2610Init(8000000, DrvYMROMB, &RomSndSizeB, DrvYMROMA, &RomSndSizeA, &blzntrndFMIRQHandler, 0);
 	BurnTimerAttachZet(8000000);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_LEFT);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_2, 1.00, BURN_SND_ROUTE_RIGHT);
@@ -3772,7 +3760,7 @@ static void metro_portB_write(UINT8 data)
 	if (BIT(updportB_data, 2) && !BIT(data, 2))
 	{
 		if (!BIT(data, 4))
-			MSM6295Command(0, updportA_data);
+			MSM6295Write(0, updportA_data);
 	}
 
 	updportB_data = data;
@@ -3803,7 +3791,7 @@ static void ym2151_portB_write(UINT8 data)
 		if (!BIT(data, 3))
 		{
 			/* read */
-			updportA_data = (BIT(data,1) ? BurnYM2151ReadStatus() : 0xff);
+			updportA_data = (BIT(data,1) ? BurnYM2151Read() : 0xff);
 		}
 
 		updportB_data = data;
@@ -3813,13 +3801,13 @@ static void ym2151_portB_write(UINT8 data)
 	if (BIT(updportB_data, 2) && !BIT(data, 2))   /* clock 1->0 */
 	{
 		if (!BIT(data, 4))
-			MSM6295Command(0, updportA_data);
+			MSM6295Write(0, updportA_data);
 	}
 
 	if (BIT(updportB_data, 3) && !BIT(data, 3))   /* clock 1->0 */
 	{
 		if (!BIT(data, 4))
-			updportA_data = MSM6295ReadStatus(0);
+			updportA_data = MSM6295Read(0);
 	}
 
 	updportB_data = data;
@@ -3980,10 +3968,10 @@ static INT32 common_type1_init(INT32 video_type, INT32 gfx_len, INT32 load_roms,
 		upd7810SetWritePortHandler(metro_upd7810_write_port);
 
 		BurnYM2413Init(3579545);
-		BurnYM2413SetAllRoutes(0.90, BURN_SND_ROUTE_BOTH);
+		BurnYM2413SetAllRoutes(1.40, BURN_SND_ROUTE_BOTH);
 
 		MSM6295Init(0, 1056000 / 132, 1);
-		MSM6295SetRoute(0, 0.10, BURN_SND_ROUTE_BOTH);
+		MSM6295SetRoute(0, 0.25, BURN_SND_ROUTE_BOTH);
 	}
 
 	if (sound_system == 5)
@@ -3998,16 +3986,16 @@ static INT32 common_type1_init(INT32 video_type, INT32 gfx_len, INT32 load_roms,
 
 		BurnYM2151Init(3579545);
 		BurnYM2151SetIrqHandler(&YM2151IrqHandler);
-		BurnYM2151SetAllRoutes(0.60, BURN_SND_ROUTE_BOTH);
+		BurnYM2151SetAllRoutes(1.20, BURN_SND_ROUTE_BOTH);
 
 		MSM6295Init(0, 1056000 / 132, 1);
-		MSM6295SetRoute(0, 0.40, BURN_SND_ROUTE_BOTH);
+		MSM6295SetRoute(0, 0.50, BURN_SND_ROUTE_BOTH);
 	}
 
 	if (sound_system == 3)
 	{
-		BurnYMF278BInit(0, DrvYMROMB, 0x280000, &DrvFMIRQHandler, DrvSynchroniseStream);
-		BurnYMF278BSetAllRoutes(0.100, BURN_SND_ROUTE_BOTH);
+		BurnYMF278BInit(0, DrvYMROMB, 0x280000, &DrvFMIRQHandler);
+		BurnYMF278BSetAllRoutes(1.00, BURN_SND_ROUTE_BOTH);
 		BurnTimerAttachSek(16000000);
 	}
 
@@ -4316,6 +4304,7 @@ static INT32 bangballInit()
 	m_tilemap_scrolldx[1] = -2;
 	m_tilemap_scrolldx[2] = -2;
 	ymf278bint = 1;
+	bangballmode = 1;
 
 	return nRet;
 }
@@ -4396,6 +4385,7 @@ static INT32 DrvExit()
 	m_sprite_yoffs_dx = 0;
 	m_sprite_yoffs_dx = 0;
 	ymf278bint = 0;
+	bangballmode = 0;
 
 	return 0;
 }
@@ -4949,6 +4939,11 @@ static INT32 YMF278bFrame()
 			update_irq_state();
 		}
 
+		if (bangballmode && i < 224 && ~irq_enable & 2) {
+			requested_int[1] = 1;
+			update_irq_state();
+		}
+
 		if (i == 237) {
 			requested_int[vblank_bit] = 1;
 			update_irq_state();
@@ -5118,8 +5113,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		if (sound_system == 2)
 		{
 			upd7810Scan(nAction);
-			BurnYM2413Scan(nAction);
-			MSM6295Scan(0, nAction);
+			BurnYM2413Scan(nAction, pnMin);
+			MSM6295Scan(nAction, pnMin);
 		}
 
 		if (sound_system == 3)
@@ -5129,15 +5124,15 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 
 		if (sound_system == 4)
 		{
-			BurnYM2413Scan(nAction);
-			MSM6295Scan(0, nAction);
+			BurnYM2413Scan(nAction, pnMin);
+			MSM6295Scan(nAction, pnMin);
 		}
 
 		if (sound_system == 5)
 		{
 			upd7810Scan(nAction);
-			BurnYM2151Scan(nAction);
-			MSM6295Scan(0, nAction);
+			BurnYM2151Scan(nAction, pnMin);
+			MSM6295Scan(nAction, pnMin);
 		}
 
 		KonamiICScan(nAction);
@@ -5707,17 +5702,17 @@ struct BurnDriver BurnDrvPururun = {
 // The Karate Tournament
 
 static struct BurnRomInfo karatourRomDesc[] = {
-	{ "2.2FAB.8G",			0x040000, 0x199a28d4, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "3.0560.10G",			0x040000, 0xb054e683, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "2.2fab.8g",			0x040000, 0x199a28d4, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "3.0560.10g",			0x040000, 0xb054e683, 1 | BRF_PRG | BRF_ESS }, //  1
 
-	{ "KT001.1I",			0x020000, 0x1dd2008c, 2 | BRF_PRG | BRF_ESS }, //  2 uPD7810 Code
+	{ "kt001.1i",			0x020000, 0x1dd2008c, 2 | BRF_PRG | BRF_ESS }, //  2 uPD7810 Code
 
-	{ "361A04.15F",			0x100000, 0xf6bf20a5, 3 | BRF_GRA },           //  3 Graphics
-	{ "361A07.17D",			0x100000, 0x794cc1c0, 3 | BRF_GRA },           //  4
-	{ "361A05.17F",			0x100000, 0xea9c11fc, 3 | BRF_GRA },           //  5
-	{ "361A06.15D",			0x100000, 0x7e15f058, 3 | BRF_GRA },           //  6
+	{ "361a04.15f",			0x100000, 0xf6bf20a5, 3 | BRF_GRA },           //  3 Graphics
+	{ "361a07.17d",			0x100000, 0x794cc1c0, 3 | BRF_GRA },           //  4
+	{ "361a05.17f",			0x100000, 0xea9c11fc, 3 | BRF_GRA },           //  5
+	{ "361a06.15d",			0x100000, 0x7e15f058, 3 | BRF_GRA },           //  6
 
-	{ "8.4A06.1D",			0x040000, 0x8d208179, 4 | BRF_SND },           //  7 MSM6295 Samples
+	{ "8.4a06.1d",			0x040000, 0x8d208179, 4 | BRF_SND },           //  7 MSM6295 Samples
 };
 
 STD_ROM_PICK(karatour)
@@ -6153,8 +6148,8 @@ struct BurnDriver BurnDrvBalcube = {
 // Bang Bang Ball (v1.05)
 
 static struct BurnRomInfo bangballRomDesc[] = {
-	{ "b-ball_j_rom#006.u18",	0x040000, 0x0e4124bc, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
-	{ "b-ball_j_rom#005.u19",	0x040000, 0x3fa08587, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "b-ball_j_rom@006.u18",	0x040000, 0x0e4124bc, 1 | BRF_PRG | BRF_ESS }, //  0 68k Code
+	{ "b-ball_j_rom@005.u19",	0x040000, 0x3fa08587, 1 | BRF_PRG | BRF_ESS }, //  1
 
 	{ "bp963a_u30.u30",		0x100000, 0xb0ca8e39, 2 | BRF_GRA },           //  2 Graphics
 	{ "bp963a_u29.u29",		0x100000, 0xd934468f, 2 | BRF_GRA },           //  3
@@ -6162,7 +6157,7 @@ static struct BurnRomInfo bangballRomDesc[] = {
 	{ "bp963a_u27.u27",		0x100000, 0x5e3c7732, 2 | BRF_GRA },           //  5
 
 	{ "yrw801-m",			0x200000, 0x2a9d8d43, 3 | BRF_GRA },           //  6 YMF278b Samples
-	{ "b-ball_j_rom#007.u49",	0x080000, 0x04cc91a9, 3 | BRF_GRA },           //  7
+	{ "b-ball_j_rom@007.u49",	0x080000, 0x04cc91a9, 3 | BRF_GRA },           //  7
 };
 
 STD_ROM_PICK(bangball)

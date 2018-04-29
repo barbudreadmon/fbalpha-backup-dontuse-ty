@@ -158,7 +158,7 @@ static struct BurnDIPInfo ChinatwnDIPList[]=
 
 STDDIPINFO(Chinatwn)
 
-void __fastcall supbtime_main_write_word(UINT32 address, UINT16 data)
+static void __fastcall supbtime_main_write_word(UINT32 address, UINT16 data)
 {
 	deco16_write_control_word(0, address, 0x300000, data)
 
@@ -172,7 +172,7 @@ void __fastcall supbtime_main_write_word(UINT32 address, UINT16 data)
 	}
 }
 
-void __fastcall supbtime_main_write_byte(UINT32 address, UINT8 data)
+static void __fastcall supbtime_main_write_byte(UINT32 address, UINT8 data)
 {
 	switch (address)
 	{
@@ -184,7 +184,7 @@ void __fastcall supbtime_main_write_byte(UINT32 address, UINT8 data)
 	}
 }
 
-UINT16 __fastcall supbtime_main_read_word(UINT32 address)
+static UINT16 __fastcall supbtime_main_read_word(UINT32 address)
 {
 	deco16_read_control_word(0, address, 0x300000)
 
@@ -200,14 +200,17 @@ UINT16 __fastcall supbtime_main_read_word(UINT32 address)
 			return (DrvInputs[1] & ~0x0008) | (deco16_vblank & 0x0008);
 
 		case 0x18000a:
+			return 0;
+
 		case 0x18000c:
+			SekSetIRQLine(6, CPU_IRQSTATUS_NONE);
 			return 0;
 	}
 
 	return 0;
 }
 
-UINT8 __fastcall supbtime_main_read_byte(UINT32 address)
+static UINT8 __fastcall supbtime_main_read_byte(UINT32 address)
 {
 	switch (address)
 	{
@@ -229,9 +232,22 @@ UINT8 __fastcall supbtime_main_read_byte(UINT32 address)
 	return 0;
 }
 
+static void palette_onreset() // rainbow fill palette, fixes disappearing "Super" on first titlescreen iteration
+{
+	for (INT32 i = 0; i < 0x800/2; i++) {
+		UINT8 r = ((i & 1) ? 0x0f : 0);
+		UINT8 g = ((i & 2) ? 0x0f : 0);
+		UINT8 b = ((i & 4) ? 0x0f : 0);
+
+		*((UINT32*)(DrvPalRAM + (i * 2))) =  r | (g << 4) | (b << 8);
+	}
+}
+
 static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
+
+	palette_onreset();
 
 	SekOpen(0);
 	SekReset();
@@ -457,11 +473,11 @@ static INT32 DrvDraw()
 		pTransDraw[i] = 0x300;
 	}
 
-	if (nBurnLayer & 1) deco16_draw_layer(1, pTransDraw, 0x10000 /*opaque*/);
+	if (nBurnLayer & 1) deco16_draw_layer(1, pTransDraw, 0);
 
 	if (nBurnLayer & 2) draw_sprites();
 
-	if (nBurnLayer & 4) deco16_draw_layer(0, pTransDraw, 0x00000 /*transparent*/);
+	if (nBurnLayer & 4) deco16_draw_layer(0, pTransDraw, 0);
 
 	BurnTransferCopy(DrvPalette);
 
@@ -499,7 +515,11 @@ static INT32 DrvFrame()
 		nCyclesDone[0] += SekRun(nCyclesTotal[0] / nInterleave);
 		nCyclesDone[1] += h6280Run(nCyclesTotal[1] / nInterleave);
 
-		if (i == 206) deco16_vblank = 0x08;
+		if (i == 206) {
+			deco16_vblank = 0x08;
+			SekSetIRQLine(6, CPU_IRQSTATUS_ACK);
+		}
+
 		
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
@@ -509,7 +529,6 @@ static INT32 DrvFrame()
 		}
 	}
 
-	SekSetIRQLine(6, CPU_IRQSTATUS_AUTO);
 	
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
@@ -548,7 +567,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
-	
+
 		deco16SoundScan(nAction, pnMin);
 
 		deco16Scan();
@@ -573,6 +592,13 @@ static struct BurnRomInfo supbtimeRomDesc[] = {
 	{ "mae01.bin",		0x80000, 0x434af3fb, 4 | BRF_GRA },           //  5
 
 	{ "gc05.bin",		0x20000, 0x2f2246ff, 5 | BRF_SND },           //  6 OKI M6295 Samples
+	
+	{ "tg5.j1",			0x00104, 0x21d02af7, 0 | BRF_OPT },
+	{ "tg3.c13",		0x00104, 0x3d5f0e97, 0 | BRF_OPT },
+	{ "tg1.b15",		0x00104, 0x819c4522, 0 | BRF_OPT },
+	{ "tg2.c12",		0x00104, 0x88f6d299, 0 | BRF_OPT },
+	{ "tg0.a11",		0x00104, 0xac6aa74b, 0 | BRF_OPT },
+	{ "tg4.c14",		0x00104, 0xe9ee3a67, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(supbtime)

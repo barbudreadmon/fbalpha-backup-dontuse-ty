@@ -1307,7 +1307,7 @@ static void __fastcall sound_write(UINT16 address, UINT8 data)
 		return;
 
 		case 0xf80a:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 	}
 }
@@ -1336,10 +1336,10 @@ static UINT8 __fastcall sound_read(UINT16 address)
 	// flytiger
 		case 0xf808:
 		case 0xf809:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xf80a:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -1355,26 +1355,6 @@ inline static void DrvYM2203IRQHandler(INT32 n, INT32 nStatus)
 static void DrvYM2151IrqHandler(INT32 nStatus)
 {
 	ZetSetIRQLine(0, (nStatus ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE));
-}
-
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 4000000;
-}
-
-inline static INT32 DrvSynchroniseStream8Mhz(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 8000000;
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000.0;
-}
-
-inline static double DrvGetTime8Mhz()
-{
-	return (double)ZetTotalCycles() / 8000000.0;
 }
 
 static INT32 Z80YM2203DoReset()
@@ -1699,7 +1679,7 @@ static INT32 LastdayInit()
 
 	DrvSoundCPUInit(1,0);
 
-	BurnYM2203Init(2, 4000000, &DrvYM2203IRQHandler, DrvSynchroniseStream8Mhz, DrvGetTime8Mhz, 0);
+	BurnYM2203Init(2, 4000000, &DrvYM2203IRQHandler, 0);
 	BurnTimerAttachZet(8000000);
 	BurnYM2203SetAllRoutes(0, 0.40, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetAllRoutes(1, 0.40, BURN_SND_ROUTE_BOTH);
@@ -1766,7 +1746,7 @@ static INT32 GulfstrmInit()
 
 	DrvSoundCPUInit(1,0);
 
-	BurnYM2203Init(2, 1500000, &DrvYM2203IRQHandler, DrvSynchroniseStream8Mhz, DrvGetTime8Mhz, 0);
+	BurnYM2203Init(2, 1500000, &DrvYM2203IRQHandler, 0);
 	BurnTimerAttachZet(8000000);
 	BurnYM2203SetAllRoutes(0, 0.40, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetPSGVolume(0, 0.20);
@@ -1836,7 +1816,7 @@ static INT32 PolluxInit()
 
 	DrvSoundCPUInit(1,1);
 
-	BurnYM2203Init(2, 1500000, &DrvYM2203IRQHandler, DrvSynchroniseStream8Mhz, DrvGetTime8Mhz, 0);
+	BurnYM2203Init(2, 1500000, &DrvYM2203IRQHandler, 0);
 	BurnTimerAttachZet(8000000);
 	BurnYM2203SetAllRoutes(0, 0.40, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetAllRoutes(1, 0.40, BURN_SND_ROUTE_BOTH);
@@ -3101,8 +3081,8 @@ static INT32 Z80YM2151Scan(INT32 nAction,INT32 *pnMin)
 
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(sprite_enable);
 		SCAN_VAR(soundlatch);
@@ -3138,8 +3118,8 @@ static INT32 Drv68KScan(INT32 nAction,INT32 *pnMin)
 		SekScan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(sprite_enable);
 		SCAN_VAR(soundlatch);
@@ -3452,7 +3432,7 @@ struct BurnDriver BurnDrvGulfstrmm = {
 // Gulf Storm (Korea)
 
 static struct BurnRomInfo gulfstrmkRomDesc[] = {
-	{ "18.4L",	0x20000, 0x02bcf56d, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU Code
+	{ "18.4l",	0x20000, 0x02bcf56d, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU Code
 
 	{ "3.c5",	0x10000, 0xc029b015, 2 | BRF_PRG | BRF_ESS }, //  1 Audio CPU Code
 

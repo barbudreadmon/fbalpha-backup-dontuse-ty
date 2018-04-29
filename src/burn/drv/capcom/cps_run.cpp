@@ -163,7 +163,7 @@ INT32 CpsRunInit()
 	if (Cps == 2 || Cps1Qs == 1) {
 		CheatSearchInitCallbackFunction = CpsQSoundCheatSearchCallback;
 	}
-	
+
 	return 0;
 }
 

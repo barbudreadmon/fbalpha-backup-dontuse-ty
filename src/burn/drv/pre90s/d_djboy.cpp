@@ -277,11 +277,11 @@ static void __fastcall djboy_cpu2_write_port(UINT16 port, UINT8 data)
 		return;
 
 		case 0x06:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x07:
-			MSM6295Command(1, data);
+			MSM6295Write(1, data);
 		return;
 	}
 }
@@ -298,23 +298,13 @@ static UINT8 __fastcall djboy_cpu2_read_port(UINT16 port)
 			return *soundlatch;
 
 		case 0x06:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0x07:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 6000000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 6000000;
 }
 
 static INT32 DrvDoReset(INT32 full_reset)
@@ -477,7 +467,7 @@ static INT32 DrvInit()
 
 	mermaidInit(DrvMCUROM, DrvInputs);
 
-	BurnYM2203Init(1, 3000000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 3000000, NULL, 0);
 	BurnTimerAttachZet(6000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.50, BURN_SND_ROUTE_BOTH);
@@ -655,8 +645,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		mermaidScan(nAction);
 
 		BurnYM2203Scan(nAction, pnMin);
-		MSM6295Scan(0, nAction);
-		MSM6295Scan(1, nAction);
+		MSM6295Scan(nAction, pnMin);
+		//MSM6295Scan(1, nAction);
 
 		SCAN_VAR(nBankAddress0);
 		SCAN_VAR(nBankAddress1);

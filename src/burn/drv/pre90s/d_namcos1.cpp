@@ -600,9 +600,10 @@ static UINT8 berabohm_buttons_read(INT32 offset)
 			if (stored_input[0] == 0)
 			{
 				input_count = (input_count + 1) % 5;
-				if (input_count == 3) res |= 0x10;
 			}
 		}
+
+		if (input_count == 3) res |= 0x10;
 
 		return res | stored_input[0];
 	}
@@ -1149,7 +1150,7 @@ static UINT8 sound_read(UINT16 address)
 	{
 		case 0x4000:
 		case 0x4001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 	}
 
 	return 0;
@@ -1577,8 +1578,7 @@ static INT32 DrvInit()
 
 	if (Namcos1GetRoms()) return 1;
 
-	M6809Init(3);
-
+	M6809Init(0);
 	M6809Open(0);
 	M6809SetWriteHandler(main_write);
 	M6809SetReadHandler(main_read);
@@ -1586,6 +1586,7 @@ static INT32 DrvInit()
 	M6809SetReadOpArgHandler(main_read);
 	M6809Close();
 
+	M6809Init(1);
 	M6809Open(1);
 	M6809SetWriteHandler(sub_write);
 	M6809SetReadHandler(sub_read);
@@ -1593,6 +1594,7 @@ static INT32 DrvInit()
 	M6809SetReadOpArgHandler(sub_read);
 	M6809Close();
 
+	M6809Init(2);
 	M6809Open(2);
 	M6809MapMemory(DrvTriRAM,		0x7000, 0x77ff, MAP_RAM);
 	M6809MapMemory(DrvSoundRAM,		0x8000, 0x9fff, MAP_RAM);
@@ -2069,7 +2071,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 		M6809Open(2);
 		NamcoSoundScan(nAction, pnMin);
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 		M6809Close();
 
 		SCAN_VAR(bank_offsets);
@@ -3075,6 +3077,8 @@ static struct BurnRomInfo mmazeRomDesc[] = {
 	{ "mm_obj-1.bin",	0x20000, 0x1ce49e04, 7 | BRF_GRA },           // 18
 	{ "mm_obj-2.bin",	0x20000, 0x3d3d5de3, 7 | BRF_GRA },           // 19
 	{ "mm_obj-3.bin",	0x20000, 0xdac57358, 7 | BRF_GRA },           // 20
+	
+	{ "mmaze.nv",		0x00800, 0x73e62b56, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(mmaze)
@@ -3129,6 +3133,8 @@ static struct BurnRomInfo mmaze2RomDesc[] = {
 	{ "mm_obj-1.bin",	0x20000, 0x1ce49e04, 7 | BRF_GRA },           // 18
 	{ "mm_obj-2.bin",	0x20000, 0x3d3d5de3, 7 | BRF_GRA },           // 19
 	{ "mm_obj-3.bin",	0x20000, 0xdac57358, 7 | BRF_GRA },           // 20
+	
+	{ "mmaze.nv",		0x00800, 0x73e62b56, 0 | BRF_OPT },
 };
 
 STD_ROM_PICK(mmaze2)

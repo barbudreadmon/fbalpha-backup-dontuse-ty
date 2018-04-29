@@ -1040,7 +1040,7 @@ static INT32 TrackfldnzInit()
 		M6809Decode();
 	}
 
-	M6809Init(1);
+	M6809Init(0);
 	M6809Open(0);
 	M6809MapMemory(DrvSprRAM1,		0x1800, 0x1bff, MAP_RAM);
 	// spr2 00-3f, scroll 40-5f
@@ -1771,7 +1771,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		if (game_select == 1 || game_select == 3) DACScan(nAction, pnMin);
 
 		SN76496Scan(nAction, pnMin);
-		vlm5030Scan(nAction);
+		vlm5030Scan(nAction, pnMin);
 
 		SCAN_VAR(watchdog);
 		SCAN_VAR(bg_bank);

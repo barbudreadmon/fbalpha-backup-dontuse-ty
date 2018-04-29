@@ -19,6 +19,10 @@ static int cbLoopLen = 0;					// Loop length (in bytes) calculated
 
 int (*DSoundGetNextSound)(int);				// Callback used to request more sound
 
+static HANDLE hDSoundEvent = NULL;
+static HANDLE hAbortEvent = NULL;
+static HANDLE hAbortAckEvent = NULL;
+
 static int nDSoundFps;						// Application fps * 100
 static long nDSoundVol = 0;
 
@@ -48,6 +52,11 @@ static int DxBlankSound()
 	void *pData = NULL, *pData2 = NULL;
 	DWORD cbLen = 0, cbLen2 = 0;
 
+	// blank the nAudNextSound buffer
+	if (nAudNextSound) {
+		memset(nAudNextSound, 0, nAudSegLen << 2);
+	}
+
 	// Lock the Loop buffer
 	if (FAILED(pdsbLoop->Lock(0, cbLoopLen, &pData, &cbLen, &pData2, &cbLen2, 0))) {
 		return 1;
@@ -57,11 +66,6 @@ static int DxBlankSound()
 	// Unlock (2nd 0 is because we wrote nothing to second part)
 	pdsbLoop->Unlock(pData, cbLen, pData2, 0);
 
-	// Also blank the nAudNextSound buffer
-	if (nAudNextSound) {
-		memset(nAudNextSound, 0, nAudSegLen << 2);
-	}
-
 	return 0;
 }
 
@@ -69,13 +73,61 @@ static int nDSoundNextSeg = 0;										// We have filled the sound in the loop 
 
 #define WRAP_INC(x) { x++; if (x >= nAudSegCount) x = 0; }
 
-bool bRunFrame = false;
+bool bAbortSound = false;
 
 // This function checks the DSound loop, and if necessary does a callback to update the emulation
 static int DxSoundCheck()
 {
 	int nPlaySeg = 0, nFollowingSeg = 0;
 	DWORD nPlay = 0, nWrite = 0;
+
+	if (bAbortSound)
+	{
+		bAbortSound = false;
+		DWORD wait_object = SignalObjectAndWait(hAbortEvent, hAbortAckEvent, false, 2500);
+		if (wait_object != WAIT_OBJECT_0)
+		{
+
+#ifdef PRINT_DEBUG_INFO
+			//if (wait_object == WAIT_TIMEOUT)
+			//	bprintf(0, _T("*** DirectSound playback stalled.\n"));
+#endif
+
+			ResetEvent(hAbortAckEvent);
+		}
+
+		return 0;
+	}
+
+	HANDLE handles[] = { hDSoundEvent, hAbortEvent };
+
+
+	DWORD wait_object = WaitForMultipleObjects(2, handles, false, 2500);
+	if (wait_object != WAIT_OBJECT_0)
+	{
+
+#ifdef PRINT_DEBUG_INFO
+		if (wait_object == WAIT_TIMEOUT)
+			bprintf(0, _T("*** DirectSound playback notification timeout.\n"));
+		if (wait_object == WAIT_FAILED)
+			bprintf(0, _T("*** DirectSound playback wait failed.\n"));
+		// if (wait_object == WAIT_OBJECT_0 + 1)
+		//	bprintf(0, _T("*** DirectSound playback wait aborted.\n"));
+#endif
+
+		if (wait_object == WAIT_OBJECT_0 + 1)
+		{
+			SetEvent(hAbortAckEvent);
+			ResetEvent(hAbortEvent);
+		}
+
+		return 1;
+	}
+
+	ResetEvent(hDSoundEvent);
+
+	if (!bAudPlaying)
+		return 1;
 
 	if (pdsbLoop == NULL) {
 		return 1;
@@ -86,7 +138,7 @@ static int DxSoundCheck()
 
 	nPlaySeg = nPlay / (nAudSegLen << 2);
 
-	if (nPlaySeg > nAudSegCount -1 ) {
+	if (nPlaySeg > nAudSegCount - 1) {
 		nPlaySeg = nAudSegCount - 1;
 	}
 	if (nPlaySeg < 0) {												// important to ensure nPlaySeg clipped for below
@@ -94,8 +146,7 @@ static int DxSoundCheck()
 	}
 
 	if (nDSoundNextSeg == nPlaySeg) {
-		Sleep(2);													// Don't need to do anything for a bit
-		//bRunFrame = true;
+		//Sleep(2);													// Don't need to do anything for a bit
 		return 0;
 	}
 
@@ -106,7 +157,6 @@ static int DxSoundCheck()
 	while (nDSoundNextSeg != nPlaySeg) {
 		void *pData = NULL, *pData2 = NULL;
 		DWORD cbLen = 0, cbLen2 = 0;
-		int bDraw;
 
 		// fill nNextSeg
 
@@ -119,16 +169,8 @@ static int DxSoundCheck()
 			pdsbLoop->Unlock(pData, cbLen, pData2, 0);
 		}
 
-		bDraw = (nFollowingSeg == nPlaySeg)	|| bAlwaysDrawFrames;	// If this is the last seg of sound, flag bDraw (to draw the graphics)
-
-		if(bDraw) {
-			DSoundGetNextSound(bDraw);									// get more sound into nAudNextSound
-		}
-
-		if(!bDraw) {
-			bRunFrame = true;
-			RunIdle();
-		}
+		// get more sound into nAudNextSound
+		DSoundGetNextSound((nFollowingSeg == nPlaySeg) || bAlwaysDrawFrames); // If this is the last seg of sound, draw the graphics (frameskipping)
 
 		if (nAudDSPModule[0])	{
 			DspDo(nAudNextSound, nAudSegLen);
@@ -143,6 +185,9 @@ static int DxSoundCheck()
 
 static int DxSoundExit()
 {
+	ResetEvent(hAbortEvent);
+	ResetEvent(hAbortAckEvent);
+
 	DspExit();
 
 	if (nAudNextSound) {
@@ -159,6 +204,18 @@ static int DxSoundExit()
 	// Release the DirectSound interface
 	RELEASE(pDS);
 
+	if (hAbortAckEvent)
+		CloseHandle(hAbortAckEvent);
+	hAbortAckEvent = NULL;
+
+	if (hAbortEvent)
+		CloseHandle(hAbortEvent);
+	hAbortEvent = NULL;
+
+	if (hDSoundEvent)
+		CloseHandle(hDSoundEvent);
+	hDSoundEvent = NULL;
+
 	return 0;
 }
 
@@ -167,10 +224,24 @@ static int DxSoundInit()
 	int nRet = 0;
 	DSBUFFERDESC dsbd;
 	WAVEFORMATEX wfx;
+	LPDIRECTSOUNDNOTIFY lpDsNotify;
+	LPDSBPOSITIONNOTIFY lpPositionNotify = 0;
 
-	if (nAudSampleRate <= 0) {
+	if (nAudSampleRate[0] <= 0) {
 		return 1;
 	}
+
+	hDSoundEvent = CreateEvent(NULL, TRUE, false, NULL);
+	if (hDSoundEvent == NULL)
+		return 1;
+
+	hAbortEvent = CreateEvent(NULL, TRUE, false, NULL);
+	if (hAbortEvent == NULL)
+		return 1;
+
+	hAbortAckEvent = CreateEvent(NULL, TRUE, false, NULL);
+	if (hAbortAckEvent == NULL)
+		return 1;
 
 	nDSoundFps = nAppVirtualFps;
 
@@ -227,6 +298,29 @@ static int DxSoundInit()
 		return 1;
 	}
 
+	lpPositionNotify = (LPDSBPOSITIONNOTIFY)malloc(nAudSegCount * sizeof(DSBPOSITIONNOTIFY));
+	if (lpPositionNotify == NULL)
+		goto error;
+
+	if (FAILED(pdsbLoop->QueryInterface(IID_IDirectSoundNotify, (void**)&lpDsNotify)))
+		goto error;
+
+	for (int i = 0; i < nAudSegCount; i++)
+	{
+		lpPositionNotify[i].dwOffset = (i * nAudSegLen) << 2;
+		lpPositionNotify[i].hEventNotify = hDSoundEvent;
+	}
+
+	if (FAILED(lpDsNotify->SetNotificationPositions(nAudSegCount, lpPositionNotify)))
+	{
+		lpDsNotify->Release();
+
+		goto error;
+	}
+
+	lpDsNotify->Release();
+	free(lpPositionNotify);
+
 	nAudNextSound = (short*)malloc(nAudSegLen << 2);		// The next sound block to put in the stream
 	if (nAudNextSound == NULL) {
 		DxSoundExit();
@@ -238,6 +332,12 @@ static int DxSoundInit()
 	DspInit();
 
 	return 0;
+
+error:
+	free(lpPositionNotify);
+	DxSoundExit();
+
+	return 1;
 }
 
 static int DxSoundPlay()
@@ -264,6 +364,9 @@ static int DxSoundStop()
 
 	// Stop the looping buffer
 	pdsbLoop->Stop();
+
+	bAbortSound = true;
+	DxSoundCheck();
 
 	return 0;
 }

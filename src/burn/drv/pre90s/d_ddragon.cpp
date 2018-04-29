@@ -1377,7 +1377,7 @@ UINT8 DrvDdragonM6809ReadByte(UINT16 Address)
 		}
 		
 		case 0x2801: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 	}
 	
@@ -1452,11 +1452,11 @@ UINT8 __fastcall Ddragon2SoundZ80Read(UINT16 Address)
 {
 	switch (Address) {
 		case 0x8801: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		case 0x9800: {
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		}
 		
 		case 0xa000: {
@@ -1485,7 +1485,7 @@ void __fastcall Ddragon2SoundZ80Write(UINT16 Address, UINT8 Data)
 		}
 		
 		case 0x9800: {
-			MSM6295Command(0, Data);
+			MSM6295Write(0, Data);
 			return;
 		}
 		
@@ -1981,7 +1981,7 @@ static INT32 DrvMachineInit()
 	}
 	
 	if (DrvSoundCPUType == DD_CPU_TYPE_M6809) {
-		M6809Init(1);
+		M6809Init(0);
 		M6809Open(0);
 		M6809MapMemory(DrvSoundCPURam      , 0x0000, 0x0fff, MAP_RAM);
 		M6809MapMemory(DrvSoundCPURom      , 0x8000, 0xffff, MAP_ROM);
@@ -2633,8 +2633,8 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		if (DrvSoundCPUType == DD_CPU_TYPE_M6809) M6809Scan(nAction);
 		if (DrvGameType == DD_GAME_DARKTOWR) m6805Scan(nAction); // m68705
 		
-		BurnYM2151Scan(nAction);
-		if (DrvSoundCPUType == DD_CPU_TYPE_Z80) MSM6295Scan(0, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		if (DrvSoundCPUType == DD_CPU_TYPE_Z80) MSM6295Scan(nAction, pnMin);
 		if (DrvSoundCPUType == DD_CPU_TYPE_M6809) MSM5205Scan(nAction, pnMin);
 		
 		SCAN_VAR(DrvRomBank);

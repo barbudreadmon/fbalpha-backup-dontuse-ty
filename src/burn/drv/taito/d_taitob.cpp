@@ -30,6 +30,8 @@ static INT32 game_config = 0; // for disable opposites
 static INT32 cpu_speed[2];
 static UINT8 nTaitoInputConfig[5] = { 0, 0, 0, 0, 0 };
 
+static INT32 spritelag_disable = 0;
+
 static INT32 LastScrollX = 0; // hitice
 
 static struct BurnInputInfo CommonInputList[] = {
@@ -1587,7 +1589,7 @@ static void __fastcall taitob_sound_write_ym2203(UINT16 a, UINT8 d)
 
 		case 0xb000:
 		case 0xb001:
-			MSM6295Command(0, d);
+			MSM6295Write(0, d);
 		return;
 
 		case 0xa000:
@@ -1610,7 +1612,7 @@ static UINT8 __fastcall taitob_sound_read_ym2203(UINT16 a)
 
 		case 0xb000:
 		case 0xb001:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xa001:
 			return TC0140SYTSlaveCommRead();
@@ -1690,21 +1692,7 @@ static void DrvMakeInputs()
 
 static void DrvFMIRQHandler(INT32, INT32 nStatus)
 {
-	if (nStatus) {
-		ZetSetIRQLine(0xff, CPU_IRQSTATUS_ACK);
-	} else {
-		ZetSetIRQLine(0,    CPU_IRQSTATUS_NONE);
-	}
-}
-
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / cpu_speed[1];
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / (cpu_speed[1] * 1.0);
+	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvDoReset(INT32 reset_ram)
@@ -1831,7 +1819,7 @@ static void common_ym2610_init()
 	INT32 len0 = TaitoYM2610ARomSize;
 	INT32 len1 = TaitoYM2610BRomSize;
 
-	BurnYM2610Init(8000000, TaitoYM2610ARom, &len0, TaitoYM2610BRom, &len1, &DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2610Init(8000000, TaitoYM2610ARom, &len0, TaitoYM2610BRom, &len1, &DrvFMIRQHandler, 0);
 	BurnTimerAttachZet(cpu_speed[1]);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_1, 1.00, BURN_SND_ROUTE_BOTH);
 	BurnYM2610SetRoute(BURN_SND_YM2610_YM2610_ROUTE_2, 1.00, BURN_SND_ROUTE_BOTH);
@@ -1855,7 +1843,7 @@ static void common_ym2203_init()
 
 	TC0140SYTInit(0);
 
-	BurnYM2203Init(1, 3000000, DrvFMIRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 3000000, DrvFMIRQHandler, 0);
 	BurnYM2203SetPorts(0, NULL, NULL, &bankswitch, NULL);
 	BurnTimerAttachZet(cpu_speed[1]);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.80, BURN_SND_ROUTE_BOTH);
@@ -1951,6 +1939,7 @@ static INT32 DrvExit()
 	TaitoExit();
 
 	game_config = 0;
+	spritelag_disable = 0;
 
 	return 0;
 }
@@ -2007,6 +1996,8 @@ static INT32 DrvDraw()
 		return 0;
 	}
 
+	if (spritelag_disable) TC0180VCUBufferSprites();
+
 	if (~nBurnLayer & 1) BurnTransferClear();
 
 	if (nBurnLayer & 1) TC0180VCUDrawLayer(color_config[0], 1, -1);
@@ -2023,7 +2014,7 @@ static INT32 DrvDraw()
 
 	BurnTransferCopy(TaitoPalette);
 
-	TC0180VCUBufferSprites();
+	if (!spritelag_disable) TC0180VCUBufferSprites();
 
 	return 0;
 }
@@ -2116,7 +2107,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 			ZetOpen(0); // because of bankswitch() port callback.
 			BurnYM2203Scan(nAction, pnMin);
 			ZetClose();
-			MSM6295Scan(0, nAction);
+			MSM6295Scan(nAction, pnMin);
 		}
 
 		SCAN_VAR(TaitoZ80Bank);
@@ -3989,13 +3980,20 @@ static struct BurnRomInfo ryujinRomDesc[] = {
 STD_ROM_PICK(ryujin)
 STD_ROM_FN(ryujin)
 
+static INT32 RyujinInit()
+{
+	spritelag_disable = 1;
+
+	return SelfeenaInit();
+}
+
 struct BurnDriver BurnDrvRyujin = {
 	"ryujin", NULL, NULL, NULL, "1993",
 	"Ryu Jin (Japan)\0", NULL, "Taito Corporation", "Taito B System",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_TAITOB, GBF_VERSHOOT, 0,
 	NULL, ryujinRomInfo, ryujinRomName, NULL, NULL, SelfeenaInputInfo, RyujinDIPInfo,
-	SelfeenaInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x1000,
+	RyujinInit, DrvExit, DrvFrame, DrvDraw, DrvScan, NULL, 0x1000,
 	224, 320, 3, 4
 };
 

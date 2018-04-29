@@ -18,6 +18,9 @@ export
 # Include Unicode support
 UNICODE = 1
 
+# Use Segoe Fonts (installed by default on Windows Vista and newer)
+USE_SEGOE = 1
+
 # Build A68K ASM 68000 core
 #BUILD_A68K = 1
 
@@ -35,9 +38,6 @@ INCLUDE_7Z_SUPPORT = 1
 
 # Include AVI recording support (uses Video For Windows)
 INCLUDE_AVI_RECORDING = 1
-
-# Include Toaplan sound sample hacks for games without MCU dumps
-TOAPLAN_SOUND_SAMPLES_HACK = 1
 
 # Include Files that require C++11 (Killer Instinct, Midway Mortal Kombat style drivers, and associated files) - requires C++11 support
 INCLUDE_CPLUSPLUS11_FILES = 1

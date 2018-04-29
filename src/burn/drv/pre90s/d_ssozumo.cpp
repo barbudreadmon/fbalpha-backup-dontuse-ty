@@ -4,10 +4,7 @@
 #include "tiles_generic.h"
 #include "z80_intf.h"
 #include "m6502_intf.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 #include "dac.h"
 
 static UINT8 *AllMem;
@@ -31,13 +28,12 @@ static UINT8 *Drv6502RAM1;
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
 
-static INT16 *pAY8910Buffer[6];
-
 static INT32 palette_written;
 static UINT8 nmi_mask;
 static UINT8 soundlatch;
 static UINT8 flipscreen;
 static UINT8 bgscrolly;
+static UINT8 color_bank;
 
 static INT32 vblank;
 static INT32 previous_coin = 0;
@@ -124,6 +120,7 @@ static void ssozumo_main_write(UINT16 address, UINT8 data)
 	{
 		case 0x4000:
 			flipscreen = data >> 7;
+			color_bank = data & 3;
 		return;
 
 		case 0x4010: {
@@ -227,6 +224,7 @@ static INT32 DrvDoReset()
 	soundlatch = 0;
 	flipscreen = 0;
 	bgscrolly = 0;
+	color_bank = 0;
 	previous_coin = 0xc0;
 
 	return 0;
@@ -259,13 +257,6 @@ static INT32 MemIndex()
 	Drv6502RAM1		= Next; Next += 0x000200;
 
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -387,8 +378,8 @@ static INT32 DrvInit()
 
 	M6502Close();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.30, BURN_SND_ROUTE_BOTH);
 
@@ -515,11 +506,9 @@ static void draw_fg_layer()
 		sx += 9; //offsets (8 + 1 to give the screen a 3d-effect)
 		sy -= 8;
 
-		INT32 color  = (DrvColRAM1[offs] & 0x30) >> 4;
-		INT32 code  = DrvVidRAM1[offs] + 256 * (DrvColRAM1[offs] & 0x07);
-		code &= 0x3ff;
+		INT32 code = (DrvVidRAM1[offs] + 256 * (DrvColRAM1[offs] & 0x07)) & 0x3ff;
 
-		Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy, color, 3, 0, 0, DrvGfxROM0);
+		Render8x8Tile_Mask_Clip(pTransDraw, code, sx, sy, color_bank, 3, 0, 0, DrvGfxROM0);
 	}
 }
 
@@ -640,7 +629,7 @@ static INT32 DrvFrame()
 	}
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 		DACUpdate(pBurnSoundOut, nBurnSoundLen);
 	}
 
@@ -676,6 +665,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(soundlatch);
 		SCAN_VAR(flipscreen);
 		SCAN_VAR(bgscrolly);
+		SCAN_VAR(color_bank);
 	}
 
 	return 0;

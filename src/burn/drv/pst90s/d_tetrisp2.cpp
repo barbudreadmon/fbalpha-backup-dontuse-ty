@@ -425,7 +425,7 @@ static void __fastcall tetrisp2_write_word(UINT32 address, UINT16 data)
 	{
 		case 0x800000:
 			if (game == 3) {
-				MSM6295Command(0, data);
+				MSM6295Write(0, data);
 			} else {
 				YMZ280BSelectRegister(data);
 			}
@@ -515,7 +515,7 @@ static UINT16 __fastcall tetrisp2_read_word(UINT32 address)
 	{
 		case 0x800000:
 		case 0x800002:
-			if (game == 3) return MSM6295ReadStatus(0);
+			if (game == 3) return MSM6295Read(0);
 			return YMZ280BReadStatus();
 
 		case 0xa30000: // rockn1 sound volume
@@ -1317,9 +1317,9 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SekScan(nAction);
 
 		if (game == 3) {
-			MSM6295Scan(0, nAction);
+			MSM6295Scan(nAction, pnMin);
 		} else {
-			YMZ280BScan();
+			YMZ280BScan(nAction, pnMin);
 		}
 
 		SCAN_VAR(nndmseal_bank_lo);

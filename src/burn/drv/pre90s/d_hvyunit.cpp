@@ -35,6 +35,8 @@ static UINT16 scrolly;
 static UINT8 soundlatch;
 static UINT8 z80banks[3];
 
+static INT32 nExtraCycles[4];
+
 static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
 static UINT8 DrvJoy3[8];
@@ -331,16 +333,6 @@ static UINT8 __fastcall hvyunit_sound_read_port(UINT16 port)
 	return 0;
 }
 
-static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)ZetTotalCycles() * nSoundRate / 6000000;
-}
-
-static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 6000000;
-}
-
 static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
@@ -366,6 +358,8 @@ static INT32 DrvDoReset()
 	scrollx = 0;
 	scrolly = 0;
 	soundlatch = 0;
+
+	nExtraCycles[0] = nExtraCycles[1] = nExtraCycles[2] = nExtraCycles[3] = 0;
 
 	return 0;
 }
@@ -531,7 +525,7 @@ static INT32 DrvInit(INT32 select)
 
 	mermaidInit(DrvMCUROM, DrvInputs);
 
-	BurnYM2203Init(1, 3000000, NULL, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(1, 3000000, NULL, 0);
 	BurnTimerAttachZet(6000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE, 0.50, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.25, BURN_SND_ROUTE_BOTH);
@@ -626,24 +620,24 @@ static INT32 DrvFrame()
 		}
 	}
 
-	INT32 nInterleave = 256;
+	INT32 nInterleave = 256*4;
 	INT32 nCyclesTotal[4] =  { 6000000 / 58, 6000000 / 58, 6000000 / 58, 6000000 / 12 / 58 };
-	INT32 nCyclesDone[4] = { 0, 0, 0, 0 };
+	INT32 nCyclesDone[4] = { nExtraCycles[0], nExtraCycles[1], nExtraCycles[2], nExtraCycles[3] };
 
 	for (INT32 i = 0; i < nInterleave; i++) {
 
-		INT32 nSegment = nCyclesTotal[0] / nInterleave;
+		INT32 nSegment;
 
 		ZetOpen(0);
-		if (i == 64) {
+		if (i == 64*4) {
 			ZetSetVector(0xff);
 			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		}
-		if (i == 240) {
+		if (i == 240*4) {
 			ZetSetVector(0xfd);
 			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		}
-		nSegment = (nCyclesTotal[0] - nCyclesDone[0]) / (nInterleave - i);
+		nSegment = (nCyclesTotal[0] * (i + 1) / nInterleave) - nCyclesDone[0];
 		nCyclesDone[0] += ZetRun(nSegment);
 		ZetClose();
 
@@ -651,21 +645,21 @@ static INT32 DrvFrame()
 		if (mermaid_sub_z80_reset) {
 			nCyclesDone[1] += ZetIdle(nSegment);
 		} else {
-			if (i == 240) ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
-			nSegment = (nCyclesTotal[1] - nCyclesDone[1]) / (nInterleave - i);
+			if (i == 240*4) ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
+			nSegment = (nCyclesTotal[1] * (i + 1) / nInterleave) - nCyclesDone[1];
 			nCyclesDone[1] += ZetRun(nSegment);
 		}
 		ZetClose();
 
 		ZetOpen(2);
-		if (i == 240) ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
+		if (i == 240*4) ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		BurnTimerUpdate((i + 1) * nCyclesTotal[2] / nInterleave);
 		ZetClose();
 
-		nSegment = (nCyclesTotal[3] - nCyclesDone[3]) / (nInterleave - i);
+		nSegment = (nCyclesTotal[3] * (i + 1) / nInterleave) - nCyclesDone[3];
 		nCyclesDone[3] += mcs51Run(nSegment);
 
-		if (i == 239) {
+		if (i == 239*4) {
 			pandora_buffer_sprites();
 
 			if (pBurnDraw) {
@@ -682,6 +676,10 @@ static INT32 DrvFrame()
 	}
 
 	ZetClose();
+
+	nExtraCycles[0] = nCyclesDone[0] - nCyclesTotal[0];
+	nExtraCycles[1] = nCyclesDone[1] - nCyclesTotal[1];
+	nExtraCycles[3] = nCyclesDone[3] - nCyclesTotal[3];
 
 	return 0;
 }
@@ -712,6 +710,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(scrolly);
 		SCAN_VAR(soundlatch);
 		SCAN_VAR(z80banks);
+		SCAN_VAR(nExtraCycles);
 	}
 
 	if (nAction & ACB_WRITE) {

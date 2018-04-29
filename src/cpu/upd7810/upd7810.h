@@ -10,7 +10,6 @@
 // unfortunatly memory configuration differs with internal rom size
 typedef enum {
 	TYPE_7810,
-	TYPE_7810_GAMEMASTER, // a few modifications until internal rom dumped
 	TYPE_7807
 //  TYPE_78C10, // stop instruction added
 //  TYPE_78IV,
@@ -126,8 +125,19 @@ typedef struct {
 	UINT8	ci;
 	UINT8	co0;
 	UINT8	co1;
+	UINT8	lv0;
+	UINT8	lv1;
 	UINT16	irr;	/* interrupt request register */
 	UINT16	itf;	/* interrupt test flag register */
+
+	INT32 adcnt;
+	UINT32 PANM;
+	INT32 adtot;
+	UINT32 adin;
+	UINT32 adout;
+	UINT32 shdone;
+	UINT32 adrange;
+	UINT8 tmpcr;
 
 /* internal helper variables */
 	UINT16	txs;	/* transmitter shift register */

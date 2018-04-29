@@ -389,7 +389,7 @@ INT32 SMSScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(sms);
 		SCAN_VAR(cart.fcr);
 		if (sms.use_fm) // put it down here so we keep compatibility with non-fm states.
-			BurnYM2413Scan(nAction);
+			BurnYM2413Scan(nAction, pnMin);
 
 		if (nAction & ACB_WRITE) {
 			ZetOpen(0);
@@ -21349,7 +21349,7 @@ STD_ROM_FN(gg_popeye)
 
 struct BurnDriver BurnDrvgg_popeye = {
 	"gg_popeye", NULL, NULL, NULL, "1994",
-	"Popeye no Beach Volleyball (Jpn)\0", NULL, "Technos Japan", "Sega Game Gear",
+	"Popeye no Beach Volleyball (Jpn)\0", "Graphics issues on map screen", "Technos Japan", "Sega Game Gear",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_GAME_GEAR, GBF_MISC, 0,
 	GGGetZipName, gg_popeyeRomInfo, gg_popeyeRomName, NULL, NULL, SMSInputInfo, GGDIPInfo,
@@ -27367,3 +27367,59 @@ struct BurnDriver BurnDrvsms_datastorm = {
 	256, 192, 4, 3
 };
 
+// Alex Kidd in Miracle World 2
+
+static struct BurnRomInfo sms_alexkidd2RomDesc[] = {
+	{ "Alex Kidd in Miracle World 2.sms",	0x80000, 0x7de172ff, BRF_PRG | BRF_ESS },
+};
+
+STD_ROM_PICK(sms_alexkidd2)
+STD_ROM_FN(sms_alexkidd2)
+
+struct BurnDriver BurnDrvsms_alexkidd2 = {
+	"sms_alexkidd2", NULL, NULL, NULL, "2017",
+	"Alex Kidd in Miracle World 2 (Hack)\0", NULL, "2017 Ian Wall", "Sega Master System",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_SEGA_MASTER_SYSTEM, GBF_MISC, 0,
+	SMSGetZipName, sms_alexkidd2RomInfo, sms_alexkidd2RomName, NULL, NULL, SMSInputInfo, SMSDIPInfo,
+	SMSInit, SMSExit, SMSFrame, SMSDraw, SMSScan, &SMSPaletteRecalc, 0x1000,
+	256, 192, 4, 3
+};
+
+// Weka Invaders (Version 1.0)
+
+static struct BurnRomInfo sms_wekainvadersRomDesc[] = {
+	{ "WekaInvaders.sms",	0x48000, 0x54b2fcf8, BRF_PRG | BRF_ESS },
+};
+
+STD_ROM_PICK(sms_wekainvaders)
+STD_ROM_FN(sms_wekainvaders)
+
+struct BurnDriver BurnDrvsms_wekainvaders = {
+	"sms_wekainvaders10", NULL, NULL, NULL, "2017",
+	"Weka Invaders (Version 1.0)\0", NULL, "Disjointed Studio", "Sega Master System",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_SEGA_MASTER_SYSTEM, GBF_MISC, 0,
+	SMSGetZipName, sms_wekainvadersRomInfo, sms_wekainvadersRomName, NULL, NULL, SMSInputInfo, SMSDIPInfo,
+	SMSInit, SMSExit, SMSFrame, SMSDraw, SMSScan, &SMSPaletteRecalc, 0x1000,
+	256, 192, 4, 3
+};
+
+// Silver Valley
+
+static struct BurnRomInfo sms_silvervalleyRomDesc[] = {
+	{ "silvervalley-final.sms",	0x40000, 0x2774b5cc, BRF_PRG | BRF_ESS },
+};
+
+STD_ROM_PICK(sms_silvervalley)
+STD_ROM_FN(sms_silvervalley)
+
+struct BurnDriver BurnDrvsms_silvervalley = {
+	"sms_silvervalley", NULL, NULL, NULL, "2018",
+	"Silver Valley\0", NULL, "MIKGAMES / Enrique Ruiz", "Sega Master System",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_SEGA_MASTER_SYSTEM, GBF_MISC, 0,
+	SMSGetZipName, sms_silvervalleyRomInfo, sms_silvervalleyRomName, NULL, NULL, SMSInputInfo, SMSDIPInfo,
+	SMSInit, SMSExit, SMSFrame, SMSDraw, SMSScan, &SMSPaletteRecalc, 0x1000,
+	256, 192, 4, 3
+};

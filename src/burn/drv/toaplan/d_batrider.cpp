@@ -327,9 +327,9 @@ static INT32 drvScan(INT32 nAction, INT32* pnMin)
 		ZetScan(nAction);				// Scan Z80
 		SCAN_VAR(nCurrentBank);
 
-		MSM6295Scan(0, nAction);
-		MSM6295Scan(1, nAction);
-		BurnYM2151Scan(nAction);
+		MSM6295Scan(nAction, pnMin);
+		//MSM6295Scan(1, nAction);
+		BurnYM2151Scan(nAction, pnMin);
 
 		ToaScanGP9001(nAction, pnMin);
 
@@ -391,11 +391,11 @@ UINT8 __fastcall batriderZIn(UINT16 nAddress)
 			return RamShared[1];
 
 		case 0x81:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		case 0x82:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 		case 0x84:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;
@@ -427,10 +427,10 @@ void __fastcall batriderZOut(UINT16 nAddress, UINT8 nValue)
 			break;
 
 		case 0x82:
-			MSM6295Command(0, nValue);
+			MSM6295Write(0, nValue);
 			break;
 		case 0x84:
-			MSM6295Command(1, nValue);
+			MSM6295Write(1, nValue);
 			break;
 
 		case 0x88: {

@@ -2,6 +2,7 @@
 
 #include "version.h"
 #include "burnint.h"
+#include "timer.h"
 #include "burn_sound.h"
 #include "driverlist.h"
 
@@ -627,13 +628,14 @@ extern "C" INT32 BurnDrvInit()
 	nReturnValue = pDriver[nBurnDrvActive]->Init();	// Forward to drivers function
 
 	nMaxPlayers = pDriver[nBurnDrvActive]->Players;
-	
+
+	nCurrentFrame = 0;
+
 #if defined (FBA_DEBUG)
 	if (!nReturnValue) {
 		starttime = clock();
 		nFramesEmulated = 0;
 		nFramesRendered = 0;
-		nCurrentFrame = 0;
 	} else {
 		starttime = 0;
 	}
@@ -878,6 +880,19 @@ void BurnRandomScan(INT32 nAction)
 void BurnRandomInit()
 { // for states & input recordings - init before emulation starts
 	nBurnRandSeed = time(NULL);
+}
+
+// ----------------------------------------------------------------------------
+// Handy FM default callbacks
+
+INT32 BurnSynchroniseStream(INT32 nSoundRate)
+{
+	return (INT64)BurnTimerCPUTotalCycles() * nSoundRate / BurnTimerCPUClockspeed;
+}
+
+double BurnGetTime()
+{
+	return (double)BurnTimerCPUTotalCycles() / BurnTimerCPUClockspeed;
 }
 
 // ----------------------------------------------------------------------------

@@ -5,10 +5,7 @@
 #include "z80_intf.h"
 #include "m6800_intf.h"
 #include "dac.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 #include "bitswap.h"
 
 static UINT8 *AllMem;
@@ -30,8 +27,6 @@ static UINT8 *DrvVidRegs;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[3];
 
 static UINT8 irq_mask;
 static UINT8 flipscreen;
@@ -432,10 +427,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-
 	MemEnd			= Next;
 
 	return 0;
@@ -482,11 +473,6 @@ static INT32 DrvInit(INT32 select)
 		if (BurnLoadRom(DrvZ80ROM + 0x6000,   6, 1)) return 1;
 		if (BurnLoadRom(DrvZ80ROM + 0x7000,   7, 1)) return 1;
 
-		if (!strcmp(BurnDrvGetTextA(DRV_NAME), "radradj") ==0) {
-			if (BurnLoadRom(DrvZ80ROM + 0x7000,   7, 1)) return 1;
-			memcpy (DrvZ80ROM + 0x7800, DrvGfxROM0 + 0x7000, 0x0800);
-		}
-		
 		if (BurnLoadRom(DrvGfxROM0 + 0x0000,  8, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM0 + 0x1000,  9, 1)) return 1;
 		if (BurnLoadRom(DrvGfxROM0 + 0x2000, 10, 1)) return 1;
@@ -500,7 +486,7 @@ static INT32 DrvInit(INT32 select)
 				DrvMCUOps[i] = BITSWAP08(DrvZ80ROM[i], 6, 7, 5, 4, 3, 2, 0, 1);
 			}
 		}
-				
+
 		DrvGfxDecode();
 	}
 
@@ -524,12 +510,13 @@ static INT32 DrvInit(INT32 select)
 		NSC8105MapMemory(DrvNVRAM,	0x1000, 0x10ff, MAP_RAM);
 	NSC8105MapMemory(DrvZ80ROM,	0x8000, 0xf7ff, MAP_ROM);
 	if (game_select == 1)
-		NSC8105MapMemory(DrvMCUOps,	0x8000, 0xf7ff, MAP_FETCH);
+		NSC8105MapMemory(DrvMCUOps,	0x8000, 0xf7ff, MAP_ROM);
 	NSC8105MapMemory(DrvShareRAM,	0xf800, 0xffff, MAP_RAM);
 	NSC8105SetWriteHandler(seicross_mcu_write);
 	NSC8105SetReadHandler(seicross_mcu_read);
 
-	AY8910Init(0, 1536000, nBurnSoundRate, NULL, &ay8910_read_B, NULL, &ay8910_write_B);
+	AY8910Init(0, 1536000, 0);
+	AY8910SetPorts(0, NULL, &ay8910_read_B, NULL, &ay8910_write_B);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 
 	DACInit(0, 0, 1, syncronize_dac);
@@ -743,7 +730,7 @@ static INT32 DrvFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 
@@ -755,7 +742,7 @@ static INT32 DrvFrame()
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
 		if (nSegmentLength) {
-			AY8910Render(&pAY8910Buffer[0], pSoundBuf, nSegmentLength, 0);
+			AY8910Render(pSoundBuf, nSegmentLength);
 		}
 		DACUpdate(pBurnSoundOut, nBurnSoundLen);
 	}
@@ -913,7 +900,7 @@ struct BurnDriver BurnDrvFriskytb = {
 	"friskytb", "friskyt", NULL, NULL, "1981",
 	"Frisky Tom (set 3, encrypted)\0", "Broken, please use parent romset!", "Nichibutsu", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
+	BDF_GAME_NOT_WORKING | BDF_CLONE, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
 	NULL, friskytbRomInfo, friskytbRomName, NULL, NULL, FriskytInputInfo, FriskytDIPInfo,
 	friskytbInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x40,
 	256, 224, 4, 3

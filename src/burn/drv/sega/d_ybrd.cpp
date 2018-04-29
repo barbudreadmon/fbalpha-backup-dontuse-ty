@@ -93,9 +93,9 @@ static struct BurnInputInfo RchaseInputList[] = {
 	{"Coin 2"            , BIT_DIGITAL   , System16InputPort0 + 5, "p2 coin"    },
 	{"Start 2"           , BIT_DIGITAL   , System16InputPort0 + 6, "p2 start"   },
 
-	A("P1 Left/Right"    , BIT_ANALOG_REL, &System16AnalogPort0,   "p1 x-axis"  ),
-	A("P1 Up/Down"       , BIT_ANALOG_REL, &System16AnalogPort1,   "p1 y-axis"  ),
-	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort0 + 1, "p1 fire 1"  },
+	A("P1 Left/Right"    , BIT_ANALOG_REL, &System16AnalogPort0,   "mouse x-axis"  ),
+	A("P1 Up/Down"       , BIT_ANALOG_REL, &System16AnalogPort1,   "mouse y-axis"  ),
+	{"P1 Fire 1"         , BIT_DIGITAL   , System16InputPort0 + 1, "mouse button 1"  },
 	
 	A("P2 Left/Right"    , BIT_ANALOG_REL, &System16AnalogPort2,   "p2 x-axis"  ),
 	A("P2 Up/Down"       , BIT_ANALOG_REL, &System16AnalogPort3,   "p2 y-axis"  ),

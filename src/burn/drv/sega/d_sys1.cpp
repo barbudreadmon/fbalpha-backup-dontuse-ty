@@ -1640,41 +1640,41 @@ STDDIPINFO(Ufosensi)
 static struct BurnDIPInfo WbmlDIPList[]=
 {
 	// Default Values
-	{0x13, 0xff, 0xff, 0xff, NULL                     },
-	{0x14, 0xff, 0xff, 0xfe, NULL                     },
+	{0x13, 0xff, 0xff, 0xfe, NULL                     },
+	{0x14, 0xff, 0xff, 0xff, NULL                     },
 
 	// Dip 1
-	SYSTEM1_COINAGE(0x13)
-	
-	// Dip 2	
 	{0   , 0xfe, 0   ,    2, "Cabinet"                },
-	{0x14, 0x01, 0x01, 0x00, "Upright"                },
-	{0x14, 0x01, 0x01, 0x01, "Cocktail"               },
+	{0x13, 0x01, 0x01, 0x00, "Upright"                },
+	//{0x13, 0x01, 0x01, 0x01, "Cocktail"               }, no screen flipping here :)
 
 	{0   , 0xfe, 0   ,    2, "Demo Sounds"		},
-	{0x14, 0x01, 0x02, 0x00, "Off"		},
-	{0x14, 0x01, 0x02, 0x02, "On"		},
+	{0x13, 0x01, 0x02, 0x00, "Off"		},
+	{0x13, 0x01, 0x02, 0x02, "On"		},
 
 	{0   , 0xfe, 0   ,    3, "Lives"		},
-	{0x14, 0x01, 0x0c, 0x04, "3"		},
-	{0x14, 0x01, 0x0c, 0x0c, "4"		},
-	{0x14, 0x01, 0x0c, 0x08, "5"		},
+	{0x13, 0x01, 0x0c, 0x04, "3"		},
+	{0x13, 0x01, 0x0c, 0x0c, "4"		},
+	{0x13, 0x01, 0x0c, 0x08, "5"		},
 
 	{0   , 0xfe, 0   ,    2, "Bonus Life"		},
-	{0x14, 0x01, 0x10, 0x10, "30000 100000 200000"		},
-	{0x14, 0x01, 0x10, 0x00, "50000 150000 250000"		},
+	{0x13, 0x01, 0x10, 0x10, "30000 100000 200000"		},
+	{0x13, 0x01, 0x10, 0x00, "50000 150000 250000"		},
 
 	{0   , 0xfe, 0   ,    2, "Difficulty"		},
-	{0x14, 0x01, 0x20, 0x20, "Easy"		},
-	{0x14, 0x01, 0x20, 0x00, "Hard"		},
+	{0x13, 0x01, 0x20, 0x20, "Easy"		},
+	{0x13, 0x01, 0x20, 0x00, "Hard"		},
 
 	{0   , 0xfe, 0   ,    2, "Test Mode"		},
-	{0x14, 0x01, 0x40, 0x40, "Off"		},
-	{0x14, 0x01, 0x40, 0x00, "On"		},
+	{0x13, 0x01, 0x40, 0x40, "Off"		},
+	{0x13, 0x01, 0x40, 0x00, "On"		},
 
 	{0   , 0xfe, 0   ,    2, "Unknown"		},
-	{0x14, 0x01, 0x80, 0x80, "Off"		},
-	{0x14, 0x01, 0x80, 0x00, "On"		},
+	{0x13, 0x01, 0x80, 0x80, "Off"		},
+	{0x13, 0x01, 0x80, 0x00, "On"		},
+
+	// Dip 2
+	SYSTEM1_COINAGE(0x14)
 };
 
 STDDIPINFO(Wbml)
@@ -2237,20 +2237,20 @@ static struct BurnRomInfo MyheroblRomDesc[] = {
 	{ "2.g2",         	   0x004000, 0x688c9ede, BRF_ESS | BRF_PRG }, //  1	Z80 #1 Program Code
 	{ "3.h2",              0x004000, 0x3cbbaf64, BRF_ESS | BRF_PRG }, //  2	Z80 #1 Program Code
 	
-	{ "6.E10",      	   0x002000, 0xaf467223, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
+	{ "6.e10",      	   0x002000, 0xaf467223, BRF_ESS | BRF_PRG }, //  3	Z80 #2 Program Code
 	
-	{ "B13.R10",           0x004000, 0x9a4861b1, BRF_GRA },		  	  //  4 Tiles
-	{ "B11.R7",            0x004000, 0x0d6f248a, BRF_GRA },		  	  //  5 Tiles
-	{ "x.R8",              0x004000, 0x24537709, BRF_GRA },		  	  //  6 Tiles
+	{ "b13.r10",           0x004000, 0x9a4861b1, BRF_GRA },		  	  //  4 Tiles
+	{ "b11.r7",            0x004000, 0x0d6f248a, BRF_GRA },		  	  //  5 Tiles
+	{ "x.r8",              0x004000, 0x24537709, BRF_GRA },		  	  //  6 Tiles
 	
 	{ "4.f4",      		   0x004000, 0xf19e05a1, BRF_GRA },		  	  //  7 Sprites
-	{ "x.H4",              0x004000, 0x7988adc3, BRF_GRA },		  	  //  8 Sprites
-	{ "x.G4",      		   0x004000, 0x37f77a78, BRF_GRA },		  	  //  9 Sprites
-	{ "B7.K4",       	   0x004000, 0x42bdc8f6, BRF_GRA },		  	  // 10 Sprites
+	{ "x.h4",              0x004000, 0x7988adc3, BRF_GRA },		  	  //  8 Sprites
+	{ "x.g4",      		   0x004000, 0x37f77a78, BRF_GRA },		  	  //  9 Sprites
+	{ "b7.k4",       	   0x004000, 0x42bdc8f6, BRF_GRA },		  	  // 10 Sprites
 
 	{ "pr-5317.76",        0x000100, 0x648350b8, BRF_OPT },		  	  // 11 Timing PROM
 	
-	{ "PROM.A2",           0x000200, 0x4fcaf000, BRF_OPT },       	  // 12 Timing PROMBL
+	{ "prom.a2",           0x000200, 0x4fcaf000, BRF_OPT },       	  // 12 Timing PROMBL
 };
 
 STD_ROM_PICK(Myherobl)
@@ -4805,6 +4805,7 @@ static UINT8 __fastcall System2Z801PortRead(UINT16 a)
 		case 0x17: return ppi8255_r(0, a & 3);
 		//case 0x19: return System1VideoMode;
 	}
+
 	return 0;
 }
 

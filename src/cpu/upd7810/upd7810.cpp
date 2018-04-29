@@ -403,6 +403,16 @@ STOP            01001000  10111011          12  stop
 //#include "mamedbg.h"
 #include "upd7810.h"
 
+
+static UINT8 (*an0_func)();
+static UINT8 (*an1_func)();
+static UINT8 (*an2_func)();
+static UINT8 (*an3_func)();
+static UINT8 (*an4_func)();
+static UINT8 (*an5_func)();
+static UINT8 (*an6_func)();
+static UINT8 (*an7_func)();
+
 static UINT8 *mem[3][0x100];
 
 static UINT8 (*read_byte_8)(UINT16) = NULL;
@@ -559,6 +569,7 @@ static UINT8 upd7810_win_layout[] = {
 #define INTFST	0x0400
 #define INTER	0x0800
 #define INTOV	0x1000
+#define INTF0   0x2000
 
 /* ITF flags */
 #define INTAN4	0x0001
@@ -647,6 +658,8 @@ static UINT8 upd7810_win_layout[] = {
 #define TI		upd7810.ti
 #define TO		upd7810.to
 #define CI		upd7810.ci
+#define LV0     upd7810.lv0
+#define LV1     upd7810.lv1
 #define CO0 	upd7810.co0
 #define CO1 	upd7810.co1
 
@@ -859,36 +872,31 @@ static void upd7810_take_irq(void)
 {
 	UINT16 vector = 0;
 	int irqline = 0;
+
 	/* global interrupt disable? */
 	if (0 == IFF)
 		return;
 
 	/* check the interrupts in priority sequence */
-	if ((IRR & INTFT0)	&& 0 == (MKL & 0x02))
+	if (IRR & INTNMI)
 	{
-	    switch (upd7810_config_type)
-		{
-			case TYPE_7810_GAMEMASTER:
-				vector = 0xff2a;
-				break;
-			default:
-				vector = 0x0008;
-		}
-	    if (!((IRR & INTFT1)	&& 0 == (MKL & 0x04)))
+		/* Nonmaskable interrupt */
+		irqline = CPU_IRQLINE_NMI;
+		vector = 0x0004;
+		IRR &= ~INTNMI;
+	}
+	else
+	if ((IRR & INTFT0)  && 0 == (MKL & 0x02))
+	{
+		vector = 0x0008;
+		if (!((IRR & INTFT1)    && 0 == (MKL & 0x04)))
 		IRR&=~INTFT0;
 	}
 	else
-	if ((IRR & INTFT1)	&& 0 == (MKL & 0x04))
+	if ((IRR & INTFT1)  && 0 == (MKL & 0x04))
 	{
-	    switch (upd7810_config_type)
-		{
-			case TYPE_7810_GAMEMASTER:
-				vector = 0xff2a;
-				break;
-			default:
-				vector = 0x0008;
-		}
-	    IRR&=~INTFT1;
+		vector = 0x0008;
+		IRR&=~INTFT1;
 	}
 	else
 	if ((IRR & INTF1)	&& 0 == (MKL & 0x08))
@@ -906,31 +914,17 @@ static void upd7810_take_irq(void)
 		IRR&=~INTF2;
 	}
 	else
-	if ((IRR & INTFE0)	&& 0 == (MKL & 0x20))
+	if ((IRR & INTFE0)  && 0 == (MKL & 0x20))
 	{
-	    switch (upd7810_config_type)
-		{
-			case TYPE_7810_GAMEMASTER:
-				vector = 0xff2d;
-				break;
-			default:
-				vector = 0x0018;
-		}
-	    if (!((IRR & INTFE1)	&& 0 == (MKL & 0x40)))
+		vector = 0x0018;
+		if (!((IRR & INTFE1)    && 0 == (MKL & 0x40)))
 		IRR&=~INTFE0;
 	}
 	else
-	if ((IRR & INTFE1)	&& 0 == (MKL & 0x40))
+	if ((IRR & INTFE1)  && 0 == (MKL & 0x40))
 	{
-	    switch (upd7810_config_type)
-		{
-		    case TYPE_7810_GAMEMASTER:
-				vector = 0xff2d;
-				break;
-		    default:
-				vector = 0x0018;
-		}
-	    IRR&=~INTFE1;
+		vector = 0x0018;
+		IRR&=~INTFE1;
 	}
 	else
 	if ((IRR & INTFEIN) && 0 == (MKL & 0x80))
@@ -954,6 +948,7 @@ static void upd7810_take_irq(void)
 		vector = 0x0028;
 	   	IRR&=~INTFST;
 	}
+
 	if (vector)
 	{
 		/* acknowledge external IRQ */
@@ -968,10 +963,72 @@ static void upd7810_take_irq(void)
 		IFF = 0;
 		PSW &= ~(SK|L0|L1);
 		PC = vector;
-		change_pc( PCD );
 	}
 }
 
+static void upd7810_co0_output_change()
+{
+	/* Output LV0 Content to CO0 */
+	CO0 = LV0;
+
+	/* LV0 Level Inversion */
+	if (EOM & 0x02)
+		LV0 ^= 1;
+
+	//m_co0_func(CO0);
+}
+
+static void upd7810_co1_output_change()
+{
+	/* Output LV1 Content to CO1 */
+	CO1 = LV1;
+
+	/* LV1 Level Inversion */
+	if (EOM & 0x20)
+		LV1 ^= 1;
+
+	//m_co1_func(CO1);
+}
+
+static void upd7810_write_EOM()
+{
+	switch (EOM & 0x0c)
+	{
+	case 0x04:  /* To Reset LV0 */
+		LV0 = 0;
+		EOM &= 0xfb; /* LRE0 is reset to 0 */
+		break;
+	case 0x08:  /* To Set LV0 */
+		LV0 = 1;
+		EOM &= 0xf7; /* LRE1 is reset to 0 */
+		break;
+	}
+	/* Output LV0 Content */
+	if (EOM & 0x01) {
+		upd7810_co0_output_change();
+		EOM &= 0xfe; /* LO0 is reset to 0 */
+	}
+
+	switch (EOM & 0xc0)
+	{
+	case 0x40:  /* To Reset LV1 */
+		LV1 = 0;
+		EOM &= 0xbf; /* LRE2 is reset to 0 */
+		break;
+	case 0x80:  /* To Set LV1 */
+		LV1 = 1;
+		EOM &= 0x7f; /* LRE3 is reset to 0 */
+		break;
+	}
+	/* Output LV1 Content */
+	if (EOM & 0x10) {
+		upd7810_co1_output_change();
+		EOM &= 0xef; /* LO1 is reset to 0 */
+	}
+}
+
+#if 0
+OLD
 static void upd7810_write_EOM(void)
 {
 	if (EOM & 0x01) /* output LV0 content ? */
@@ -1005,6 +1062,7 @@ static void upd7810_write_EOM(void)
 		}
 	}
 }
+#endif
 
 static void upd7810_write_TXB(void)
 {
@@ -1298,146 +1356,105 @@ static void upd7810_sio_input(void)
 	}
 }
 
+static void upd7810_handle_timer0(int cycles, int clkdiv)
+{
+	OVC0 += cycles;
+	while (OVC0 >= clkdiv)
+	{
+		OVC0 -= clkdiv;
+		CNT0++;
+		if (CNT0 == TM0)
+		{
+			CNT0 = 0;
+			IRR |= INTFT0;
+			/* timer F/F source is timer 0 ? */
+			if (0x00 == (TMM & 0x03))
+			{
+				TO ^= 1;
+				if (upd7810_io_callback)
+					(*upd7810_io_callback)(UPD7810_TO,TO);
+			}
+			/* timer 1 chained with timer 0 ? */
+			if ((TMM & 0xe0) == 0x60)
+			{
+				CNT1++;
+				if (CNT1 == TM1)
+				{
+					CNT1 = 0;
+					IRR |= INTFT1;
+					/* timer F/F source is timer 1 ? */
+					if (0x01 == (TMM & 0x03))
+					{
+						TO ^= 1;
+						if (upd7810_io_callback)
+							(*upd7810_io_callback)(UPD7810_TO,TO);
+					}
+				}
+			}
+		}
+	}
+}
+
+static void upd7810_handle_timer1(int cycles, int clkdiv)
+{
+	OVC1 += cycles;
+	while (OVC1 >= clkdiv)
+	{
+		OVC1 -= clkdiv;
+		CNT1++;
+		if (CNT1 == TM1)
+		{
+			CNT1 = 0;
+			IRR |= INTFT1;
+			/* timer F/F source is timer 1 ? */
+			if (0x01 == (TMM & 0x03))
+			{
+				TO ^= 1;
+				if (upd7810_io_callback)
+					(*upd7810_io_callback)(UPD7810_TO,TO);
+			}
+		}
+	}
+}
+
 static void upd7810_timers(int cycles)
 {
 	/**** TIMER 0 ****/
-	if (TMM & 0x10) 		/* timer 0 upcounter reset ? */
+	if (TMM & 0x10)         /* timer 0 upcounter reset ? */
 		CNT0 = 0;
 	else
 	{
 		switch (TMM & 0x0c) /* timer 0 clock source */
 		{
-		case 0x00:	/* clock divided by 12 */
-			OVC0 += cycles;
-			while (OVC0 >= 12)
-			{
-				OVC0 -= 12;
-				CNT0++;
-				if (CNT0 == TM0)
-				{
-					CNT0 = 0;
-					IRR |= INTFT0;
-					/* timer F/F source is timer 0 ? */
-					if (0x00 == (TMM & 0x03))
-					{
-						TO ^= 1;
-						if (upd7810_io_callback)
-							(*upd7810_io_callback)(UPD7810_TO,TO);
-					}
-					/* timer 1 chained with timer 0 ? */
-					if ((TMM & 0xe0) == 0x60)
-					{
-						CNT1++;
-						if (CNT1 == TM1)
-						{
-							IRR |= INTFT1;
-							CNT1 = 0;
-							/* timer F/F source is timer 1 ? */
-							if (0x01 == (TMM & 0x03))
-							{
-								TO ^= 1;
-								if (upd7810_io_callback)
-									(*upd7810_io_callback)(UPD7810_TO,TO);
-							}
-						}
-					}
-				}
-			}
+		case 0x00:  /* clock divided by 12 */
+			upd7810_handle_timer0(cycles, 12);
 			break;
-		case 0x04:	/* clock divided by 384 */
-			OVC0 += cycles;
-			while (OVC0 >= 384)
-			{
-				OVC0 -= 384;
-				CNT0++;
-				if (CNT0 == TM0)
-				{
-					CNT0 = 0;
-					IRR |= INTFT0;
-					/* timer F/F source is timer 0 ? */
-					if (0x00 == (TMM & 0x03))
-					{
-						TO ^= 1;
-						if (upd7810_io_callback)
-							(*upd7810_io_callback)(UPD7810_TO,TO);
-					}
-					/* timer 1 chained with timer 0 ? */
-					if ((TMM & 0xe0) == 0x60)
-					{
-						CNT1++;
-						if (CNT1 == TM1)
-						{
-							CNT1 = 0;
-							IRR |= INTFT1;
-							/* timer F/F source is timer 1 ? */
-							if (0x01 == (TMM & 0x03))
-							{
-								TO ^= 1;
-								if (upd7810_io_callback)
-									(*upd7810_io_callback)(UPD7810_TO,TO);
-							}
-						}
-					}
-				}
-			}
+		case 0x04:  /* clock divided by 384 */
+			upd7810_handle_timer0(cycles, 384);
 			break;
-		case 0x08:	/* external signal at TI */
+		case 0x08:  /* external signal at TI */
 			break;
-		case 0x0c:	/* disabled */
+		case 0x0c:  /* disabled */
 			break;
 		}
 	}
 
 	/**** TIMER 1 ****/
-	if (TMM & 0x80) 		/* timer 1 upcounter reset ? */
+	if (TMM & 0x80)         /* timer 1 upcounter reset ? */
 		CNT1 = 0;
 	else
 	{
 		switch (TMM & 0x60) /* timer 1 clock source */
 		{
-		case 0x00:	/* clock divided by 12 */
-			OVC1 += cycles;
-			while (OVC1 >= 12)
-			{
-				OVC1 -= 12;
-				CNT1++;
-				if (CNT1 == TM1)
-				{
-					CNT1 = 0;
-					IRR |= INTFT1;
-					/* timer F/F source is timer 1 ? */
-					if (0x01 == (TMM & 0x03))
-					{
-						TO ^= 1;
-						if (upd7810_io_callback)
-							(*upd7810_io_callback)(UPD7810_TO,TO);
-					}
-				}
-			}
+		case 0x00:  /* clock divided by 12 */
+			upd7810_handle_timer1(cycles, 12);
 			break;
-		case 0x20:	/* clock divided by 384 */
-			OVC1 += cycles;
-			while (OVC1 >= 384)
-			{
-				OVC1 -= 384;
-				CNT1++;
-				if (CNT1 == TM1)
-				{
-					CNT1 = 0;
-					IRR |= INTFT1;
-					/* timer F/F source is timer 1 ? */
-					if (0x01 == (TMM & 0x03))
-					{
-						TO ^= 1;
-						if (upd7810_io_callback)
-							(*upd7810_io_callback)(UPD7810_TO,TO);
-					}
-				}
-			}
+		case 0x20:  /* clock divided by 384 */
+			upd7810_handle_timer1(cycles, 384);
 			break;
-		case 0x40:	/* external signal at TI */
+		case 0x40:  /* external signal at TI */
 			break;
-		case 0x60:	/* clocked with timer 0 */
+		case 0x60:  /* clocked with timer 0 */
 			break;
 		}
 	}
@@ -1469,131 +1486,41 @@ static void upd7810_timers(int cycles)
 		{
 			OVCE -= 12;
 			ECNT++;
+			/* Interrupt Control Circuit */
+			if (ETM0 == ECNT)
+				IRR |= INTFE0;
+			if (ETM1 == ECNT)
+				IRR |= INTFE1;
+			/* Conditions When ECNT Causes a CO0 Output Change */
+			if (((0x00 == (ETMM & 0x30)) && (ETM0 == ECNT)) || /* set CO0 if ECNT == ETM0 */
+				/* ((0x10 == (ETMM & 0x30)) prohibited */
+				((0x20 == (ETMM & 0x30)) && (ETM0 == ECNT)) || /* set CO0 if ECNT == ETM0 or at falling CI input */
+				((0x30 == (ETMM & 0x30)) && (ETM0 == ECNT || ETM1 == ECNT))) /* latch CO0 if ECNT == ETM0 or ECNT == ETM1 */
+			{
+				upd7810_co0_output_change();
+			}
+			/* Conditions When ECNT Causes a CO1 Output Change */
+			if (((0x00 == (ETMM & 0xc0)) && (ETM1 == ECNT)) || /* set CO1 if ECNT == ETM1 */
+				/* ((0x40 == (ETMM & 0xc0)) prohibited */
+				((0x80 == (ETMM & 0xc0)) && (ETM1 == ECNT)) || /* set CO1 if ECNT == ETM1 or at falling CI input */
+				((0xc0 == (ETMM & 0xc0)) && (ETM0 == ECNT || ETM1 == ECNT))) /* latch CO1 if ECNT == ETM0 or ECNT == ETM1 */
+			{
+				upd7810_co1_output_change();
+			}
+			/* How and When ECNT is Cleared */
 			switch (ETMM & 0x0c)
 			{
-			case 0x00:				/* clear ECNT */
+			case 0x00:              /* clear ECNT */
 				break;
-			case 0x04:				/* free running */
+			case 0x04:              /* free running */
 				if (0 == ECNT)
-					ITF |= INTOV;	/* set overflow flag if counter wrapped */
+					ITF |= INTOV;   /* set overflow flag if counter wrapped */
 				break;
-			case 0x08:				/* reset at falling edge of CI or TO */
+			case 0x08:              /* reset at falling edge of CI or TO */
 				break;
-			case 0x0c:				/* reset if ECNT == ETM1 */
+			case 0x0c:              /* reset if ECNT == ETM1 */
 				if (ETM1 == ECNT)
 					ECNT = 0;
-				break;
-			}
-			switch (ETMM & 0x30)
-			{
-			case 0x00:	/* set CO0 if ECNT == ETM0 */
-				if (ETM0 == ECNT)
-				{
-					switch (EOM & 0x0e)
-					{
-					case 0x02:	/* toggle CO0 */
-						CO0 = (CO0 >> 1) | ((CO0 ^ 2) & 2);
-						break;
-					case 0x04:	/* reset CO0 */
-						CO0 = 0;
-						break;
-					case 0x08:	/* set CO0 */
-						CO0 = 1;
-						break;
-					}
-				}
-				break;
-			case 0x10:	/* prohibited */
-				break;
-			case 0x20:	/* set CO0 if ECNT == ETM0 or at falling CI input */
-				if (ETM0 == ECNT)
-				{
-					switch (EOM & 0x0e)
-					{
-					case 0x02:	/* toggle CO0 */
-						CO0 = (CO0 >> 1) | ((CO0 ^ 2) & 2);
-						break;
-					case 0x04:	/* reset CO0 */
-						CO0 = 0;
-						break;
-					case 0x08:	/* set CO0 */
-						CO0 = 1;
-						break;
-					}
-				}
-				break;
-			case 0x30:	/* latch CO0 if ECNT == ETM0 or ECNT == ETM1 */
-				if (ETM0 == ECNT || ETM1 == ECNT)
-				{
-					switch (EOM & 0x0e)
-					{
-					case 0x02:	/* toggle CO0 */
-						CO0 = (CO0 >> 1) | ((CO0 ^ 2) & 2);
-						break;
-					case 0x04:	/* reset CO0 */
-						CO0 = 0;
-						break;
-					case 0x08:	/* set CO0 */
-						CO0 = 1;
-						break;
-					}
-				}
-				break;
-			}
-			switch (ETMM & 0xc0)
-			{
-			case 0x00:	/* lacth CO1 if ECNT == ETM1 */
-				if (ETM1 == ECNT)
-				{
-					switch (EOM & 0xe0)
-					{
-					case 0x20:	/* toggle CO1 */
-						CO1 = (CO1 >> 1) | ((CO1 ^ 2) & 2);
-						break;
-					case 0x40:	/* reset CO1 */
-						CO1 = 0;
-						break;
-					case 0x80:	/* set CO1 */
-						CO1 = 1;
-						break;
-					}
-				}
-				break;
-			case 0x40:	/* prohibited */
-				break;
-			case 0x80:	/* latch CO1 if ECNT == ETM1 or falling edge of CI input */
-				if (ETM1 == ECNT)
-				{
-					switch (EOM & 0xe0)
-					{
-					case 0x20:	/* toggle CO1 */
-						CO1 = (CO1 >> 1) | ((CO1 ^ 2) & 2);
-						break;
-					case 0x40:	/* reset CO1 */
-						CO1 = 0;
-						break;
-					case 0x80:	/* set CO1 */
-						CO1 = 1;
-						break;
-					}
-				}
-				break;
-			case 0xc0:	/* latch CO1 if ECNT == ETM0 or ECNT == ETM1 */
-				if (ETM0 == ECNT || ETM1 == ECNT)
-				{
-					switch (EOM & 0xe0)
-					{
-					case 0x20:	/* toggle CO1 */
-						CO1 = (CO1 >> 1) | ((CO1 ^ 2) & 2);
-						break;
-					case 0x40:	/* reset CO1 */
-						CO1 = 0;
-						break;
-					case 0x80:	/* set CO1 */
-						CO1 = 1;
-						break;
-					}
-				}
 				break;
 			}
 		}
@@ -1602,9 +1529,9 @@ static void upd7810_timers(int cycles)
 	/**** SIO ****/
 	switch (SMH & 0x03)
 	{
-	case 0x00:		/* interval timer F/F */
+	case 0x00:      /* interval timer F/F */
 		break;
-	case 0x01:		/* internal clock divided by 384 */
+	case 0x01:      /* internal clock divided by 384 */
 		OVCS += cycles;
 		while (OVCS >= 384)
 		{
@@ -1615,7 +1542,7 @@ static void upd7810_timers(int cycles)
 				upd7810_sio_output();
 		}
 		break;
-	case 0x02:		/* internal clock divided by 24 */
+	case 0x02:      /* internal clock divided by 24 */
 		OVCS += cycles;
 		while (OVCS >= 24)
 		{
@@ -1627,10 +1554,126 @@ static void upd7810_timers(int cycles)
 		}
 		break;
 	}
+
+	/**** ADC ****/
+	upd7810.adcnt += cycles;
+	if (upd7810.PANM != ANM)
+	{
+		/* reset A/D converter */
+		upd7810.adcnt = 0;
+		if (ANM & 0x10)
+			upd7810.adtot = 144;
+		else
+			upd7810.adtot = 192;
+		upd7810.adout = 0;
+		upd7810.shdone = 0;
+		if (ANM & 0x01)
+		{
+			/* select mode */
+			upd7810.adin = (ANM >> 1) & 0x07;
+		}
+		else
+		{
+			/* scan mode */
+			upd7810.adin    = 0;
+			upd7810.adrange = (ANM >> 1) & 0x04;
+		}
+	}
+	upd7810.PANM = ANM;
+	if (ANM & 0x01)
+	{
+		/* select mode */
+		if (upd7810.shdone == 0)
+		{
+			switch (upd7810.adin)
+			{
+				case 0: upd7810.tmpcr = an0_func(); break;
+				case 1: upd7810.tmpcr = an1_func(); break;
+				case 2: upd7810.tmpcr = an2_func(); break;
+				case 3: upd7810.tmpcr = an3_func(); break;
+				case 4: upd7810.tmpcr = an4_func(); break;
+				case 5: upd7810.tmpcr = an5_func(); break;
+				case 6: upd7810.tmpcr = an6_func(); break;
+				case 7: upd7810.tmpcr = an7_func(); break;
+			}
+			upd7810.shdone = 1;
+		}
+		if (upd7810.adcnt > upd7810.adtot)
+		{
+			upd7810.adcnt -= upd7810.adtot;
+			switch (upd7810.adout)
+			{
+				// volfied code checks bit 0x80, old code set bit 0x01, TODO: verify which bits are set on real hw
+				case 0: CR0 = upd7810.tmpcr ? 0xff:0x00; break;
+				case 1: CR1 = upd7810.tmpcr ? 0xff:0x00; break;
+				case 2: CR2 = upd7810.tmpcr ? 0xff:0x00; break;
+				case 3: CR3 = upd7810.tmpcr ? 0xff:0x00; break;
+			}
+			upd7810.adout = (upd7810.adout + 1) & 0x03;
+			if (upd7810.adout == 0)
+				IRR |= INTFAD;
+			upd7810.shdone = 0;
+		}
+	}
+	else
+	{
+		/* scan mode */
+		if (upd7810.shdone == 0)
+		{
+			switch (upd7810.adin | upd7810.adrange)
+			{
+				case 0: upd7810.tmpcr = an0_func(); break;
+				case 1: upd7810.tmpcr = an1_func(); break;
+				case 2: upd7810.tmpcr = an2_func(); break;
+				case 3: upd7810.tmpcr = an3_func(); break;
+				case 4: upd7810.tmpcr = an4_func(); break;
+				case 5: upd7810.tmpcr = an5_func(); break;
+				case 6: upd7810.tmpcr = an6_func(); break;
+				case 7: upd7810.tmpcr = an7_func(); break;
+			}
+			upd7810.shdone = 1;
+		}
+		if (upd7810.adcnt > upd7810.adtot)
+		{
+			upd7810.adcnt -= upd7810.adtot;
+			switch (upd7810.adout)
+			{
+				case 0: CR0 = upd7810.tmpcr ? 0xff:0x00; break;
+				case 1: CR1 = upd7810.tmpcr ? 0xff:0x00; break;
+				case 2: CR2 = upd7810.tmpcr ? 0xff:0x00; break;
+				case 3: CR3 = upd7810.tmpcr ? 0xff:0x00; break;
+			}
+			upd7810.adin  = (upd7810.adin  + 1) & 0x07;
+			upd7810.adout = (upd7810.adout + 1) & 0x03;
+			if (upd7810.adout == 0)
+				IRR |= INTFAD;
+			upd7810.shdone = 0;
+		}
+	}
 }
 
 #include "7810tbl.c"
 #include "7810ops.c"
+
+static UINT8 fake_an_func()
+{
+       return 0;
+}
+
+void upd7810SetAnfunc(INT32 select, UINT8 (*func)())
+{
+       switch (select & 7)
+       {
+               case 0: an0_func = func; break;
+               case 1: an1_func = func; break;
+               case 2: an2_func = func; break;
+               case 3: an3_func = func; break;
+               case 4: an4_func = func; break;
+               case 5: an5_func = func; break;
+               case 6: an6_func = func; break;
+               case 7: an7_func = func; break;
+       }
+}
 
 
 static void upd7810_init(INT32 (*io_callback)(INT32 ioline, INT32 state))
@@ -1644,6 +1687,14 @@ static void upd7810_init(INT32 (*io_callback)(INT32 ioline, INT32 state))
 
 	memset (mem, 0, 3 * 0x100 * sizeof(UINT8*));
 
+	an0_func = fake_an_func;
+	an1_func = fake_an_func;
+	an2_func = fake_an_func;
+	an3_func = fake_an_func;
+	an4_func = fake_an_func;
+	an5_func = fake_an_func;
+	an6_func = fake_an_func;
+	an7_func = fake_an_func;
 
 #if 0
 	int cpu = cpu_getactivecpu();
@@ -1752,22 +1803,13 @@ void upd7807Init(INT32 (*io_callback)(INT32 ioline, INT32 state))
 void upd7810Reset()
 {
 	memset(&upd7810, 0, sizeof(upd7810));
-	ETMM = 0xff;
-	TMM = 0xff;
 	MA = 0xff;
 	MB = 0xff;
-	switch (upd7810_config_type)
-	{
-		case TYPE_7810_GAMEMASTER:
-		    // needed for lcd screen/ram selection; might be internal in cpu and therefor not needed; 0x10 written in some games
-			MC = 0xff&~0x7;
-			WP( UPD7810_PORTC, 1 ); //hyper space
-			PCD=0x8000;
-			break;
-		default:
-			MC = 0xff;
-	}
+	MC = 0xff;
+
 	MF = 0xff;
+	TMM = 0xff;
+	ETMM = 0xff;
 	// gamemaster falling block "and"s to enable interrupts
 	MKL = 0xff;
 	MKH = 0xff; //?
@@ -1775,6 +1817,8 @@ void upd7810Reset()
 	upd7810_icount = 0;
 	upd7810_total_cycles = 0;
 	upd7810_current_cycles = 0;
+
+	upd7810.PANM = 0xff; //reset
 }
 
 void upd7810Exit()
@@ -1857,7 +1901,7 @@ INT32 upd7810Run(INT32 cycles)
 
 			PSW &= ~SK;
 			upd7810_timers( cc );
-			change_pc( PCD );
+			//change_pc( PCD );
 		}
 		else
 		{
@@ -1879,7 +1923,6 @@ INT32 upd7810Run(INT32 cycles)
 
 	INT32 ret = cycles - upd7810_icount;
 
-	upd7810_total_cycles = 0;
 	upd7810_current_cycles = 0;
 	upd7810_icount = 0;
 
@@ -1888,7 +1931,7 @@ INT32 upd7810Run(INT32 cycles)
 
 INT32 upd7810TotalCycles()
 {
-	return upd7810_total_cycles; // + (upd7810_current_cycles - upd7810_icount);
+	return upd7810_total_cycles + (upd7810_current_cycles - upd7810_icount);
 }
 
 void upd7810NewFrame()
@@ -1917,6 +1960,7 @@ static void upd7810_set_context (void *src)
 }
 #endif
 
+// if probs with taito c-chip, add the edge level checks hereunder in latest upd7810 core
 static void set_irq_line(int irqline, int state)
 {
 	if (state != CLEAR_LINE)
@@ -1927,16 +1971,6 @@ static void set_irq_line(int irqline, int state)
 //          if (0 == (IRR & INTNMI))
 			{
 	            IRR |= INTNMI;
-				SP--;
-				WM( SP, PSW );
-				SP--;
-				WM( SP, PCH );
-				SP--;
-				WM( SP, PCL );
-				IFF = 0;
-				PSW &= ~(SK|L0|L1);
-				PC = 0x0004;
-				change_pc( PCD );
 			}
 		}
 		else

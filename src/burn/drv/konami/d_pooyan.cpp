@@ -4,6 +4,7 @@
 #include "tiles_generic.h"
 #include "z80_intf.h"
 #include "timeplt_snd.h"
+#include "resnet.h"
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -23,19 +24,16 @@ static UINT8 *DrvVidRAM;
 static UINT32 *DrvPalette;
 static UINT8  DrvRecalc;
 
-static INT16 *pFMBuffer;
-static INT16 *pAY8910Buffer[6];
-
 static UINT8 irqtrigger;
 static UINT8 irq_enable;
 static UINT8 flipscreen;
 
-static UINT8  DrvJoy1[8];
-static UINT8  DrvJoy2[8];
-static UINT8  DrvJoy3[8];
-static UINT8  DrvDips[2];
-static UINT8  DrvInputs[3];
-static UINT8  DrvReset;
+static UINT8 DrvJoy1[8];
+static UINT8 DrvJoy2[8];
+static UINT8 DrvJoy3[8];
+static UINT8 DrvDips[2];
+static UINT8 DrvInputs[3];
+static UINT8 DrvReset;
 
 static struct BurnInputInfo DrvInputList[] = {
 	{"P1 Coin",	BIT_DIGITAL  , DrvJoy1 + 0, "p1 coin"	},
@@ -213,132 +211,6 @@ static INT32 DrvDoReset()
 	return 0;
 }
 
-#define MAX_NETS        3
-#define MAX_RES_PER_NET 18
-#define Combine2Weights(tab,w0,w1)	((int)(((tab)[0]*(w0) + (tab)[1]*(w1)) + 0.5))
-#define Combine3Weights(tab,w0,w1,w2)	((int)(((tab)[0]*(w0) + (tab)[1]*(w1) + (tab)[2]*(w2)) + 0.5))
-
-static double ComputeResistorWeights(INT32 MinVal, INT32 MaxVal, double Scaler, INT32 Count1, const INT32 *Resistances1, double *Weights1, INT32 PullDown1, INT32 PullUp1,	INT32 Count2, const INT32 *Resistances2, double *Weights2, INT32 PullDown2, INT32 PullUp2, INT32 Count3, const INT32 *Resistances3, double *Weights3, INT32 PullDown3, INT32 PullUp3)
-{
-	INT32 NetworksNum;
-
-	INT32 ResCount[MAX_NETS];
-	double r[MAX_NETS][MAX_RES_PER_NET];
-	double w[MAX_NETS][MAX_RES_PER_NET];
-	double ws[MAX_NETS][MAX_RES_PER_NET];
-	INT32 r_pd[MAX_NETS];
-	INT32 r_pu[MAX_NETS];
-
-	double MaxOut[MAX_NETS];
-	double *Out[MAX_NETS];
-
-	INT32 i, j, n;
-	double Scale;
-	double Max;
-
-	NetworksNum = 0;
-	for (n = 0; n < MAX_NETS; n++) {
-		INT32 Count, pd, pu;
-		const INT32 *Resistances;
-		double *Weights;
-
-		switch (n) {
-			case 0: {
-				Count = Count1;
-				Resistances = Resistances1;
-				Weights = Weights1;
-				pd = PullDown1;
-				pu = PullUp1;
-				break;
-			}
-			
-			case 1: {
-				Count = Count2;
-				Resistances = Resistances2;
-				Weights = Weights2;
-				pd = PullDown2;
-				pu = PullUp2;
-				break;
-			}
-		
-			case 2:
-			default: {
-				Count = Count3;
-				Resistances = Resistances3;
-				Weights = Weights3;
-				pd = PullDown3;
-				pu = PullUp3;
-				break;
-			}
-		}
-
-		if (Count > 0) {
-			ResCount[NetworksNum] = Count;
-			for (i = 0; i < Count; i++) {
-				r[NetworksNum][i] = 1.0 * Resistances[i];
-			}
-			Out[NetworksNum] = Weights;
-			r_pd[NetworksNum] = pd;
-			r_pu[NetworksNum] = pu;
-			NetworksNum++;
-		}
-	}
-
-	for (i = 0; i < NetworksNum; i++) {
-		double R0, R1, Vout, Dst;
-
-		for (n = 0; n < ResCount[i]; n++) {
-			R0 = (r_pd[i] == 0) ? 1.0 / 1e12 : 1.0 / r_pd[i];
-			R1 = (r_pu[i] == 0) ? 1.0 / 1e12 : 1.0 / r_pu[i];
-
-			for (j = 0; j < ResCount[i]; j++) {
-				if (j == n) {
-					if (r[i][j] != 0.0) R1 += 1.0 / r[i][j];
-				} else {
-					if (r[i][j] != 0.0) R0 += 1.0 / r[i][j];
-				}
-			}
-
-			R0 = 1.0/R0;
-			R1 = 1.0/R1;
-			Vout = (MaxVal - MinVal) * R0 / (R1 + R0) + MinVal;
-
-			Dst = (Vout < MinVal) ? MinVal : (Vout > MaxVal) ? MaxVal : Vout;
-
-			w[i][n] = Dst;
-		}
-	}
-
-	j = 0;
-	Max = 0.0;
-	for (i = 0; i < NetworksNum; i++) {
-		double Sum = 0.0;
-
-		for (n = 0; n < ResCount[i]; n++) Sum += w[i][n];
-
-		MaxOut[i] = Sum;
-		if (Max < Sum) {
-			Max = Sum;
-			j = i;
-		}
-	}
-
-	if (Scaler < 0.0) {
-		Scale = ((double)MaxVal) / MaxOut[j];
-	} else {
-		Scale = Scaler;
-	}
-
-	for (i = 0; i < NetworksNum; i++) {
-		for (n = 0; n < ResCount[i]; n++) {
-			ws[i][n] = w[i][n] * Scale;
-			(Out[i])[n] = ws[i][n];
-		}
-	}
-
-	return Scale;
-}
-
 static void DrvPaletteInit()
 {
 	UINT32 pal[0x20];
@@ -348,10 +220,10 @@ static void DrvPaletteInit()
 
 	double rweights[3], gweights[3], bweights[2];
 
-	ComputeResistorWeights(0, 0xff, -1.0,
-								3, &resistances_rg[0], rweights, 1000, 0,
-								3, &resistances_rg[0], gweights, 1000, 0,
-								2, &resistances_b[0],  bweights, 1000, 0);
+	compute_resistor_weights(0, 0xff, -1.0,
+		3, &resistances_rg[0], rweights, 1000, 0,
+		3, &resistances_rg[0], gweights, 1000, 0,
+		2, &resistances_b[0],  bweights, 1000, 0);
 
 	for (INT32 i = 0; i < 0x20; i++)
 	{
@@ -361,16 +233,16 @@ static void DrvPaletteInit()
 		bit0 = (DrvColPROM[i] >> 0) & 0x01;
 		bit1 = (DrvColPROM[i] >> 1) & 0x01;
 		bit2 = (DrvColPROM[i] >> 2) & 0x01;
-		r = Combine3Weights(rweights, bit0, bit1, bit2);
+		r = combine_3_weights(rweights, bit0, bit1, bit2);
 
 		bit0 = (DrvColPROM[i] >> 3) & 0x01;
 		bit1 = (DrvColPROM[i] >> 4) & 0x01;
 		bit2 = (DrvColPROM[i] >> 5) & 0x01;
-		g = Combine3Weights(gweights, bit0, bit1, bit2);
+		g = combine_3_weights(gweights, bit0, bit1, bit2);
 
 		bit0 = (DrvColPROM[i] >> 6) & 0x01;
 		bit1 = (DrvColPROM[i] >> 7) & 0x01;
-		b = Combine2Weights(bweights, bit0, bit1);
+		b = combine_2_weights(bweights, bit0, bit1);
 
 		pal[i] = BurnHighCol(r, g, b, 0);
 	}
@@ -381,11 +253,6 @@ static void DrvPaletteInit()
 		DrvPalette[i + 0x100] = pal[(DrvColPROM[i + 0x120] & 0x0f) | 0x00];
 	}
 }
-
-#undef MAX_NETS
-#undef MAX_RES_PER_NET
-#undef Combine2Weights
-#undef Combine3Weights
 
 static INT32 DrvGfxDecode()
 {
@@ -435,15 +302,6 @@ static INT32 MemIndex()
 
 	RamEnd			= Next;
 
-	pFMBuffer		= (INT16 *)Next; Next += nBurnSoundLen * 6 * sizeof(INT16);
-
-	pAY8910Buffer[0]	= pFMBuffer + nBurnSoundLen * 0;
-	pAY8910Buffer[1]	= pFMBuffer + nBurnSoundLen * 1;
-	pAY8910Buffer[2]	= pFMBuffer + nBurnSoundLen * 2;
-	pAY8910Buffer[3]	= pFMBuffer + nBurnSoundLen * 3;
-	pAY8910Buffer[4]	= pFMBuffer + nBurnSoundLen * 4;
-	pAY8910Buffer[5]	= pFMBuffer + nBurnSoundLen * 5;
-
 	MemEnd			= Next;
 
 	return 0;
@@ -483,20 +341,11 @@ static INT32 DrvInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapArea(0x0000, 0x7fff, 0, DrvZ80ROM0);
-	ZetMapArea(0x0000, 0x7fff, 2, DrvZ80ROM0);
-	ZetMapArea(0x8000, 0x87ff, 0, DrvVidRAM);
-	ZetMapArea(0x8000, 0x87ff, 1, DrvVidRAM);
-	ZetMapArea(0x8000, 0x87ff, 2, DrvVidRAM);
-	ZetMapArea(0x8800, 0x8fff, 0, DrvZ80RAM0);
-	ZetMapArea(0x8800, 0x8fff, 1, DrvZ80RAM0);
-	ZetMapArea(0x8800, 0x8fff, 2, DrvZ80RAM0);
-	ZetMapArea(0x9000, 0x90ff, 0, DrvSprRAM0);
-	ZetMapArea(0x9000, 0x90ff, 1, DrvSprRAM0);
-	ZetMapArea(0x9000, 0x90ff, 2, DrvSprRAM0);
-	ZetMapArea(0x9400, 0x94ff, 0, DrvSprRAM1);
-	ZetMapArea(0x9400, 0x94ff, 1, DrvSprRAM1);
-	ZetMapArea(0x9400, 0x94ff, 2, DrvSprRAM1);
+	ZetMapMemory(DrvZ80ROM0,	0x0000, 0x7fff, MAP_ROM);
+	ZetMapMemory(DrvVidRAM,		0x8000, 0x87ff, MAP_RAM);
+	ZetMapMemory(DrvZ80RAM0,	0x8800, 0x8fff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM0,	0x9000, 0x90ff, MAP_RAM);
+	ZetMapMemory(DrvSprRAM1,	0x9400, 0x94ff, MAP_RAM);
 	ZetSetWriteHandler(pooyan_main_write);
 	ZetSetReadHandler(pooyan_main_read);
 	ZetClose();
@@ -560,7 +409,7 @@ static void draw_layer()
 			}
 		}
 	}
-}         extern int counter;
+}
 
 static void RenderTileCPMP(INT32 code, INT32 color, INT32 sx, INT32 sy, INT32 flipx, INT32 flipy, INT32 width, INT32 height)
 {
@@ -666,7 +515,7 @@ static INT32 DrvFrame()
 		if (pBurnSoundOut) {
 			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
 			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-			TimepltSndUpdate(pAY8910Buffer, pSoundBuf, nSegmentLength);
+			TimepltSndUpdate(pSoundBuf, nSegmentLength);
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
@@ -675,7 +524,7 @@ static INT32 DrvFrame()
 	if (pBurnSoundOut) {
 		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
 		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
-		TimepltSndUpdate(pAY8910Buffer, pSoundBuf, nSegmentLength);
+		TimepltSndUpdate(pSoundBuf, nSegmentLength);
 	}
 
 	if (pBurnDraw) {

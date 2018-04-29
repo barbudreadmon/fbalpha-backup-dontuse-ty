@@ -110,7 +110,7 @@ static Z80WriteProgHandler Z80ProgramWrite;
 static Z80ReadOpHandler Z80CPUReadOp;
 static Z80ReadOpArgHandler Z80CPUReadOpArg;
 
-unsigned char Z80Vector = 0xff;
+#define Z80Vector Z80.vector
 
 #define VERBOSE 0
 
@@ -3579,7 +3579,7 @@ int Z80Execute(int cycles)
 	cycles = cycles - z80_ICount;
 
 	Z80.cycles_left = z80_ICount = 0;
-	
+
 	return cycles;
 }
 
@@ -3722,6 +3722,16 @@ int ActiveZ80GetPrevPC()
 void ActiveZ80SetIRQHold()
 {
 	Z80.hold_irq = 1;
+}
+
+void ActiveZ80SetVector(INT32 vector)
+{
+	Z80Vector = vector;
+}
+
+int ActiveZ80GetVector()
+{
+	return Z80Vector;
 }
 
 #if 0

@@ -57,8 +57,8 @@ static struct BurnInputInfo ChqflagInputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 3,	"p1 start"	},
 
-	A("Wheel",          BIT_ANALOG_REL, &DrvAnalogPort0 , "p1 x-axis"),
-	A("Accelerator",    BIT_ANALOG_REL, &DrvAnalogPort1 , "p1 fire 1"),
+	A("P1 Wheel",          BIT_ANALOG_REL, &DrvAnalogPort0 , "mouse x-axis"),
+	A("P1 Accelerator",    BIT_ANALOG_REL, &DrvAnalogPort1 , "p1 fire 1"),
 
 	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 fire 2"	},
 	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 fire 3"	},
@@ -365,7 +365,7 @@ static UINT8 __fastcall chqflag_sound_read(UINT16 address)
 	{
 		case 0xc000:
 		case 0xc001:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xd000:
 			return *soundlatch;
@@ -429,6 +429,8 @@ static INT32 DrvDoReset(INT32 clear_mem)
 	ZetClose();
 
 	BurnYM2151Reset();
+	K007232Reset(0);
+	K007232Reset(1);
 
 	KonamiICReset();
 	K051316WrapEnable(1, 1);
@@ -727,7 +729,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		konamiCpuScan(nAction);
 		ZetScan(nAction);
 
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 		K007232Scan(nAction, pnMin);
 
 		KonamiICScan(nAction);

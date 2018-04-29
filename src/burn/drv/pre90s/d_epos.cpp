@@ -5,10 +5,7 @@
 #include "z80_intf.h"
 #include "8255ppi.h"
 #include "bitswap.h"
-#include "driver.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -20,9 +17,6 @@ static UINT8 *DrvZ80RAM;
 static UINT8 *DrvVidRAM;
 
 static UINT32  *DrvPalette;
-
-static INT16* pAY8910Buffer[3];
-
 static UINT8 DrvRecalc;
 
 static UINT8 DrvJoy1[8];
@@ -75,24 +69,24 @@ STDINPUTINFO(Suprglob)
 
 static struct BurnInputInfo Revngr84InputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvJoy3 + 6,	"p1 coin"	},
-	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 start"},
-	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"},
-	{"P1 Down",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 down"},
-	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 left"},
-	{"P1 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 right"},
-	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 1"},
-	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 2"},
+	{"P1 Start",		BIT_DIGITAL,	DrvJoy2 + 6,	"p1 start"	},
+	{"P1 Up",		BIT_DIGITAL,	DrvJoy2 + 3,	"p1 up"		},
+	{"P1 Down",		BIT_DIGITAL,	DrvJoy2 + 2,	"p1 down"	},
+	{"P1 Left",		BIT_DIGITAL,	DrvJoy2 + 0,	"p1 left"	},
+	{"P1 Right",		BIT_DIGITAL,	DrvJoy2 + 1,	"p1 right"	},
+	{"P1 Button 1",		BIT_DIGITAL,	DrvJoy2 + 4,	"p1 fire 1"	},
+	{"P1 Button 2",		BIT_DIGITAL,	DrvJoy2 + 5,	"p1 fire 2"	},
 
-	{"P2 Start",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 start"},
-	{"P2 Up",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 up"},
-	{"P2 Down",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 down"},
-	{"P2 Left",		BIT_DIGITAL,	DrvJoy3 + 0,	"p2 left"},
-	{"P2 Right",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 right"},
-	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"},
-	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"},
+	{"P2 Start",		BIT_DIGITAL,	DrvJoy2 + 7,	"p2 start"	},
+	{"P2 Up",		BIT_DIGITAL,	DrvJoy3 + 3,	"p2 up"		},
+	{"P2 Down",		BIT_DIGITAL,	DrvJoy3 + 2,	"p2 down"	},
+	{"P2 Left",		BIT_DIGITAL,	DrvJoy3 + 0,	"p2 left"	},
+	{"P2 Right",		BIT_DIGITAL,	DrvJoy3 + 1,	"p2 right"	},
+	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"	},
+	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"	},
 
-	{"Service Mode",	BIT_DIGITAL,    DrvJoy3 + 7,     "diag"},
-	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"},
+	{"Service Mode",	BIT_DIGITAL,    DrvJoy3 + 7,     "diag"		},
+	{"Reset",		BIT_DIGITAL,	&DrvReset,	"reset"		},
 	{"Dip A",		BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
 	{"Dip B",		BIT_DIPSWITCH,	DrvDips + 1,	"dip"		},
 };
@@ -307,7 +301,7 @@ static struct BurnDIPInfo Revngr84DIPList[]=
 
 STDDIPINFO(Revngr84)
 
-UINT8 __fastcall epos_read_port(UINT16 port)
+static UINT8 __fastcall epos_read_port(UINT16 port)
 {
 	switch (port & 0xff)
 	{
@@ -327,7 +321,7 @@ UINT8 __fastcall epos_read_port(UINT16 port)
 	return 0;
 }
 
-void __fastcall epos_write_port(UINT16 port, UINT8 data)
+static void __fastcall epos_write_port(UINT16 port, UINT8 data)
 {
 	switch (port & 0xff)
 	{
@@ -379,7 +373,7 @@ static void dealer_bankswitch2(INT32 data)
 	ZetMapArea(0x6000, 0x6fff, 2, DrvZ80ROM + nBank);
 }
 
-UINT8 __fastcall dealer_read_port(UINT16 port)
+static UINT8 __fastcall dealer_read_port(UINT16 port)
 {
 	switch (port & 0xff)
 	{
@@ -398,7 +392,7 @@ UINT8 __fastcall dealer_read_port(UINT16 port)
 
 static void set_pal(UINT8 offs, UINT8 value);
 
-void __fastcall dealer_write_port(UINT16 port, UINT8 data)
+static void __fastcall dealer_write_port(UINT16 port, UINT8 data)
 {
 	port &= 0xff;
 
@@ -437,7 +431,7 @@ void __fastcall dealer_write_port(UINT16 port, UINT8 data)
 	}
 }
 
-UINT8 DealerPPIReadA()
+static UINT8 DealerPPIReadA()
 {
 	if (!(*DealerInputMultiplex & 1))
 		return DrvInputs[1];
@@ -448,7 +442,7 @@ UINT8 DealerPPIReadA()
 	return 0xff;
 }
 
-void DealerPPIWriteC(UINT8 data)
+static void DealerPPIWriteC(UINT8 data)
 {
 	dealer_bankswitch2(data);
 	*DealerInputMultiplex = (data >> 5) & 3;
@@ -524,28 +518,24 @@ static INT32 MemIndex()
 {
 	UINT8 *Next; Next = AllMem;
 
-	DrvZ80ROM	 = Next; Next += 0x040000;
+	DrvZ80ROM		 = Next; Next += 0x040000;
 
-	DrvColPROM	 = Next; Next += 0x000020;
+	DrvColPROM		 = Next; Next += 0x000020;
 
-	DrvPalette	 = (UINT32*)Next; Next += 0x0020 * sizeof(UINT32);
+	DrvPalette		 = (UINT32*)Next; Next += 0x0020 * sizeof(UINT32);
 
-	pAY8910Buffer[0] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2] = (INT16 *)Next; Next += nBurnSoundLen * sizeof(INT16);
+	AllRam			 = Next;
 
-	AllRam		 = Next;
+	DrvZ80RAM		 = Next; Next += 0x001000;
+	DrvVidRAM		 = Next; Next += 0x008000;
 
-	DrvZ80RAM	 = Next; Next += 0x001000;
-	DrvVidRAM	 = Next; Next += 0x008000;
+	DrvPaletteBank		 = Next; Next += 0x000001;
+	DealerZ80Bank		 = Next; Next += 0x000001;
+	DealerZ80Bank2		 = Next; Next += 0x000001;
+	DealerInputMultiplex	 = Next; Next += 0x000001;
 
-	DrvPaletteBank	 = Next; Next += 0x000001;
-	DealerZ80Bank	 = Next; Next += 0x000001;
-	DealerZ80Bank2	 = Next; Next += 0x000001;
-	DealerInputMultiplex = Next; Next += 0x000001;
-
-	RamEnd		 = Next;
-	MemEnd		 = Next;
+	RamEnd			 = Next;
+	MemEnd			 = Next;
 
 	return 0;
 }
@@ -575,19 +565,14 @@ static INT32 DrvInit()
 
 	ZetInit(0);
 	ZetOpen(0);
-	ZetMapArea(0x0000, 0x77ff, 0, DrvZ80ROM);
-	ZetMapArea(0x0000, 0x77ff, 2, DrvZ80ROM);
-	ZetMapArea(0x7800, 0x7fff, 0, DrvZ80RAM);
-	ZetMapArea(0x7800, 0x7fff, 1, DrvZ80RAM);
-	ZetMapArea(0x7800, 0x7fff, 2, DrvZ80RAM);
-	ZetMapArea(0x8000, 0xffff, 0, DrvVidRAM);
-	ZetMapArea(0x8000, 0xffff, 1, DrvVidRAM);
-	ZetMapArea(0x8000, 0xffff, 2, DrvVidRAM);
+	ZetMapMemory(DrvZ80ROM,		0x0000, 0x77ff, MAP_ROM);
+	ZetMapMemory(DrvZ80RAM,		0x7800, 0x7fff, MAP_RAM);
+	ZetMapMemory(DrvVidRAM,		0x8000, 0xffff, MAP_RAM);
 	ZetSetInHandler(epos_read_port);
 	ZetSetOutHandler(epos_write_port);
 	ZetClose();
 
-	AY8910Init(0, 2750000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 2750000, 0);
 	AY8910SetAllRoutes(0, 0.35, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -632,7 +617,8 @@ static INT32 DealerInit()
 	ZetSetOutHandler(dealer_write_port);
 	ZetClose();
 
-	AY8910Init(0, 2750000, nBurnSoundRate, AY8910_0_portA, NULL, NULL, NULL);
+	AY8910Init(0, 2750000, 0);
+	AY8910SetPorts(0, AY8910_0_portA, NULL, NULL, NULL);
 	AY8910SetAllRoutes(0, 0.25, BURN_SND_ROUTE_BOTH);
 
 	ppi8255_init(1);
@@ -717,7 +703,7 @@ static INT32 DrvFrame()
 	ZetClose();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -994,10 +980,10 @@ struct BurnDriver BurnDrvDealer = {
 // Revenger '84 (set 1)
 
 static struct BurnRomInfo revngr84RomDesc[] = {
-	{ "u_1__revenger__r06254__(c)_epos_corp.m5l2764k.u1",	0x2000, 0x308f231f, BRF_ESS | BRF_PRG },	//  0 Z80 code
-	{ "u_2__revenger__r06254__(c)_epos_corp.m5l2764k.u2",	0x2000, 0xe80bbfb4, BRF_ESS | BRF_PRG },	//  1
-	{ "u_3__revenger__r06254__(c)_epos_corp.m5l2764k.u3",	0x2000, 0xd9270929, BRF_ESS | BRF_PRG },	//  2
-	{ "u_4__revenger__r06254__(c)_epos_corp.m5l2764k.u4",	0x2000, 0xd6e6cfa8, BRF_ESS | BRF_PRG },	//  3
+	{ "u_1__revenger__r06254__=c=_epos_corp.m5l2764k.u1",	0x2000, 0x308f231f, BRF_ESS | BRF_PRG },	//  0 Z80 code
+	{ "u_2__revenger__r06254__=c=_epos_corp.m5l2764k.u2",	0x2000, 0xe80bbfb4, BRF_ESS | BRF_PRG },	//  1
+	{ "u_3__revenger__r06254__=c=_epos_corp.m5l2764k.u3",	0x2000, 0xd9270929, BRF_ESS | BRF_PRG },	//  2
+	{ "u_4__revenger__r06254__=c=_epos_corp.m5l2764k.u4",	0x2000, 0xd6e6cfa8, BRF_ESS | BRF_PRG },	//  3
 
 	{ "dm74s288n.u60",	0x0020, 0xbe2b0641, BRF_GRA },	//  4 Color Prom
 	{ "revngr84.nv",	0x1000, 0xa4417770, BRF_GRA },	//  5 NVRAM

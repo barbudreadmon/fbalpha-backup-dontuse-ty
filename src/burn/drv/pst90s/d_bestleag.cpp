@@ -158,7 +158,7 @@ static void __fastcall bestleag_write_byte(UINT32 address, UINT8 data)
 		return;
 
 		case 0x30001f:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0x304000:
@@ -194,7 +194,7 @@ static UINT8 __fastcall bestleag_read_byte(UINT32 address)
 	switch (address)
 	{
 		case 0x30001f:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 	}
 
 	return 0;
@@ -540,7 +540,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
 
-		MSM6295Scan(0, nAction);
+		MSM6295Scan(nAction, pnMin);
 
 		SCAN_VAR(scroll);
 		SCAN_VAR(okibank);

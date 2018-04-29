@@ -39,7 +39,7 @@ UINT8 __fastcall Sf2mdtZ80Read(UINT16 a)
 {
 	switch (a) {
 		case 0xd801: {
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 		}
 		
 		case 0xdc00: {
@@ -233,7 +233,7 @@ INT32 Sf2mdtScanSound(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		ZetScan(nAction);
 		
-		BurnYM2151Scan(nAction);
+		BurnYM2151Scan(nAction, pnMin);
 		MSM5205Scan(nAction, pnMin);
 		
 		SCAN_VAR(Sf2mdtZ80BankAddress);

@@ -714,7 +714,7 @@ static UINT8 __fastcall whizz_sound_read_port(UINT16 port)
 	{
 		case 0x00:
 		case 0x01:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xc0:
 			return soundlatch;
@@ -731,16 +731,6 @@ inline static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 static void DrvYM2151IrqHandler(INT32 nStatus)
 {
 	ZetSetIRQLine(0, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
-}
-
-inline static INT32 DrvSynchroniseStream(INT32 nSoundRate)
-{
-	return (INT64)(ZetTotalCycles() * nSoundRate / 4000000);
-}
-
-inline static double DrvGetTime()
-{
-	return (double)ZetTotalCycles() / 4000000;
 }
 
 static INT32 DrvDoReset(INT32 clear_mem)
@@ -909,7 +899,7 @@ static INT32 SidearmsInit()
 	ZetSetReadHandler(sidearms_sound_read);
 	ZetClose();
 
-	BurnYM2203Init(2,  4000000, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(2,  4000000, &DrvYM2203IRQHandler, 0);
 	BurnTimerAttachZet(4000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.25, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.15, BURN_SND_ROUTE_BOTH);
@@ -984,7 +974,7 @@ static INT32 TurtshipInit()
 	ZetSetReadHandler(sidearms_sound_read);
 	ZetClose();
 
-	BurnYM2203Init(2,  4000000, &DrvYM2203IRQHandler, DrvSynchroniseStream, DrvGetTime, 0);
+	BurnYM2203Init(2,  4000000, &DrvYM2203IRQHandler, 0);
 	BurnTimerAttachZet(4000000);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_YM2203_ROUTE,   0.25, BURN_SND_ROUTE_BOTH);
 	BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_1, 0.15, BURN_SND_ROUTE_BOTH);
@@ -1439,7 +1429,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		ZetScan(nAction);
 
 		if (is_whizz) {
-			BurnYM2151Scan(nAction);
+			BurnYM2151Scan(nAction, pnMin);
 		} else {
 			BurnYM2203Scan(nAction, pnMin);
 		}
@@ -1526,7 +1516,7 @@ struct BurnDriver BurnDrvSidearms = {
 // Side Arms - Hyper Dyne (US, 861202)
 
 static struct BurnRomInfo sidearmsuRomDesc[] = {
-	{ "SAA_03.15E",		0x8000, 0x32ef2739, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
+	{ "saa_03.15e",		0x8000, 0x32ef2739, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
 	{ "a_14e.rom",		0x8000, 0x4925ed03, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "a_12e.rom",		0x8000, 0x81d0ece7, 1 | BRF_PRG | BRF_ESS }, //  2
 
@@ -1805,27 +1795,27 @@ struct BurnDriver BurnDrvTurtshipk = {
 // Turtle Ship (Korea, older)
 
 static struct BurnRomInfo turtshipkoRomDesc[] = {
-	{ "T-3.G5",			0x08000, 0xcd789535, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
-	{ "T-2.G3",			0x08000, 0x253678c0, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "T-1.E3",			0x08000, 0xd6fdc376, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "t-3.g5",			0x08000, 0xcd789535, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
+	{ "t-2.g3",			0x08000, 0x253678c0, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "t-1.e3",			0x08000, 0xd6fdc376, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "T-4.A8",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+	{ "t-4.a8",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
 
-	{ "T-5.K8",			0x08000, 0x35c3dbc5, 3 | BRF_GRA },           //  4 Characters
+	{ "t-5.k8",			0x08000, 0x35c3dbc5, 3 | BRF_GRA },           //  4 Characters
 
-	{ "T-8.D1",			0x10000, 0x2f0b2336, 4 | BRF_GRA },           //  5 Tiles
-	{ "T-10.C3",		0x10000, 0x6a0072f4, 4 | BRF_GRA },           //  6
-	{ "T-11.D3",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
-	{ "T-6.A1",			0x10000, 0xa7cce654, 4 | BRF_GRA },           //  8
-	{ "T-7.C1",			0x10000, 0x90dd8415, 4 | BRF_GRA },           //  9
-	{ "T-9.A3",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
+	{ "t-8.d1",			0x10000, 0x2f0b2336, 4 | BRF_GRA },           //  5 Tiles
+	{ "t-10.c3",		0x10000, 0x6a0072f4, 4 | BRF_GRA },           //  6
+	{ "t-11.d3",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
+	{ "t-6.a1",			0x10000, 0xa7cce654, 4 | BRF_GRA },           //  8
+	{ "t-7.c1",			0x10000, 0x90dd8415, 4 | BRF_GRA },           //  9
+	{ "t-9.a3",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
 
-	{ "T-13.I1",		0x10000, 0x1cc87f50, 5 | BRF_GRA },           // 11 Sprites
-	{ "T-15.I3",		0x10000, 0x775ee5d9, 5 | BRF_GRA },           // 12
-	{ "T-12.G1",		0x10000, 0x57783312, 5 | BRF_GRA },           // 13
-	{ "T-14.G3",		0x10000, 0xa30e3346, 5 | BRF_GRA },           // 14
+	{ "t-13.i1",		0x10000, 0x1cc87f50, 5 | BRF_GRA },           // 11 Sprites
+	{ "t-15.i3",		0x10000, 0x775ee5d9, 5 | BRF_GRA },           // 12
+	{ "t-12.g1",		0x10000, 0x57783312, 5 | BRF_GRA },           // 13
+	{ "t-14.g3",		0x10000, 0xa30e3346, 5 | BRF_GRA },           // 14
 
-	{ "T-16.F9",		0x08000, 0x9b377277, 6 | BRF_GRA },           // 15 Tilemap
+	{ "t-16.f9",		0x08000, 0x9b377277, 6 | BRF_GRA },           // 15 Tilemap
 };
 
 STD_ROM_PICK(turtshipko)
@@ -1845,27 +1835,27 @@ struct BurnDriver BurnDrvTurtshipko = {
 // Turtle Ship (Korea, 88/9)
 
 static struct BurnRomInfo turtshipknRomDesc[] = {
-	{ "T-3.G5",			0x08000, 0x529b091c, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
-	{ "T-2.G3",			0x08000, 0xd2f30195, 1 | BRF_PRG | BRF_ESS }, //  1
-	{ "T-1.E3",			0x08000, 0x2d02da90, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "t-3.g5",			0x08000, 0x529b091c, 1 | BRF_PRG | BRF_ESS }, //  0 Main CPU
+	{ "t-2.g3",			0x08000, 0xd2f30195, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "t-1.e3",			0x08000, 0x2d02da90, 1 | BRF_PRG | BRF_ESS }, //  2
 
-	{ "T-4.A8",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
+	{ "t-4.a8",			0x08000, 0x1cbe48e8, 2 | BRF_PRG | BRF_ESS }, //  3 Sound CPU
 
-	{ "T-5.K8",			0x08000, 0x5c2ee02d, 3 | BRF_GRA },           //  4 Characters
+	{ "t-5.k8",			0x08000, 0x5c2ee02d, 3 | BRF_GRA },           //  4 Characters
 
-	{ "T-8.D1",			0x10000, 0x2f0b2336, 4 | BRF_GRA },           //  5 Tiles
-	{ "T-10.C3",		0x10000, 0x6a0072f4, 4 | BRF_GRA },           //  6
-	{ "T-11.D3",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
-	{ "T-6.A1",			0x10000, 0xa7cce654, 4 | BRF_GRA },           //  8
-	{ "T-7.C1",			0x10000, 0x90dd8415, 4 | BRF_GRA },           //  9
-	{ "T-9.A3",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
+	{ "t-8.d1",			0x10000, 0x2f0b2336, 4 | BRF_GRA },           //  5 Tiles
+	{ "t-10.c3",		0x10000, 0x6a0072f4, 4 | BRF_GRA },           //  6
+	{ "t-11.d3",		0x10000, 0x53da6cb1, 4 | BRF_GRA },           //  7
+	{ "t-6.a1",			0x10000, 0xa7cce654, 4 | BRF_GRA },           //  8
+	{ "t-7.c1",			0x10000, 0x90dd8415, 4 | BRF_GRA },           //  9
+	{ "t-9.a3",			0x10000, 0x44762916, 4 | BRF_GRA },           // 10
 
-	{ "T-13.I1",		0x10000, 0x1cc87f50, 5 | BRF_GRA },           // 11 Sprites
-	{ "T-15.I3",		0x10000, 0x3bf91fb8, 5 | BRF_GRA },           // 12
-	{ "T-12.G1",		0x10000, 0x57783312, 5 | BRF_GRA },           // 13
-	{ "T-14.G3",		0x10000, 0xee162dc0, 5 | BRF_GRA },           // 14
+	{ "t-13.i1",		0x10000, 0x1cc87f50, 5 | BRF_GRA },           // 11 Sprites
+	{ "t-15.i3",		0x10000, 0x3bf91fb8, 5 | BRF_GRA },           // 12
+	{ "t-12.g1",		0x10000, 0x57783312, 5 | BRF_GRA },           // 13
+	{ "t-14.g3",		0x10000, 0xee162dc0, 5 | BRF_GRA },           // 14
 
-	{ "T-16.F9",		0x08000, 0x9b377277, 6 | BRF_GRA },           // 15 Tilemap
+	{ "t-16.f9",		0x08000, 0x9b377277, 6 | BRF_GRA },           // 15 Tilemap
 };
 
 STD_ROM_PICK(turtshipkn)

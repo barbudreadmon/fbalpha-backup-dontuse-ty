@@ -6,11 +6,8 @@
 #include "z80_intf.h"
 #include "sn76496.h"
 #include "dac.h"
-#include "driver.h"
 #include "bitswap.h"
-extern "C" {
 #include "ay8910.h"
-}
 
 static UINT8 *AllMem;
 static UINT8 *MemEnd;
@@ -36,8 +33,6 @@ static UINT8 *DrvBitmapRAM;
 
 static UINT32 *DrvPalette;
 static UINT8 DrvRecalc;
-
-static INT16 *pAY8910Buffer[6];
 
 static UINT8 back_color;
 static UINT8 soundlatch;
@@ -463,7 +458,6 @@ static INT32 DrvSyncDAC()
 	return (INT32)(float)(nBurnSoundLen * (M6502TotalCycles() / (6000000.000 / (nBurnFPS / 100.000))));
 }
 
-
 static INT32 LassoDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
@@ -544,13 +538,6 @@ static INT32 MemIndex()
 	DrvBitmapRAM		= Next; Next += 0x002000;
 
 	RamEnd			= Next;
-
-	pAY8910Buffer[0]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[1]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[2]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[3]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[4]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
-	pAY8910Buffer[5]	= (INT16*)Next; Next += nBurnSoundLen * sizeof(INT16);
 
 	MemEnd			= Next;
 
@@ -952,8 +939,8 @@ static INT32 PinboInit()
 	ZetSetOutHandler(pinbo_sound_write);
 	ZetClose();
 
-	AY8910Init(0, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
-	AY8910Init(1, 1500000, nBurnSoundRate, NULL, NULL, NULL, NULL);
+	AY8910Init(0, 1500000, 0);
+	AY8910Init(1, 1500000, 1);
 	AY8910SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
 	AY8910SetAllRoutes(1, 0.30, BURN_SND_ROUTE_BOTH);
 
@@ -1371,7 +1358,7 @@ static INT32 PinboFrame()
 	M6502Close();
 
 	if (pBurnSoundOut) {
-		AY8910Render(&pAY8910Buffer[0], pBurnSoundOut, nBurnSoundLen, 0);
+		AY8910Render(pBurnSoundOut, nBurnSoundLen);
 	}
 
 	if (pBurnDraw) {
@@ -1449,7 +1436,7 @@ struct BurnDriver BurnDrvLasso = {
 	"lasso", NULL, NULL, NULL, "1982",
 	"Lasso\0", NULL, "SNK", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_16BIT_ONLY | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, lassoRomInfo, lassoRomName, NULL, NULL, LassoInputInfo, LassoDIPInfo,
 	LassoInit, LassoExit, LassoFrame, LassoDraw, LassoScan, &DrvRecalc, 0x40,
 	224, 256, 3, 4
@@ -1482,7 +1469,7 @@ struct BurnDriver BurnDrvChameleo = {
 	"chameleo", NULL, NULL, NULL, "1983",
 	"Chameleon\0", NULL, "Jaleco", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, chameleoRomInfo, chameleoRomName, NULL, NULL, ChameleoInputInfo, ChameleoDIPInfo,
 	ChameleoInit, LassoExit, LassoFrame, LassoDraw, LassoScan, &DrvRecalc, 0x40,
 	256, 224, 4, 3
@@ -1517,7 +1504,7 @@ struct BurnDriver BurnDrvWwjgtin = {
 	"wwjgtin", NULL, NULL, NULL, "1984",
 	"Wai Wai Jockey Gate-In!\0", NULL, "Jaleco / Casio", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_16BIT_ONLY | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, wwjgtinRomInfo, wwjgtinRomName, NULL, NULL, WwjgtinInputInfo, WwjgtinDIPInfo,
 	WwjgtinInit, LassoExit, LassoFrame, WwjgtinDraw, LassoScan, &DrvRecalc, 0x140,
 	256, 224, 4, 3
@@ -1552,7 +1539,7 @@ struct BurnDriver BurnDrvPhotof = {
 	"photof", "wwjgtin", NULL, NULL, "1991",
 	"Photo Finish (bootleg?)\0", NULL, "Jaleco / Casio", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_16BIT_ONLY | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, photofRomInfo, photofRomName, NULL, NULL, WwjgtinInputInfo, WwjgtinDIPInfo,
 	WwjgtinInit, LassoExit, LassoFrame, WwjgtinDraw, LassoScan, &DrvRecalc, 0x140,
 	256, 224, 4, 3
@@ -1585,7 +1572,7 @@ struct BurnDriver BurnDrvPinbo = {
 	"pinbo", NULL, NULL, NULL, "1984",
 	"Pinbo (set 1)\0", NULL, "Jaleco", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_16BIT_ONLY | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC, 0,
 	NULL, pinboRomInfo, pinboRomName, NULL, NULL, PinboInputInfo, PinboDIPInfo,
 	PinboInit, LassoExit, PinboFrame, PinboDraw, LassoScan, &DrvRecalc, 0x100,
 	224, 256, 3, 4

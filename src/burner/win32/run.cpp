@@ -135,6 +135,9 @@ static int RunFrame(int bDraw, int bPause)
 
 	if (bPrevDraw && !bPause) {
 		VidPaint(0);							// paint the screen (no need to validate)
+
+		if (!nVidFullscreen && bVidDWMSync)     // Sync to DWM (Win7+, windowed)
+			SuperWaitVBlank();
 	}
 
 	if (!bDrvOkay) {
@@ -161,6 +164,8 @@ static int RunFrame(int bDraw, int bPause)
 				GetInput(false);				// Update burner inputs, but not game inputs
 				if (ReplayInput()) {			// Read input from file
 					SetPauseMode(1);            // Replay has finished
+					bAppDoFast = 0;
+					bAppDoFasttoggled = 0;      // Disable FFWD
 					MenuEnableItems();
 					InputSetCooperativeLevel(false, false);
 					return 0;
@@ -174,7 +179,7 @@ static int RunFrame(int bDraw, int bPause)
 			RecordInput();						// Write input to file
 		}
 
-		if (bDraw) {
+		if (bDraw) {                            // Draw Frame
 			nFramesRendered++;
 
 			if (VidFrame()) {					// Do one frame
@@ -228,6 +233,7 @@ static int RunGetNextSound(int bDraw)
 
 	if (bAppDoFast) {									// do more frames
 		for (int i = 0; i < nFastSpeed; i++) {
+			if (!bAppDoFast) break;                     // break out if no longer in ffwd
 #ifdef INCLUDE_AVI_RECORDING
 			if (nAviStatus) {
 				// Render frame with sound
@@ -259,27 +265,14 @@ static int RunGetNextSound(int bDraw)
 	return 0;
 }
 
-extern bool bRunFrame;
-
 int RunIdle()
 {
 	int nTime, nCount;
 
 	if (bAudPlaying) {
 		// Run with sound
-		
-		if(bRunFrame) {
-			bRunFrame = false;
-			if(bAlwaysDrawFrames) {
-				RunFrame(1, 0);
-			} else {
-				RunGetNextSound(0);
-			}
-			return 0;
-		} else {
-			AudSoundCheck();
-			return 0;
-		}
+		AudSoundCheck();
+		return 0;
 	}
 
 	// Run without sound
@@ -314,8 +307,6 @@ int RunIdle()
 		for (int i = 0; i < nFastSpeed; i++) {
 #ifdef INCLUDE_AVI_RECORDING
 			if (nAviStatus) {
-				// Render frame with sound
-				pBurnSoundOut = nAudNextSound;
 				RunFrame(1, 0);
 			} else {
 				RunFrame(0, 0);
@@ -415,6 +406,10 @@ int RunMessageLoop()
 		GameInpCheckLeftAlt();
 		GameInpCheckMouse();															// Hide the cursor
 
+		if (bVidDWMSync) {
+			bprintf(0, _T("[Win7+] Sync to DWM is enabled (if available).\n"));
+			SuperWaitVBlankInit();
+		}
 
 		while (1) {
 			if (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE)) {

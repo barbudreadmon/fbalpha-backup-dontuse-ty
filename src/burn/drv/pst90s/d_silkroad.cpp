@@ -148,13 +148,13 @@ UINT8 __fastcall silkroad_read_byte(UINT32 address)
 			return DrvDips[0];
 
 		case 0xc00025:
-			return MSM6295ReadStatus(0);
+			return MSM6295Read(0);
 
 		case 0xc0002d:
-			return BurnYM2151ReadStatus();
+			return BurnYM2151Read();
 
 		case 0xc00031:
-			return MSM6295ReadStatus(1);
+			return MSM6295Read(1);
 	}
 
 	return 0;
@@ -165,7 +165,7 @@ void __fastcall silkroad_write_byte(UINT32 address, UINT8 data)
 	switch (address)
 	{
 		case 0xc00025:
-			MSM6295Command(0, data);
+			MSM6295Write(0, data);
 		return;
 
 		case 0xc00029:
@@ -177,7 +177,7 @@ void __fastcall silkroad_write_byte(UINT32 address, UINT8 data)
 		return;
 
 		case 0xc00031:
-			MSM6295Command(1, data);
+			MSM6295Write(1, data);
 		return;
 
 		case 0xc00034:
@@ -646,9 +646,9 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 	if (nAction & ACB_DRIVER_DATA) {
 		SekScan(nAction);
 
-		BurnYM2151Scan(nAction);
-		MSM6295Scan(0, nAction);
-		MSM6295Scan(1, nAction);
+		BurnYM2151Scan(nAction, pnMin);
+		MSM6295Scan(nAction, pnMin);
+		//MSM6295Scan(1, nAction);
 
 		SCAN_VAR(DrvInputs[0]);
 		SCAN_VAR(DrvInputs[1]);
