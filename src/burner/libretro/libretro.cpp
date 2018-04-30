@@ -180,7 +180,7 @@ static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-a
 static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-input", "Diagnostic Input; None|Hold Start|Start + A + B|Hold Start + A + B|Start + L + R|Hold Start + L + R|Hold Select|Select + A + B|Hold Select + A + B|Select + L + R|Hold Select + L + R" };
 static const struct retro_variable var_fba_hiscores = { "fba-hiscores", "Hiscores; enabled|disabled" };
 static const struct retro_variable var_fba_samplerate = { "fba-samplerate", "Samplerate (need to quit retroarch); 48000|44100|22050|11025" };
-static const struct retro_variable var_fba_sample_interpolation = { "fba-sample-interpolation", "Sample Interpolation; 4-point 3rd order|2-point 1st order" };
+static const struct retro_variable var_fba_sample_interpolation = { "fba-sample-interpolation", "Sample Interpolation; 4-point 3rd order|2-point 1st order|disabled" };
 static const struct retro_variable var_fba_fm_interpolation = { "fba-fm-interpolation", "FM Interpolation; 4-point 3rd order|disabled" };
 
 // Neo Geo core options
@@ -1369,6 +1369,8 @@ static void check_variables(void)
 	      nInterpolation = 3;
 	   else if (strcmp(var.value, "2-point 1st order") == 0)
 	      nInterpolation = 1;
+	   else if (strcmp(var.value, "disabled") == 0)
+	      nInterpolation = 0;
 	   else
 	      nInterpolation = 3;
 	}
