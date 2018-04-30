@@ -23,8 +23,6 @@
    char slash = '/';
 #endif
 
-bool init_input_needed = true;
-
 static void log_dummy(enum retro_log_level level, const char *fmt, ...) { }
 static const char *print_label(unsigned i);
 
@@ -341,7 +339,7 @@ void retro_get_system_info(struct retro_system_info *info)
 /////
 static INT32 InputTick();
 static void InputMake();
-static bool init_input(bool);
+static bool init_input();
 static void check_variables();
 
 void wav_exit() { }
@@ -1428,15 +1426,7 @@ void retro_run()
 
       bool macro_updated = apply_macro_from_variables();
 
-      bool init_input_performed = false;
-
-      if (init_input_needed)
-      {
-         init_input(macro_updated);
-         init_input_performed = true;
-      }
-
-      if (macro_updated && !init_input_performed) // if the init_input_performed is true, the 2 following methods was already called in the init_input one
+      if (macro_updated) // if the init_input_performed is true, the 2 following methods was already called in the init_input one
       {
          // Re-create the list of macro input_descriptors with new values
          init_macro_input_descriptors();
@@ -1647,9 +1637,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    // CPS3 won't run without defining nBurnSoundLen
    init_audio_buffer(nBurnSoundRate, 6000);
 
-   if (init_input_needed) {
-      init_input(false);
-   }
+   init_input();
 
    // Initialize EEPROM path
    snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%cfba%c", g_save_dir, slash, slash);
@@ -1841,7 +1829,7 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
 	if (port < nMaxPlayers && fba_devices[port] != device)
 	{
 		fba_devices[port] = device;
-		init_input_needed = true;
+		init_input();
 	}
 }
 
@@ -1888,7 +1876,7 @@ static const char *print_label(unsigned i)
    }
 }
 
-static bool init_input(bool macro_updated)
+static bool init_input()
 {
 	switch_ncode = 0;
 
@@ -1914,16 +1902,10 @@ static bool init_input(bool macro_updated)
 	set_environment();
 	// Read the user core option values
 	check_variables();
+	apply_macro_from_variables();
 
-	if (!macro_updated) {
-		macro_updated = apply_macro_from_variables();
-	}
-
-	if (macro_updated) {
-		// Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
-		init_macro_input_descriptors();
-	}
-
+	// Now that the macro_core_options are created and core option values are read, we can create the list of macro input_descriptors
+	init_macro_input_descriptors();
 	// The list of normal and macro input_descriptors are filled, we can assign all the input_descriptors to retroarch
 	set_input_descriptors();
 
@@ -1931,8 +1913,6 @@ static bool init_input(bool macro_updated)
 	uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_SINGLE_SESSION;
 	if(!strcmp(systemname, "CPS-3"))
 	environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);*/
-
-	init_input_needed = false;
 
 	return 0;
 }

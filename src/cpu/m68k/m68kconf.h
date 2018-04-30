@@ -214,11 +214,6 @@
 #ifndef FASTCALL
  #undef __fastcall
  #define __fastcall
-#else
-#ifndef _MSC_VER
- #undef __fastcall
- #define __fastcall __attribute__((fastcall))
-#endif
 #endif
 
 /* Reset callback */

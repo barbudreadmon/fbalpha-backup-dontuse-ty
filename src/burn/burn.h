@@ -13,6 +13,11 @@
  #define __cdecl
 #endif
 
+#if !defined (_MSC_VER)
+ #undef __fastcall
+ #define __fastcall __attribute__((fastcall))
+#endif
+
 #ifndef MAX_PATH
  #define MAX_PATH 	260
 #endif

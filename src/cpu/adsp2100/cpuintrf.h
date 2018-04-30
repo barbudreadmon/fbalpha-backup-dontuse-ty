@@ -3,9 +3,10 @@
 
 #include <stdint.h>
 
-#ifndef INLINE
- #define INLINE inline
+#ifdef INLINE
+ #undef INLINE
 #endif
+#define INLINE inline
 
 #define logerror(...)
 #define fatalerror(...)
