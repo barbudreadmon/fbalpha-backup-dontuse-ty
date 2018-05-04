@@ -6,6 +6,8 @@ FRONTEND_SUPPORTS_RGB565 = 1
 HAVE_GRIFFIN = 0
 # fastcall only works on x86_32
 FASTCALL = 0
+# fastmath should improve performance with every arch, and there is no known issue with fbalpha
+FASTMATH = 1
 WANT_NEOGEOCD = 0
 USE_SPEEDHACKS = 1
 EXTERNAL_ZLIB = 0
@@ -76,9 +78,9 @@ ifneq (,$(findstring unix,$(platform)))
 
    # Raspberry Pi
    ifneq (,$(findstring rpi2,$(platform)))
-      PLATFORM_DEFINES := -marm -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -ffast-math
+      PLATFORM_DEFINES := -marm -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
    else ifneq (,$(findstring rpi3,$(platform)))
-      PLATFORM_DEFINES := -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -ffast-math
+      PLATFORM_DEFINES := -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard
    endif
 
    # Solaris
@@ -209,8 +211,8 @@ else ifeq ($(platform), vita)
    AR = arm-vita-eabi-ar$(EXE_EXT)
    PLATFORM_DEFINES += -DVITA
    ENDIANNESS_DEFINES := -DLSB_FIRST
-   CFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant
-   CXXFLAGS += -mfloat-abi=hard -ffast-math -fsingle-precision-constant -fpermissive -fno-rtti -fno-exceptions
+   CFLAGS += -mfloat-abi=hard -fsingle-precision-constant
+   CXXFLAGS += -mfloat-abi=hard -fsingle-precision-constant -fpermissive -fno-rtti -fno-exceptions
    EXTERNAL_ZLIB = 1
    STATIC_LINKING = 1
 
@@ -230,7 +232,7 @@ else ifeq ($(platform), switch)
    include $(LIBTRANSISTOR_HOME)/libtransistor.mk
    STATIC_LINKING=1
    ENDIANNESS_DEFINES := -DLSB_FIRST
-   PLATFORM_DEFINES := -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -ffast-math
+   PLATFORM_DEFINES := -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard
 
 # Nintendo Game Cube / Wii / WiiU
 else ifneq (,$(filter $(platform), ngc wii wiiu))
@@ -400,6 +402,11 @@ endif
 
 ifeq ($(FASTCALL), 1)
    FBA_DEFINES += -DFASTCALL
+endif
+
+ifeq ($(FASTMATH), 1)
+   CFLAGS += -ffast-math
+   CXXFLAGS += -ffast-math
 endif
 
 ifeq ($(DEBUG_ASAN), 1)
