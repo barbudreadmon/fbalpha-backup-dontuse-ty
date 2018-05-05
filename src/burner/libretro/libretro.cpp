@@ -164,6 +164,7 @@ INT32 nFireButtons = 0;
 bool bStreetFighterLayout = false;
 bool bButtonMapped = false;
 bool bVolumeIsFireButton = false;
+INT32 bDip = 1;
 
 // libretro globals
 void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
@@ -3374,9 +3375,14 @@ INT32 GameInpInit()
 	}
 	memset(GameInp, 0, nSize);
 
-	GameInpBlank(1);
+	// Initializing dipswitches several times is causing issues (#185)
+	// So let's use a variable (bDip global) to avoid initializing them several times
+	GameInpBlank(bDip);
 
-	InpDIPSWResetDIPs();
+	if(bDip)
+		InpDIPSWResetDIPs();
+
+	bDip = 0;
 
 	GameInpInitMacros();
 
