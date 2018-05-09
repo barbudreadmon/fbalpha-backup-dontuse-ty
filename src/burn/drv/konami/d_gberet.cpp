@@ -951,6 +951,64 @@ static INT32 DrvFrame()
 	return 0;
 }
 
+static INT32 GberetFrame()
+{
+        if(!(nCurrentFrame&1)) return 0;
+	
+	INT32 nInterleave = game_type ? 16 : 32;
+	INT32 nSoundBufferPos = 0;
+
+	if (DrvReset) {
+		DrvDoReset();
+	}
+
+	ZetOpen(0);
+
+	INT32 nCyclesDone, nCyclesTotal;
+
+	nCyclesDone = 0;
+	nCyclesTotal = 3072000 / (nBurnFPS / 256);
+
+	for (INT32 i = 0; i < nInterleave; i++)
+	{
+		INT32 nCyclesSegment = (nCyclesTotal - nCyclesDone) / (nInterleave - i);
+
+		nCyclesDone = ZetRun(nCyclesSegment);
+
+		if (irq_enable && i == (nInterleave - 1)) {
+			ZetSetIRQLine(0, CPU_IRQSTATUS_AUTO);
+		}
+
+		if (nmi_enable && (i & 1)) {
+			ZetNmi();
+		}
+		if (pBurnSoundOut) {
+			INT32 nSegmentLength = nBurnSoundLen / nInterleave;
+			INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+			SN76496Update(0, pSoundBuf, nSegmentLength);
+			nSoundBufferPos += nSegmentLength;
+		}
+	}
+
+	ZetClose();
+
+// Make sure the buffer is entirely filled.
+	if (pBurnSoundOut) {
+		INT32 nSegmentLength = nBurnSoundLen - nSoundBufferPos;
+		INT16* pSoundBuf = pBurnSoundOut + (nSoundBufferPos << 1);
+
+		if (nSegmentLength) {
+			SN76496Update(0, pSoundBuf, nSegmentLength);
+		}
+	}
+
+	if (pBurnDraw) {
+		DrvDraw();
+	}
+
+	return 0;
+}
+
 static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 {
 	struct BurnArea ba;
@@ -1014,7 +1072,7 @@ struct BurnDriver BurnDrvGberet = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, gberetRomInfo, gberetRomName, NULL, NULL, DrvInputInfo, gberetDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalcPal, 0x200,
+	DrvInit, DrvExit, GberetFrame, DrvDraw, DrvScan, &DrvRecalcPal, 0x200,
 	240, 224, 4, 3
 };
 
@@ -1047,7 +1105,7 @@ struct BurnDriver BurnDrvRushatck = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_PREFIX_KONAMI, GBF_PLATFORM, 0,
 	NULL, rushatckRomInfo, rushatckRomName, NULL, NULL, DrvInputInfo, gberetDIPInfo,
-	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalcPal, 0x200,
+	DrvInit, DrvExit, GberetFrame, DrvDraw, DrvScan, &DrvRecalcPal, 0x200,
 	240, 224, 4, 3
 };
 
