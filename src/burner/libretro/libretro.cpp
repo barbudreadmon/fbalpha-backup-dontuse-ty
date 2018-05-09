@@ -224,19 +224,20 @@ static struct RomBiosInfo aes_bioses[] = {
 };
 
 static struct RomBiosInfo uni_bioses[] = {
-   {"uni-bios_3_2.rom",  0xa4e8b9b3, 0x0f, "Universe BIOS ver. 3.2"         ,  1 },
-   {"uni-bios_3_1.rom",  0x0c58093f, 0x10, "Universe BIOS ver. 3.1"         ,  2 },
-   {"uni-bios_3_0.rom",  0xa97c89a9, 0x11, "Universe BIOS ver. 3.0"         ,  3 },
-   {"uni-bios_2_3.rom",  0x27664eb5, 0x12, "Universe BIOS ver. 2.3"         ,  4 },
-   {"uni-bios_2_3o.rom", 0x601720ae, 0x13, "Universe BIOS ver. 2.3 (alt)"   ,  5 },
-   {"uni-bios_2_2.rom",  0x2d50996a, 0x14, "Universe BIOS ver. 2.2"         ,  6 },
-   {"uni-bios_2_1.rom",  0x8dabf76b, 0x15, "Universe BIOS ver. 2.1"         ,  7 },
-   {"uni-bios_2_0.rom",  0x0c12c2ad, 0x16, "Universe BIOS ver. 2.0"         ,  8 },
-   {"uni-bios_1_3.rom",  0xb24b44a0, 0x17, "Universe BIOS ver. 1.3"         ,  9 },
-   {"uni-bios_1_2.rom",  0x4fa698e9, 0x18, "Universe BIOS ver. 1.2"         , 10 },
-   {"uni-bios_1_2o.rom", 0xe19d3ce9, 0x19, "Universe BIOS ver. 1.2 (alt)"   , 11 },
-   {"uni-bios_1_1.rom",  0x5dda0d84, 0x1a, "Universe BIOS ver. 1.1"         , 12 },
-   {"uni-bios_1_0.rom",  0x0ce453a0, 0x1b, "Universe BIOS ver. 1.0"         , 13 },
+   {"uni-bios_3_3.rom",  0x24858466, 0x0f, "Universe BIOS ver. 3.3"         ,  1 },
+   {"uni-bios_3_2.rom",  0xa4e8b9b3, 0x10, "Universe BIOS ver. 3.2"         ,  2 },
+   {"uni-bios_3_1.rom",  0x0c58093f, 0x11, "Universe BIOS ver. 3.1"         ,  3 },
+   {"uni-bios_3_0.rom",  0xa97c89a9, 0x12, "Universe BIOS ver. 3.0"         ,  4 },
+   {"uni-bios_2_3.rom",  0x27664eb5, 0x13, "Universe BIOS ver. 2.3"         ,  5 },
+   {"uni-bios_2_3o.rom", 0x601720ae, 0x14, "Universe BIOS ver. 2.3 (alt)"   ,  6 },
+   {"uni-bios_2_2.rom",  0x2d50996a, 0x15, "Universe BIOS ver. 2.2"         ,  7 },
+   {"uni-bios_2_1.rom",  0x8dabf76b, 0x16, "Universe BIOS ver. 2.1"         ,  8 },
+   {"uni-bios_2_0.rom",  0x0c12c2ad, 0x17, "Universe BIOS ver. 2.0"         ,  9 },
+   {"uni-bios_1_3.rom",  0xb24b44a0, 0x18, "Universe BIOS ver. 1.3"         ,  10 },
+   {"uni-bios_1_2.rom",  0x4fa698e9, 0x19, "Universe BIOS ver. 1.2"         , 11 },
+   {"uni-bios_1_2o.rom", 0xe19d3ce9, 0x1a, "Universe BIOS ver. 1.2 (alt)"   , 12 },
+   {"uni-bios_1_1.rom",  0x5dda0d84, 0x1b, "Universe BIOS ver. 1.1"         , 13 },
+   {"uni-bios_1_0.rom",  0x0ce453a0, 0x1c, "Universe BIOS ver. 1.0"         , 14 },
    {NULL, 0, 0, NULL, 0 }
 };
 
