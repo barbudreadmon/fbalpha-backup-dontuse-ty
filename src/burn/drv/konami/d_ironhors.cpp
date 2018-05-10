@@ -565,8 +565,6 @@ static INT32 DrvDraw()
 
 static INT32 DrvFrame()
 {
-	if(!(nCurrentFrame&1)) return 0;
-	
 	if (DrvReset) {
 		DrvDoReset();
 	}

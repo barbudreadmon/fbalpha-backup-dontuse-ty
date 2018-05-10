@@ -1634,7 +1634,19 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
       log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
       return false;
    }
-   
+
+   // [issue #206] Games where nBurnFPS/100 < g_audio_samplerate/1000 need the following
+   if (g_audio_samplerate > 22050 && (
+      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "aztarac") == 0) ||
+      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "gberet") == 0) ||
+      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "rushatck") == 0) ||
+      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "ironhors") == 0) ||
+      (BurnDrvGetTextA(DRV_PARENT) && strcmp(BurnDrvGetTextA(DRV_PARENT), "ironhors") == 0)
+   )) {
+      g_audio_samplerate = 22050;
+      log_cb(RETRO_LOG_INFO, "[FBA] Samplerate downgraded to %d.\n", g_audio_samplerate);
+   }
+
    nBurnSoundRate = g_audio_samplerate;
    
    // CPS3 won't run without defining nBurnSoundLen
