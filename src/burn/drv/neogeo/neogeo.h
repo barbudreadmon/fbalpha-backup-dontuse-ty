@@ -84,6 +84,7 @@ extern bool bNeoEnableGraphics;
 extern bool bDisableNeoWatchdog;
 
 extern INT32 s1945pmode;
+extern INT32 fatfury2mode;
 
 INT32 NeoInit();
 INT32 NeoCDInit();
