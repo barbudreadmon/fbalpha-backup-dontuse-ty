@@ -19,4 +19,3 @@ Move hiscore.dat from /metadata/ to /SYSTEM_DIRECTORY/fba/
 ## Known issues
 
 - There is no support for MIDWAY hardware in this port
-- There is no support for unibios 3.3 at the moment (will be included when it is included upstream)

@@ -1476,7 +1476,9 @@ static int burn_read_state_cb(BurnArea *pba)
 
 static int burn_dummy_state_cb(BurnArea *pba)
 {
+#ifdef FBA_DEBUG
    log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
+#endif
    state_size += pba->nLen;
    return 0;
 }
@@ -2689,7 +2691,9 @@ static void init_macro_core_options()
       }
       std::basic_string<char>(macro_option->values_str).swap(macro_option->values_str);
 
+#ifdef FBA_DEBUG
       log_cb(RETRO_LOG_INFO, "'%s' (%d)\n", macro_option->values_str.c_str(), macro_option->values.size() - 1); // -1 to exclude the None from the macro count
+#endif
    }
 }
 
@@ -2785,7 +2789,9 @@ static bool apply_macro_from_variables()
 
          if (macro_value->retro_device_id == old_retro_device_id)
          {
+#ifdef FBA_DEBUG
             log_cb(RETRO_LOG_INFO, "Macro '%s' unchanged '%s'\n", macro_option->friendly_name, print_label(macro_value->retro_device_id));
+#endif
             continue;
          }
 
@@ -2796,14 +2802,18 @@ static bool apply_macro_from_variables()
             // deactivate the macro
             macro_option->selected_value = NULL;
             macro_option->pgi->Macro.nMode = 0;
+#ifdef FBA_DEBUG
             log_cb(RETRO_LOG_INFO, "Macro '%s' disable from '%s'\n", macro_option->friendly_name, print_label(old_retro_device_id));
+#endif
          }
          else
          {
             // activate the macro
             macro_option->selected_value = macro_value;
             macro_option->pgi->Macro.nMode = 1;
+#ifdef FBA_DEBUG
             log_cb(RETRO_LOG_INFO, "Macro '%s' changed from '%s' to '%s'\n", macro_option->friendly_name, print_label(old_retro_device_id), print_label(macro_value->retro_device_id));
+#endif
          }
 
          // set the retro device id for the macro
