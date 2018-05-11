@@ -1624,11 +1624,16 @@ INT32 SetBurnHighCol(INT32 nDepth)
 
 static void init_audio_buffer(INT32 sample_rate, INT32 fps)
 {
-   nAudSegLen = (sample_rate * 100 + (fps >> 1)) / fps;
-   free(g_audio_buf);
-   g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
-   nBurnSoundLen = nAudSegLen;
-   pBurnSoundOut = g_audio_buf;
+	// [issue #206]
+	// For games where sample_rate/1000 > fps/100
+	// we don't change nBurnSoundRate, but we adjust some length
+	if ((sample_rate / 1000) > (fps / 100))
+		sample_rate = fps * 10;
+	nAudSegLen = (sample_rate * 100 + (fps >> 1)) / fps;
+	free(g_audio_buf);
+	g_audio_buf = (int16_t*)malloc(nAudSegLen<<2 * sizeof(int16_t));
+	nBurnSoundLen = nAudSegLen;
+	pBurnSoundOut = g_audio_buf;
 }
 
 static bool fba_init(unsigned driver, const char *game_zip_name)
@@ -1638,18 +1643,6 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    if (!open_archive()) {
       log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
       return false;
-   }
-
-   // [issue #206] Games where nBurnFPS/100 < g_audio_samplerate/1000 need the following
-   if (g_audio_samplerate > 22050 && (
-      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "aztarac") == 0) ||
-      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "gberet") == 0) ||
-      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "rushatck") == 0) ||
-      (BurnDrvGetTextA(DRV_NAME) && strcmp(BurnDrvGetTextA(DRV_NAME), "ironhors") == 0) ||
-      (BurnDrvGetTextA(DRV_PARENT) && strcmp(BurnDrvGetTextA(DRV_PARENT), "ironhors") == 0)
-   )) {
-      g_audio_samplerate = 22050;
-      log_cb(RETRO_LOG_INFO, "[FBA] Samplerate downgraded to %d.\n", g_audio_samplerate);
    }
 
    nBurnSoundRate = g_audio_samplerate;
