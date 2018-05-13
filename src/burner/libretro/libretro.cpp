@@ -702,7 +702,11 @@ static void set_controller_infos()
 static void set_environment()
 {
 	std::vector<const retro_variable*> vars_systems;
+#ifdef _MSC_VER
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 	struct retro_vfs_interface_info vfs_iface_info;
+#endif
+#endif
 
 	// Add the Global core options
 	vars_systems.push_back(&var_fba_aspect);
