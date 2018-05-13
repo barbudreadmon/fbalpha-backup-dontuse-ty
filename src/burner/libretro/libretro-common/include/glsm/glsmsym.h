@@ -1,4 +1,4 @@
-/* Copyright (C) 2010-2016 The RetroArch team
+/* Copyright (C) 2010-2018 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
  * The following license statement only applies to this libretro SDK code part (glsmsym.h).
@@ -135,7 +135,7 @@ RETRO_BEGIN_DECLS
 #define glUniformBlockBinding       rglUniformBlockBinding
 #define glGetUniformBlockIndex      rglGetUniformBlockIndex
 #define glGetActiveUniformBlockiv   rglGetActiveUniformBlockiv
-#define glBindBufferBase            rglBindBufferBase 
+#define glBindBufferBase            rglBindBufferBase
 #define glGetUniformIndices         rglGetUniformIndices
 #define glGetActiveUniformsiv       rglGetActiveUniformsiv
 #define glGetError                  rglGetError
@@ -161,6 +161,11 @@ RETRO_BEGIN_DECLS
 #define glClearBufferfi             rglClearBufferfi
 #define glWaitSync                  rglWaitSync
 #define glFenceSync                 rglFenceSync
+#define glDeleteSync                rglDeleteSync
+#define glBufferStorage             rglBufferStorage
+#define glFlushMappedBufferRange    rglFlushMappedBufferRange
+#define glClientWaitSync            rglClientWaitSync
+#define glDrawElementsBaseVertex    rglDrawElementsBaseVertex
 
 const GLubyte* rglGetStringi(GLenum name, GLuint index);
 void rglTexBuffer(GLenum target, GLenum internalFormat, GLuint buffer);
@@ -396,7 +401,13 @@ void rglTexSubImage2D( 	GLenum target,
   	const GLvoid * pixels);
 void rglDeleteVertexArrays(GLsizei n, const GLuint *arrays);
 void *rglFenceSync(GLenum condition, GLbitfield flags);
+void rglDeleteSync(void *sync);
 void rglWaitSync(void *sync, GLbitfield flags, uint64_t timeout);
+void rglBufferStorage(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags);
+void rglFlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length);
+GLenum rglClientWaitSync(void *sync, GLbitfield flags, uint64_t timeout);
+void rglDrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
+			       GLvoid *indices, GLint basevertex);
 
 RETRO_END_DECLS
 

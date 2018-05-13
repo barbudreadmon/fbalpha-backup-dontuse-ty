@@ -1,4 +1,4 @@
-/* Copyright (C) 2010-2015 The RetroArch team
+/* Copyright (C) 2010-2018 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
  * The following license statement only applies to this libretro SDK code part (glsym).
@@ -49,7 +49,8 @@
 #include <GL3/gl3ext.h>
 #elif defined(HAVE_OPENGLES3)
 #include <GLES3/gl3.h>
-#include <GLES2/gl2ext.h> /* There are no GLES3 extensions yet. */
+#define __gl2_h_
+#include <GLES2/gl2ext.h>
 #elif defined(HAVE_OPENGLES2)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>

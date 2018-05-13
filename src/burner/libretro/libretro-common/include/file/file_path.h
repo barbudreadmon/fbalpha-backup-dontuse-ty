@@ -1,4 +1,4 @@
-/* Copyright  (C) 2010-2017 The RetroArch team
+/* Copyright  (C) 2010-2018 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
  * The following license statement only applies to this file (file_path.h).
@@ -291,6 +291,19 @@ void fill_pathname_basedir_noext(char *out_dir,
       const char *in_path, size_t size);
 
 /**
+ * fill_pathname_parent_dir_name:
+ * @out_dir            : output directory
+ * @in_dir             : input directory
+ * @size               : size of output directory
+ *
+ * Copies only the parent directory name of @in_dir into @out_dir.
+ * The two buffers must not overlap. Removes trailing '/'.
+ * Returns true on success, false if a slash was not found in the path.
+ **/
+bool fill_pathname_parent_dir_name(char *out_dir,
+      const char *in_dir, size_t size);
+
+/**
  * fill_pathname_parent_dir:
  * @out_dir            : output directory
  * @in_dir             : input directory
@@ -334,6 +347,12 @@ void fill_pathname_join(char *out_path, const char *dir,
 void fill_pathname_join_special_ext(char *out_path,
       const char *dir,  const char *path,
       const char *last, const char *ext,
+      size_t size);
+
+void fill_pathname_join_concat_noext(
+      char *out_path,
+      const char *dir, const char *path,
+      const char *concat,
       size_t size);
 
 void fill_pathname_join_concat(char *out_path,
@@ -390,6 +409,15 @@ void fill_pathname_abbreviate_special(char *out_path,
       const char *in_path, size_t size);
 
 /**
+ * path_basedir:
+ * @path               : path
+ *
+ * Extracts base directory by mutating path.
+ * Keeps trailing '/'.
+ **/
+void path_basedir_wrapper(char *path);
+
+/**
  * path_char_is_slash:
  * @c                  : character
  *
@@ -404,7 +432,7 @@ void fill_pathname_abbreviate_special(char *out_path,
 #endif
 
 /**
- * path_default_slash:
+ * path_default_slash and path_default_slash_c:
  *
  * Gets the default slash separator.
  *
@@ -412,8 +440,10 @@ void fill_pathname_abbreviate_special(char *out_path,
  */
 #ifdef _WIN32
 #define path_default_slash() "\\"
+#define path_default_slash_c() '\\'
 #else
 #define path_default_slash() "/"
+#define path_default_slash_c() '/'
 #endif
 
 /**
@@ -426,7 +456,7 @@ void fill_pathname_abbreviate_special(char *out_path,
  **/
 void fill_pathname_slash(char *path, size_t size);
 
-#ifndef RARCH_CONSOLE
+#if !defined(RARCH_CONSOLE) && defined(RARCH_INTERNAL)
 void fill_pathname_application_path(char *buf, size_t size);
 #endif
 

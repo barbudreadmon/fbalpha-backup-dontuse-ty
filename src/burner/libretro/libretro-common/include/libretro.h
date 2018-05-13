@@ -1,4 +1,4 @@
-/* Copyright (C) 2010-2017 The RetroArch team
+/* Copyright (C) 2010-2018 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
  * The following license statement only applies to this libretro API header (libretro.h).
@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 #ifndef __cplusplus
-#if defined(_MSC_VER) && !defined(SN_TARGET_PS3)
+#if defined(_MSC_VER) && _MSC_VER < 1800 && !defined(SN_TARGET_PS3)
 /* Hack applied for MSVC when compiling in C89 mode
  * as it isn't C99-compliant. */
 #define bool unsigned char
@@ -270,6 +270,7 @@ enum retro_language
    RETRO_LANGUAGE_ESPERANTO           = 13,
    RETRO_LANGUAGE_POLISH              = 14,
    RETRO_LANGUAGE_VIETNAMESE          = 15,
+   RETRO_LANGUAGE_ARABIC              = 16,
    RETRO_LANGUAGE_LAST,
 
    /* Ensure sizeof(enum) == sizeof(int) */
@@ -375,6 +376,10 @@ enum retro_key
    RETROK_x              = 120,
    RETROK_y              = 121,
    RETROK_z              = 122,
+   RETROK_LEFTBRACE      = 123,
+   RETROK_BAR            = 124,
+   RETROK_RIGHTBRACE     = 125,
+   RETROK_TILDE          = 126,
    RETROK_DELETE         = 127,
 
    RETROK_KP0            = 256,
@@ -594,9 +599,12 @@ enum retro_mod
                                             * GET_VARIABLE.
                                             * This allows the frontend to present these variables to
                                             * a user dynamically.
-                                            * This should be called as early as possible (ideally in
-                                            * retro_set_environment).
-                                            *
+                                            * This should be called the first time as early as
+                                            * possible (ideally in retro_set_environment).
+                                            * Afterward it may be called again for the core to communicate
+                                            * updated options to the frontend, but the number of core
+                                            * options must not change from the number in the initial call.
+					    *
                                             * 'data' points to an array of retro_variable structs
                                             * terminated by a { NULL, NULL } element.
                                             * retro_variable::key should be namespaced to not collide
@@ -770,17 +778,18 @@ enum retro_mod
                                             */
 #define RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY 31
                                            /* const char ** --
-                                            * Returns the "save" directory of the frontend.
-                                            * This directory can be used to store SRAM, memory cards,
-                                            * high scores, etc, if the libretro core
+                                            * Returns the "save" directory of the frontend, unless there is no
+                                            * save directory available. The save directory should be used to
+                                            * store SRAM, memory cards, high scores, etc, if the libretro core
                                             * cannot use the regular memory interface (retro_get_memory_data()).
                                             *
-                                            * NOTE: libretro cores used to check GET_SYSTEM_DIRECTORY for
-                                            * similar things before.
-                                            * They should still check GET_SYSTEM_DIRECTORY if they want to
-                                            * be backwards compatible.
-                                            * The path here can be NULL. It should only be non-NULL if the
-                                            * frontend user has set a specific save path.
+                                            * If the frontend cannot designate a save directory, it will return
+                                            * NULL to indicate that the core should attempt to operate without a
+                                            * save directory set.
+                                            *
+                                            * NOTE: early libretro cores used the system directory for save
+                                            * files. Cores that need to be backwards-compatible can still check
+                                            * GET_SYSTEM_DIRECTORY.
                                             */
 #define RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO 32
                                            /* const struct retro_system_av_info * --
@@ -1083,8 +1092,12 @@ struct retro_vfs_interface_info
 
 enum retro_hw_render_interface_type
 {
-   RETRO_HW_RENDER_INTERFACE_VULKAN = 0,
-   RETRO_HW_RENDER_INTERFACE_DUMMY = INT_MAX
+	RETRO_HW_RENDER_INTERFACE_VULKAN = 0,
+	RETRO_HW_RENDER_INTERFACE_D3D9   = 1,
+	RETRO_HW_RENDER_INTERFACE_D3D10  = 2,
+	RETRO_HW_RENDER_INTERFACE_D3D11  = 3,
+	RETRO_HW_RENDER_INTERFACE_D3D12  = 4,
+   RETRO_HW_RENDER_INTERFACE_DUMMY  = INT_MAX
 };
 
 /* Base struct. All retro_hw_render_interface_* types
@@ -1094,6 +1107,62 @@ struct retro_hw_render_interface
    enum retro_hw_render_interface_type interface_type;
    unsigned interface_version;
 };
+
+
+#define RETRO_ENVIRONMENT_GET_LED_INTERFACE (46 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+                                           /* struct retro_led_interface * --
+                                            * Gets an interface which is used by a libretro core to set
+                                            * state of LEDs.
+                                            */
+
+typedef void (RETRO_CALLCONV *retro_set_led_state_t)(int led, int state);
+struct retro_led_interface
+{
+    retro_set_led_state_t set_led_state;
+};
+
+#define RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE (47 | RETRO_ENVIRONMENT_EXPERIMENTAL)
+                                           /* int * --
+                                            * Tells the core if the frontend wants audio or video.
+                                            * If disabled, the frontend will discard the audio or video,
+                                            * so the core may decide to skip generating a frame or generating audio.
+                                            * This is mainly used for increasing performance.
+                                            * Bit 0 (value 1): Enable Video
+                                            * Bit 1 (value 2): Enable Audio
+                                            * Bit 2 (value 4): Use Fast Savestates.
+                                            * Bit 3 (value 8): Hard Disable Audio
+                                            * Other bits are reserved for future use and will default to zero.
+                                            * If video is disabled:
+                                            * * The frontend wants the core to not generate any video,
+                                            *   including presenting frames via hardware acceleration.
+                                            * * The frontend's video frame callback will do nothing.
+                                            * * After running the frame, the video output of the next frame should be
+                                            *   no different than if video was enabled, and saving and loading state
+                                            *   should have no issues.
+                                            * If audio is disabled:
+                                            * * The frontend wants the core to not generate any audio.
+                                            * * The frontend's audio callbacks will do nothing.
+                                            * * After running the frame, the audio output of the next frame should be
+                                            *   no different than if audio was enabled, and saving and loading state
+                                            *   should have no issues.
+                                            * Fast Savestates:
+                                            * * Guaranteed to be created by the same binary that will load them.
+                                            * * Will not be written to or read from the disk.
+                                            * * Suggest that the core assumes loading state will succeed.
+                                            * * Suggest that the core updates its memory buffers in-place if possible.
+                                            * * Suggest that the core skips clearing memory.
+                                            * * Suggest that the core skips resetting the system.
+                                            * * Suggest that the core may skip validation steps.
+                                            * Hard Disable Audio:
+                                            * * Used for a secondary core when running ahead.
+                                            * * Indicates that the frontend will never need audio from the core.
+                                            * * Suggests that the core may stop synthesizing audio, but this should not
+                                            *   compromise emulation accuracy.
+                                            * * Audio output for the next frame does not matter, and the frontend will
+                                            *   never need an accurate audio state in the future.
+                                            * * State will never be saved when using Hard Disable Audio.
+                                            */
+
 #define RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE (41 | RETRO_ENVIRONMENT_EXPERIMENTAL)
                                            /* const struct retro_hw_render_interface ** --
                                             * Returns an API specific rendering interface for accessing API specific data.
@@ -1822,6 +1891,10 @@ enum retro_hw_context_type
    /* Vulkan, see RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE. */
    RETRO_HW_CONTEXT_VULKAN           = 6,
 
+   /* Direct3D, set version_major to select the type of interface
+    * returned by RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE */
+   RETRO_HW_CONTEXT_DIRECT3D         = 7,
+
    RETRO_HW_CONTEXT_DUMMY = INT_MAX
 };
 
@@ -2296,7 +2369,9 @@ RETRO_API bool retro_unserialize(const void *data, size_t size);
 RETRO_API void retro_cheat_reset(void);
 RETRO_API void retro_cheat_set(unsigned index, bool enabled, const char *code);
 
-/* Loads a game. */
+/* Loads a game. 
+ * Return true to indicate successful loading and false to indicate load failure.
+ */
 RETRO_API bool retro_load_game(const struct retro_game_info *game);
 
 /* Loads a "special" kind of game. Should not be used,
@@ -2306,7 +2381,7 @@ RETRO_API bool retro_load_game_special(
   const struct retro_game_info *info, size_t num_info
 );
 
-/* Unloads a currently loaded game. */
+/* Unloads the currently loaded game. Called before retro_deinit(void). */
 RETRO_API void retro_unload_game(void);
 
 /* Gets region of game. */
