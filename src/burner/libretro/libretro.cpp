@@ -2568,7 +2568,7 @@ INT32 BurnStateSaveEmbed(FILE* fp, INT32 nOffset, INT32 bAll)
 // State save
 INT32 BurnStateSave(TCHAR* szName, INT32 bAll)
 {
-   FILE 8fp              = NULL;
+   FILE *fp              = NULL;
    const char szHeader[] = "FB1 ";                  // File identifier
    INT32 nLen = 0, nVer  = 0;
    INT32 nRet = 0;
