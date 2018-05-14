@@ -2318,16 +2318,15 @@ static INT32 StateInfo(INT32* pnLen, INT32* pnMinVer, INT32 bAll)
    BurnAcb = StateLenAcb;
 
    BurnAreaScan(ACB_NVRAM, &nMin);                  // Scan nvram
-   if (bAll) {
+   if (bAll)
+   {
       INT32 m;
       BurnAreaScan(ACB_MEMCARD, &m);               // Scan memory card
-      if (m > nMin) {                           // Up the minimum, if needed
+      if (m > nMin)                           // Up the minimum, if needed
          nMin = m;
-      }
       BurnAreaScan(ACB_VOLATILE, &m);               // Scan volatile ram
-      if (m > nMin) {                           // Up the minimum, if needed
+      if (m > nMin)                           // Up the minimum, if needed
          nMin = m;
-      }
    }
    *pnLen = nTotalLen;
    *pnMinVer = nMin;
@@ -2349,103 +2348,99 @@ INT32 BurnStateLoadEmbed(FILE* fp, INT32 nOffset, INT32 bAll, INT32 (*pLoadGame)
    UINT8 *Def = NULL;
    INT32 nDefLen = 0;                           // Deflated version
    INT32 nRet = 0;
+   INT64 newOffset = (INT64)nOffset;
 
-   if (nOffset >= 0) {
-      fseek(fp, nOffset, SEEK_SET);
-   } else {
-      if (nOffset == -2) {
+   if (newOffset >= 0)
+      fseek(fp, newOffset, SEEK_SET);
+   else
+   {
+      if (newOffset == -2)
          fseek(fp, 0, SEEK_END);
-      } else {
+      else
          fseek(fp, 0, SEEK_CUR);
-      }
    }
 
    memset(ReadHeader, 0, 4);
    fread(ReadHeader, 1, 4, fp);                  // Read identifier
-   if (memcmp(ReadHeader, szHeader, 4)) {            // Not the right file type
+   if (memcmp(ReadHeader, szHeader, 4)) // Not the right file type
       return -2;
-   }
 
    fread(&nChunkSize, 1, 4, fp);
-   if (nChunkSize <= 0x40) {                     // Not big enough
+   if (nChunkSize <= 0x40) // Not big enough
       return -1;
-   }
 
-   INT32 nChunkData = ftell(fp);
+   INT64 nChunkData = ftell(fp);
 
    fread(&nFileVer, 1, 4, fp);                     // Version of FB that this file was saved from
 
    fread(&t1, 1, 4, fp);                        // Min version of FB that NV  data will work with
    fread(&t2, 1, 4, fp);                        // Min version of FB that All data will work with
 
-   if (bAll) {                                 // Get the min version number which applies to us
+   if (bAll)                                // Get the min version number which applies to us
       nFileMin = t2;
-   } else {
+   else
       nFileMin = t1;
-   }
 
    fread(&nDefLen, 1, 4, fp);                     // Get the size of the compressed data block
 
    memset(szForName, 0, sizeof(szForName));
    fread(szForName, 1, 32, fp);
 
-   if (nBurnVer < nFileMin) {                     // Error - emulator is too old to load this state
+   if (nBurnVer < nFileMin)                    // Error - emulator is too old to load this state
       return -5;
-   }
 
    // Check the game the savestate is for, and load it if needed.
    {
       bool bLoadGame = false;
 
-      if (nBurnDrvActive < nBurnDrvCount) {
-         if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME))) {   // The save state is for the wrong game
+      if (nBurnDrvActive < nBurnDrvCount)
+      {
+         if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME)))   // The save state is for the wrong game
             bLoadGame = true;
-         }
-      } else {                              // No game loaded
-         bLoadGame = true;
       }
+      else                              // No game loaded
+         bLoadGame = true;
 
-      if (bLoadGame) {
+      if (bLoadGame)
+      {
          UINT32 nCurrentGame = nBurnDrvActive;
          UINT32 i;
-         for (i = 0; i < nBurnDrvCount; i++) {
+         for (i = 0; i < nBurnDrvCount; i++)
+         {
             nBurnDrvActive = i;
-            if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME)) == 0) {
+            if (strcmp(szForName, BurnDrvGetTextA(DRV_NAME)) == 0)
                break;
-            }
          }
-         if (i == nBurnDrvCount) {
+         if (i == nBurnDrvCount)
+         {
             nBurnDrvActive = nCurrentGame;
             return -3;
-         } else {
-            if (pLoadGame == NULL) {
+         }
+         else
+         {
+            if (pLoadGame == NULL)
                return -1;
-            }
-            if (pLoadGame()) {
+            if (pLoadGame())
                return -1;
-            }
          }
       }
    }
 
    StateInfo(&nLen, &nMin, bAll);
-   if (nLen <= 0) {                           // No memory to load
+   if (nLen <= 0)                           // No memory to load
       return -1;
-   }
 
    // Check if the save state is okay
-   if (nFileVer < nMin) {                        // Error - this state is too old and cannot be loaded.
+   if (nFileVer < nMin)                        // Error - this state is too old and cannot be loaded.
       return -4;
-   }
 
    fseek(fp, nChunkData + 0x30, SEEK_SET);            // Read current frame
    fread(&nCurrentFrame, 1, 4, fp);               //
 
    fseek(fp, 0x0C, SEEK_CUR);                     // Move file pointer to the start of the compressed block
    Def = (UINT8*)malloc(nDefLen);
-   if (Def == NULL) {
+   if (Def == NULL)
       return -1;
-   }
    memset(Def, 0, nDefLen);
    fread(Def, 1, nDefLen, fp);                     // Read in deflated block
 
@@ -2457,11 +2452,9 @@ INT32 BurnStateLoadEmbed(FILE* fp, INT32 nOffset, INT32 bAll, INT32 (*pLoadGame)
 
    fseek(fp, nChunkData + nChunkSize, SEEK_SET);
 
-   if (nRet) {
+   if (nRet)
       return -1;
-   } else {
-      return 0;
-   }
+   return 0;
 }
 
 // State load
@@ -2472,21 +2465,17 @@ INT32 BurnStateLoad(TCHAR* szName, INT32 bAll, INT32 (*pLoadGame)())
    INT32 nRet = 0;
 
    FILE* fp = _tfopen(szName, _T("rb"));
-   if (fp == NULL) {
+   if (fp == NULL)
       return 1;
-   }
 
    fread(szReadHeader, 1, 4, fp);                  // Read identifier
-   if (memcmp(szReadHeader, szHeader, 4) == 0) {      // Check filetype
+   if (memcmp(szReadHeader, szHeader, 4) == 0)      // Check filetype
       nRet = BurnStateLoadEmbed(fp, -1, bAll, pLoadGame);
-   }
     fclose(fp);
 
-   if (nRet < 0) {
+   if (nRet < 0)
       return -nRet;
-   } else {
-      return 0;
-   }
+   return 0;
 }
 
 // Write a savestate as a chunk of an "FB1 " file
@@ -2504,33 +2493,31 @@ INT32 BurnStateSaveEmbed(FILE* fp, INT32 nOffset, INT32 bAll)
    UINT8 *Def = NULL;
    INT32 nDefLen = 0;                           // Deflated version
    INT32 nRet = 0;
+   INT64 newOffset = (INT64)nOffset;
 
-   if (fp == NULL) {
+   if (fp == NULL)
       return -1;
-   }
 
    StateInfo(&nLen, &nNvMin, 0);                  // Get minimum version for NV part
    nAMin = nNvMin;
-   if (bAll) {                                 // Get minimum version for All data
+   if (bAll)                                 // Get minimum version for All data
       StateInfo(&nLen, &nAMin, 1);
-   }
 
-   if (nLen <= 0) {                           // No memory to save
+   if (nLen <= 0)                           // No memory to save
       return -1;
-   }
 
-   if (nOffset >= 0) {
-      fseek(fp, nOffset, SEEK_SET);
-   } else {
-      if (nOffset == -2) {
+   if (newOffset >= 0)
+      fseek(fp, newOffset, SEEK_SET);
+   else
+   {
+      if (newOffset == -2)
          fseek(fp, 0, SEEK_END);
-      } else {
+      else
          fseek(fp, 0, SEEK_CUR);
-      }
    }
 
    fwrite(szHeader, 1, 4, fp);                     // Chunk identifier
-   INT32 nSizeOffset = ftell(fp);                  // Reserve space to write the size of this chunk
+   INT64 nSizeOffset = ftell(fp);                  // Reserve space to write the size of this chunk
    fwrite(&nZero, 1, 4, fp);                     //
 
    fwrite(&nBurnVer, 1, 4, fp);                  // Version of FB this was saved from
@@ -2550,9 +2537,8 @@ INT32 BurnStateSaveEmbed(FILE* fp, INT32 nOffset, INT32 bAll)
    fwrite(&nZero, 1, 4, fp);                     //
 
    nRet = BurnStateCompress(&Def, &nDefLen, bAll);      // Compress block from driver and return deflated buffer
-   if (Def == NULL) {
+   if (Def == NULL)
       return -1;
-   }
 
    nRet = fwrite(Def, 1, nDefLen, fp);               // Write block to disk
    if (Def) {
@@ -2560,13 +2546,11 @@ INT32 BurnStateSaveEmbed(FILE* fp, INT32 nOffset, INT32 bAll)
       Def = NULL;
    }
 
-   if (nRet != nDefLen) {                        // error writing block to disk
+   if (nRet != nDefLen)                       // error writing block to disk
       return -1;
-   }
 
-   if (nDefLen & 3) {                           // Chunk size must be a multiple of 4
+   if (nDefLen & 3)                           // Chunk size must be a multiple of 4
       fwrite(&nZero, 1, 4 - (nDefLen & 3), fp);      // Pad chunk if needed
-   }
 
    fseek(fp, nSizeOffset + 0x10, SEEK_SET);         // Write size of the compressed data
    fwrite(&nDefLen, 1, 4, fp);                     //
@@ -2584,39 +2568,35 @@ INT32 BurnStateSaveEmbed(FILE* fp, INT32 nOffset, INT32 bAll)
 // State save
 INT32 BurnStateSave(TCHAR* szName, INT32 bAll)
 {
+   FILE 8fp              = NULL;
    const char szHeader[] = "FB1 ";                  // File identifier
-   INT32 nLen = 0, nVer = 0;
+   INT32 nLen = 0, nVer  = 0;
    INT32 nRet = 0;
 
-   if (bAll) {                                 // Get amount of data
+   if (bAll)                                 // Get amount of data
       StateInfo(&nLen, &nVer, 1);
-   } else {
+   else
       StateInfo(&nLen, &nVer, 0);
-   }
-   if (nLen <= 0) {                           // No data, so exit without creating a savestate
+   if (nLen <= 0)                           // No data, so exit without creating a savestate
       return 0;                              // Don't return an error code
-   }
 
-   FILE* fp = _tfopen(szName, _T("wb"));
-   if (fp == NULL) {
+   fp = _tfopen(szName, _T("wb"));
+   if (fp == NULL)
       return 1;
-   }
 
    fwrite(&szHeader, 1, 4, fp);
    nRet = BurnStateSaveEmbed(fp, -1, bAll);
     fclose(fp);
 
-   if (nRet < 0) {
+   if (nRet < 0)
       return 1;
-   } else {
-      return 0;
-   }
+   return 0;
 }
 
 // Creates core option for the available macros of the game
 // These core options will be stored in the macro_core_options list
 // Depending of the game, 4 or 6 RetroPad Buttons will be configurable (L, R, L2, R2, L3, R3)
-static void init_macro_core_options()
+static void init_macro_core_options(void)
 {
    const char * drvname = BurnDrvGetTextA(DRV_NAME);
 
@@ -2635,9 +2615,7 @@ static void init_macro_core_options()
    {
       // Skip system macros
       if (pgi->Macro.nSysMacro)
-      {
          continue;
-      }
 
       // Assign an unique nCode for the macto
       pgi->Macro.Switch.nCode = switch_ncode++;
