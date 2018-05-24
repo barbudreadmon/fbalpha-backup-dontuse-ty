@@ -835,6 +835,12 @@
 		<manufacturer>Sega</manufacturer>
 		<rom name="mpr-14998.ic1" size="1048576" crc="4a3225c0"/>
 	</game>
+	<game name="battlyuie" cloneof="battlyui" romof="battlyui">
+		<description>Battle Golfer Yui (Hack, English)</description>
+		<year>2017</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="battle golfer yui (english translation).md" size="1048576" crc="2d7e868c"/>
+	</game>
 	<game name="battlyui">
 		<description>Battle Golfer Yui (Jpn)</description>
 		<year>1991</year>
@@ -1008,6 +1014,12 @@
 		<year>1992</year>
 		<manufacturer>Sega</manufacturer>
 		<rom name="bio hazard battle (usa) (beta).bin" size="1048576" crc="dd10dd1a"/>
+	</game>
+	<game name="sailormne" cloneof="sailormn" romof="sailormn">
+		<description>Bishoujo Senshi Sailor Moon (Hack, English)</description>
+		<year>2018</year>
+		<manufacturer>Ma-Ba</manufacturer>
+		<rom name="bishoujo senshi sailor moon (english translation).md" size="4194304" crc="48778add"/>
 	</game>
 	<game name="sailormn">
 		<description>Bishoujo Senshi Sailor Moon (Jpn)</description>
@@ -3781,6 +3793,12 @@
 		<year>1993</year>
 		<manufacturer>Realtec</manufacturer>
 		<rom name="funny world &amp; balloon boy (usa) (unl).bin" size="524288" crc="a82f05f0"/>
+	</game>
+	<game name="nadiae" cloneof="nadia" romof="nadia">
+		<description>Fushigi no Umi no Nadia (Hack, English)</description>
+		<year>2011</year>
+		<manufacturer>Namcot</manufacturer>
+		<rom name="fushigi no umi no nadia (english translation).md" size="1572864" crc="8dec9c35"/>
 	</game>
 	<game name="nadia">
 		<description>Fushigi no Umi no Nadia (Jpn)</description>
@@ -8072,6 +8090,12 @@
 		<manufacturer>Konami</manufacturer>
 		<rom name="probotector (euro).bin" size="2097152" crc="bc597d48"/>
 	</game>
+	<game name="psyoblade" cloneof="psyoblad" romof="psyoblad">
+		<description>Psy-O-Blade (Hack, English)</description>
+		<year>2015</year>
+		<manufacturer>Sigma</manufacturer>
+		<rom name="psy-o-blade (english translation).md" size="785184" crc="427f95cd"/>
+	</game>
 	<game name="psyoblad">
 		<description>Psy-O-Blade (Jpn)</description>
 		<year>1990</year>
@@ -8359,6 +8383,12 @@
 		<year>1994</year>
 		<manufacturer>Time Warner Interactive</manufacturer>
 		<rom name="red zone (euro, usa).bin" size="2097152" crc="56512ee5"/>
+	</game>
+	<game name="rentheroe" cloneof="renthero" romof="renthero">
+		<description>Rent a Hero (Hack, English)</description>
+		<year>2015</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="rent a hero (english translation).bin" size="1271968" crc="820dac90"/>
 	</game>
 	<game name="renthero">
 		<description>Rent a Hero (Jpn)</description>
@@ -10113,6 +10143,12 @@
 		<manufacturer>Ballistic</manufacturer>
 		<rom name="star control (usa).bin" size="1572864" crc="8e2bceaf"/>
 	</game>
+	<game name="starcruse" cloneof="starcrus" romof="starcrus">
+		<description>Star Cruiser (Hack, English)</description>
+		<year>2016</year>
+		<manufacturer>NCS</manufacturer>
+		<rom name="star cruiser (english translation).md" size="786432" crc="53d8b33e"/>
+	</game>
 	<game name="starcrus">
 		<description>Star Cruiser (Jpn)</description>
 		<year>1990</year>
@@ -10352,6 +10388,12 @@
 		<year>2017</year>
 		<manufacturer>2017, Hack By Carzj, Fix By M3tro</manufacturer>
 		<rom name="SoR2_TMNT_Hack.bin" size="2903472" crc="50e3c7c3"/>
+	</game>
+	<game name="sor2upw" cloneof="sor2" romof="sor2">
+		<description>Streets of Rage 2 Puyo Wars (Hack)</description>
+		<year>2014</year>
+		<manufacturer>Candra Software</manufacturer>
+		<rom name="sor2u_pw.md" size="3990600" crc="f618ec40"/>
 	</game>
 	<game name="sor3">
 		<description>Streets of Rage 3 (Euro)</description>
@@ -12843,6 +12885,12 @@
 		<year>1993</year>
 		<manufacturer>Electronic Arts</manufacturer>
 		<rom name="virtual pinball (euro, usa).bin" size="1048576" crc="d63473aa"/>
+	</game>
+	<game name="vixen357e" cloneof="vixen357" romof="vixen357">
+		<description>Vixen 357 (Hack, English)</description>
+		<year>2016</year>
+		<manufacturer>NCS</manufacturer>
+		<rom name="vixen 357 (english translation).bin" size="1310720" crc="f8ce2e43"/>
 	</game>
 	<game name="vixen357">
 		<description>Vixen 357 (Jpn)</description>

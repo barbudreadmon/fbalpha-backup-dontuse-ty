@@ -117,6 +117,7 @@ static UINT8 diag_input_select_a_b[] =  {RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DE
 static UINT8 diag_input_select_l_r[] =  {RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DEVICE_ID_JOYPAD_L, RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_EMPTY };
 
 static unsigned int BurnDrvGetIndexByName(const char* name);
+char* DecorateGameName(UINT32 nBurnDrv);
 
 static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 static bool core_aspect_par = false;
@@ -916,8 +917,6 @@ char* TCHARToANSI(const TCHAR* pszInString, char* pszOutString, int /*nOutSize*/
    return (char*)pszInString;
 }
 
-int QuoteRead(char **, char **, char*) { return 1; }
-char *LabelCheck(char *, char *) { return 0; }
 const int nConfigMinVersion = 0x020921;
 
 // addition to support loading of roms without crc check
@@ -1209,6 +1208,49 @@ static bool open_archive()
    return true;
 }
 
+#ifdef AUTOGEN_DATS
+int CreateAllDatfiles()
+{
+	INT32 nRet = 0;
+	TCHAR szFilename[MAX_PATH];
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML");
+	create_datfile(szFilename, DAT_ARCADE_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Megadrive only");
+	create_datfile(szFilename, DAT_MEGADRIVE_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, PC-Engine only");
+	create_datfile(szFilename, DAT_PCENGINE_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, TurboGrafx16 only");
+	create_datfile(szFilename, DAT_TG16_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, SuprGrafx only");
+	create_datfile(szFilename, DAT_SGX_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Sega SG-1000 only");
+	create_datfile(szFilename, DAT_SG1000_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, ColecoVision only");
+	create_datfile(szFilename, DAT_COLECO_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Master System only");
+	create_datfile(szFilename, DAT_MASTERSYSTEM_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Game Gear only");
+	create_datfile(szFilename, DAT_GAMEGEAR_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Megadrive only");
+	create_datfile(szFilename, DAT_MEGADRIVE_ONLY);
+
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Neogeo only");
+	create_datfile(szFilename, DAT_NEOGEO_ONLY);
+
+	return nRet;
+}
+#endif
+
 void retro_init()
 {
    struct retro_log_callback log;
@@ -1218,7 +1260,11 @@ void retro_init()
    else
       log_cb = log_dummy;
 
+   snprintf(szAppBurnVer, sizeof(szAppBurnVer), "%x.%x.%x.%02x", nBurnVer >> 20, (nBurnVer >> 16) & 0x0F, (nBurnVer >> 8) & 0xFF, nBurnVer & 0xFF);
    BurnLibInit();
+#ifdef AUTOGEN_DATS
+   CreateAllDatfiles();
+#endif
 }
 
 void retro_deinit()
@@ -4430,4 +4476,71 @@ INT32 GameInpDefault()
 	*/
 
 	return 0;
+}
+
+char* DecorateGameName(UINT32 nBurnDrv)
+{
+	static char szDecoratedName[256];
+	UINT32 nOldBurnDrv = nBurnDrvActive;
+
+	nBurnDrvActive = nBurnDrv;
+
+	const char* s1 = "";
+	const char* s2 = "";
+	const char* s3 = "";
+	const char* s4 = "";
+	const char* s5 = "";
+	const char* s6 = "";
+	const char* s7 = "";
+	const char* s8 = "";
+	const char* s9 = "";
+	const char* s10 = "";
+	const char* s11 = "";
+	const char* s12 = "";
+	const char* s13 = "";
+	const char* s14 = "";
+
+	s1 = BurnDrvGetTextA(DRV_FULLNAME);
+	if ((BurnDrvGetFlags() & BDF_DEMO) || (BurnDrvGetFlags() & BDF_HACK) || (BurnDrvGetFlags() & BDF_HOMEBREW) || (BurnDrvGetFlags() & BDF_PROTOTYPE) || (BurnDrvGetFlags() & BDF_BOOTLEG) || (BurnDrvGetTextA(DRV_COMMENT) && strlen(BurnDrvGetTextA(DRV_COMMENT)) > 0)) {
+		s2 = " [";
+		if (BurnDrvGetFlags() & BDF_DEMO) {
+			s3 = "Demo";
+			if ((BurnDrvGetFlags() & BDF_HACK) || (BurnDrvGetFlags() & BDF_HOMEBREW) || (BurnDrvGetFlags() & BDF_PROTOTYPE) || (BurnDrvGetFlags() & BDF_BOOTLEG) || (BurnDrvGetTextA(DRV_COMMENT) && strlen(BurnDrvGetTextA(DRV_COMMENT)) > 0)) {
+				s4 = ", ";
+			}
+		}
+		if (BurnDrvGetFlags() & BDF_HACK) {
+			s5 = "Hack";
+			if ((BurnDrvGetFlags() & BDF_HOMEBREW) || (BurnDrvGetFlags() & BDF_PROTOTYPE) || (BurnDrvGetFlags() & BDF_BOOTLEG) || (BurnDrvGetTextA(DRV_COMMENT) && strlen(BurnDrvGetTextA(DRV_COMMENT)) > 0)) {
+				s6 = ", ";
+			}
+		}
+		if (BurnDrvGetFlags() & BDF_HOMEBREW) {
+			s7 = "Homebrew";
+			if ((BurnDrvGetFlags() & BDF_PROTOTYPE) || (BurnDrvGetFlags() & BDF_BOOTLEG) || (BurnDrvGetTextA(DRV_COMMENT) && strlen(BurnDrvGetTextA(DRV_COMMENT)) > 0)) {
+				s8 = ", ";
+			}
+		}
+		if (BurnDrvGetFlags() & BDF_PROTOTYPE) {
+			s9 = "Prototype";
+			if ((BurnDrvGetFlags() & BDF_BOOTLEG) || (BurnDrvGetTextA(DRV_COMMENT) && strlen(BurnDrvGetTextA(DRV_COMMENT)) > 0)) {
+				s10 = ", ";
+			}
+		}		
+		if (BurnDrvGetFlags() & BDF_BOOTLEG) {
+			s11 = "Bootleg";
+			if (BurnDrvGetTextA(DRV_COMMENT) && strlen(BurnDrvGetTextA(DRV_COMMENT)) > 0) {
+				s12 = ", ";
+			}
+		}
+		if (BurnDrvGetTextA(DRV_COMMENT) && strlen(BurnDrvGetTextA(DRV_COMMENT)) > 0) {
+			s13 = BurnDrvGetTextA(DRV_COMMENT);
+		}
+		s14 = "]";
+	}
+
+	sprintf(szDecoratedName, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s", s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14);
+
+	nBurnDrvActive = nOldBurnDrv;
+	return szDecoratedName;
 }

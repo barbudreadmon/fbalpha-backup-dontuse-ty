@@ -48,7 +48,6 @@ BURN_BLACKLIST := $(FBA_CPU_DIR)/arm7/arm7exec.c \
 	$(FBA_CPU_DIR)/sh2/mksh2.cpp \
 	$(FBA_BURNER_DIR)/sshot.cpp \
 	$(FBA_BURNER_DIR)/conc.cpp \
-	$(FBA_BURNER_DIR)/dat.cpp \
 	$(FBA_BURNER_DIR)/cong.cpp \
 	$(FBA_BURNER_DIR)/image.cpp \
 	$(FBA_BURNER_DIR)/misc.cpp \
@@ -94,6 +93,12 @@ BURN_BLACKLIST := $(FBA_CPU_DIR)/arm7/arm7exec.c \
 	$(FBA_CPU_DIR)/z180/z180ed.c \
 	$(FBA_CPU_DIR)/z180/z180dd.c \
 	$(FBA_CPU_DIR)/z180/z180cb.c
+
+ifeq ($(AUTOGEN_DATS), 0)
+   BURN_BLACKLIST += $(FBA_BURNER_DIR)/dat.cpp
+else
+   FBA_DEFINES += -DAUTOGEN_DATS
+endif
 
 ifeq ($(NO_MD), 1)
 	MD_DIR		:= 
