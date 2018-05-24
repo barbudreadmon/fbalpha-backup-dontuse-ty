@@ -187,9 +187,38 @@ static const struct retro_variable var_fba_fm_interpolation = { "fba-fm-interpol
 // Neo Geo core options
 static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "Force Neo Geo mode (if available); MVS|AES|UNIBIOS|DIPSWITCH" };
 
+#define RETRO_GAME_TYPE_CV		1
+#define RETRO_GAME_TYPE_GG		2
+#define RETRO_GAME_TYPE_MD		3
+#define RETRO_GAME_TYPE_MSX		4
+#define RETRO_GAME_TYPE_PCE		5
+#define RETRO_GAME_TYPE_SG1K	6
+#define RETRO_GAME_TYPE_SGX		7
+#define RETRO_GAME_TYPE_SMS		8
+#define RETRO_GAME_TYPE_TG		9
+
 void retro_set_environment(retro_environment_t cb)
 {
 	environ_cb = cb;
+
+	// Subsystem (needs to be called now, or it won't work on command line)
+	static const struct retro_subsystem_rom_info subsystem_rom[] = {
+		{ "Rom", "zip|7z", true, true, true, NULL, 0 },
+	};
+	static const struct retro_subsystem_info subsystems[] = {
+		{ "CBS ColecoVision", "cv", subsystem_rom, 1, RETRO_GAME_TYPE_CV },
+		{ "MSX 1", "msx", subsystem_rom, 1, RETRO_GAME_TYPE_MSX },
+		{ "Nec PC-Engine", "pce", subsystem_rom, 1, RETRO_GAME_TYPE_PCE },
+		{ "Nec SuperGrafX", "sgx", subsystem_rom, 1, RETRO_GAME_TYPE_SGX },
+		{ "Nec TurboGrafx-16", "tg16", subsystem_rom, 1, RETRO_GAME_TYPE_TG },
+		{ "Sega GameGear", "gg", subsystem_rom, 1, RETRO_GAME_TYPE_GG },
+		{ "Sega Master System", "sms", subsystem_rom, 1, RETRO_GAME_TYPE_SMS },
+		{ "Sega Megadrive", "md", subsystem_rom, 1, RETRO_GAME_TYPE_MD },
+		{ "Sega SG-1000", "sg1k", subsystem_rom, 1, RETRO_GAME_TYPE_SG1K },
+		{ NULL },
+	};
+
+	environ_cb(RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO, (void*)subsystems);
 }
 
 struct RomBiosInfo {
@@ -1194,15 +1223,6 @@ void retro_init()
 
 void retro_deinit()
 {
-   char output[MAX_PATH];
-
-   if (driver_inited)
-   {
-      snprintf (output, sizeof(output), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
-      BurnStateSave(output, 0);
-      BurnDrvExit();
-   }
-   driver_inited = false;
    BurnLibExit();
    if (g_fba_frame)
       free(g_fba_frame);
@@ -1733,7 +1753,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    return true;
 }
 
-static void extract_basename(char *buf, const char *path, size_t size)
+static void extract_basename(char *buf, const char *path, size_t size, char *prefix)
 {
    const char *base = strrchr(path, slash);
    if (!base)
@@ -1742,7 +1762,8 @@ static void extract_basename(char *buf, const char *path, size_t size)
    if (*base == slash)
       base++;
 
-   strncpy(buf, base, size - 1);
+   strcpy(buf, prefix);
+   strncat(buf, base, size - 1);
    buf[size - 1] = '\0';
 
    char *ext = strrchr(buf, '.');
@@ -1771,7 +1792,7 @@ bool retro_load_game(const struct retro_game_info *info)
    if (!info)
       return false;
 
-   extract_basename(g_base_name, info->path, sizeof(g_base_name));
+   extract_basename(g_base_name, info->path, sizeof(g_base_name), "");
    extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
 
    const char *dir = NULL;
@@ -1833,9 +1854,117 @@ error:
    return false;
 }
 
-bool retro_load_game_special(unsigned, const struct retro_game_info*, size_t) { return false; }
+bool retro_load_game_special(unsigned game_type, const struct retro_game_info *info, size_t) {
+   if (!info)
+      return false;
 
-void retro_unload_game(void) {}
+   char * prefix;
+   switch (game_type) {
+      case RETRO_GAME_TYPE_CV:
+         prefix = "cv_";
+         break;
+      case RETRO_GAME_TYPE_GG:
+         prefix = "gg_";
+         break;
+      case RETRO_GAME_TYPE_MD:
+         prefix = "md_";
+         break;
+      case RETRO_GAME_TYPE_MSX:
+         prefix = "msx_";
+         break;
+      case RETRO_GAME_TYPE_PCE:
+         prefix = "pce_";
+         break;
+      case RETRO_GAME_TYPE_SG1K:
+         prefix = "sg1k_";
+         break;
+      case RETRO_GAME_TYPE_SGX:
+         prefix = "sgx_";
+         break;
+      case RETRO_GAME_TYPE_SMS:
+         prefix = "sms_";
+         break;
+      case RETRO_GAME_TYPE_TG:
+         prefix = "tg_";
+         break;
+      default:
+         return false;
+         break;
+   }
+
+   extract_basename(g_base_name, info->path, sizeof(g_base_name), prefix);
+   extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
+
+   const char *dir = NULL;
+   // If save directory is defined use it, ...
+   if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &dir) && dir)
+   {
+      strncpy(g_save_dir, dir, sizeof(g_save_dir));
+      log_cb(RETRO_LOG_INFO, "Setting save dir to %s\n", g_save_dir);
+   }
+   else
+   {
+      // ... otherwise use rom directory
+      strncpy(g_save_dir, g_rom_dir, sizeof(g_save_dir));
+      log_cb(RETRO_LOG_ERROR, "Save dir not defined => use roms dir %s\n", g_save_dir);
+   }
+
+   // If system directory is defined use it, ...
+   if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir)
+   {
+      strncpy(g_system_dir, dir, sizeof(g_system_dir));
+      log_cb(RETRO_LOG_INFO, "Setting system dir to %s\n", g_system_dir);
+   }
+   else
+   {
+      // ... otherwise use rom directory
+      strncpy(g_system_dir, g_rom_dir, sizeof(g_system_dir));
+      log_cb(RETRO_LOG_ERROR, "System dir not defined => use roms dir %s\n", g_system_dir);
+   }
+
+   unsigned i = BurnDrvGetIndexByName(g_base_name);
+   if (i < nBurnDrvCount)
+   {
+      INT32 width, height;
+      const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
+      is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
+
+      // Define nMaxPlayers early;
+      nMaxPlayers = BurnDrvGetMaxPlayers();
+      set_controller_infos();
+
+      set_environment();
+      check_variables();
+
+      if (!fba_init(i, g_base_name))
+         goto error;
+
+      driver_inited = true;
+
+      BurnDrvGetFullSize(&width, &height);
+
+      g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+      state_size = 0;
+
+      return true;
+   }
+
+error:
+   log_cb(RETRO_LOG_ERROR, "[FBA] Cannot load this game.\n");
+   return false;
+}
+
+void retro_unload_game(void) {
+   char output[MAX_PATH];
+
+   if (driver_inited)
+   {
+      snprintf (output, sizeof(output), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
+      BurnStateSave(output, 0);
+      BurnDrvExit();
+   }
+   driver_inited = false;
+}
 
 unsigned retro_get_region() { return RETRO_REGION_NTSC; }
 
