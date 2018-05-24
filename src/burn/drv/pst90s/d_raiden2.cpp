@@ -3035,7 +3035,7 @@ static void draw_layer(UINT8 *ram, INT32 scr, UINT32 color_base, INT32 bank)
 
 		if (sy >= nScreenHeight || sx >= nScreenWidth) continue;
 
-		INT32 attr = vram[offs];
+		INT32 attr = BURN_ENDIAN_SWAP_INT16(vram[offs]);
 		INT32 color = attr >> 12;
 		INT32 code = (attr & 0xfff) + (bank << 12);
 
@@ -3084,7 +3084,7 @@ static void draw_txt_layer()
 
 		if (sy >= nScreenHeight || sx >= nScreenWidth) continue;
 
-		INT32 attr = vram[offs];
+		INT32 attr = BURN_ENDIAN_SWAP_INT16(vram[offs]);
 		INT32 color = attr >> 12;
 		INT32 code = (attr & 0xfff) + (tx_bank * 0x1000);
 
@@ -3163,9 +3163,9 @@ static void draw_sprites(INT32 priority)
 	UINT16 *source = sprites + sprites_cur_start/2;
 
 	while( source >= sprites ){
-		INT32 tile_number = source[1];
-		INT32 sx = source[2];
-		INT32 sy = source[3];
+		INT32 tile_number = BURN_ENDIAN_SWAP_INT16(source[1]);
+		INT32 sx = BURN_ENDIAN_SWAP_INT16(source[2]);
+		INT32 sy = BURN_ENDIAN_SWAP_INT16(source[3]);
 		INT32 colr;
 		INT32 xtiles, ytiles;
 		INT32 ytlim, xtlim;
@@ -3173,15 +3173,15 @@ static void draw_sprites(INT32 priority)
 		INT32 xstep, ystep;
 		INT32 pri;
 
-		ytlim = (source[0] >> 12) & 0x7;
-		xtlim = (source[0] >> 8 ) & 0x7;
+		ytlim = (BURN_ENDIAN_SWAP_INT16(source[0]) >> 12) & 0x7;
+		xtlim = (BURN_ENDIAN_SWAP_INT16(source[0]) >> 8 ) & 0x7;
 
-		xflip = (source[0] >> 15) & 0x1;
-		yflip = (source[0] >> 11) & 0x1;
+		xflip = (BURN_ENDIAN_SWAP_INT16(source[0]) >> 15) & 0x1;
+		yflip = (BURN_ENDIAN_SWAP_INT16(source[0]) >> 11) & 0x1;
 
-		colr = source[0] & 0x3f;
+		colr = BURN_ENDIAN_SWAP_INT16(source[0]) & 0x3f;
 
-		pri = (source[0] >> 6) & 3;
+		pri = (BURN_ENDIAN_SWAP_INT16(source[0]) >> 6) & 3;
 
 		if (pri != priority) {
 			source -= 4;
