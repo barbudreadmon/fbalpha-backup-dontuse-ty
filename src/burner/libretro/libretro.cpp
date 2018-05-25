@@ -1241,8 +1241,8 @@ int CreateAllDatfiles()
 	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Game Gear only");
 	create_datfile(szFilename, DAT_GAMEGEAR_ONLY);
 
-	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Megadrive only");
-	create_datfile(szFilename, DAT_MEGADRIVE_ONLY);
+	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, MSX 1 Games only");
+	create_datfile(szFilename, DAT_MSX_ONLY);
 
 	snprintf(szFilename, sizeof(szFilename), "%s%cFB Alpha v%.20s (%s).dat", "dats", slash, szAppBurnVer, "ClrMame Pro XML, Neogeo only");
 	create_datfile(szFilename, DAT_NEOGEO_ONLY);

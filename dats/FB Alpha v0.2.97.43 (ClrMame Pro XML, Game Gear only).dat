@@ -1614,6 +1614,12 @@
 		<manufacturer>Psygnosis</manufacturer>
 		<rom name="lemmings 2 - the tribes [proto].bin" size="524288" crc="fbc807e1"/>
 	</game>
+	<game name="lunare" cloneof="lunar" romof="lunar">
+		<description>Lunar - Sanposuru Gakuen (Hack, English)</description>
+		<year>2009</year>
+		<manufacturer>Game Arts</manufacturer>
+		<rom name="lunar - sanposuru gakuen (english translation).gg" size="1048576" crc="19f3f168"/>
+	</game>
 	<game name="lunar">
 		<description>Lunar - Sanposuru Gakuen (Jpn)</description>
 		<year>1996</year>
@@ -1637,6 +1643,12 @@
 		<year>1995</year>
 		<manufacturer>Compile</manufacturer>
 		<rom name="madou monogatari a - dokidoki vacation (japan).bin" size="524288" crc="7ec95282"/>
+	</game>
+	<game name="madoumone" cloneof="madoumon" romof="madoumon">
+		<description>Madou Monogatari I - 3-Tsu no Madoukyuu (Hack, English)</description>
+		<year>2010</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="madou monogatari i - 3-tsu no madoukyuu (english translation).gg" size="524288" crc="b289011d"/>
 	</game>
 	<game name="madoumon">
 		<description>Madou Monogatari I - 3-Tsu no Madoukyuu (Jpn)</description>
@@ -1721,6 +1733,12 @@
 		<year>1994</year>
 		<manufacturer>Sega</manufacturer>
 		<rom name="megami tensei gaiden - last bible (japan).bin" size="524288" crc="2e4ec17b"/>
+	</game>
+	<game name="lastbibse" cloneof="lastbibs" romof="lastbibs">
+		<description>Megami Tensei Gaiden - Last Bible S (Hack, English)</description>
+		<year>2017</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="megami tensei gaiden - last bible s (english translation).gg" size="524288" crc="8a44108b"/>
 	</game>
 	<game name="lastbibs">
 		<description>Megami Tensei Gaiden - Last Bible S (Jpn)</description>
@@ -2472,6 +2490,12 @@
 		<manufacturer>Sega</manufacturer>
 		<rom name="phantasy star adventure (japan).bin" size="131072" crc="1a51579d"/>
 	</game>
+	<game name="pstargdne" cloneof="pstargdn" romof="pstargdn">
+		<description>Phantasy Star Gaiden (Hack, English)</description>
+		<year>1999</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="phantasy star gaiden (english translation).gg" size="262144" crc="1c98154a"/>
+	</game>
 	<game name="pstargdn">
 		<description>Phantasy Star Gaiden (Jpn)</description>
 		<year>1992</year>
@@ -2843,6 +2867,12 @@
 		<year>1992</year>
 		<manufacturer>Sega</manufacturer>
 		<rom name="shining force gaiden - ensei, jashin no kuni e (japan).bin" size="524288" crc="4d1f4699"/>
+	</game>
+	<game name="shinfrgfe" cloneof="shinfrgf" romof="shinfrgf">
+		<description>Shining Force Gaiden - Final Conflict (Hack, English)</description>
+		<year>2006</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="shining force gaiden - final conflict (english translation).gg" size="524288" crc="23bac434"/>
 	</game>
 	<game name="shinfrgf">
 		<description>Shining Force Gaiden - Final Conflict (Jpn)</description>
@@ -3647,6 +3677,12 @@
 		<year>1993</year>
 		<manufacturer>Sega</manufacturer>
 		<rom name="surf ninjas (usa).bin" size="524288" crc="284482a8"/>
+	</game>
+	<game name="sylvane" cloneof="sylvan" romof="sylvan">
+		<description>Sylvan Tale (Hack, English)</description>
+		<year>2001</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="sylvan tale (english translation).gg" size="524288" crc="5d803486"/>
 	</game>
 	<game name="sylvan">
 		<description>Sylvan Tale (Jpn)</description>

@@ -9225,6 +9225,12 @@
 		<manufacturer>Sega</manufacturer>
 		<rom name="shining in the darkness (euro, usa).bin" size="1048576" crc="4d2785bc"/>
 	</game>
+	<game name="shinfrc2t" cloneof="shinfrc2" romof="shinfrc2">
+		<description>Shining Tactics Absolute Final Edition (Hack)</description>
+		<year>2014</year>
+		<manufacturer>Dark Claw</manufacturer>
+		<rom name="shining tactics absolute final edition (hack).bin" size="4194304" crc="49d556e2"/>
+	</game>
 	<game name="shinobi3">
 		<description>Shinobi III - Return of the Ninja Master (Euro)</description>
 		<year>1993</year>
