@@ -16,6 +16,8 @@ extern bool bAlwaysProcessKeyboardInput;
 #define MAX_PATH PATH_MAX
 #endif
 
+extern char g_rom_dir[MAX_PATH];
+
 extern void InpDIPSWResetDIPs (void);
 
 #endif

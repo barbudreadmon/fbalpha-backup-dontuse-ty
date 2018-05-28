@@ -1720,11 +1720,11 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    // Initialize Samples path
    snprintf (szAppSamplesPath, sizeof(szAppSamplesPath), "%s%cfba%csamples%c", g_system_dir, slash, slash, slash);
 
-// Neo cd stuff probably needs to go there
-//	if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SNK_NEOCD) {
-//		if (CDEmuInit()) {
-//		}
-//	}
+   if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SNK_NEOCD) {
+      if (CDEmuInit()) {
+         log_cb(RETRO_LOG_INFO, "[FBA] Starting neogeo CD\n");
+      }
+   }
 
    InpDIPSWInit();
    BurnDrvInit();

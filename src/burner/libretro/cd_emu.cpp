@@ -332,8 +332,7 @@ static int isowavParseCueFile()
 			// read filename
 			QuoteRead(&szQuote, NULL, s);
 
-			_sntprintf(szFile, ExtractFilename(CDEmuImage) - CDEmuImage, _T("%s"), CDEmuImage);
-			_sntprintf(szFile + (ExtractFilename(CDEmuImage) - CDEmuImage), 1024 - (ExtractFilename(CDEmuImage) - CDEmuImage), _T("/%s"), szQuote);
+			sprintf(szFile, "%s/%s", g_rom_dir, szQuote);
 
 			continue;
 		}
@@ -461,14 +460,14 @@ static int isowavInit()
 
 	if (_tcscmp(_T(".cue"), filename + _tcslen(filename) - 4) == 0) {
 		if (isowavParseCueFile()) {
-			dprintf(_T("*** Couldn't parse .cue file\n"));
+			bprintf(1, "*** Couldn't parse .cue file\n");
 			isowavExit();
 
 			return 1;
 		}
 	} else {
 		if (isowavTestISO()) {
-			dprintf(_T("*** Couldn't find .iso / .bin file\n"));
+			bprintf(1, "*** Couldn't find .iso / .bin file\n");
 			isowavExit();
 
 			return 1;
