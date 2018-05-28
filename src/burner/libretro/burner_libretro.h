@@ -3,6 +3,7 @@
 
 #include "gameinp.h"
 #include "input/inp_keys.h"
+#include "cd_interface.h"
 
 #include "streams/file_stream_transforms.h"
 #include "compat/msvc.h"

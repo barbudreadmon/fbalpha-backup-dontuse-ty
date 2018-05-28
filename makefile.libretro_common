@@ -246,11 +246,8 @@ endif
 SOURCES_CXX		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
 SOURCES_CXX		+= $(LIBRETRO_DIR)/libretro.cpp \
 						$(LIBRETRO_DIR)/neocdlist.cpp \
+						$(LIBRETRO_DIR)/cd_emu.cpp \
 						$(LIBRETRO_DIR)/retro_mem.cpp
-
-ifeq ($(WANT_NEOGEOCD), 1)
-   FBA_DEFINES += -DWANT_NEOGEOCD
-endif
 
 INCLUDE_DIRS := $(FBA_BURNER_DIR)/win32 \
 	$(LIBRETRO_COMM_DIR)/include \

@@ -6,10 +6,10 @@
 #include "libretro.h"
 #include "burner.h"
 #include "retro_mem.h"
+#include "cd_emu.h"
 
 #include <file/file_path.h>
 
-#include "cd/cd_interface.h"
 #include <streams/file_stream.h>
 
 #define FBA_VERSION "v0.2.97.43"
@@ -197,6 +197,7 @@ static const struct retro_variable var_fba_neogeo_mode = { "fba-neogeo-mode", "F
 #define RETRO_GAME_TYPE_SGX		7
 #define RETRO_GAME_TYPE_SMS		8
 #define RETRO_GAME_TYPE_TG		9
+#define RETRO_GAME_TYPE_NEOCD	10
 
 void retro_set_environment(retro_environment_t cb)
 {
@@ -205,6 +206,9 @@ void retro_set_environment(retro_environment_t cb)
 	// Subsystem (needs to be called now, or it won't work on command line)
 	static const struct retro_subsystem_rom_info subsystem_rom[] = {
 		{ "Rom", "zip|7z", true, true, true, NULL, 0 },
+	};
+	static const struct retro_subsystem_rom_info subsystem_iso[] = {
+		{ "Iso", "iso|cue", true, true, true, NULL, 0 },
 	};
 	static const struct retro_subsystem_info subsystems[] = {
 		{ "CBS ColecoVision", "cv", subsystem_rom, 1, RETRO_GAME_TYPE_CV },
@@ -216,6 +220,7 @@ void retro_set_environment(retro_environment_t cb)
 		{ "Sega Master System", "sms", subsystem_rom, 1, RETRO_GAME_TYPE_SMS },
 		{ "Sega Megadrive", "md", subsystem_rom, 1, RETRO_GAME_TYPE_MD },
 		{ "Sega SG-1000", "sg1k", subsystem_rom, 1, RETRO_GAME_TYPE_SG1K },
+		{ "Neogeo CD", "neocd", subsystem_iso, 1, RETRO_GAME_TYPE_NEOCD },
 		{ NULL },
 	};
 
@@ -376,8 +381,6 @@ static void InputMake();
 static bool init_input();
 static void check_variables();
 
-void wav_exit() { }
-
 // FBA stubs
 unsigned ArcadeJoystick;
 
@@ -393,20 +396,6 @@ TCHAR szAppHiscorePath[MAX_PATH];
 TCHAR szAppSamplesPath[MAX_PATH];
 TCHAR szAppBlendPath[MAX_PATH];
 TCHAR szAppBurnVer[16];
-
-CDEmuStatusValue CDEmuStatus;
-
-const char* isowavLBAToMSF(const int LBA) { return ""; }
-int isowavMSFToLBA(const char* address) { return 0; }
-TCHAR* GetIsoPath() { return NULL; }
-INT32 CDEmuInit() { return 0; }
-INT32 CDEmuExit() { return 0; }
-INT32 CDEmuStop() { return 0; }
-INT32 CDEmuPlay(UINT8 M, UINT8 S, UINT8 F) { return 0; }
-INT32 CDEmuLoadSector(INT32 LBA, char* pBuffer) { return 0; }
-UINT8* CDEmuReadTOC(INT32 track) { return 0; }
-UINT8* CDEmuReadQChannel() { return 0; }
-INT32 CDEmuGetSoundBuffer(INT16* buffer, INT32 samples) { return 0; }
 
 // Replace the char c_find by the char c_replace in the destination c string
 char* str_char_replace(char* destination, char c_find, char c_replace)
@@ -1933,6 +1922,13 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
       case RETRO_GAME_TYPE_TG:
          prefix = "tg_";
          break;
+      case RETRO_GAME_TYPE_NEOCD:
+#ifndef WANT_NEOGEOCD
+         return false;
+#else
+         strcpy(CDEmuImage, info->path);
+#endif
+         break;
       default:
          return false;
          break;
@@ -1940,6 +1936,10 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 
    extract_basename(g_base_name, info->path, sizeof(g_base_name), prefix);
    extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
+   
+   if(game_type == RETRO_GAME_TYPE_NEOCD) {
+      extract_basename(g_base_name, "neocdz", sizeof(g_base_name), "");
+   }
 
    const char *dir = NULL;
    // If save directory is defined use it, ...

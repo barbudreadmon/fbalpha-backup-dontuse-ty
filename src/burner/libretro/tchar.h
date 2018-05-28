@@ -22,16 +22,19 @@
 #define _tcstol strtol
 #define _tcsstr strstr
 #define _istspace(x) isspace(x)
+#define _sntprintf snprintf
 #define _stprintf sprintf
 #define _tcslen strlen
 #define _tcsicmp(a, b) strcasecmp(a, b)
 #define _tcscpy(to, from) strcpy(to, from)
 #define _fgetts fgets
 #define _strnicmp(s1, s2, n) strncasecmp(s1, s2, n)
+#define _tcscmp strcmp
 #define _tcsncmp strncmp
 #define _tcsncpy strncpy
 #define _stscanf sscanf
 #define _ftprintf fprintf
+#define dprintf printf
 
 #ifdef UNICODE //Is there any point in this? Can we not just typedef TCHAR to CHAR?
 	typedef wchar_t TCHAR;

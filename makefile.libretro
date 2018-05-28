@@ -405,6 +405,10 @@ ifeq ($(FASTCALL), 1)
    FBA_DEFINES += -DFASTCALL
 endif
 
+ifeq ($(WANT_NEOGEOCD), 1)
+   FBA_DEFINES += -DWANT_NEOGEOCD
+endif
+
 ifeq ($(FASTMATH), 1)
    CFLAGS += -ffast-math
    CXXFLAGS += -ffast-math
