@@ -45,6 +45,8 @@ UINT8 VezReadByte(UINT32 a);
 UINT16 VezReadWord(UINT32 a);
 UINT32 VezReadLong(UINT32 a);
 
+void VezCheatWrite(UINT32 a, UINT8 d);
+
 #define V25_PORT_P0 0x10000
 #define V25_PORT_P1 0x10002
 #define V25_PORT_P2 0x10004
