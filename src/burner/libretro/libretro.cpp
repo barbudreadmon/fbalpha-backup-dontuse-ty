@@ -1926,6 +1926,7 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 #ifndef WANT_NEOGEOCD
          return false;
 #else
+         prefix = "";
          strcpy(CDEmuImage, info->path);
 #endif
          break;
@@ -2006,8 +2007,9 @@ void retro_unload_game(void) {
    if (driver_inited)
    {
       snprintf (output, sizeof(output), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
-      BurnStateSave(output, 0);
+      BurnStateSave(output, 1);
       BurnDrvExit();
+      CDEmuExit();
    }
    driver_inited = false;
 }

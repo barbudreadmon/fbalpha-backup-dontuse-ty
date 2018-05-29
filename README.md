@@ -75,4 +75,7 @@ This libretro port also support various features which are usually buggy or abse
 This is not implemented yet.
 
 ### Neogeo CD doesn't work, why ?
-This is not implemented yet.
+The support is still a work in progress, there are several things to know :
+* You need a copy of neocdz.zip and neogeo.zip in your libretro system directory
+* You need to add `--subsystem neocd` to the command line
+* you can't load `MODE1/2352` tracks at the moment

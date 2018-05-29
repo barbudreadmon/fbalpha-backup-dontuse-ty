@@ -124,6 +124,7 @@ void wav_exit()
 
 struct isowavTRACK_DATA { 
 	char Control; 
+	int Mode;
 	char TrackNumber; 
 	char Address[4]; 
 	TCHAR* Filename; 
@@ -187,7 +188,7 @@ static int isowavGetTrackSizes()
 
 			fseek(h, 0, SEEK_END);
 
-			address = isowavLBAToMSF((ftell(h) + 2047) / 2048 + isowavMSFToLBA(isowavTOC->TrackData[i].Address));
+			address = isowavLBAToMSF((ftell(h) + (isowavTOC->TrackData[i].Mode - 1)) / isowavTOC->TrackData[i].Mode + isowavMSFToLBA(isowavTOC->TrackData[i].Address));
 
 			if(h) fclose(h);
 
@@ -370,6 +371,13 @@ static int isowavParseCueFile()
 
 			if ((t = LabelCheck(s, _T("MODE1/2048"))) != 0) {
 				isowavTOC->TrackData[track - 1].Control = 4;
+				isowavTOC->TrackData[track - 1].Mode = 2048;
+
+				continue;
+			}
+			if ((t = LabelCheck(s, _T("MODE1/2352"))) != 0) {
+				isowavTOC->TrackData[track - 1].Control = 4;
+				isowavTOC->TrackData[track - 1].Mode = 2352;
 
 				continue;
 			}
@@ -704,24 +712,46 @@ INT32 CDEmuInit() {
 	return nRet;
 }
 INT32 CDEmuExit() {
+	if (!bCDEmuOkay) {
+		return 1;
+	}
+	bCDEmuOkay = false;
 	return isowavExit();
 }
 INT32 CDEmuStop() {
+	if (!bCDEmuOkay) {
+		return 1;
+	}
 	return isowavStop();
 }
 INT32 CDEmuPlay(UINT8 M, UINT8 S, UINT8 F) {
+	if (!bCDEmuOkay) {
+		return 1;
+	}
 	return isowavPlay(M, S, F);
 }
 INT32 CDEmuLoadSector(INT32 LBA, char* pBuffer) {
+	if (!bCDEmuOkay) {
+		return 0;
+	}
 	return isowavLoadSector(LBA, pBuffer);
 }
 UINT8* CDEmuReadTOC(INT32 track) {
+	if (!bCDEmuOkay) {
+		return NULL;
+	}
 	return isowavReadTOC(track);
 }
 UINT8* CDEmuReadQChannel() {
+	if (!bCDEmuOkay) {
+		return NULL;
+	}
 	return isowavReadQChannel();
 }
 INT32 CDEmuGetSoundBuffer(INT16* buffer, INT32 samples) {
+	if (!bCDEmuOkay) {
+		return 1;
+	}
 	return isowavGetSoundBuffer(buffer, samples);
 }
 
