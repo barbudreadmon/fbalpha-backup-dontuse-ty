@@ -1072,8 +1072,6 @@ static bool open_archive()
          return false;
       }
 
-      log_cb(RETRO_LOG_INFO, "[FBA] Parsing archive %s.\n", g_find_list_path[z].c_str());
-      
       ZipEntry *list = NULL;
       int count;
       ZipGetList(&list, &count);
@@ -1099,21 +1097,22 @@ static bool open_archive()
          if (index < 0)
          {
             index = find_rom_by_name(rom_name, list, count);
-            bad_crc = true;
+            if (index >= 0)
+               bad_crc = true;
          }
 
-         if (index < 0)
+         if (index >= 0)
          {
-            log_cb(RETRO_LOG_WARN, "[FBA] Searching ROM at index %d with CRC 0x%08x and name %s => Not Found\n", i, g_find_list[i].ri.nCrc, rom_name);
-            continue;              
+            if (bad_crc)
+               log_cb(RETRO_LOG_WARN, "[FBA] Using ROM with bad CRC and name %s from archive %s\n", rom_name, g_find_list_path[z].c_str());
+            else
+               log_cb(RETRO_LOG_INFO, "[FBA] Using ROM with good CRC and name %s from archive %s\n", rom_name, g_find_list_path[z].c_str());
          }
-         
-         if (bad_crc)
-            log_cb(RETRO_LOG_WARN, "[FBA] Using ROM at index %d with wrong CRC and name %s\n", i, rom_name);
+         else
+         {
+            continue;
+         }
 
-#if 0
-         log_cb(RETRO_LOG_INFO, "[FBA] Searching ROM at index %d with CRC 0x%08x and name %s => Found\n", i, g_find_list[i].ri.nCrc, rom_name);
-#endif                          
          // Search for the best bios available by category
          if (is_neogeo_game)
          {
