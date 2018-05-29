@@ -8,7 +8,6 @@ HAVE_GRIFFIN = 0
 FASTCALL = 0
 # fastmath should improve performance with every arch, and there is no known issue with fbalpha
 FASTMATH = 1
-WANT_NEOGEOCD = 1
 USE_SPEEDHACKS = 1
 EXTERNAL_ZLIB = 0
 INCLUDE_7Z_SUPPORT = 1
@@ -403,10 +402,6 @@ endif
 
 ifeq ($(FASTCALL), 1)
    FBA_DEFINES += -DFASTCALL
-endif
-
-ifeq ($(WANT_NEOGEOCD), 1)
-   FBA_DEFINES += -DWANT_NEOGEOCD
 endif
 
 ifeq ($(FASTMATH), 1)

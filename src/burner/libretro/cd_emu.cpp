@@ -4,22 +4,7 @@
 CDEmuStatusValue CDEmuStatus;
 TCHAR CDEmuImage[MAX_PATH];
 
-#ifndef WANT_NEOGEOCD
-
-static const char* isowavLBAToMSF(const int LBA) { return ""; }
-static int isowavMSFToLBA(const char* address) { return 0; }
-TCHAR* GetIsoPath() { return NULL; }
-INT32 CDEmuInit() { return 0; }
-INT32 CDEmuExit() { return 0; }
-INT32 CDEmuStop() { return 0; }
-INT32 CDEmuPlay(UINT8 M, UINT8 S, UINT8 F) { return 0; }
-INT32 CDEmuLoadSector(INT32 LBA, char* pBuffer) { return 0; }
-UINT8* CDEmuReadTOC(INT32 track) { return 0; }
-UINT8* CDEmuReadQChannel() { return 0; }
-INT32 CDEmuGetSoundBuffer(INT16* buffer, INT32 samples) { return 0; }
-void wav_exit() {}
-
-#else
+void NeoCDInfo_Exit() {}
 
 /**
  * see src/burner/misc.cpp
@@ -186,9 +171,13 @@ static int isowavGetTrackSizes()
 			h = _tfopen(isowavTOC->TrackData[i].Filename, _T("rb"));
 			if (h == NULL) return 1;
 
-			fseek(h, 0, SEEK_END);
-
-			address = isowavLBAToMSF((ftell(h) + (isowavTOC->TrackData[i].Mode - 1)) / isowavTOC->TrackData[i].Mode + isowavMSFToLBA(isowavTOC->TrackData[i].Address));
+			if (isowavTOC->TrackData[i].Mode == 2352) {
+				fseek(h, 16, SEEK_END);
+				address = isowavLBAToMSF((ftell(h) + 2335) / 2336 + isowavMSFToLBA(isowavTOC->TrackData[i].Address));
+			} else {
+				fseek(h, 0, SEEK_END);
+				address = isowavLBAToMSF((ftell(h) + 2047) / 2048 + isowavMSFToLBA(isowavTOC->TrackData[i].Address));
+			}
 
 			if(h) fclose(h);
 
@@ -468,14 +457,14 @@ static int isowavInit()
 
 	if (_tcscmp(_T(".cue"), filename + _tcslen(filename) - 4) == 0) {
 		if (isowavParseCueFile()) {
-			bprintf(1, "*** Couldn't parse .cue file\n");
+			dprintf(_T("*** Couldn't parse .cue file\n"));
 			isowavExit();
 
 			return 1;
 		}
 	} else {
 		if (isowavTestISO()) {
-			bprintf(1, "*** Couldn't find .iso / .bin file\n");
+			dprintf(_T("*** Couldn't find .iso / .bin file\n"));
 			isowavExit();
 
 			return 1;
@@ -754,5 +743,3 @@ INT32 CDEmuGetSoundBuffer(INT16* buffer, INT32 samples) {
 	}
 	return isowavGetSoundBuffer(buffer, samples);
 }
-
-#endif

@@ -1923,12 +1923,8 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
          prefix = "tg_";
          break;
       case RETRO_GAME_TYPE_NEOCD:
-#ifndef WANT_NEOGEOCD
-         return false;
-#else
          prefix = "";
          strcpy(CDEmuImage, info->path);
-#endif
          break;
       default:
          return false;
@@ -2007,7 +2003,7 @@ void retro_unload_game(void) {
    if (driver_inited)
    {
       snprintf (output, sizeof(output), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
-      BurnStateSave(output, 1);
+      BurnStateSave(output, 0);
       BurnDrvExit();
       CDEmuExit();
    }
