@@ -8,22 +8,6 @@
 
 #define MAX_VEZ		4
 
-cpu_core_config VezConfig =
-{
-	VezOpen,
-	VezClose,
-	cpu_readmem20,
-	VezCheatWrite,
-	VezGetActive,
-	VezTotalCycles,
-	VezNewFrame,
-	VezRun,
-	VezRunEnd,
-	VezReset,
-	0x100000,
-	0
-};
-
 //----------------------------------------------------------------------------------
 // nec.cpp
 void necInit(INT32 cpu, INT32 type);
@@ -174,7 +158,7 @@ void VezWriteWord(UINT32 a, UINT16 d)
 	
 	UINT16 * p = (UINT16*)VezCurrentCPU->ppMemWrite[ a >> VEZ_MEM_SHIFT ];
 	if ( p )
-		*(p + (a / 2)) = d;
+		*(p + (a / 2)) = BURN_ENDIAN_SWAP_INT16(d);
 	else {
 		VezCurrentCPU->WriteHandler(a, d);
 		VezCurrentCPU->WriteHandler(a+1, d >> 8);
@@ -187,7 +171,7 @@ void VezWriteLong(UINT32 a, UINT32 d)
 	
 	UINT32 * p = (UINT32*)VezCurrentCPU->ppMemWrite[ a >> VEZ_MEM_SHIFT ];
 	if ( p )
-		*(p + (a / 4)) = d;
+		*(p + (a / 4)) = BURN_ENDIAN_SWAP_INT32(d);
 	else {
 		VezCurrentCPU->WriteHandler(a, d);
 		VezCurrentCPU->WriteHandler(a+1, d >> 8);
@@ -214,7 +198,7 @@ UINT16 VezReadWord(UINT32 a)
 	
 	UINT16 * p = (UINT16*)VezCurrentCPU->ppMemRead[ a >> VEZ_MEM_SHIFT ];
 	if ( p )
-		return *(p + (a / 2));
+		return BURN_ENDIAN_SWAP_INT16(*(p + (a / 2)));
 	else
 		return VezCurrentCPU->ReadHandler(a) + (VezCurrentCPU->ReadHandler(a+1) * 0x100);
 }
@@ -225,13 +209,13 @@ UINT32 VezReadLong(UINT32 a)
 	
 	UINT32 * p = (UINT32*)VezCurrentCPU->ppMemRead[ a >> VEZ_MEM_SHIFT ];
 	if ( p )
-		return *(p + (a / 4));
+		return BURN_ENDIAN_SWAP_INT32(*(p + (a / 4)));
 	else
 		return VezCurrentCPU->ReadHandler(a) + (VezCurrentCPU->ReadHandler(a+1) << 8) +
 			(VezCurrentCPU->ReadHandler(a+2) << 16) + (VezCurrentCPU->ReadHandler(a+3) << 24);
 }
 
-void VezCheatWrite(UINT32 a, UINT8 d)
+static void VezCheatWrite(UINT32 a, UINT8 d)
 {
 	a &= 0xfffff;
 
@@ -304,6 +288,22 @@ void VezSetDecode(UINT8 *table)
 	}
 }
 
+static cpu_core_config VezCheatCpuConfig =
+{
+	VezOpen,
+	VezClose,
+	cpu_readmem20,
+	VezCheatWrite,
+	VezGetActive,
+	VezTotalCycles,
+	VezNewFrame,
+	VezRun,
+	VezRunEnd,
+	VezReset,
+	1<<20,
+	0
+};
+
 INT32 VezInit(INT32 cpu, INT32 type, INT32 clock)
 {
 	DebugCPU_VezInitted = 1;
@@ -370,7 +370,7 @@ INT32 VezInit(INT32 cpu, INT32 type, INT32 clock)
 
 	nVezCount = nCPUCount = nCount;
 
-	CpuCheatRegister(cpu, &VezConfig);
+	CpuCheatRegister(cpu, &VezCheatCpuConfig);
 
 	return 0;
 }

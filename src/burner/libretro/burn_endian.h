@@ -44,8 +44,11 @@ typedef union {
 /* Wii */
 #elif defined(HW_RVL)
 #define BURN_ENDIAN_SWAP_INT8(x)				(x^1)
-#define BURN_ENDIAN_SWAP_INT16(x)				({uint16_t tt; __sthbrx(&tt, 0, x); tt;})
-#define BURN_ENDIAN_SWAP_INT32(x)				({uint32_t tt; __stwbrx(&tt, 0, x); tt;})
+//#define BURN_ENDIAN_SWAP_INT16(x)				({uint16_t tt; __sthbrx(&tt, 0, x); tt;})
+//#define BURN_ENDIAN_SWAP_INT32(x)				({uint32_t tt; __stwbrx(&tt, 0, x); tt;})
+/* Not sure the asm stuff is working properly, so trying something else for debugging (may be slower) */
+#define BURN_ENDIAN_SWAP_INT16(x)				(((x) >> 8) | (((x) & 0xFF) << 8))
+#define BURN_ENDIAN_SWAP_INT32(x)				(((x) >> 24) | (((x) & 0x00FF0000) >> 8) | (((x) & 0x0000FF00) << 8) | (((x) & 0xFF) << 24))
 #endif
 
 #ifdef NO_64BIT_BYTESWAP
