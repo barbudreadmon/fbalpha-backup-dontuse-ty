@@ -408,8 +408,10 @@ ifeq ($(FASTCALL), 1)
 endif
 
 ifeq ($(FASTMATH), 1)
-   CFLAGS += -ffast-math
-   CXXFLAGS += -ffast-math
+   ifeq (,$(findstring msvc,$(platform)))
+      CFLAGS += -ffast-math
+      CXXFLAGS += -ffast-math
+   endif
 endif
 
 ifeq ($(DEBUG_ASAN), 1)
