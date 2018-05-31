@@ -107,6 +107,7 @@ static int   diag_input_combo_start_frame = 0;
 static bool  diag_combo_activated = false;
 static bool  one_diag_input_pressed = false;
 static bool  all_diag_input_pressed = true;
+static bool  reinit_input_needed = false;
 
 static UINT8 *diag_input;
 static UINT8 diag_input_start[] =       {RETRO_DEVICE_ID_JOYPAD_START,  RETRO_DEVICE_ID_JOYPAD_EMPTY };
@@ -118,6 +119,7 @@ static UINT8 diag_input_select_l_r[] =  {RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DE
 
 static unsigned int BurnDrvGetIndexByName(const char* name);
 char* DecorateGameName(UINT32 nBurnDrv);
+INT32 GameInpInitialize(INT32 bFull);
 
 static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 static bool core_aspect_par = false;
@@ -165,7 +167,6 @@ INT32 nFireButtons = 0;
 bool bStreetFighterLayout = false;
 bool bButtonMapped = false;
 bool bVolumeIsFireButton = false;
-INT32 bDip = 1;
 
 // libretro globals
 void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
@@ -378,7 +379,7 @@ void retro_get_system_info(struct retro_system_info *info)
 /////
 static INT32 InputTick();
 static void InputMake();
-static bool init_input();
+static bool init_input(INT32 bFull);
 static void check_variables();
 
 // FBA stubs
@@ -1479,6 +1480,13 @@ void retro_run()
    video_cb(g_fba_frame, width, height, nBurnPitch);
    audio_batch_cb(g_audio_buf, nBurnSoundLen);
    bool updated = false;
+
+   if (reinit_input_needed)
+   {
+      init_input(false);
+      reinit_input_needed = false;
+   }
+
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
    {
       bool old_core_aspect_par = core_aspect_par;
@@ -1489,8 +1497,7 @@ void retro_run()
       apply_dipswitch_from_variables();
 
       bool macro_updated = apply_macro_from_variables();
-
-      if (macro_updated) // if the init_input_performed is true, the 2 following methods was already called in the init_input one
+      if (macro_updated)
       {
          // Re-create the list of macro input_descriptors with new values
          init_macro_input_descriptors();
@@ -1708,7 +1715,7 @@ static bool fba_init(unsigned driver, const char *game_zip_name)
    // CPS3 won't run without defining nBurnSoundLen
    init_audio_buffer(nBurnSoundRate, 6000);
 
-   init_input();
+   init_input(true);
 
    // Initialize EEPROM path
    snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%cfba%c", g_save_dir, slash, slash);
@@ -1875,6 +1882,8 @@ bool retro_load_game(const struct retro_game_info *info)
 
       driver_inited = true;
 
+      apply_dipswitch_from_variables();
+
       BurnDrvGetFullSize(&width, &height);
 
       g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
@@ -2018,7 +2027,7 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
 	if (port < nMaxPlayers && fba_devices[port] != device)
 	{
 		fba_devices[port] = device;
-		init_input();
+		reinit_input_needed = true;
 	}
 }
 
@@ -2065,7 +2074,7 @@ static const char *print_label(unsigned i)
    }
 }
 
-static bool init_input()
+static bool init_input(INT32 bFull)
 {
 	switch_ncode = 0;
 
@@ -2082,7 +2091,7 @@ static bool init_input()
 		}
 	}
 
-	GameInpInit();
+	GameInpInitialize(bFull);
 	GameInpDefault();
 
 	init_macro_core_options();
@@ -2811,7 +2820,7 @@ static void init_macro_core_options()
          continue;
       }
 
-      // Assign an unique nCode for the macto
+      // Assign an unique nCode for the macro
       pgi->Macro.Switch.nCode = switch_ncode++;
 
       macro_core_options.push_back(macro_core_option());
@@ -3545,7 +3554,7 @@ static void GameInpInitMacros()
 	}
 }
 
-INT32 GameInpInit()
+INT32 GameInpInitialize(INT32 bFull)
 {
 	INT32 nRet = 0;
 	// Count the number of inputs
@@ -3569,14 +3578,9 @@ INT32 GameInpInit()
 	}
 	memset(GameInp, 0, nSize);
 
-	// Initializing dipswitches several times is causing issues (#185)
-	// So let's use a variable (bDip global) to avoid initializing them several times
-	GameInpBlank(bDip);
+	GameInpBlank(bFull);
 
-	if(bDip)
-		InpDIPSWResetDIPs();
-
-	bDip = 0;
+	if(bFull) InpDIPSWResetDIPs();
 
 	GameInpInitMacros();
 
