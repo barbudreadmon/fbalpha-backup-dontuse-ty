@@ -26,7 +26,6 @@
 static void log_dummy(enum retro_log_level level, const char *fmt, ...) { }
 static const char *print_label(unsigned i);
 
-
 static void set_controller_infos();
 static void set_environment();
 static bool apply_dipswitch_from_variables();
@@ -107,7 +106,7 @@ static int   diag_input_combo_start_frame = 0;
 static bool  diag_combo_activated = false;
 static bool  one_diag_input_pressed = false;
 static bool  all_diag_input_pressed = true;
-static bool  reinit_input_needed = false;
+static bool  input_initialized = false;
 
 static UINT8 *diag_input;
 static UINT8 diag_input_start[] =       {RETRO_DEVICE_ID_JOYPAD_START,  RETRO_DEVICE_ID_JOYPAD_EMPTY };
@@ -119,7 +118,6 @@ static UINT8 diag_input_select_l_r[] =  {RETRO_DEVICE_ID_JOYPAD_SELECT, RETRO_DE
 
 static unsigned int BurnDrvGetIndexByName(const char* name);
 char* DecorateGameName(UINT32 nBurnDrv);
-INT32 GameInpInitialize(INT32 bFull);
 
 static neo_geo_modes g_opt_neo_geo_mode = NEO_GEO_MODE_MVS;
 static bool core_aspect_par = false;
@@ -356,10 +354,11 @@ void set_neo_system_bios()
    }
 }
 
-char g_base_name[128];
+char g_driver_name[128];
 char g_rom_dir[MAX_PATH];
 char g_save_dir[MAX_PATH];
 char g_system_dir[MAX_PATH];
+char g_autofs_path[MAX_PATH];
 extern unsigned int (__cdecl *BurnHighCol) (signed int r, signed int g, signed int b, signed int i);
 
 static bool driver_inited;
@@ -379,7 +378,7 @@ void retro_get_system_info(struct retro_system_info *info)
 /////
 static INT32 InputTick();
 static void InputMake();
-static bool init_input(INT32 bFull);
+static bool init_input();
 static void check_variables();
 
 // FBA stubs
@@ -1044,9 +1043,9 @@ static bool open_archive()
       locate_archive(g_find_list_path, rom_name);
  
       // Handle non-arcade roms with unofficial zip name (prefixed)
-      if (strcmp(rom_name, g_base_name) != 0)
+      if (strcmp(rom_name, g_driver_name) != 0)
       {
-         locate_archive(g_find_list_path, g_base_name);
+         locate_archive(g_find_list_path, g_driver_name);
       }
 
       // Handle msx bios unofficial zip name (prefixed)
@@ -1481,12 +1480,6 @@ void retro_run()
    audio_batch_cb(g_audio_buf, nBurnSoundLen);
    bool updated = false;
 
-   if (reinit_input_needed)
-   {
-      init_input(false);
-      reinit_input_needed = false;
-   }
-
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
    {
       bool old_core_aspect_par = core_aspect_par;
@@ -1701,99 +1694,6 @@ static void init_audio_buffer(INT32 sample_rate, INT32 fps)
 	pBurnSoundOut = g_audio_buf;
 }
 
-static bool fba_init(unsigned driver, const char *game_zip_name)
-{
-   nBurnDrvActive = driver;
-
-   if (!open_archive()) {
-      log_cb(RETRO_LOG_ERROR, "[FBA] Cannot find driver.\n");
-      return false;
-   }
-
-   nBurnSoundRate = g_audio_samplerate;
-   
-   // CPS3 won't run without defining nBurnSoundLen
-   init_audio_buffer(nBurnSoundRate, 6000);
-
-   init_input(true);
-
-   // Initialize EEPROM path
-   snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%cfba%c", g_save_dir, slash, slash);
-   // Create EEPROM path if it does not exist
-   path_mkdir(szAppEEPROMPath);
-   // Initialize Hiscore path
-   snprintf (szAppHiscorePath, sizeof(szAppHiscorePath), "%s%cfba%c", g_system_dir, slash, slash);
-   // Initialize Samples path
-   snprintf (szAppSamplesPath, sizeof(szAppSamplesPath), "%s%cfba%csamples%c", g_system_dir, slash, slash, slash);
-
-   if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SNK_NEOCD) {
-      if (CDEmuInit()) {
-         log_cb(RETRO_LOG_INFO, "[FBA] Starting neogeo CD\n");
-      }
-   }
-
-   InpDIPSWInit();
-   BurnDrvInit();
-   
-   // Get MainRam
-   INT32 nMin = 0;
-   BurnAcb = StateGetMainRamAcb;
-   BurnAreaScan(ACB_MEMORY_RAM, &nMin);
-   if (bMainRamFound) {
-      log_cb(RETRO_LOG_INFO, "[Cheevos] System RAM set to %p %zu\n", MainRamData, MainRamSize);
-   }
-
-   init_audio_buffer(nBurnSoundRate, nBurnFPS);
-
-   char input[MAX_PATH];
-   snprintf (input, sizeof(input), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
-   BurnStateLoad(input, 0, NULL);
-
-   int width, height;
-   BurnDrvGetVisibleSize(&width, &height);
-   unsigned drv_flags = BurnDrvGetFlags();
-   if (!(BurnDrvIsWorking())) {
-      log_cb(RETRO_LOG_ERROR, "[FBA] Game %s is not marked as working\n", game_zip_name);
-      return false;
-   }
-   size_t pitch_size = nBurnBpp == 2 ? sizeof(uint16_t) : sizeof(uint32_t);
-   if (drv_flags & BDF_ORIENTATION_VERTICAL)
-      nBurnPitch = height * pitch_size;
-   else
-      nBurnPitch = width * pitch_size;
-
-   unsigned rotation;
-   switch (drv_flags & (BDF_ORIENTATION_FLIPPED | BDF_ORIENTATION_VERTICAL))
-   {
-      case BDF_ORIENTATION_VERTICAL:
-         rotation = 1;
-         break;
-
-      case BDF_ORIENTATION_FLIPPED:
-         rotation = 2;
-         break;
-
-      case BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED:
-         rotation = 3;
-         break;
-
-      default:
-         rotation = 0;
-   }
-   
-   log_cb(RETRO_LOG_INFO, "Game: %s\n", game_zip_name);
-
-   environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
-
-#ifdef FRONTEND_SUPPORTS_RGB565
-   SetBurnHighCol(16);
-#else
-   SetBurnHighCol(15);
-#endif
-
-   return true;
-}
-
 static void extract_basename(char *buf, const char *path, size_t size, char *prefix)
 {
    const char *base = strrchr(path, slash);
@@ -1828,208 +1728,230 @@ static void extract_directory(char *buf, const char *path, size_t size)
     }
 }
 
+static bool retro_load_game_common()
+{
+	const char *dir = NULL;
+	// If save directory is defined use it, ...
+	if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &dir) && dir) {
+		strncpy(g_save_dir, dir, sizeof(g_save_dir));
+		log_cb(RETRO_LOG_INFO, "Setting save dir to %s\n", g_save_dir);
+	} else {
+		// ... otherwise use rom directory
+		strncpy(g_save_dir, g_rom_dir, sizeof(g_save_dir));
+		log_cb(RETRO_LOG_ERROR, "Save dir not defined => use roms dir %s\n", g_save_dir);
+	}
+
+	// If system directory is defined use it, ...
+	if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir) {
+		strncpy(g_system_dir, dir, sizeof(g_system_dir));
+		log_cb(RETRO_LOG_INFO, "Setting system dir to %s\n", g_system_dir);
+	} else {
+		// ... otherwise use rom directory
+		strncpy(g_system_dir, g_rom_dir, sizeof(g_system_dir));
+		log_cb(RETRO_LOG_ERROR, "System dir not defined => use roms dir %s\n", g_system_dir);
+	}
+
+	// Initialize EEPROM path
+	snprintf (szAppEEPROMPath, sizeof(szAppEEPROMPath), "%s%cfba%c", g_save_dir, slash, slash);
+
+	// Create EEPROM path if it does not exist
+	path_mkdir(szAppEEPROMPath);
+
+	// Initialize Hiscore path
+	snprintf (szAppHiscorePath, sizeof(szAppHiscorePath), "%s%cfba%c", g_system_dir, slash, slash);
+
+	// Initialize Samples path
+	snprintf (szAppSamplesPath, sizeof(szAppSamplesPath), "%s%cfba%csamples%c", g_system_dir, slash, slash, slash);
+
+	// Intialize state_size (for serialization)
+	state_size = 0;
+
+	nBurnDrvActive = BurnDrvGetIndexByName(g_driver_name);
+	if (nBurnDrvActive < nBurnDrvCount) {
+		const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
+		is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
+
+		// Define nMaxPlayers early;
+		nMaxPlayers = BurnDrvGetMaxPlayers();
+		set_controller_infos();
+
+		set_environment();
+		check_variables();
+
+		if (!open_archive()) {
+			log_cb(RETRO_LOG_ERROR, "[FBA] Can't launch this game, some files are missing.\n");
+			return false;
+		}
+
+		// Announcing to fba which samplerate we want
+		nBurnSoundRate = g_audio_samplerate;
+
+		// Some game drivers won't initialize with an undefined nBurnSoundLen
+		init_audio_buffer(nBurnSoundRate, 6000);
+
+		// Initizalize inputs
+		init_input();
+		input_initialized = true;
+
+		// Start CD reader emulation if needed
+		if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SNK_NEOCD) {
+			if (CDEmuInit()) {
+				log_cb(RETRO_LOG_INFO, "[FBA] Starting neogeo CD\n");
+			}
+		}
+
+		// Initialize dipswitches
+		InpDIPSWInit();
+
+		// Initialize game driver
+		BurnDrvInit();
+
+		// If the game is marked as not working, let's stop here
+		if (!(BurnDrvIsWorking())) {
+			log_cb(RETRO_LOG_ERROR, "[FBA] Can't launch this game, it is marked as not working\n");
+			return false;
+		}
+
+		// Now we know real game fps, let's initialize sound buffer again
+		init_audio_buffer(nBurnSoundRate, nBurnFPS);
+
+		// Get MainRam for RetroAchievements support
+		INT32 nMin = 0;
+		BurnAcb = StateGetMainRamAcb;
+		BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+		if (bMainRamFound) {
+			log_cb(RETRO_LOG_INFO, "[Cheevos] System RAM set to %p %zu\n", MainRamData, MainRamSize);
+		}
+
+		// Loading minimal savestate (not exactly sure why it is needed)
+		snprintf (g_autofs_path, sizeof(g_autofs_path), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
+		BurnStateLoad(g_autofs_path, 0, NULL);
+
+		// Initializing display, autorotate if needed
+		INT32 width, height;
+		BurnDrvGetVisibleSize(&width, &height);
+		unsigned drv_flags = BurnDrvGetFlags();
+		size_t pitch_size = nBurnBpp == 2 ? sizeof(uint16_t) : sizeof(uint32_t);
+		if (drv_flags & BDF_ORIENTATION_VERTICAL)
+			nBurnPitch = height * pitch_size;
+		else
+			nBurnPitch = width * pitch_size;
+		unsigned rotation;
+		switch (drv_flags & (BDF_ORIENTATION_FLIPPED | BDF_ORIENTATION_VERTICAL))
+		{
+			case BDF_ORIENTATION_VERTICAL:
+				rotation = 1;
+				break;
+			case BDF_ORIENTATION_FLIPPED:
+				rotation = 2;
+				break;
+			case BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED:
+				rotation = 3;
+				break;
+			default:
+				rotation = 0;
+				break;
+		}
+		environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rotation);
+#ifdef FRONTEND_SUPPORTS_RGB565
+		SetBurnHighCol(16);
+#else
+		SetBurnHighCol(15);
+#endif
+		BurnDrvGetFullSize(&width, &height);
+		g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
+
+		// Apply dipswitches
+		apply_dipswitch_from_variables();
+
+		// Initialization done
+		log_cb(RETRO_LOG_INFO, "Driver %s was successfully started\n", g_driver_name);
+		driver_inited = true;
+
+		return true;
+	}
+	return false;
+}
+
 bool retro_load_game(const struct retro_game_info *info)
 {
-   if (!info)
-      return false;
+	if (!info)
+		return false;
 
-   extract_basename(g_base_name, info->path, sizeof(g_base_name), "");
-   extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
+	extract_basename(g_driver_name, info->path, sizeof(g_driver_name), "");
+	extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
 
-   const char *dir = NULL;
-   // If save directory is defined use it, ...
-   if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &dir) && dir)
-   {
-      strncpy(g_save_dir, dir, sizeof(g_save_dir));
-      log_cb(RETRO_LOG_INFO, "Setting save dir to %s\n", g_save_dir);
-   }
-   else
-   {
-      // ... otherwise use rom directory
-      strncpy(g_save_dir, g_rom_dir, sizeof(g_save_dir));
-      log_cb(RETRO_LOG_ERROR, "Save dir not defined => use roms dir %s\n", g_save_dir);
-   }
-
-   // If system directory is defined use it, ...
-   if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir)
-   {
-      strncpy(g_system_dir, dir, sizeof(g_system_dir));
-      log_cb(RETRO_LOG_INFO, "Setting system dir to %s\n", g_system_dir);
-   }
-   else
-   {
-      // ... otherwise use rom directory
-      strncpy(g_system_dir, g_rom_dir, sizeof(g_system_dir));
-      log_cb(RETRO_LOG_ERROR, "System dir not defined => use roms dir %s\n", g_system_dir);
-   }
-
-   unsigned i = BurnDrvGetIndexByName(g_base_name);
-   if (i < nBurnDrvCount)
-   {
-      INT32 width, height;
-      const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
-      is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
-
-      // Define nMaxPlayers early;
-      nMaxPlayers = BurnDrvGetMaxPlayers();
-      set_controller_infos();
-
-      set_environment();
-      check_variables();
-
-      if (!fba_init(i, g_base_name))
-         goto error;
-
-      driver_inited = true;
-
-      apply_dipswitch_from_variables();
-
-      BurnDrvGetFullSize(&width, &height);
-
-      g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
-      state_size = 0;
-
-      return true;
-   }
-
-error:
-   log_cb(RETRO_LOG_ERROR, "[FBA] Cannot load this game.\n");
-   return false;
+	return retro_load_game_common();
 }
 
-bool retro_load_game_special(unsigned game_type, const struct retro_game_info *info, size_t) {
-   if (!info)
-      return false;
+bool retro_load_game_special(unsigned game_type, const struct retro_game_info *info, size_t)
+{
+	if (!info)
+		return false;
 
-   char * prefix;
-   switch (game_type) {
-      case RETRO_GAME_TYPE_CV:
-         prefix = "cv_";
-         break;
-      case RETRO_GAME_TYPE_GG:
-         prefix = "gg_";
-         break;
-      case RETRO_GAME_TYPE_MD:
-         prefix = "md_";
-         break;
-      case RETRO_GAME_TYPE_MSX:
-         prefix = "msx_";
-         break;
-      case RETRO_GAME_TYPE_PCE:
-         prefix = "pce_";
-         break;
-      case RETRO_GAME_TYPE_SG1K:
-         prefix = "sg1k_";
-         break;
-      case RETRO_GAME_TYPE_SGX:
-         prefix = "sgx_";
-         break;
-      case RETRO_GAME_TYPE_SMS:
-         prefix = "sms_";
-         break;
-      case RETRO_GAME_TYPE_TG:
-         prefix = "tg_";
-         break;
-      case RETRO_GAME_TYPE_NEOCD:
-         prefix = "";
-         strcpy(CDEmuImage, info->path);
-         break;
-      default:
-         return false;
-         break;
-   }
+	char * prefix;
+	switch (game_type) {
+		case RETRO_GAME_TYPE_CV:
+			prefix = "cv_";
+			break;
+		case RETRO_GAME_TYPE_GG:
+			prefix = "gg_";
+			break;
+		case RETRO_GAME_TYPE_MD:
+			prefix = "md_";
+			break;
+		case RETRO_GAME_TYPE_MSX:
+			prefix = "msx_";
+			break;
+		case RETRO_GAME_TYPE_PCE:
+			prefix = "pce_";
+			break;
+		case RETRO_GAME_TYPE_SG1K:
+			prefix = "sg1k_";
+			break;
+		case RETRO_GAME_TYPE_SGX:
+			prefix = "sgx_";
+			break;
+		case RETRO_GAME_TYPE_SMS:
+			prefix = "sms_";
+			break;
+		case RETRO_GAME_TYPE_TG:
+			prefix = "tg_";
+			break;
+		case RETRO_GAME_TYPE_NEOCD:
+			prefix = "";
+			strcpy(CDEmuImage, info->path);
+			break;
+		default:
+			return false;
+			break;
+	}
 
-   extract_basename(g_base_name, info->path, sizeof(g_base_name), prefix);
-   extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
-   
-   if(game_type == RETRO_GAME_TYPE_NEOCD) {
-      extract_basename(g_base_name, "neocdz", sizeof(g_base_name), "");
-   }
+	extract_basename(g_driver_name, info->path, sizeof(g_driver_name), prefix);
+	extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
 
-   const char *dir = NULL;
-   // If save directory is defined use it, ...
-   if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &dir) && dir)
-   {
-      strncpy(g_save_dir, dir, sizeof(g_save_dir));
-      log_cb(RETRO_LOG_INFO, "Setting save dir to %s\n", g_save_dir);
-   }
-   else
-   {
-      // ... otherwise use rom directory
-      strncpy(g_save_dir, g_rom_dir, sizeof(g_save_dir));
-      log_cb(RETRO_LOG_ERROR, "Save dir not defined => use roms dir %s\n", g_save_dir);
-   }
+	if(game_type == RETRO_GAME_TYPE_NEOCD) {
+		extract_basename(g_driver_name, "neocdz", sizeof(g_driver_name), "");
+	}
 
-   // If system directory is defined use it, ...
-   if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir) && dir)
-   {
-      strncpy(g_system_dir, dir, sizeof(g_system_dir));
-      log_cb(RETRO_LOG_INFO, "Setting system dir to %s\n", g_system_dir);
-   }
-   else
-   {
-      // ... otherwise use rom directory
-      strncpy(g_system_dir, g_rom_dir, sizeof(g_system_dir));
-      log_cb(RETRO_LOG_ERROR, "System dir not defined => use roms dir %s\n", g_system_dir);
-   }
-
-   unsigned i = BurnDrvGetIndexByName(g_base_name);
-   if (i < nBurnDrvCount)
-   {
-      INT32 width, height;
-      const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
-      is_neogeo_game = (boardrom && strcmp(boardrom, "neogeo") == 0);
-
-      // Define nMaxPlayers early;
-      nMaxPlayers = BurnDrvGetMaxPlayers();
-      set_controller_infos();
-
-      set_environment();
-      check_variables();
-
-      if (!fba_init(i, g_base_name))
-         goto error;
-
-      driver_inited = true;
-
-      BurnDrvGetFullSize(&width, &height);
-
-      g_fba_frame = (uint32_t*)malloc(width * height * sizeof(uint32_t));
-      state_size = 0;
-
-      return true;
-   }
-
-error:
-   log_cb(RETRO_LOG_ERROR, "[FBA] Cannot load this game.\n");
-   return false;
+	return retro_load_game_common();
 }
 
-void retro_unload_game(void) {
-   char output[MAX_PATH];
-
-   if (driver_inited)
-   {
-      snprintf (output, sizeof(output), "%s%cfba%c%s.fs", g_save_dir, slash, slash, BurnDrvGetTextA(DRV_NAME));
-      BurnStateSave(output, 0);
-      BurnDrvExit();
-      CDEmuExit();
-   }
-   driver_inited = false;
+void retro_unload_game(void)
+{
+	if (driver_inited)
+	{
+		BurnStateSave(g_autofs_path, 0);
+		BurnDrvExit();
+		CDEmuExit();
+	}
+	input_initialized = false;
+	driver_inited = false;
 }
 
 unsigned retro_get_region() { return RETRO_REGION_NTSC; }
 
 unsigned retro_api_version() { return RETRO_API_VERSION; }
-
-void retro_set_controller_port_device(unsigned port, unsigned device)
-{
-	if (port < nMaxPlayers && fba_devices[port] != device)
-	{
-		fba_devices[port] = device;
-		reinit_input_needed = true;
-	}
-}
 
 static const char *print_label(unsigned i)
 {
@@ -2074,7 +1996,7 @@ static const char *print_label(unsigned i)
    }
 }
 
-static bool init_input(INT32 bFull)
+static bool init_input()
 {
 	switch_ncode = 0;
 
@@ -2091,7 +2013,7 @@ static bool init_input(INT32 bFull)
 		}
 	}
 
-	GameInpInitialize(bFull);
+	GameInpInit();
 	GameInpDefault();
 
 	init_macro_core_options();
@@ -2821,7 +2743,8 @@ static void init_macro_core_options()
       }
 
       // Assign an unique nCode for the macro
-      pgi->Macro.Switch.nCode = switch_ncode++;
+      if (!input_initialized)
+         pgi->Macro.Switch.nCode = switch_ncode++;
 
       macro_core_options.push_back(macro_core_option());
       macro_core_option *macro_option = &macro_core_options.back();
@@ -3554,7 +3477,7 @@ static void GameInpInitMacros()
 	}
 }
 
-INT32 GameInpInitialize(INT32 bFull)
+INT32 GameInpInit()
 {
 	INT32 nRet = 0;
 	// Count the number of inputs
@@ -3578,9 +3501,9 @@ INT32 GameInpInitialize(INT32 bFull)
 	}
 	memset(GameInp, 0, nSize);
 
-	GameInpBlank(bFull);
+	GameInpBlank(1);
 
-	if(bFull) InpDIPSWResetDIPs();
+	InpDIPSWResetDIPs();
 
 	GameInpInitMacros();
 
@@ -3673,7 +3596,8 @@ INT32 GameInpDigital2RetroInpKey(struct GameInp* pgi, UINT32 nJoy, UINT32 nKey, 
 {
 	if(bButtonMapped) return 0;
 	pgi->nInput = GIT_SWITCH;
-	pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
+	if (!input_initialized)
+		pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
 	keybinds[pgi->Input.Switch.nCode][0] = nKey;
 	keybinds[pgi->Input.Switch.nCode][1] = nJoy;
 	retro_input_descriptor descriptor;
@@ -3696,7 +3620,8 @@ INT32 GameInpDigital2RetroInpAnalogRight(struct GameInp* pgi, UINT32 nJoy, UINT3
 {
 	if(bButtonMapped) return 0;
 	pgi->nInput = GIT_SWITCH;
-	pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
+	if (!input_initialized)
+		pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
 	keybinds[pgi->Input.Switch.nCode][0] = nKey;
 	keybinds[pgi->Input.Switch.nCode][1] = nJoy;
 	keybinds[pgi->Input.Switch.nCode][2] = RETRO_DEVICE_INDEX_ANALOG_RIGHT;
@@ -4417,14 +4342,16 @@ static INT32 GameInpAutoOne(struct GameInp* pgi, char* szi, char *szn)
 	// Store the pgi that controls the reset input
 	if (strcmp(szi, "reset") == 0) {
 		pgi->nInput = GIT_SWITCH;
-		pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
+		if (!input_initialized)
+			pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
 		pgi_reset = pgi;
 	}
 
 	// Store the pgi that controls the diagnostic input
 	if (strcmp(szi, "diag") == 0) {
 		pgi->nInput = GIT_SWITCH;
-		pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
+		if (!input_initialized)
+			pgi->Input.Switch.nCode = (UINT16)(switch_ncode++);
 		pgi_diag = pgi;
 	}
 	return 0;
@@ -4477,6 +4404,31 @@ INT32 GameInpDefault()
 	*/
 
 	return 0;
+}
+
+// Call this one when device type is changed
+INT32 GameInpReassign()
+{
+	struct GameInp* pgi;
+	struct BurnInputInfo bii;
+	UINT32 i;
+
+	for (i = 0, pgi = GameInp; i < nGameInpCount; i++, pgi++) {
+		BurnDrvGetInputInfo(&bii, i);
+		GameInpAutoOne(pgi, bii.szInfo, bii.szName);
+	}
+
+	return 0;
+}
+
+void retro_set_controller_port_device(unsigned port, unsigned device)
+{
+	if (port < nMaxPlayers && fba_devices[port] != device)
+	{
+		fba_devices[port] = device;
+		GameInpReassign();
+		set_input_descriptors();
+	}
 }
 
 char* DecorateGameName(UINT32 nBurnDrv)
