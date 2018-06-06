@@ -1,14 +1,24 @@
 [![Build Status](https://travis-ci.org/libretro/fbalpha.svg?branch=master)](https://travis-ci.org/libretro/fbalpha)
 [![Build status](https://ci.appveyor.com/api/projects/status/bdj5xf7t3kgbk1p7/branch/master?svg=true)](https://ci.appveyor.com/project/bparker06/fbalpha/branch/master)
 
-# fba-libretro
+# fbalpha-libretro
 
 ## Roms
 
 Use clrmamepro (which runs fine on linux with wine and on mac with crossover) to build valid romsets with dats from the [dats](dats/) directory.
-fba dats are NOT mame dats.
 Don't report issues if you didn't build a valid romset.
 Also, i don't provide a "parent-only" dat file, this is usually a bad idea to only use parent roms (some don't work, and some clones are interesting)
+
+## Romset differences between fbalpha standalone and fbalpha-libretro
+
+While i generally try to stay in sync with the latest fbalpha release about this, sometimes i have to sync with the current dev version for various reasons.
+It can cause new romsets to appear and slight changes in existing romsets.
+Currently, to build a full set for fbalpha-libretro (arcade), you'll probably need the following romsets from MAME 0.198 :
+* ffightj3
+* kodr2
+* mshbr1
+* neogeo
+* sf2level
 
 ## Emulating consoles
 
