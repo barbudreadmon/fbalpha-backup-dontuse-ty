@@ -2766,6 +2766,12 @@
 		<manufacturer>Virgin Interactive</manufacturer>
 		<rom name="mpr-16049.ic1" size="524288" crc="4ab7fa4e"/>
 	</game>
+	<game name="royalstne" cloneof="royalstn" romof="royalstn">
+		<description>Royal Stone - Hirakareshi Toki no Tobira (Hack, English)</description>
+		<year>2013</year>
+		<manufacturer>Sega</manufacturer>
+		<rom name="royal stone - hirakareshi toki no tobira (english translation).gg" size="524288" crc="e4677b07"/>
+	</game>
 	<game name="royalstn">
 		<description>Royal Stone - Hirakareshi Toki no Tobira (Jpn)</description>
 		<year>1995</year>
