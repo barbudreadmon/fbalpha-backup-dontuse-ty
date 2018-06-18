@@ -47,6 +47,8 @@ static INT32 game_kabukiz = 0;
 static INT32 cpu1_reset;
 static INT32 tnzs_banks[3];
 
+static INT32 system_type;
+
 static UINT8 DrvJoy1[8];
 static UINT8 DrvJoy2[8];
 static UINT8 DrvJoy3[8];
@@ -912,12 +914,7 @@ static void kageki_ym2203_write_portB(UINT32, UINT32 data)
 
 inline static void DrvYM2203IRQHandler(INT32, INT32 nStatus)
 {
-	Z80SetIrqLine(Z80_INPUT_LINE_NMI, nStatus & 1);
-}
-
-static INT32 kabukizSyncDAC()
-{
-	return (INT32)(float)(nBurnSoundLen * (ZetTotalCycles() / (6000000.000 / (nBurnFPS / 100.000))));
+	ZetSetIRQLine(CPU_IRQLINE_NMI, (nStatus) ? CPU_IRQSTATUS_ACK : CPU_IRQSTATUS_NONE);
 }
 
 static INT32 DrvDoReset()
@@ -1103,6 +1100,8 @@ static INT32 Type1Init(INT32 mcutype)
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
+
+	system_type = 1;
 
 	switch (mcutype)
 	{
@@ -1350,6 +1349,7 @@ static INT32 Type1Init(INT32 mcutype)
 	} else {
 		BurnYM2203Init(1, 3000000, NULL, 0);
 		BurnYM2203SetAllRoutes(0, 0.30, BURN_SND_ROUTE_BOTH);
+		BurnTimerAttachZet(6000000);
 
 		if (mcutype == MCU_EXTRMATN || mcutype == MCU_DRTOPPEL) {
 			BurnYM2203SetPSGVolume(0, 0.10);
@@ -1366,7 +1366,7 @@ static INT32 Type1Init(INT32 mcutype)
 		}
 	}	
 
-	DACInit(0, 0, 1, kabukizSyncDAC); // kabukiz
+	DACInit(0, 0, 1, ZetTotalCycles); // kabukiz
 	DACSetRoute(0, 0.10, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -1384,6 +1384,8 @@ static INT32 Type2Init()
 	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
 	memset(AllMem, 0, nLen);
 	MemIndex();
+
+	system_type = 2;
 
 	game_kabukiz = (strncmp(BurnDrvGetTextA(DRV_NAME), "kabukiz", 7) == 0);
 
@@ -1481,7 +1483,7 @@ static INT32 Type2Init()
 		BurnYM2203SetRoute(0, BURN_SND_YM2203_AY8910_ROUTE_3, 1.00, BURN_SND_ROUTE_BOTH);
 	}
 
-	DACInit(0, 0, 1, kabukizSyncDAC); // kabukiz
+	DACInit(0, 0, 1, ZetTotalCycles); // kabukiz
 	DACSetRoute(0, 0.10, BURN_SND_ROUTE_BOTH);
 
 	GenericTilesInit();
@@ -1807,8 +1809,12 @@ static INT32 DrvFrame()
 		// Run Z80 #1
 		nCurrentCPU = 1;
 		ZetOpen(nCurrentCPU);
-		if (!cpu1_reset)
-			ZetRun(nCyclesTotal[nCurrentCPU] / nInterleave);
+		if (!cpu1_reset) {
+			if (system_type == 1 && tnzs_mcu_type() != MCU_NONE_JPOPNICS)
+				BurnTimerUpdate((i + 1) * (nCyclesTotal[nCurrentCPU] / nInterleave));
+			else
+				ZetRun(nCyclesTotal[nCurrentCPU] / nInterleave);
+		}
 		if (i == nInterleave - 1)
 			ZetSetIRQLine(0, CPU_IRQSTATUS_HOLD);
 		ZetClose();
@@ -1835,6 +1841,12 @@ static INT32 DrvFrame()
 			nSoundBufferPos += nSegmentLength;
 		}
 	}
+	ZetOpen(1);
+	if (!cpu1_reset) {
+		if (system_type == 1 && tnzs_mcu_type() != MCU_NONE_JPOPNICS)
+			BurnTimerEndFrame(nCyclesTotal[1]);
+	}
+	ZetClose();
 
 	ZetOpen(2);
 	if (tnzs_mcu_type() == MCU_NONE) {
@@ -2016,7 +2028,7 @@ struct BurnDriver BurnDrvExtrmatn = {
 	"extrmatn", NULL, NULL, NULL, "1987",
 	"Extermination (World)\0", NULL, "Taito Corporation Japan", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_RUNGUN, 0,
 	NULL, extrmatnRomInfo, extrmatnRomName, NULL, NULL, CommonInputInfo, ExtrmatnDIPInfo,
 	ExtrmatnInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2055,7 +2067,7 @@ struct BurnDriver BurnDrvExtrmatu = {
 	"extrmatnu", "extrmatn", NULL, NULL, "1987",
 	"Extermination (US, set 1)\0", NULL, "Taito (World Games license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_RUNGUN, 0,
 	NULL, extrmatuRomInfo, extrmatuRomName, NULL, NULL, CommonInputInfo, ExtrmatnDIPInfo,
 	ExtrmatnInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2094,7 +2106,7 @@ struct BurnDriver BurnDrvExtrmatur = {
 	"extrmatnur", "extrmatn", NULL, NULL, "1987",
 	"Extermination (US, Romstar)\0", NULL, "Taito America Corporation (Romstar license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_RUNGUN, 0,
 	NULL, extrmaturRomInfo, extrmaturRomName, NULL, NULL, CommonInputInfo, ExtrmatnDIPInfo,
 	ExtrmatnInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
@@ -2133,7 +2145,7 @@ struct BurnDriver BurnDrvExtrmatj = {
 	"extrmatnj", "extrmatn", NULL, NULL, "1987",
 	"Extermination (Japan)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_RUNGUN, 0,
 	NULL, extrmatjRomInfo, extrmatjRomName, NULL, NULL, CommonInputInfo, ExtrmatnDIPInfo,
 	ExtrmatnInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x200,
 	224, 256, 3, 4
