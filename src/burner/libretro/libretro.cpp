@@ -997,25 +997,31 @@ static int archive_load_rom(uint8_t *dest, int *wrote, int i)
 
 static void locate_archive(std::vector<std::string>& pathList, const char* const romName)
 {
-   static char path[MAX_PATH];
+	static char path[MAX_PATH];
 
-   snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, romName);
-   if (ZipOpen(path) == 0)
-   {
-      g_find_list_path.push_back(path);
-      return;
-   }
-   else
-   {
-      snprintf(path, sizeof(path), "%s%c%s", g_system_dir, slash, romName);
-      if (ZipOpen(path) == 0)
-      {
-         g_find_list_path.push_back(path);
-         return;
-      }
-   }
+	// Search rom dir
+	snprintf(path, sizeof(path), "%s%c%s", g_rom_dir, slash, romName);
+	if (ZipOpen(path) == 0)
+	{
+		g_find_list_path.push_back(path);
+		return;
+	}
+	// Search system fba subdirectory (where samples/hiscore are stored)
+	snprintf(path, sizeof(path), "%s%cfba%c%s", g_system_dir, slash, slash, romName);
+	if (ZipOpen(path) == 0)
+	{
+		g_find_list_path.push_back(path);
+		return;
+	}
+	// Search system directory
+	snprintf(path, sizeof(path), "%s%c%s", g_system_dir, slash, romName);
+	if (ZipOpen(path) == 0)
+	{
+		g_find_list_path.push_back(path);
+		return;
+	}
 
-   log_cb(RETRO_LOG_ERROR, "[FBA] Failed to find archive: %s, let's continue with other archives...\n", path);
+	log_cb(RETRO_LOG_ERROR, "[FBA] Couldn't locate the %s archive anywhere, this game probably won't boot.\n", romName);
 }
 
 // This code is very confusing. The original code is even more confusing :(
@@ -1041,19 +1047,6 @@ static bool open_archive()
       log_cb(RETRO_LOG_INFO, "[FBA] Archive: %s\n", rom_name);
 
       locate_archive(g_find_list_path, rom_name);
- 
-      // Handle non-arcade roms with unofficial zip name (prefixed)
-      if (strcmp(rom_name, g_driver_name) != 0)
-      {
-         locate_archive(g_find_list_path, g_driver_name);
-      }
-
-      // Handle msx bios unofficial zip name (prefixed)
-      const char * boardrom = BurnDrvGetTextA(DRV_BOARDROM);
-      if (boardrom && strcmp(boardrom, "msx_msx") == 0)
-      {
-         locate_archive(g_find_list_path, boardrom);
-      }
       
       // Handle bios for pgm single pcb board (special case)
       if (strcmp(rom_name, "thegladpcb") == 0 || strcmp(rom_name, "dmnfrntpcb") == 0 || strcmp(rom_name, "svgpcb") == 0)
