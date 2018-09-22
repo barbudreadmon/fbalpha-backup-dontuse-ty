@@ -1513,57 +1513,67 @@ static unsigned state_size;
 
 static int burn_write_state_cb(BurnArea *pba)
 {
-   memcpy(write_state_ptr, pba->Data, pba->nLen);
-   write_state_ptr += pba->nLen;
-   return 0;
+	memcpy(write_state_ptr, pba->Data, pba->nLen);
+	write_state_ptr += pba->nLen;
+	return 0;
 }
 
 static int burn_read_state_cb(BurnArea *pba)
 {
-   memcpy(pba->Data, read_state_ptr, pba->nLen);
-   read_state_ptr += pba->nLen;
-   return 0;
+	memcpy(pba->Data, read_state_ptr, pba->nLen);
+	read_state_ptr += pba->nLen;
+	return 0;
 }
 
 static int burn_dummy_state_cb(BurnArea *pba)
 {
 #ifdef FBA_DEBUG
-   log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
+	log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
 #endif
-   state_size += pba->nLen;
-   return 0;
+	state_size += pba->nLen;
+	return 0;
 }
 
 size_t retro_serialize_size()
 {
-   if (state_size)
-      return state_size;
+	if (state_size)
+		return state_size;
 
-   BurnAcb = burn_dummy_state_cb;
-   BurnAreaScan(ACB_FULLSCAN, 0);
-   return state_size;
+	BurnAcb = burn_dummy_state_cb;
+	BurnAreaScan(ACB_FULLSCAN, 0);
+	return state_size;
 }
 
 bool retro_serialize(void *data, size_t size)
 {
-   if (size != state_size)
-      return false;
+	if (!state_size)
+	{
+		BurnAcb = burn_dummy_state_cb;
+		BurnAreaScan(ACB_FULLSCAN, 0);
+	}
+	if (size != state_size)
+		return false;
 
-   BurnAcb = burn_write_state_cb;
-   write_state_ptr = (uint8_t*)data;
-   BurnAreaScan(ACB_FULLSCAN | ACB_READ, 0);   
-   return true;
+	BurnAcb = burn_write_state_cb;
+	write_state_ptr = (uint8_t*)data;
+	BurnAreaScan(ACB_FULLSCAN | ACB_READ, 0);   
+	return true;
 }
 
 bool retro_unserialize(const void *data, size_t size)
 {
-   if (size != state_size)
-      return false;
+	if (!state_size)
+	{
+		BurnAcb = burn_dummy_state_cb;
+		BurnAreaScan(ACB_FULLSCAN, 0);
+	}
+	if (size != state_size)
+		return false;
 
-   BurnAcb = burn_read_state_cb;
-   read_state_ptr = (const uint8_t*)data;
-   BurnAreaScan(ACB_FULLSCAN | ACB_WRITE, 0);
-   return true;
+	BurnAcb = burn_read_state_cb;
+	read_state_ptr = (const uint8_t*)data;
+	BurnAreaScan(ACB_FULLSCAN | ACB_WRITE, 0);
+	return true;
 }
 
 void retro_cheat_reset() {}
