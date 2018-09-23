@@ -353,7 +353,7 @@ INT32 CpsMemExit()
 	return 0;
 }
 
-static INT32 ScanRam()
+static INT32 ScanRam(INT32 includeAllPtr)
 {
 	// scan ram:
 	struct BurnArea ba;
@@ -374,7 +374,9 @@ static INT32 ScanRam()
 		ba.Data = CpsRam660;  ba.nLen = 0x004000; ba.szName = "CpsRam660"; BurnAcb(&ba);
 	}
 
-	ba.Data = CpsRamAll;  ba.nLen = CpsRamAllSize; ba.szName = "CpsRamAll";    BurnAcb(&ba);
+	if ( includeAllPtr == 1 ) {
+		ba.Data = CpsRamAll;  ba.nLen = CpsRamAllSize; ba.szName = "CpsRamAll";    BurnAcb(&ba);
+	}
 
 	return 0;
 }
@@ -412,9 +414,7 @@ INT32 CpsAreaScan(INT32 nAction, INT32 *pnMin)
 	}
 
 	if (nAction & ACB_MEMORY_RAM) {
-
-		ScanRam();
-
+		ScanRam(nAction == ACB_MEMORY_RAM ? 1 : 0); //if nAction is exactly equal to ACB_MEMORY_RAM then we know this is just to search for memory pointers and is not for save states
 	}
 
 
