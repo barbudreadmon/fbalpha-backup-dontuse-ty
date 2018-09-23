@@ -14,6 +14,8 @@ static UINT8 *CpsSaveRegData = NULL;
 static UINT8 *CpsSaveFrgData = NULL;
 UINT8 *CpsRam660=NULL,*CpsRam708=NULL,*CpsReg=NULL,*CpsFrg=NULL;
 UINT8 *CpsRamFF=NULL;
+UINT8 *CpsRamAll=NULL;
+UINT32 CpsRamAllSize=0;
 
 CpsMemScanCallback CpsMemScanCallbackFunction = NULL;
 
@@ -23,6 +25,7 @@ static INT32 CpsMemIndex()
 {
 	UINT8*  Next; Next =  CpsMem;
 
+	CpsRamAll         = CpsMem ;
 	CpsRam90	  = Next; Next += 0x030000;							// Video Ram
 	CpsRamFF	  = Next; Next += 0x010000;							// Work Ram
 	CpsReg		  = Next; Next += 0x000100;							// Registers
@@ -75,6 +78,7 @@ static INT32 AllocateMemory()
 	}
 
 	memset(CpsMem, 0, nLen);										// blank all memory
+	CpsRamAllSize = nLen ;
 	CpsMemIndex();													// Index the allocated memory
 
 	return 0;
@@ -365,9 +369,12 @@ static INT32 ScanRam()
 	}
 
 	if (Cps == 2) {
-		ba.Data = CpsRam708; ba.nLen = 0x010000; ba.szName = "CpsRam708"; BurnAcb(&ba);
-		ba.Data = CpsFrg;    ba.nLen = 0x000010; ba.szName = "CpsFrg";    BurnAcb(&ba);
+		ba.Data = CpsRam708;  ba.nLen = 0x010000; ba.szName = "CpsRam708"; BurnAcb(&ba);
+		ba.Data = CpsFrg;     ba.nLen = 0x000010; ba.szName = "CpsFrg";    BurnAcb(&ba);
+		ba.Data = CpsRam660;  ba.nLen = 0x004000; ba.szName = "CpsRam660"; BurnAcb(&ba);
 	}
+
+	ba.Data = CpsRamAll;  ba.nLen = CpsRamAllSize; ba.szName = "CpsRamAll";    BurnAcb(&ba);
 
 	return 0;
 }
@@ -408,13 +415,6 @@ INT32 CpsAreaScan(INT32 nAction, INT32 *pnMin)
 
 		ScanRam();
 
-		if (Cps == 2) {
-			memset(&ba, 0, sizeof(ba));
-			ba.Data   = CpsRam660;
-			ba.nLen   = 0x004000;
-			ba.szName = "CpsRam660";
-			BurnAcb(&ba);
-		}
 	}
 
 
