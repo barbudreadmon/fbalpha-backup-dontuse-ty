@@ -14,8 +14,6 @@ static UINT8 *CpsSaveRegData = NULL;
 static UINT8 *CpsSaveFrgData = NULL;
 UINT8 *CpsRam660=NULL,*CpsRam708=NULL,*CpsReg=NULL,*CpsFrg=NULL;
 UINT8 *CpsRamFF=NULL;
-UINT8 *CpsRamAll=NULL;
-UINT32 CpsRamAllSize=0;
 
 CpsMemScanCallback CpsMemScanCallbackFunction = NULL;
 
@@ -25,7 +23,6 @@ static INT32 CpsMemIndex()
 {
 	UINT8*  Next; Next =  CpsMem;
 
-	CpsRamAll         = CpsMem ;
 	CpsRam90	  = Next; Next += 0x030000;							// Video Ram
 	CpsRamFF	  = Next; Next += 0x010000;							// Work Ram
 	CpsReg		  = Next; Next += 0x000100;							// Registers
@@ -78,7 +75,6 @@ static INT32 AllocateMemory()
 	}
 
 	memset(CpsMem, 0, nLen);										// blank all memory
-	CpsRamAllSize = nLen ;
 	CpsMemIndex();													// Index the allocated memory
 
 	return 0;
@@ -353,7 +349,7 @@ INT32 CpsMemExit()
 	return 0;
 }
 
-static INT32 ScanRam(INT32 includeAllPtr)
+static INT32 ScanRam()
 {
 	// scan ram:
 	struct BurnArea ba;
@@ -371,11 +367,6 @@ static INT32 ScanRam(INT32 includeAllPtr)
 	if (Cps == 2) {
 		ba.Data = CpsRam708;  ba.nLen = 0x010000; ba.szName = "CpsRam708"; BurnAcb(&ba);
 		ba.Data = CpsFrg;     ba.nLen = 0x000010; ba.szName = "CpsFrg";    BurnAcb(&ba);
-		ba.Data = CpsRam660;  ba.nLen = 0x004000; ba.szName = "CpsRam660"; BurnAcb(&ba);
-	}
-
-	if ( includeAllPtr == 1 ) {
-		ba.Data = CpsRamAll;  ba.nLen = CpsRamAllSize; ba.szName = "CpsRamAll";    BurnAcb(&ba);
 	}
 
 	return 0;
@@ -414,7 +405,16 @@ INT32 CpsAreaScan(INT32 nAction, INT32 *pnMin)
 	}
 
 	if (nAction & ACB_MEMORY_RAM) {
-		ScanRam(nAction == ACB_MEMORY_RAM ? 1 : 0); //if nAction is exactly equal to ACB_MEMORY_RAM then we know this is just to search for memory pointers and is not for save states
+
+		ScanRam(); 
+
+		if (Cps == 2) {
+			memset(&ba, 0, sizeof(ba));
+			ba.Data   = CpsRam660;
+			ba.nLen   = 0x004000;
+			ba.szName = "CpsRam660";
+			BurnAcb(&ba);
+		}
 	}
 
 

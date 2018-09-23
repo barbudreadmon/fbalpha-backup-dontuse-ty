@@ -21,8 +21,10 @@ int StateGetMainRamAcb(BurnArea *pba)
 	}
 	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1
 	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_QSOUND
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS1_GENERIC
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPSCHANGER
 	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_CAPCOM_CPS2) {
-		if (strcmp(pba->szName, "CpsRamAll") == 0) {
+		if (strcmp(pba->szName, "CpsRamFF") == 0) {
 			MainRamData = pba->Data;
 			MainRamSize = pba->nLen;
 			bMainRamFound = true;
@@ -35,6 +37,14 @@ int StateGetMainRamAcb(BurnArea *pba)
 			bMainRamFound = true;
 		}
 	}
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_PREFIX_KONAMI) {
+		if (strcmp(pba->szName, "All Ram") == 0) {
+			MainRamData = pba->Data;
+			MainRamSize = pba->nLen;
+			bMainRamFound = true;
+		}
+	}
+
 	return 0;
 }
 
