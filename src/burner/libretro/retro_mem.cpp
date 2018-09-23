@@ -64,9 +64,6 @@ int StateGetMainRamAcb(BurnArea *pba)
 			bMainRamFound = true;
 		}
 	}
-
-
-
 	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_CAVE) {
 		if (strcmp(pba->szName, "RAM") == 0) {
 			MainRamData = pba->Data;
@@ -95,8 +92,6 @@ int StateGetMainRamAcb(BurnArea *pba)
 			bMainRamFound = true;
 		}
 	}
-
-
 
 	return 0;
 }
