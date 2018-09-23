@@ -37,8 +37,56 @@ int StateGetMainRamAcb(BurnArea *pba)
 			bMainRamFound = true;
 		}
 	}
-	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_PREFIX_KONAMI) {
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) == HARDWARE_PREFIX_KONAMI
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_TAITO
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_IREM
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_DATAEAST
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_PACMAN
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_CAPCOM_MISC
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_GALAXIAN
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_SETA
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_TECHNOS
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_PCENGINE
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_SYSTEMX
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_SYSTEMY
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_SYSTEM16A
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_SYSTEM16B
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_SYSTEM16M
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_SYSTEM18
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_HANGON
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_OUTRUN
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_SYSTEM1
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_SEGA_MISC
+	 || (nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_TOAPLAN) {
 		if (strcmp(pba->szName, "All Ram") == 0) {
+			MainRamData = pba->Data;
+			MainRamSize = pba->nLen;
+			bMainRamFound = true;
+		}
+	}
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_CAVE) {
+		if (strcmp(pba->szName, "RAM") == 0) {
+			MainRamData = pba->Data;
+			MainRamSize = pba->nLen;
+			bMainRamFound = true;
+		}
+	}
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_IGS_PGM) {
+		if (strcmp(pba->szName, "Z80 RAM") == 0) {
+			MainRamData = pba->Data;
+			MainRamSize = pba->nLen;
+			bMainRamFound = true;
+		}
+	}
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_PSIKYO) {
+		if (strcmp(pba->szName, "68K RAM") == 0) {
+			MainRamData = pba->Data;
+			MainRamSize = pba->nLen;
+			bMainRamFound = true;
+		}
+	}
+	if ((nHardwareCode & HARDWARE_PUBLIC_MASK) & HARDWARE_PREFIX_KANEKO) {
+		if ( (strcmp(pba->szName, "All Ram") == 0) || (strcmp(pba->szName, "All RAM") == 0) ) {
 			MainRamData = pba->Data;
 			MainRamSize = pba->nLen;
 			bMainRamFound = true;
