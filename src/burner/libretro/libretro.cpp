@@ -1821,7 +1821,7 @@ static bool retro_load_game_common()
 		// Get MainRam for RetroAchievements support
 		INT32 nMin = 0;
 		BurnAcb = StateGetMainRamAcb;
-		BurnAreaScan(ACB_MEMORY_RAM, &nMin);
+		BurnAreaScan(ACB_FULLSCAN, &nMin);
 		if (bMainRamFound) {
 			log_cb(RETRO_LOG_INFO, "[Cheevos] System RAM set to %p %zu\n", MainRamData, MainRamSize);
 		}
