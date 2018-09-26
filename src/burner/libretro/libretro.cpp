@@ -155,6 +155,9 @@ static int16_t *g_audio_buf;
 #define JOY_NEG 0
 #define JOY_POS 1
 
+// Frameskip
+UINT32 nFrameskip = 1;
+
 // Mapping of PC inputs to game inputs
 struct GameInp* GameInp = NULL;
 UINT32 nGameInpCount = 0;
@@ -177,6 +180,7 @@ static const struct retro_variable var_empty = { NULL, NULL };
 
 // Global core options
 static const struct retro_variable var_fba_aspect = { "fba-aspect", "Core-provided aspect ratio; DAR|PAR" };
+static const struct retro_variable var_fba_frameskip = { "fba-frameskip", "Frameskip; 0|1|2|3|4|5" };
 static const struct retro_variable var_fba_cpu_speed_adjust = { "fba-cpu-speed-adjust", "CPU overclock; 100|110|120|130|140|150|160|170|180|190|200" };
 static const struct retro_variable var_fba_diagnostic_input = { "fba-diagnostic-input", "Diagnostic Input; None|Hold Start|Start + A + B|Hold Start + A + B|Start + L + R|Hold Start + L + R|Hold Select|Select + A + B|Hold Select + A + B|Select + L + R|Hold Select + L + R" };
 static const struct retro_variable var_fba_hiscores = { "fba-hiscores", "Hiscores; enabled|disabled" };
@@ -729,6 +733,7 @@ static void set_environment()
 
 	// Add the Global core options
 	vars_systems.push_back(&var_fba_aspect);
+	vars_systems.push_back(&var_fba_frameskip);
 	vars_systems.push_back(&var_fba_cpu_speed_adjust);
 	vars_systems.push_back(&var_fba_hiscores);
 	vars_systems.push_back(&var_fba_samplerate);
@@ -878,19 +883,22 @@ void Reinitialise(void)
     environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
 }
 
-static void ForceFrameStep()
+static void ForceFrameStep(int bDraw)
 {
-   nBurnLayer = 0xff;
-   
-#ifdef FBA_DEBUG
-   nFramesEmulated++;
-#endif
-   nCurrentFrame++;
-#ifdef FBA_DEBUG
-   nFramesRendered++;
-#endif
+	nBurnLayer = 0xff;
 
-   BurnDrvFrame();
+#ifdef FBA_DEBUG
+	nFramesEmulated++;
+#endif
+	nCurrentFrame++;
+
+	if (!bDraw)
+		pBurnDraw = NULL;
+#ifdef FBA_DEBUG
+	else
+		nFramesRendered++;
+#endif
+	BurnDrvFrame();
 }
 
 // Non-idiomatic (OutString should be to the left to match strcpy())
@@ -1271,7 +1279,7 @@ void retro_reset()
 
    apply_dipswitch_from_variables();
 
-   ForceFrameStep();
+   ForceFrameStep(1);
 }
 
 static void check_variables(void)
@@ -1312,6 +1320,23 @@ static void check_variables(void)
          core_aspect_par = true;
       else
          core_aspect_par = false;
+   }
+
+   var.key = var_fba_frameskip.key;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   {
+      if (strcmp(var.value, "0") == 0)
+         nFrameskip = 1;
+      else if (strcmp(var.value, "1") == 0)
+         nFrameskip = 2;
+      else if (strcmp(var.value, "2") == 0)
+         nFrameskip = 3;
+      else if (strcmp(var.value, "3") == 0)
+         nFrameskip = 4;
+      else if (strcmp(var.value, "4") == 0)
+         nFrameskip = 5;
+      else if (strcmp(var.value, "5") == 0)
+         nFrameskip = 6;
    }
 
    if (pgi_diag)
@@ -1450,7 +1475,7 @@ void retro_run()
 
    InputMake();
 
-   ForceFrameStep();
+   ForceFrameStep(nCurrentFrame % nFrameskip == 0);
    
    unsigned drv_flags = BurnDrvGetFlags();
    uint32_t height_tmp = height;
