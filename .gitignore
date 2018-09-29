@@ -6,3 +6,4 @@
 *.exp
 *.manifest
 /nul
+*.a
