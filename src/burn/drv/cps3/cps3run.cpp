@@ -85,7 +85,6 @@ static UINT32 chardma_table_address = 0;
 static INT32 cps3_gfx_width, cps3_gfx_height;
 static INT32 cps3_gfx_max_x, cps3_gfx_max_y;
 
-extern int kNetGame;
 
 // -- AMD/Fujitsu 29F016 --------------------------------------------------
 
@@ -1717,7 +1716,7 @@ static void cps3_draw_tilemapsprite_line(INT32 drawline, UINT32 * regs )
 
 static INT32 WideScreenFrameDelay = 0;
 
-static void DrvDraw()
+INT32 DrvCps3Draw()
 {
 	INT32 bg_drawn[4] = { 0, 0, 0, 0 };
 
@@ -1917,17 +1916,15 @@ static void DrvDraw()
 								{
 									INT32 realtileno = tileno+count;
 
-									if ( realtileno ) {
-										if (global_alpha || alpha) {
-											// fix jojo's title in it's intro ???
-											if ( global_alpha && (global_pal & 0x100))
-												actualpal &= 0x0ffff;
-												
-											cps3_drawgfxzoom_2(realtileno,actualpal,flipx,flipy,current_xpos,current_ypos,xinc,yinc, color_granularity);
-											
-										} else {
-											cps3_drawgfxzoom_2(realtileno,actualpal,flipx,flipy,current_xpos,current_ypos,xinc,yinc, 0);
-										}
+									if (global_alpha || alpha) {
+										// fix jojo's title in it's intro ???
+										if ( global_alpha && (global_pal & 0x100))
+											actualpal &= 0x0ffff;
+
+										cps3_drawgfxzoom_2(realtileno,actualpal,flipx,flipy,current_xpos,current_ypos,xinc,yinc, color_granularity);
+
+									} else {
+										cps3_drawgfxzoom_2(realtileno,actualpal,flipx,flipy,current_xpos,current_ypos,xinc,yinc, 0);
 									}
 									count++;
 								}
@@ -1958,9 +1955,15 @@ static void DrvDraw()
 	if (nBurnLayer & 2)
 	{
 		// bank select? (sfiii2 intro)
-		INT32 count = (ss_bank_base & 0x01000000) ? 0x0000 : 0x0800;
-		for (INT32 y=0; y<32-4; y++) {
-			for (INT32 x=0; x<64; x++, count++) {
+		INT32 bank = (ss_bank_base & 0x01000000) ? 0x0000 : 0x0800;
+
+		for (INT32 line = 0; line < 224; line++) {
+			INT32 y = line / 8;
+			INT32 count = (y * 64) + bank;
+			// 'combo meter' in JoJo games uses rowscroll
+			INT32 rowscroll = RamSS[((line - 1) & 0x1ff) + 0x4000 / 4] >> 16;
+
+			for (INT32 x = 0; x < 64; x++, count++) {
 				UINT32 data = RamSS[count]; // +0x800 = 2nd bank, used on sfiii2 intro..
 				UINT32 tile = (data >> 16) & 0x1ff;
 				INT32 pal = (data & 0x003f) >> 1;
@@ -1971,10 +1974,12 @@ static void DrvDraw()
 				if (tile == 0) continue; // ok?
 
 				tile+=0x200;
-				cps3_drawgfxzoom_0(tile,pal,flipx,flipy,x*8,y*8);
+				cps3_drawgfxzoom_0(tile,pal,flipx,flipy,(x*8)-rowscroll,y*8);
+				cps3_drawgfxzoom_0(tile,pal,flipx,flipy,512 + (x*8)-rowscroll,y*8);
 			}
 		}
 	}
+	return 0;
 }
 
 static INT32 cps_int10_cnt = 0;
@@ -2039,7 +2044,7 @@ INT32 cps3Frame()
 	
 //	bprintf(0, _T("PC: %08x\n"), Sh2GetPC(0));
 	
-	if (pBurnDraw) DrvDraw();
+	if (pBurnDraw) DrvCps3Draw();
 
 	return 0;
 }
@@ -2097,14 +2102,11 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 		ba.szName	= "Palette";
 		BurnAcb(&ba);
 
-		// Too huge and not necessary if running net game
-		if (!kNetGame) {
-			ba.Data		= RamCRam;
-			ba.nLen		= 0x0800000;
-			ba.nAddress = 0;
-			ba.szName	= "Sprite ROM";
-			BurnAcb(&ba);
-		}
+		ba.Data		= RamCRam;
+		ba.nLen		= 0x0800000;
+		ba.nAddress = 0;
+		ba.szName	= "Sprite ROM";
+		BurnAcb(&ba);
 
 /*		// so huge. need not backup it while NOCD
 		// otherwize, need backup gfx also
