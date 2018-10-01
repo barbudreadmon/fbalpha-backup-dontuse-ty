@@ -1498,7 +1498,7 @@ static INT32 PacnpalInit()
 	M6809SetReadHandler(mappy_sub_read);
 	M6809Close();
 
-	M6809Init(0); // not used
+	M6809Init(2); // not used
 
 	NamcoSoundInit(24000, 8, 0);
 	NacmoSoundSetAllRoutes(0.50 * 10.0 / 16.0, BURN_SND_ROUTE_BOTH);
