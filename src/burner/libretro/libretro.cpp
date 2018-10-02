@@ -4139,6 +4139,54 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
+	// Beraboh Man
+	if ((parentrom && strcmp(parentrom, "berabohm") == 0) ||
+		(drvname && strcmp(drvname, "berabohm") == 0)
+	) {
+		if (strcmp("Button 1", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);
+		}
+		if (strcmp("Button 2", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_A, description);
+		}
+		if (strcmp("Button 3", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, (fba_devices[nPlayer] == RETROPAD_MODERN ? RETRO_DEVICE_ID_JOYPAD_R2 : RETRO_DEVICE_ID_JOYPAD_R), description);
+		}
+		if (strcmp("Button 4", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_Y, description);
+		}
+		if (strcmp("Button 5", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_X, description);
+		}
+		if (strcmp("Button 6", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, (fba_devices[nPlayer] == RETROPAD_MODERN ? RETRO_DEVICE_ID_JOYPAD_R : RETRO_DEVICE_ID_JOYPAD_L), description);
+		}
+	}
+	
+	// Mad Planets
+	if ((parentrom && strcmp(parentrom, "mplanets") == 0) ||
+		(drvname && strcmp(drvname, "mplanets") == 0)
+	) {
+		if (strcmp("Rotate Left", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_L, description);
+		}
+		if (strcmp("Rotate Right", description) == 0) {
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_R, description);
+		}
+	}
+	
+	// Moonwar
+	if ((parentrom && strcmp(parentrom, "moonwar") == 0) ||
+		(drvname && strcmp(drvname, "moonwar") == 0)
+	) {
+		if (strcmp("Dial", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+		if (strcmp("Dial (Cocktail)", description) == 0) {
+			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
+		}
+	}
+	
 	// Handle megadrive
 	if ((systemname && strcmp(systemname, "Sega Megadrive") == 0)) {
 		// Street Fighter 2 mapping (which is the only 6 button megadrive game ?)
