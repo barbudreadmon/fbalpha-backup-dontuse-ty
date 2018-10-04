@@ -4175,18 +4175,6 @@ INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, char *szn
 		}
 	}
 	
-	// Moonwar
-	if ((parentrom && strcmp(parentrom, "moonwar") == 0) ||
-		(drvname && strcmp(drvname, "moonwar") == 0)
-	) {
-		if (strcmp("Dial", description) == 0) {
-			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 2, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
-		}
-		if (strcmp("Dial (Cocktail)", description) == 0) {
-			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 2, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description);
-		}
-	}
-	
 	// Street Fighter Zero (CPS Changer) #245
 	if ((parentrom && strcmp(parentrom, "sfzch") == 0) ||
 		(drvname && strcmp(drvname, "sfzch") == 0)
