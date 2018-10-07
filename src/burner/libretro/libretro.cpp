@@ -1571,6 +1571,9 @@ size_t retro_serialize_size()
 
 bool retro_serialize(void *data, size_t size)
 {
+	int result = -1;
+	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
+	kNetGame = result & 4;
 	if (!state_size)
 	{
 		BurnAcb = burn_dummy_state_cb;
@@ -1587,6 +1590,9 @@ bool retro_serialize(void *data, size_t size)
 
 bool retro_unserialize(const void *data, size_t size)
 {
+	int result = -1;
+	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
+	kNetGame = result & 4;
 	if (!state_size)
 	{
 		BurnAcb = burn_dummy_state_cb;
