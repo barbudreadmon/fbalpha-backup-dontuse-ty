@@ -240,7 +240,18 @@ SOURCES_C   	+=		$(LIBRETRO_COMM_DIR)/file/file_path.c \
 						$(LIBRETRO_COMM_DIR)/string/stdstring.c \
 						$(LIBRETRO_COMM_DIR)/streams/file_stream.c \
 						$(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c \
-						$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c
+						$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
+						$(LIBRETRO_COMM_DIR)/audio/audio_mixer.c \
+						$(LIBRETRO_COMM_DIR)/audio/resampler/audio_resampler.c \
+						$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/nearest_resampler.c \
+						$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/null_resampler.c \
+						$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler.c \
+						$(LIBRETRO_COMM_DIR)/features/features_cpu.c \
+						$(LIBRETRO_COMM_DIR)/file/config_file.c \
+						$(LIBRETRO_COMM_DIR)/file/config_file_userdata.c \
+						$(LIBRETRO_COMM_DIR)/formats/wav/rwav.c \
+						$(LIBRETRO_COMM_DIR)/lists/string_list.c \
+						$(LIBRETRO_COMM_DIR)/memmap/memalign.c
 endif
 
 SOURCES_CXX		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))

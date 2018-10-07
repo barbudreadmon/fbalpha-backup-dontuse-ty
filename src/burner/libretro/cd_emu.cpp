@@ -77,25 +77,71 @@ INT32 QuoteRead(TCHAR** ppszQuote, TCHAR** ppszEnd, TCHAR* pszSrc)	// Read a (qu
 	return 0;
 }
 
+#include <audio/audio_mixer.h>
+audio_mixer_sound_t *cdsound;
+audio_mixer_voice_t *cdvoice;
 
 /**
  * see src/intf/cd/sdl/cdsound.cpp
  */
 int wav_open(TCHAR* szFile)
 {
-	return 0;
+	wav_exit();
+
+	FILE *fp;
+	void *buffer;
+	int32_t size;
+
+	fp = fopen(szFile, "rb");
+	if (!fp)
+		return 0;
+
+	fseek(fp, 0, SEEK_END);
+	size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	buffer = (void *)malloc(size+1);
+	if (!buffer)
+		return 0;
+
+	fread(buffer, size, 1, fp);
+	fclose(fp);
+
+	char *ext = strrchr(szFile, '.');
+	if (ext)
+	{
+		if (!strcmp(".wav", ext)) {
+			return 0;
+			// Following code is crashing the core, no idea why
+			//cdsound = audio_mixer_load_wav(buffer, size);
+		}
+		else if (!strcmp(".mp3", ext)) {
+			return 0;
+			//cdsound = audio_mixer_load_mp3(buffer, size);
+		}
+		else
+			return 0;
+	}
+
+	return 1;
 }
 
 void wav_stop() 
 {
+	if(!cdvoice) return;
+	audio_mixer_stop(cdvoice);
 }
 
 void wav_play()
 {
+	if(!cdsound) return;
+	cdvoice = audio_mixer_play(cdsound, true, 100, NULL);
 }
 
 void wav_exit()
 {
+	if(!cdsound) return;
+	audio_mixer_destroy(cdsound);
 }
 
 /**
