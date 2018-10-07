@@ -1534,7 +1534,7 @@ void retro_run()
 
 static uint8_t *write_state_ptr;
 static const uint8_t *read_state_ptr;
-static unsigned state_size;
+static unsigned state_sizes[2];
 
 static int burn_write_state_cb(BurnArea *pba)
 {
@@ -1555,7 +1555,7 @@ static int burn_dummy_state_cb(BurnArea *pba)
 #ifdef FBA_DEBUG
 	log_cb(RETRO_LOG_INFO, "state debug: name %s, len %d\n", pba->szName, pba->nLen);
 #endif
-	state_size += pba->nLen;
+	state_sizes[kNetGame] += pba->nLen;
 	return 0;
 }
 
@@ -1564,9 +1564,12 @@ size_t retro_serialize_size()
 	int result = -1;
 	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
 	kNetGame = result & 4 ? 1 : 0;
+	if (state_sizes[kNetGame])
+		return state_sizes[kNetGame];
+
 	BurnAcb = burn_dummy_state_cb;
 	BurnAreaScan(ACB_FULLSCAN, 0);
-	return state_size;
+	return state_sizes[kNetGame];
 }
 
 bool retro_serialize(void *data, size_t size)
@@ -1574,6 +1577,14 @@ bool retro_serialize(void *data, size_t size)
 	int result = -1;
 	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
 	kNetGame = result & 4 ? 1 : 0;
+	if (!state_sizes[kNetGame])
+	{
+		BurnAcb = burn_dummy_state_cb;
+		BurnAreaScan(ACB_FULLSCAN, 0);
+	}
+	if (size != state_sizes[kNetGame])
+		return false;
+
 	BurnAcb = burn_write_state_cb;
 	write_state_ptr = (uint8_t*)data;
 	BurnAreaScan(ACB_FULLSCAN | ACB_READ, 0);   
@@ -1585,6 +1596,14 @@ bool retro_unserialize(const void *data, size_t size)
 	int result = -1;
 	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
 	kNetGame = result & 4 ? 1 : 0;
+	if (!state_sizes[kNetGame])
+	{
+		BurnAcb = burn_dummy_state_cb;
+		BurnAreaScan(ACB_FULLSCAN, 0);
+	}
+	if (size != state_sizes[kNetGame])
+		return false;
+
 	BurnAcb = burn_read_state_cb;
 	read_state_ptr = (const uint8_t*)data;
 	BurnAreaScan(ACB_FULLSCAN | ACB_WRITE, 0);
@@ -1781,8 +1800,9 @@ static bool retro_load_game_common()
 	// Initialize Samples path
 	snprintf (szAppSamplesPath, sizeof(szAppSamplesPath), "%s%cfba%csamples%c", g_system_dir, slash, slash, slash);
 
-	// Intialize state_size (for serialization)
-	state_size = 0;
+	// Intialize state_sizes (for serialization)
+	state_sizes[0] = 0;
+	state_sizes[1] = 0;
 
 	nBurnDrvActive = BurnDrvGetIndexByName(g_driver_name);
 	if (nBurnDrvActive < nBurnDrvCount) {
