@@ -77,7 +77,7 @@ extern UINT8 NeoSystem;
 bool is_neogeo_game = false;
 bool allow_neogeo_mode = true;
 UINT16 switch_ncode = 0;
-int kNetGame = 1;
+int kNetGame = 0;
 INT32 nReplayStatus = 0;
 
 enum neo_geo_modes
@@ -1561,9 +1561,9 @@ static int burn_dummy_state_cb(BurnArea *pba)
 
 size_t retro_serialize_size()
 {
-	if (state_size)
-		return state_size;
-
+	int result = -1;
+	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
+	kNetGame = result & 4 ? 1 : 0;
 	BurnAcb = burn_dummy_state_cb;
 	BurnAreaScan(ACB_FULLSCAN, 0);
 	return state_size;
@@ -1573,15 +1573,7 @@ bool retro_serialize(void *data, size_t size)
 {
 	int result = -1;
 	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
-	kNetGame = result & 4;
-	if (!state_size)
-	{
-		BurnAcb = burn_dummy_state_cb;
-		BurnAreaScan(ACB_FULLSCAN, 0);
-	}
-	if (size != state_size)
-		return false;
-
+	kNetGame = result & 4 ? 1 : 0;
 	BurnAcb = burn_write_state_cb;
 	write_state_ptr = (uint8_t*)data;
 	BurnAreaScan(ACB_FULLSCAN | ACB_READ, 0);   
@@ -1592,15 +1584,7 @@ bool retro_unserialize(const void *data, size_t size)
 {
 	int result = -1;
 	environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
-	kNetGame = result & 4;
-	if (!state_size)
-	{
-		BurnAcb = burn_dummy_state_cb;
-		BurnAreaScan(ACB_FULLSCAN, 0);
-	}
-	if (size != state_size)
-		return false;
-
+	kNetGame = result & 4 ? 1 : 0;
 	BurnAcb = burn_read_state_cb;
 	read_state_ptr = (const uint8_t*)data;
 	BurnAreaScan(ACB_FULLSCAN | ACB_WRITE, 0);
