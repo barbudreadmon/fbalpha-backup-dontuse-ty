@@ -633,7 +633,7 @@ void SN76496Scan(INT32 nAction, INT32 *pnMin)
 	if (!DebugSnd_SN76496Initted) bprintf(PRINT_ERROR, _T("SN76496Scan called without init\n"));
 #endif
 
-	char szName[16];
+	char szName[32];
 	
 	if (pnMin != NULL) {
 		*pnMin = 0x029719;

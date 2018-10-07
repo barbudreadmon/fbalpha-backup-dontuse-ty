@@ -1960,7 +1960,7 @@ void GauntletSoundWrite(UINT16 Address, UINT8 Data)
 			switch (Address & 7)
 			{
 				case 0:
-					if (!Data&0x80) BurnYM2151Reset();
+					if (~Data&0x80) BurnYM2151Reset();
 					break;
 
 				case 1:	/* speech write, bit D7, active low */
