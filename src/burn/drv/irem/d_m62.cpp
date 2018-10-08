@@ -4347,7 +4347,7 @@ static void KungfumRenderBgLayer(INT32 PriorityToRender, INT32 Cols, INT32 Rows,
 			Code |= (Colour & 0xc0) << 2;
 			Code &= (M62NumTiles - 1);
 
-			if ((TileIndex / 64) < 6 || ((Colour & 0x1f) >> 1) > 0x0c) {
+			if (((TileIndex / 64) < 6) || (((Colour & 0x1f) >> 1) > 0x0c)) {
 				Priority = 1;
 			} else {
 				Priority = 0;
@@ -4589,9 +4589,8 @@ static INT32 KungfumDraw()
 	BurnTransferClear();
 	M62CalcPalette();
 	if (nBurnLayer & 1) KungfumRenderBgLayer(0, 64, 32, 0);
-	if (nBurnLayer & 2) KungfumRenderBgLayer(1, 64, 32, 0);
 	if (nSpriteEnable & 1) M62RenderSprites(0x1f, 0, 0, 128, 256);
-	if (nBurnLayer & 4) KungfumRenderBgLayer(0, 64, 32, 1);
+	if (nBurnLayer & 2) KungfumRenderBgLayer(1, 64, 32, 0);
 	BurnTransferCopy(M62Palette);
 
 	return 0;
