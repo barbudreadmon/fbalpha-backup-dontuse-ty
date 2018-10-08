@@ -12,7 +12,7 @@
 
 #include "tchar.h"
 
-#ifdef __LIBRETRO_OPTIMIZATIONS__
+#ifdef __LIBRETRO__
 #include "burn_libretro_opts.h"
 #endif
 

@@ -2103,6 +2103,8 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 		ba.szName	= "Palette";
 		BurnAcb(&ba);
 
+#ifdef __LIBRETRO__
+		// netplay relying on savestates doesn't want those 8mb
 		if (!kNetGame) {
 			ba.Data		= RamCRam;
 			ba.nLen		= 0x0800000;
@@ -2110,6 +2112,13 @@ INT32 cps3Scan(INT32 nAction, INT32 *pnMin)
 			ba.szName	= "Sprite ROM";
 			BurnAcb(&ba);
 		}
+#else
+		ba.Data		= RamCRam;
+		ba.nLen		= 0x0800000;
+		ba.nAddress = 0;
+		ba.szName	= "Sprite ROM";
+		BurnAcb(&ba);
+#endif
 
 /*		// so huge. need not backup it while NOCD
 		// otherwize, need backup gfx also

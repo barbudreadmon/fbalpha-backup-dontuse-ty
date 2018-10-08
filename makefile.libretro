@@ -1,7 +1,6 @@
 DEBUG = 0
 DEBUG_ASAN = 0
 DEBUG_UBSAN = 0
-LIBRETRO_OPTIMIZATIONS = 1
 FRONTEND_SUPPORTS_RGB565 = 1
 HAVE_GRIFFIN = 0
 # fastcall only works on x86_32
@@ -408,13 +407,6 @@ FBA_DEFINES += -D__LIBRETRO__ \
 
 INCFLAGS := $(foreach dir,$(INCLUDE_DIRS),-I$(dir))
 
-ifeq ($(LIBRETRO_OPTIMIZATIONS), 1)
-   FBA_DEFINES += -D__LIBRETRO_OPTIMIZATIONS__
-   GENERATE_OPTS := -D__LIBRETRO_OPTIMIZATIONS__
-else
-   GENERATE_OPTS :=
-endif
-
 ifeq ($(USE_SPEEDHACKS), 1)
    FBA_DEFINES += -DUSE_SPEEDHACKS
 endif
@@ -517,7 +509,7 @@ generate-files:
 	@echo ""
 	@echo "Generating $(FBA_GENERATED_DIR)/neo_sprite_func_table.h..."
 	@echo ""
-	$(PERL) $(FBA_SCRIPTS_DIR)/neo_sprite_func.pl -o $(FBA_GENERATED_DIR)/neo_sprite_func.h $(LIBRETRO_OPTIMIZATIONS)
+	$(PERL) $(FBA_SCRIPTS_DIR)/neo_sprite_func.pl -o $(FBA_GENERATED_DIR)/neo_sprite_func.h
 	@echo ""
 	@echo "Generating $(FBA_GENERATED_DIR)/psikyo_tile_func.h..."
 	@echo ""
