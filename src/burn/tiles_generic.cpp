@@ -4704,6 +4704,249 @@ void RenderCustomTile_Prio_TransMask_FlipXY_Clip(UINT16* pDestDraw, INT32 nWidth
 #undef PLOTPIXEL_PRIO_MASK
 #undef PLOTPIXEL_PRIO_MASK_FLIPX
 
+
+/*================================================================================================
+Merged tile functions (flipping/clipping merged)
+================================================================================================*/
+
+
+void Draw8x8Tile(UINT16 *pDestDraw, INT32 nTileNumber, INT32 StartX, INT32 StartY, INT32 FlipX, INT32 FlipY, INT32 nTilePalette, INT32 nColourDepth, INT32 nPaletteOffset, UINT8 *pTile)
+{
+	if ((StartX < -7) || (StartX >= nScreenWidth) || (StartY < -7) | (StartY >= nScreenHeight))
+	{
+		return;
+	}
+
+	if ((StartX < 8) || (StartX >= (nScreenWidth - 7)) || (StartY < 8) | (StartY >= (nScreenHeight - 7)))
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_FlipXY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_FlipY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_FlipX_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);		
+			}
+		}
+	}
+	else
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_FlipXY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_FlipY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_FlipX(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, pTile);		
+			}
+		}
+	}
+}
+
+void Draw8x8MaskTile(UINT16 *pDestDraw, INT32 nTileNumber, INT32 StartX, INT32 StartY, INT32 FlipX, INT32 FlipY, INT32 nTilePalette, INT32 nColourDepth, INT32 nMaskColour, INT32 nPaletteOffset, UINT8 *pTile)
+{
+	if ((StartX < -7) || (StartX >= nScreenWidth) || (StartY < -7) | (StartY >= nScreenHeight))
+	{
+		return;
+	}
+
+	if ((StartX < 8) || (StartX >= (nScreenWidth - 7)) || (StartY < 8) | (StartY >= (nScreenHeight - 7)))
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Mask_FlipXY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Mask_FlipY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Mask_FlipX_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Mask_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);		
+			}
+		}
+	}
+	else
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Mask_FlipXY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Mask_FlipY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Mask_FlipX(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Mask(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, pTile);		
+			}
+		}
+	}
+}
+
+void Draw8x8PrioTile(UINT16 *pDestDraw, INT32 nTileNumber, INT32 StartX, INT32 StartY, INT32 FlipX, INT32 FlipY, INT32 nTilePalette, INT32 nColourDepth, INT32 nPaletteOffset, INT32 nPriority, UINT8 *pTile)
+{
+	if ((StartX < -7) || (StartX >= nScreenWidth) || (StartY < -7) | (StartY >= nScreenHeight))
+	{
+		return;
+	}
+
+	if ((StartX < 8) || (StartX >= (nScreenWidth - 7)) || (StartY < 8) | (StartY >= (nScreenHeight - 7)))
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_FlipXY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio_FlipY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_FlipX_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+	}
+	else
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_FlipXY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio_FlipY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_FlipX(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+	}
+}
+
+void Draw8x8PrioMaskTile(UINT16 *pDestDraw, INT32 nTileNumber, INT32 StartX, INT32 StartY, INT32 FlipX, INT32 FlipY, INT32 nTilePalette, INT32 nColourDepth, INT32 nMaskColour, INT32 nPaletteOffset, INT32 nPriority, UINT8 *pTile)
+{
+	if ((StartX < -7) || (StartX >= nScreenWidth) || (StartY < -7) | (StartY >= nScreenHeight))
+	{
+		return;
+	}
+
+	if ((StartX < 8) || (StartX >= (nScreenWidth - 7)) || (StartY < 8) | (StartY >= (nScreenHeight - 7)))
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_Mask_FlipXY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio_Mask_FlipY_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_Mask_FlipX_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio_Mask_Clip(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+	}
+	else
+	{
+		if (FlipY)
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_Mask_FlipXY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio_Mask_FlipY(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+		else
+		{
+			if (FlipX)
+			{
+				Render8x8Tile_Prio_Mask_FlipX(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);	
+			}
+			else
+			{
+				Render8x8Tile_Prio_Mask(pDestDraw, nTileNumber, StartX, StartY, nTilePalette, nColourDepth, nMaskColour, nPaletteOffset, nPriority, pTile);		
+			}
+		}
+	}
+}
+
+
 /*================================================================================================
 Zoomed Tile Functions
 ================================================================================================*/
