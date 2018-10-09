@@ -8,6 +8,7 @@ INCLUDE_7Z_SUPPORT        := 1
 EXTERNAL_ZLIB             := 0
 BUILD_X64_EXE             := 0
 WANT_NEOGEOCD             := 0
+HAVE_NEON                 := 0
 
 CFLAGS      :=
 CXXFLAGS    :=
@@ -23,7 +24,7 @@ COMMON_FLAGS := -DUSE_SPEEDHACKS -D__LIBRETRO__ -DANDROID -DFRONTEND_SUPPORTS_RG
 # Build shared library including static C module
 include $(CLEAR_VARS)
 LOCAL_MODULE       := retro
-LOCAL_SRC_FILES    := $(SOURCES_C) $(SOURCES_CXX)
+LOCAL_SRC_FILES    := $(SOURCES_C) $(SOURCES_S) $(SOURCES_CXX)
 LOCAL_C_INCLUDES   := $(INCLUDE_DIRS)
 LOCAL_CFLAGS       := $(CFLAGS) $(COMMON_FLAGS)
 LOCAL_CPPFLAGS     := $(CXXFLAGS) $(COMMON_FLAGS)
