@@ -95,49 +95,49 @@ BURN_BLACKLIST := $(FBA_CPU_DIR)/arm7/arm7exec.c \
 	$(FBA_CPU_DIR)/z180/z180cb.c
 
 ifeq ($(AUTOGEN_DATS), 0)
-   BURN_BLACKLIST += $(FBA_BURNER_DIR)/dat.cpp
+	BURN_BLACKLIST += $(FBA_BURNER_DIR)/dat.cpp
 else
-   FBA_DEFINES += -DAUTOGEN_DATS
+	FBA_DEFINES += -DAUTOGEN_DATS
 endif
 
 ifeq ($(NO_MD), 1)
-	MD_DIR		:= 
+	MD_DIR := 
 endif
 
 ifeq ($(NO_PCE), 1)
-	PCE_DIR		:=
+	PCE_DIR :=
 endif
 
 ifeq ($(NO_SMS), 1)
-	SMS_DIR		:=
+	SMS_DIR :=
 endif
 
 ifeq ($(NO_CAPCOM), 1)
-	CAPCOM_DIR	:=
+	CAPCOM_DIR :=
 endif
 
 ifeq ($(NO_NEOGEO), 1)
-	NEOGEO_DIR	:=
+	NEOGEO_DIR :=
 endif
 
 ifeq ($(INCLUDE_CPLUSPLUS11_FILES), 1)
 	ifeq (,$(findstring msvc,$(platform)))
-		CXXFLAGS					+= -std=gnu++11
+		CXXFLAGS += -std=gnu++11
 	endif
 	ifeq ($(BUILD_X64_EXE), 1)
-		FBA_DEFINES				+= -DXBYAK_NO_OP_NAMES -DMIPS3_X64_DRC
+		FBA_DEFINES += -DXBYAK_NO_OP_NAMES -DMIPS3_X64_DRC
 	else
-		MIPS3_X64_DYNAREC_DIR	:=
+		MIPS3_X64_DYNAREC_DIR :=
 	endif
 else
 	ifeq (,$(findstring msvc,$(platform)))
-		CXXFLAGS					+= -std=gnu++98
+		CXXFLAGS += -std=gnu++98
 	endif
-	ADSP2100_DIR				:=
-	MIDWAY_DIR 					:=
-	MIPS3_DIR 					:=
-	MIPS3_X64_DYNAREC_DIR 		:=
-	TMS34010_DIR 				:=
+	ADSP2100_DIR :=
+	MIDWAY_DIR :=
+	MIPS3_DIR :=
+	MIPS3_X64_DYNAREC_DIR :=
+	TMS34010_DIR :=
 	BURN_BLACKLIST += $(FBA_CPU_DIR)/adsp2100_intf.cpp \
 		$(FBA_CPU_DIR)/tms34010_intf.cpp \
 		$(FBA_CPU_DIR)/mips3_intf.cpp
@@ -206,16 +206,16 @@ FBA_INTERFACE_DIRS := $(FBA_INTERFACE_DIR)/audio
 FBA_SRC_DIRS := $(FBA_BURNER_DIR) $(FBA_BURN_DIRS) $(FBA_CPU_DIRS) $(FBA_BURNER_DIRS) $(FBA_INTERFACE_DIRS)
 
 ifeq ($(EXTERNAL_ZLIB), 1)
-   FBA_DEFINES += -DEXTERNAL_ZLIB
-   LDFLAGS += -lz
+	FBA_DEFINES += -DEXTERNAL_ZLIB
+	LDFLAGS += -lz
 else
-   FBA_SRC_DIRS += $(FBA_LIB_DIR)/zlib
+	FBA_SRC_DIRS += $(FBA_LIB_DIR)/zlib
 endif
 
 ifeq ($(INCLUDE_7Z_SUPPORT), 1)
-   FBA_DEFINES += -DINCLUDE_7Z_SUPPORT
-   FBA_SRC_DIRS += $(FBA_LIB_DIR)/lib7z
-   BURN_BLACKLIST += $(FBA_LIB_DIR)/lib7z/LzFindMt.c \
+	FBA_DEFINES += -DINCLUDE_7Z_SUPPORT
+	FBA_SRC_DIRS += $(FBA_LIB_DIR)/lib7z
+	BURN_BLACKLIST += $(FBA_LIB_DIR)/lib7z/LzFindMt.c \
 		$(FBA_LIB_DIR)/lib7z/LzmaEnc.c \
 		$(FBA_LIB_DIR)/lib7z/MtCoder.c \
 		$(FBA_LIB_DIR)/lib7z/Lzma2Enc.c \
@@ -225,39 +225,45 @@ ifeq ($(INCLUDE_7Z_SUPPORT), 1)
 		$(FBA_LIB_DIR)/lib7z/LzmaLib.c \
 		$(FBA_LIB_DIR)/lib7z/XzEnc.c
 else
-   BURN_BLACKLIST += $(FBA_BURNER_DIR)/un7z.cpp
+	BURN_BLACKLIST += $(FBA_BURNER_DIR)/un7z.cpp
 endif
 
-SOURCES_C		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
+SOURCES_C += $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.c)))
 
 ifneq ($(STATIC_LINKING), 1)
-SOURCES_C   	+=		$(LIBRETRO_COMM_DIR)/file/file_path.c \
-						$(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
-						$(LIBRETRO_COMM_DIR)/compat/compat_posix_string.c \
-						$(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
-						$(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
-						$(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c \
-						$(LIBRETRO_COMM_DIR)/string/stdstring.c \
-						$(LIBRETRO_COMM_DIR)/streams/file_stream.c \
-						$(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c \
-						$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
-						$(LIBRETRO_COMM_DIR)/audio/audio_mixer.c \
-						$(LIBRETRO_COMM_DIR)/audio/resampler/audio_resampler.c \
-						$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/nearest_resampler.c \
-						$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/null_resampler.c \
-						$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler.c \
-						$(LIBRETRO_COMM_DIR)/features/features_cpu.c \
-						$(LIBRETRO_COMM_DIR)/file/config_file.c \
-						$(LIBRETRO_COMM_DIR)/file/config_file_userdata.c \
-						$(LIBRETRO_COMM_DIR)/formats/wav/rwav.c \
-						$(LIBRETRO_COMM_DIR)/lists/string_list.c \
-						$(LIBRETRO_COMM_DIR)/memmap/memalign.c
+	SOURCES_C += $(LIBRETRO_COMM_DIR)/file/file_path.c \
+		$(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
+		$(LIBRETRO_COMM_DIR)/compat/compat_posix_string.c \
+		$(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
+		$(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
+		$(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c \
+		$(LIBRETRO_COMM_DIR)/string/stdstring.c \
+		$(LIBRETRO_COMM_DIR)/streams/file_stream.c \
+		$(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c \
+		$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
+		$(LIBRETRO_COMM_DIR)/audio/audio_mixer.c \
+		$(LIBRETRO_COMM_DIR)/audio/resampler/audio_resampler.c \
+		$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/nearest_resampler.c \
+		$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/null_resampler.c \
+		$(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler.c \
+		$(LIBRETRO_COMM_DIR)/features/features_cpu.c \
+		$(LIBRETRO_COMM_DIR)/file/config_file.c \
+		$(LIBRETRO_COMM_DIR)/file/config_file_userdata.c \
+		$(LIBRETRO_COMM_DIR)/formats/wav/rwav.c \
+		$(LIBRETRO_COMM_DIR)/lists/string_list.c \
+		$(LIBRETRO_COMM_DIR)/memmap/memalign.c
 endif
 
-SOURCES_CXX		+= $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
-SOURCES_CXX		+= $(LIBRETRO_DIR)/libretro.cpp \
-						$(LIBRETRO_DIR)/cd_emu.cpp \
-						$(LIBRETRO_DIR)/retro_mem.cpp
+SOURCES_CXX += $(filter-out $(BURN_BLACKLIST),$(foreach dir,$(FBA_SRC_DIRS),$(wildcard $(dir)/*.cpp)))
+SOURCES_CXX += $(LIBRETRO_DIR)/libretro.cpp \
+	$(LIBRETRO_DIR)/cd_emu.cpp \
+	$(LIBRETRO_DIR)/retro_mem.cpp
+
+ifeq ($(HAVE_NEON), 1)
+	SOURCES_S := $(LIBRETRO_COMM_DIR)/audio/resampler/drivers/sinc_resampler_neon.S
+else
+	SOURCES_S := 
+endif
 
 INCLUDE_DIRS := $(FBA_BURNER_DIR)/win32 \
 	$(LIBRETRO_COMM_DIR)/include \
@@ -303,5 +309,5 @@ endif
 # GIT HASH
 GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
 ifneq ($(GIT_VERSION)," unknown")
-   CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+	CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
 endif

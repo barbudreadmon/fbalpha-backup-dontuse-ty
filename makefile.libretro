@@ -14,6 +14,7 @@ PTR64 ?= 1
 INCLUDE_CPLUSPLUS11_FILES = 0
 BUILD_X64_EXE = 0
 AUTOGEN_DATS = 0
+HAVE_NEON = 0
 
 SPACE :=
 SPACE := $(SPACE) $(SPACE)
@@ -78,8 +79,10 @@ ifneq (,$(findstring unix,$(platform)))
    # Raspberry Pi
    ifneq (,$(findstring rpi2,$(platform)))
       PLATFORM_DEFINES := -marm -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
+      HAVE_NEON = 1
    else ifneq (,$(findstring rpi3,$(platform)))
       PLATFORM_DEFINES := -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard
+      HAVE_NEON = 1
    endif
 
    # Solaris
@@ -171,6 +174,7 @@ else ifeq ($(platform), qnx)
    CXX = QCC -Vgcc_ntoarmv7le_cpp
    AR = qcc -Vgcc_ntoarmv7le
    PLATFORM_DEFINES := -D__BLACKBERRY_QNX__ -marm -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=softfp
+   HAVE_NEON = 1
 
 # PS3
 else ifneq (,$(filter $(platform), ps3 sncps3 psl1ght))
@@ -232,6 +236,7 @@ else ifeq ($(platform), switch)
    STATIC_LINKING=1
    ENDIANNESS_DEFINES := -DLSB_FIRST
    PLATFORM_DEFINES := -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard
+   HAVE_NEON = 1
 
 # Nintendo Switch (libnx)
 else ifeq ($(platform), libnx)
@@ -398,8 +403,9 @@ include makefile.libretro_common
 
 FBA_CXXOBJ := $(SOURCES_CXX:.cpp=.o)
 FBA_COBJ := $(SOURCES_C:.c=.o)
+FBA_SOBJ := $(SOURCES_S:.S=.o)
 
-OBJS := $(FBA_COBJ) $(FBA_CXXOBJ)
+OBJS := $(FBA_COBJ) $(FBA_CXXOBJ) $(FBA_SOBJ)
 
 FBA_DEFINES += -D__LIBRETRO__ \
 	$(ENDIANNESS_DEFINES) \
@@ -576,6 +582,9 @@ endif
 
 %.o: %.cpp
 	$(CXX) -c $(OBJOUT)$@ $< $(CXXFLAGS) $(INCFLAGS)
+
+%.o: %.S
+	$(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $@
 
 $(TARGET): $(OBJS)
 ifeq ($(STATIC_LINKING), 1)
