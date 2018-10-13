@@ -17,7 +17,7 @@ INT32 CpsDrawSpritesInReverse = 0;
 
 INT32 nIrqLine50, nIrqLine52;
 
-INT32 nCpsNumScanlines = 259;
+INT32 nCpsNumScanlines = 262;
 INT32 Cps1VBlankIRQLine = 2;
 
 CpsRunInitCallback CpsRunInitCallbackFunction = NULL;
@@ -334,13 +334,13 @@ INT32 Cps1Frame()
 			memcpy(CpsSaveReg[0], CpsReg, 0x100);				// Registers correct now
 
 			SekSetIRQLine(Cps1VBlankIRQLine, CPU_IRQSTATUS_AUTO);				// Trigger VBlank interrupt
+
+			if (pBurnDraw) {
+				CpsDraw();										// Draw frame
+			}
 		}
 
 		SekRun(nNext - SekTotalCycles());						// run 68K
-	}
-
-	if (pBurnDraw) {
-		CpsDraw();										// Draw frame
 	}
 
 	if (Cps1Qs == 1) {

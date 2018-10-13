@@ -365,8 +365,8 @@ static INT32 ScanRam()
 	}
 
 	if (Cps == 2) {
-		ba.Data = CpsRam708;  ba.nLen = 0x010000; ba.szName = "CpsRam708"; BurnAcb(&ba);
-		ba.Data = CpsFrg;     ba.nLen = 0x000010; ba.szName = "CpsFrg";    BurnAcb(&ba);
+		ba.Data = CpsRam708; ba.nLen = 0x010000; ba.szName = "CpsRam708"; BurnAcb(&ba);
+		ba.Data = CpsFrg;    ba.nLen = 0x000010; ba.szName = "CpsFrg";    BurnAcb(&ba);
 	}
 
 	return 0;
@@ -406,7 +406,7 @@ INT32 CpsAreaScan(INT32 nAction, INT32 *pnMin)
 
 	if (nAction & ACB_MEMORY_RAM) {
 
-		ScanRam(); 
+		ScanRam();
 
 		if (Cps == 2) {
 			memset(&ba, 0, sizeof(ba));
