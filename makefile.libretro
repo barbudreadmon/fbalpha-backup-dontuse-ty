@@ -40,7 +40,9 @@ ifeq ($(platform),)
       EXE_EXT=.exe
    endif
 else ifneq (,$(findstring armv,$(platform)))
-   override platform += unix
+   ifeq (,$(findstring classic_,$(platform)))
+      override platform += unix
+   endif
 else ifneq (,$(findstring rpi,$(platform)))
    override platform += unix
 endif
@@ -263,7 +265,7 @@ else ifeq ($(platform), libnx)
 else ifeq ($(platform), classic_armv7_a7)
 	TARGET := $(TARGET_NAME)_libretro.so
 	fpic := -fPIC
-    SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(VERSION_SCRIPT)
+	SHARED := -shared -Wl,-no-undefined -Wl,--version-script=$(VERSION_SCRIPT)
 	CFLAGS += -Ofast \
 	-flto=4 -fwhole-program -fuse-linker-plugin \
 	-fdata-sections -ffunction-sections -Wl,--gc-sections \
@@ -275,10 +277,13 @@ else ifeq ($(platform), classic_armv7_a7)
 	CXXFLAGS += $(CFLAGS)
 	CPPFLAGS += $(CFLAGS)
 	ASFLAGS += $(CFLAGS)
+	CXXFLAGS := -std=gnu++11
+	CFLAGS := -std=gnu11
 	HAVE_NEON = 1
 	ARCH = arm
 	BUILTIN_GPU = neon
 	USE_DYNAREC = 1
+	ENDIANNESS_DEFINES := -DLSB_FIRST
 	ifeq ($(shell echo `$(CC) -dumpversion` "< 4.9" | bc -l), 1)
 	  CFLAGS += -march=armv7-a
 	else
