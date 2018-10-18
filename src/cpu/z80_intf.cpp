@@ -25,6 +25,7 @@ struct ZetExt {
 };
  
 static INT32 nZetCyclesDone[MAX_Z80];
+static INT32 nZetCyclesDelayed[MAX_Z80];
 static INT32 nZetCyclesTotal;
 static INT32 nZ80ICount[MAX_Z80];
 static UINT32 Z80EA[MAX_Z80];
@@ -32,6 +33,22 @@ static UINT32 Z80EA[MAX_Z80];
 static INT32 nOpenedCPU = -1;
 static INT32 nCPUCount = 0;
 INT32 nHasZet = -1;
+
+cpu_core_config ZetConfig =
+{
+	ZetOpen,
+	ZetClose,
+	ZetCheatRead,
+	ZetCheatWriteROM,
+	ZetGetActive,
+	ZetTotalCycles,
+	ZetNewFrame,
+	ZetRun,
+	ZetRunEnd,
+	ZetReset,
+	0x10000,
+	0
+};
 
 UINT8 __fastcall ZetDummyReadHandler(UINT16) { return 0; }
 void __fastcall ZetDummyWriteHandler(UINT16, UINT8) { }
@@ -170,31 +187,15 @@ void ZetNewFrame()
 	nZetCyclesTotal = 0;
 }
 
-static void ZetCheatWriteROM(UINT32 a, UINT8 d)
+void ZetCheatWriteROM(UINT32 a, UINT8 d)
 {
 	ZetWriteRom(a, d);
 }
 
-static UINT8 ZetCheatRead(UINT32 a)
+UINT8 ZetCheatRead(UINT32 a)
 {
 	return ZetReadByte(a);
 }
-
-static cpu_core_config ZetCheatCpuConfig =
-{
-	ZetOpen,
-	ZetClose,
-	ZetCheatRead,
-	ZetCheatWriteROM,
-	ZetGetActive,
-	ZetTotalCycles,
-	ZetNewFrame,
-	ZetRun,
-	ZetRunEnd,
-	ZetReset,
-	(1<<16),	// 0x10000
-	0
-};
 
 INT32 ZetInit(INT32 nCPU)
 {
@@ -219,6 +220,7 @@ INT32 ZetInit(INT32 nCPU)
 		Z80GetContext(&ZetCPUContext[nCPU]->reg);
 		
 		nZetCyclesDone[nCPU] = 0;
+		nZetCyclesDelayed[nCPU] = 0;
 		nZ80ICount[nCPU] = 0;
 		
 		for (INT32 j = 0; j < (0x0100 * 4); j++) {
@@ -239,7 +241,7 @@ INT32 ZetInit(INT32 nCPU)
 
 	nHasZet = nCPU+1;
 
-	CpuCheatRegister(nCPU, &ZetCheatCpuConfig);
+	CpuCheatRegister(nCPU, &ZetConfig);
 
 	return 0;
 }
@@ -378,14 +380,24 @@ INT32 ZetRun(INT32 nCycles)
 #endif
 
 	if (nCycles <= 0) return 0;
-	
+
+	INT32 nDelayed = 0;  // handle delayed cycle counts (from nmi / irq)
+	if (nZetCyclesDelayed[nOpenedCPU]) {
+		nDelayed = nZetCyclesDelayed[nOpenedCPU];
+		nZetCyclesDelayed[nOpenedCPU] = 0;
+		nCycles -= nDelayed;
+	}
+
 	if (ZetCPUContext[nOpenedCPU]->BusReq) {
+		nCycles += nDelayed;
 		nZetCyclesTotal += nCycles;
 		return nCycles;
 	}
-	
+
 	nCycles = Z80Execute(nCycles);
-	
+
+	nCycles += nDelayed;
+
 	nZetCyclesTotal += nCycles;
 	
 	return nCycles;
@@ -563,6 +575,7 @@ void ZetReset()
 	if (nOpenedCPU == -1) bprintf(PRINT_ERROR, _T("ZetReset called when no CPU open\n"));
 #endif
 
+	nZetCyclesDelayed[nOpenedCPU] = 0;
 	Z80Reset();
 }
 
@@ -650,6 +663,20 @@ INT32 ZetI(INT32 n)
 	}
 }
 
+INT32 ZetSP(INT32 n)
+{
+#if defined FBA_DEBUG
+	if (!DebugCPU_ZetInitted) bprintf(PRINT_ERROR, _T("ZetSP called without init\n"));
+	if (nOpenedCPU == -1 && n < 0) bprintf(PRINT_ERROR, _T("ZetSP called when no CPU open\n"));
+#endif
+
+	if (n < 0) {
+		return ActiveZ80GetSP();
+	} else {
+		return ZetCPUContext[n]->reg.sp.w.l;
+	}
+}
+
 INT32 ZetScan(INT32 nAction)
 {
 #if defined FBA_DEBUG
@@ -669,6 +696,7 @@ INT32 ZetScan(INT32 nAction)
 		SCAN_VAR(Z80EA[i]);
 		SCAN_VAR(nZ80ICount[i]);
 		SCAN_VAR(nZetCyclesDone[i]);
+		SCAN_VAR(nZetCyclesDelayed[i]);
 		SCAN_VAR(ZetCPUContext[i]->BusReq);
 	}
 	
@@ -688,14 +716,14 @@ void ZetSetIRQLine(const INT32 line, const INT32 status)
 		case CPU_IRQSTATUS_NONE:
 			Z80SetIrqLine(line, 0);
 			break;
-		case CPU_IRQSTATUS_ACK: 	
+		case CPU_IRQSTATUS_ACK:
 			Z80SetIrqLine(line, 1);
 			break;
 		case CPU_IRQSTATUS_AUTO:
 			Z80SetIrqLine(line, 1);
-			Z80Execute(0);
+			nZetCyclesDelayed[nOpenedCPU] += Z80Execute(0);
 			Z80SetIrqLine(0, 0);
-			Z80Execute(0);
+			nZetCyclesDelayed[nOpenedCPU] += Z80Execute(0);
 			break;
 		case CPU_IRQSTATUS_HOLD:
 			ActiveZ80SetIRQHold();
@@ -732,13 +760,11 @@ INT32 ZetNmi()
 #endif
 
 	Z80SetIrqLine(Z80_INPUT_LINE_NMI, 1);
-	Z80Execute(0);
+	nZetCyclesDelayed[nOpenedCPU] += Z80Execute(0);
 	Z80SetIrqLine(Z80_INPUT_LINE_NMI, 0);
-	Z80Execute(0);
-	INT32 nCycles = 12;
-	nZetCyclesTotal += nCycles;
+	nZetCyclesDelayed[nOpenedCPU] += Z80Execute(0);
 
-	return nCycles;
+	return 0;
 }
 
 INT32 ZetIdle(INT32 nCycles)
@@ -785,14 +811,90 @@ void ZetSetBUSREQLine(INT32 nStatus)
 	ZetCPUContext[nOpenedCPU]->BusReq = nStatus;
 }
 
+void ZetSetAF(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.af.w.l = value;
+}
+
+void ZetSetAF2(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.af2.w.l = value;
+}
+
+void ZetSetBC(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.bc.w.l = value;
+}
+
+void ZetSetBC2(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.bc2.w.l = value;
+}
+
+void ZetSetDE(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.de.w.l = value;
+}
+
+void ZetSetDE2(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.de2.w.l = value;
+}
+
 void ZetSetHL(INT32 n, UINT16 value)
 {
-	ZetCPUContext[n]->reg.hl.w.l=value;
+	ZetCPUContext[n]->reg.hl.w.l = value;
+}
+
+void ZetSetHL2(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.hl2.w.l = value;
+}
+
+void ZetSetI(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.i = value;
+}
+
+void ZetSetIFF1(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.iff1 = value;
+}
+
+void ZetSetIFF2(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.iff2 = value;
+}
+
+void ZetSetIM(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.im = value;
+}
+
+void ZetSetIX(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.ix.w.l = value;
+}
+
+void ZetSetIY(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.iy.w.l = value;
+}
+
+void ZetSetPC(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.pc.w.l = value;
+}
+
+void ZetSetR(INT32 n, UINT16 value)
+{
+	ZetCPUContext[n]->reg.r = value;
+	ZetCPUContext[n]->reg.r2 = value & 0x80;
 }
 
 void ZetSetSP(INT32 n, UINT16 value)
 {
-	ZetCPUContext[n]->reg.sp.w.l=value;
+	ZetCPUContext[n]->reg.sp.w.l = value;
 }
 
 #undef MAX_Z80

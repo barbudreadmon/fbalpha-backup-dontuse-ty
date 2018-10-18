@@ -21,7 +21,7 @@ typedef union
 typedef struct
 {
 	Z80_PAIR	prvpc,pc,sp,af,bc,de,hl,ix,iy;
-	Z80_PAIR	af2,bc2,de2,hl2;
+	Z80_PAIR	af2,bc2,de2,hl2,wz;
 	UINT8	r,r2,iff1,iff2,halt,im,i;
 	UINT8	nmi_state;			/* nmi line state */
 	UINT8	nmi_pending;		/* nmi pending */
@@ -96,6 +96,7 @@ int ActiveZ80GetDE();
 int ActiveZ80GetHL();
 int ActiveZ80GetI();
 int ActiveZ80GetIM();
+int ActiveZ80GetSP();
 int ActiveZ80GetPrevPC();
 void ActiveZ80SetIRQHold();
 int ActiveZ80GetVector();
